@@ -1,0 +1,21 @@
+name: lemon_shadcn
+description: Reusable shadcn-style Flutter components for Lemon applications.
+version: 0.0.1
+homepage: https://github.com/lemon/lemon_shadcn
+
+environment:
+  sdk: ^3.12.2
+  flutter: '>=3.35.1'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  shadcn_flutter: ^0.0.53
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
