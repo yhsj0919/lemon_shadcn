@@ -51,7 +51,8 @@ MaterialApp.router(
   builder: (context, child) {
     return AppShadcnScope(
       config: AppThemeConfig.standard(
-        primary: brandColor,
+        radius: .6,
+        controls: const AppControlMetrics(height: 40),
       ),
       child: child!,
     );
@@ -869,6 +870,12 @@ Demo 不在单个页面混合展示全部组件。组件通过 registry 登记�
 本节记录产品化过程中需要遵循的补充规则。标记为“实现前”的内容需要在对应
 基础组件开发前确定；“后期增强”不进入首个垂直切片的强制范围。
 
+### 13.0 上游升级门槛
+
+每次修改 `shadcn_flutter` 版本后，必须先运行 `dart run tool/check_upstream.dart`。
+锁文件版本、清单基线和 pubspec 约束必须一致；版本变化时重新核对公开导出、组件数量、
+App 映射、分类 Demo 和相关回归测试，不能只更新版本号使检查通过。
+
 ### 13.1 统一异步操作模型（实现前）
 
 Button、Form 提交、分页、搜索和刷新共享 `idle`、`loading`、`success`、
@@ -928,6 +935,12 @@ Form、Select、DatePicker 和 MultiSelect 必须统一定义：
 - Disabled 或隐藏字段是否参与验证和 values；
 - 多选的 `null` 与空集合是否区分。
 
+当前实现约定：动态字段卸载后立即从 values、dirty 和验证集合移除；disabled 字段仍
+保留格式化值并遵循 Flutter 原生 `FormField.validate` 行为参与显式验证。业务若希望某个
+条件字段完全不参与提交，应将它从 widget tree 卸载，或由 validator 根据业务条件返回 null。
+动态字段列表与 Flutter 其他有状态列表相同，插入、删除或重排时必须提供稳定 Key，避免
+Element 复用使字段状态和 name 短暂错配。
+
 ### 13.6 Option 身份与相等性（实现前）
 
 - Select 和 MultiSelect 默认通过 `AppOption.value` 识别选项。
@@ -984,6 +997,17 @@ Form、Select、DatePicker 和 MultiSelect 必须统一定义：
 - 阴影被 Clip、Scrollable、Table、Dialog 等父级裁剪时需专项验证。
 - `RepaintBoundary` 按性能测试结果使用，不无差别包裹所有组件。
 - 动态阴影限制透明度、饱和度和亮度，暗色主题避免霓虹效果。
+
+### 13.10.1 默认控件尺寸与行为一致性（实现前）
+
+- 这是组件库的默认契约，不是可选的视觉优化；新增交互组件在进入“已完成”前必须通过一致性检查。
+- 同一密度下，Button、Input、Select、AutoComplete 等默认交互控件使用统一高度。
+- 相同用途的控件必须保持相同的点击区域、内容对齐和基本交互行为，禁止直接继承上游互不一致的默认尺寸。
+- 默认内边距、圆角、图标尺寸、图标与文字间距由全局 Control Metrics 提供。
+- Hover、Focus、Pressed、Disabled、Loading 和 Error 使用一致的状态优先级与过渡节奏。
+- Loading、错误图标、前后缀和选中内容切换不得引起控件尺寸跳动。
+- 只有明确声明的尺寸变体才允许改变高度，不因上游组件各自默认值产生无意的大、小差异。
+- 组件允许通过局部 `height` 或未来的显式尺寸变体覆盖默认值，但不允许因内容、校验状态、加载状态或选中状态隐式改变尺寸。
 
 ### 13.11 桌面交互规则（实现前）
 

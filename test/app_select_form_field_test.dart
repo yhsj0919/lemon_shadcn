@@ -67,4 +67,46 @@ void main() {
     await tester.pump();
     expect(loads, 1);
   });
+
+  testWidgets('async select exposes local error and retry builders', (
+    tester,
+  ) async {
+    var loads = 0;
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: AppSelectFormField<String>.async(
+          loadOptions: () async {
+            loads++;
+            throw StateError('offline');
+          },
+          loadErrorBuilder: (context, error, retry) => AppButton.outline(
+            onPressed: retry,
+            child: const Text('Try roles again'),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Try roles again'), findsOneWidget);
+    await tester.tap(find.text('Try roles again'));
+    await tester.pumpAndSettle();
+    expect(loads, 2);
+  });
+
+  testWidgets('select rejects duplicate option identity', (tester) async {
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: const AppSelect<String>(
+          options: [
+            AppOption(value: 'same', label: 'First'),
+            AppOption(value: 'same', label: 'Second'),
+          ],
+        ),
+      ),
+    );
+
+    expect(tester.takeException(), isA<FlutterError>());
+  });
 }

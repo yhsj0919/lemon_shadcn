@@ -2,23 +2,33 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
+import '../../foundation/app_control_box.dart';
 import 'app_field.dart';
+import 'app_form.dart';
 
 typedef AppFieldValidator<T> = String? Function(T? value);
 
 class AppTextFormField extends FormField<String> {
-  AppTextFormField({
+  const AppTextFormField({
     super.key,
     this.label,
+    this.name,
     this.description,
     this.hintText,
     this.controller,
     this.focusNode,
     this.required = false,
+    this.width,
     this.obscureText = false,
+    this.showObscureToggle = false,
     this.keyboardType,
     this.textInputAction,
     this.autofillHints,
+    this.autofocus = false,
+    this.autocorrect = true,
+    this.enableSuggestions = true,
+    this.maxLength,
+    this.features,
     this.onChanged,
     this.onSubmitted,
     super.enabled = true,
@@ -26,6 +36,7 @@ class AppTextFormField extends FormField<String> {
     this.inputFormatters,
     super.onSaved,
     super.validator,
+    this.asyncValidator,
     super.errorBuilder,
     super.initialValue,
     super.autovalidateMode = AutovalidateMode.onUserInteraction,
@@ -34,57 +45,43 @@ class AppTextFormField extends FormField<String> {
          controller == null || initialValue == null,
          'initialValue cannot be used with a controller.',
        ),
-       super(
-         builder: (state) {
-           final field = state.widget as AppTextFormField;
-           return AppField(
-             label: field.label,
-             description: field.description,
-             errorText: state.errorText,
-             required: field.required,
-             child: _AppTextFieldControl(
-               value: state.value ?? field.controller?.text ?? '',
-               controller: field.controller,
-               focusNode: field.focusNode,
-               hintText: field.hintText,
-               obscureText: field.obscureText,
-               keyboardType: field.keyboardType,
-               textInputAction: field.textInputAction,
-               autofillHints: field.autofillHints,
-               enabled: field.enabled,
-               readOnly: field.readOnly,
-               inputFormatters: field.inputFormatters,
-               onChanged: (value) {
-                 state.didChange(value);
-                 field.onChanged?.call(value);
-               },
-               onSubmitted: field.onSubmitted,
-             ),
-           );
-         },
-       );
+       super(builder: _buildField);
 
   AppTextFormField.email({
     super.key,
     this.label = 'Email',
+    this.name,
     this.description,
     this.hintText,
     this.controller,
     this.focusNode,
     this.required = false,
+    this.width,
+    this.autofocus = false,
+    this.features,
     this.onChanged,
     this.onSubmitted,
     super.enabled = true,
     this.readOnly = false,
     super.onSaved,
     AppFieldValidator<String>? validator,
+    this.asyncValidator,
+    super.errorBuilder,
     super.initialValue,
     super.autovalidateMode = AutovalidateMode.onUserInteraction,
     super.restorationId,
-  }) : obscureText = false,
+  }) : assert(
+         controller == null || initialValue == null,
+         'initialValue cannot be used with a controller.',
+       ),
+       obscureText = false,
+       showObscureToggle = false,
        keyboardType = TextInputType.emailAddress,
        textInputAction = TextInputAction.next,
        autofillHints = const [AutofillHints.email],
+       autocorrect = false,
+       enableSuggestions = false,
+       maxLength = null,
        inputFormatters = null,
        super(
          validator:
@@ -95,47 +92,116 @@ class AppTextFormField extends FormField<String> {
                      AppValidators.email(),
                    ])
                  : AppValidators.email(allowEmpty: true)),
-         builder: (state) {
-           final field = state.widget as AppTextFormField;
-           return AppField(
-             label: field.label,
-             description: field.description,
-             errorText: state.errorText,
-             required: field.required,
-             child: _AppTextFieldControl(
-               value: state.value ?? field.controller?.text ?? '',
-               controller: field.controller,
-               focusNode: field.focusNode,
-               hintText: field.hintText,
-               keyboardType: field.keyboardType,
-               textInputAction: field.textInputAction,
-               autofillHints: field.autofillHints,
-               enabled: field.enabled,
-               readOnly: field.readOnly,
-               onChanged: (value) {
-                 state.didChange(value);
-                 field.onChanged?.call(value);
-               },
-               onSubmitted: field.onSubmitted,
-             ),
-           );
-         },
+         builder: _buildField,
+       );
+
+  AppTextFormField.password({
+    super.key,
+    this.label = 'Password',
+    this.name,
+    this.description,
+    this.hintText,
+    this.controller,
+    this.focusNode,
+    this.required = false,
+    this.width,
+    this.autofocus = false,
+    this.showObscureToggle = true,
+    bool newPassword = false,
+    this.features,
+    this.onChanged,
+    this.onSubmitted,
+    super.enabled = true,
+    this.readOnly = false,
+    this.inputFormatters,
+    super.onSaved,
+    AppFieldValidator<String>? validator,
+    this.asyncValidator,
+    super.errorBuilder,
+    super.initialValue,
+    super.autovalidateMode = AutovalidateMode.onUserInteraction,
+    super.restorationId,
+  }) : assert(
+         controller == null || initialValue == null,
+         'initialValue cannot be used with a controller.',
+       ),
+       obscureText = true,
+       keyboardType = TextInputType.visiblePassword,
+       textInputAction = TextInputAction.next,
+       autofillHints = [
+         newPassword ? AutofillHints.newPassword : AutofillHints.password,
+       ],
+       autocorrect = false,
+       enableSuggestions = false,
+       maxLength = null,
+       super(
+         validator: validator ?? (required ? AppValidators.required() : null),
+         builder: _buildField,
        );
 
   final String? label;
+  final String? name;
   final String? description;
   final String? hintText;
   final TextEditingController? controller;
   final FocusNode? focusNode;
   final bool required;
+  final double? width;
   final bool obscureText;
+  final bool showObscureToggle;
   final TextInputType? keyboardType;
   final TextInputAction? textInputAction;
   final Iterable<String>? autofillHints;
+  final bool autofocus;
+  final bool autocorrect;
+  final bool enableSuggestions;
+  final int? maxLength;
+  final List<shad.InputFeature>? features;
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onSubmitted;
   final bool readOnly;
   final List<TextInputFormatter>? inputFormatters;
+  final AppAsyncFieldValidator<String>? asyncValidator;
+
+  static Widget _buildField(FormFieldState<String> state) {
+    final field = state.widget as AppTextFormField;
+    return AppFormFieldBinding<String>(
+      name: field.name,
+      value: state.value,
+      asyncValidator: field.asyncValidator,
+      builder: (context, asyncError) => AppField(
+        label: field.label,
+        description: field.description,
+        errorText: state.errorText ?? asyncError,
+        required: field.required,
+        width: field.width,
+        child: _AppTextFieldControl(
+          value: state.value ?? field.controller?.text ?? '',
+          controller: field.controller,
+          focusNode: field.focusNode,
+          hintText: field.hintText,
+          obscureText: field.obscureText,
+          showObscureToggle: field.showObscureToggle,
+          keyboardType: field.keyboardType,
+          textInputAction: field.textInputAction,
+          autofillHints: field.autofillHints,
+          autofocus: field.autofocus,
+          autocorrect: field.autocorrect,
+          enableSuggestions: field.enableSuggestions,
+          maxLength: field.maxLength,
+          features: field.features,
+          enabled: field.enabled,
+          readOnly: field.readOnly,
+          inputFormatters: field.inputFormatters,
+          onChanged: (value) {
+            state.didChange(value);
+            field.onChanged?.call(value);
+          },
+          onSubmitted: field.onSubmitted,
+        ),
+      ),
+    );
+  }
 }
 
 class _AppTextFieldControl extends StatefulWidget {
@@ -146,9 +212,15 @@ class _AppTextFieldControl extends StatefulWidget {
     this.focusNode,
     this.hintText,
     this.obscureText = false,
+    this.showObscureToggle = false,
     this.keyboardType,
     this.textInputAction,
     this.autofillHints,
+    this.autofocus = false,
+    this.autocorrect = true,
+    this.enableSuggestions = true,
+    this.maxLength,
+    this.features,
     this.enabled = true,
     this.readOnly = false,
     this.inputFormatters,
@@ -160,9 +232,15 @@ class _AppTextFieldControl extends StatefulWidget {
   final FocusNode? focusNode;
   final String? hintText;
   final bool obscureText;
+  final bool showObscureToggle;
   final TextInputType? keyboardType;
   final TextInputAction? textInputAction;
   final Iterable<String>? autofillHints;
+  final bool autofocus;
+  final bool autocorrect;
+  final bool enableSuggestions;
+  final int? maxLength;
+  final List<shad.InputFeature>? features;
   final bool enabled;
   final bool readOnly;
   final List<TextInputFormatter>? inputFormatters;
@@ -175,6 +253,7 @@ class _AppTextFieldControl extends StatefulWidget {
 
 class _AppTextFieldControlState extends State<_AppTextFieldControl> {
   late TextEditingController _internalController;
+  late bool _obscureText;
   bool _syncingValue = false;
 
   TextEditingController get _controller =>
@@ -183,6 +262,7 @@ class _AppTextFieldControlState extends State<_AppTextFieldControl> {
   @override
   void initState() {
     super.initState();
+    _obscureText = widget.obscureText;
     _internalController = TextEditingController(text: widget.value);
     if (widget.controller != null && widget.controller!.text != widget.value) {
       widget.controller!.text = widget.value;
@@ -192,6 +272,9 @@ class _AppTextFieldControlState extends State<_AppTextFieldControl> {
   @override
   void didUpdateWidget(_AppTextFieldControl oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.obscureText != widget.obscureText) {
+      _obscureText = widget.obscureText;
+    }
     if (_controller.text != widget.value) {
       _syncingValue = true;
       _controller.value = _controller.value.copyWith(
@@ -211,21 +294,47 @@ class _AppTextFieldControlState extends State<_AppTextFieldControl> {
 
   @override
   Widget build(BuildContext context) {
-    return shad.TextField(
-      controller: _controller,
-      focusNode: widget.focusNode,
-      hintText: widget.hintText,
-      obscureText: widget.obscureText,
-      keyboardType: widget.keyboardType,
-      textInputAction: widget.textInputAction,
-      autofillHints: widget.autofillHints,
-      enabled: widget.enabled,
-      readOnly: widget.readOnly,
-      inputFormatters: widget.inputFormatters,
-      onChanged: (value) {
-        if (!_syncingValue) widget.onChanged(value);
-      },
-      onSubmitted: widget.onSubmitted,
+    final features = <shad.InputFeature>[
+      ...?widget.features,
+      if (widget.showObscureToggle)
+        shad.InputFeature.trailing(
+          Semantics(
+            button: true,
+            label: _obscureText ? 'Show password' : 'Hide password',
+            child: shad.GhostButton(
+              density: shad.ButtonDensity.iconDense,
+              onPressed: widget.enabled
+                  ? () => setState(() => _obscureText = !_obscureText)
+                  : null,
+              child: Icon(
+                _obscureText ? shad.LucideIcons.eye : shad.LucideIcons.eyeOff,
+              ),
+            ),
+          ),
+        ),
+    ];
+    return AppControlBox(
+      child: shad.TextField(
+        controller: _controller,
+        focusNode: widget.focusNode,
+        hintText: widget.hintText,
+        obscureText: _obscureText,
+        keyboardType: widget.keyboardType,
+        textInputAction: widget.textInputAction,
+        autofillHints: widget.autofillHints,
+        autofocus: widget.autofocus,
+        autocorrect: widget.autocorrect,
+        enableSuggestions: widget.enableSuggestions,
+        maxLength: widget.maxLength,
+        features: features,
+        enabled: widget.enabled,
+        readOnly: widget.readOnly,
+        inputFormatters: widget.inputFormatters,
+        onChanged: (value) {
+          if (!_syncingValue) widget.onChanged(value);
+        },
+        onSubmitted: widget.onSubmitted,
+      ),
     );
   }
 }
@@ -259,6 +368,21 @@ abstract final class AppValidators {
         if (error != null) return error;
       }
       return null;
+    };
+  }
+
+  static AppFieldValidator<String> exactLength(
+    int length, {
+    String? message,
+    bool allowEmpty = false,
+  }) {
+    assert(length >= 0);
+    return (value) {
+      final text = value ?? '';
+      if (text.isEmpty && allowEmpty) return null;
+      return text.runes.length == length
+          ? null
+          : message ?? 'Enter exactly $length characters.';
     };
   }
 }

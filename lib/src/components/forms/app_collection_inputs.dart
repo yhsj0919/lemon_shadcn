@@ -1,0 +1,389 @@
+import 'dart:async';
+
+import 'package:flutter/material.dart' show ReorderableListView;
+import 'package:flutter/widgets.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
+
+import '../../foundation/app_control_box.dart';
+import '../../foundation/app_shadcn_scope.dart';
+import '../actions/app_button.dart';
+import 'app_field.dart';
+import 'app_form.dart';
+
+typedef AppObjectInput<T> = shad.FormattedObjectInput<T>;
+typedef AppObjectConverter<A, B> = shad.BiDirectionalConvert<A, B>;
+
+/// Image selection remains platform-agnostic: callers provide a picker that
+/// returns an already formatted domain value (path, URL, bytes model, etc.).
+class AppImageInput<T> extends StatelessWidget {
+  const AppImageInput({
+    super.key,
+    required this.value,
+    required this.pick,
+    required this.previewBuilder,
+    required this.onChanged,
+    this.placeholder,
+    this.enabled = true,
+    this.allowRemove = true,
+    this.height = 120,
+  });
+
+  final T? value;
+  final FutureOr<T?> Function() pick;
+  final Widget Function(BuildContext context, T value) previewBuilder;
+  final ValueChanged<T?> onChanged;
+  final Widget? placeholder;
+  final bool enabled;
+  final bool allowRemove;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    final current = value;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SizedBox(
+          height: height,
+          child: current == null
+              ? Center(child: placeholder ?? const Text('No image selected'))
+              : previewBuilder(context, current),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            AppButton.outline(
+              onPressed: enabled
+                  ? () async {
+                      final picked = await pick();
+                      if (picked != null) onChanged(picked);
+                    }
+                  : null,
+              child: Text(current == null ? 'Choose image' : 'Replace image'),
+            ),
+            if (current != null && allowRemove)
+              AppButton.ghost(
+                onPressed: enabled ? () => onChanged(null) : null,
+                child: const Text('Remove'),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class AppImageInputFormField<T> extends FormField<T> {
+  AppImageInputFormField({
+    super.key,
+    required this.pick,
+    required this.previewBuilder,
+    this.name,
+    this.label,
+    this.description,
+    this.required = false,
+    this.width,
+    this.placeholder,
+    this.allowRemove = true,
+    this.previewHeight = 120,
+    this.onChanged,
+    super.initialValue,
+    super.onSaved,
+    super.validator,
+    this.asyncValidator,
+    super.enabled = true,
+    super.autovalidateMode = AutovalidateMode.onUserInteraction,
+    super.restorationId,
+  }) : super(
+         builder: (state) {
+           final field = state.widget as AppImageInputFormField<T>;
+           return AppFormFieldBinding<T>(
+             name: field.name,
+             value: state.value,
+             asyncValidator: field.asyncValidator,
+             builder: (context, asyncError) => AppField(
+               label: field.label,
+               description: field.description,
+               errorText: state.errorText ?? asyncError,
+               required: field.required,
+               width: field.width,
+               child: AppImageInput<T>(
+                 value: state.value,
+                 pick: field.pick,
+                 previewBuilder: field.previewBuilder,
+                 placeholder: field.placeholder,
+                 enabled: field.enabled,
+                 allowRemove: field.allowRemove,
+                 height: field.previewHeight,
+                 onChanged: (value) {
+                   state.didChange(value);
+                   field.onChanged?.call(value);
+                 },
+               ),
+             ),
+           );
+         },
+       );
+
+  final FutureOr<T?> Function() pick;
+  final Widget Function(BuildContext context, T value) previewBuilder;
+  final String? name;
+  final String? label;
+  final String? description;
+  final bool required;
+  final double? width;
+  final Widget? placeholder;
+  final bool allowRemove;
+  final double previewHeight;
+  final ValueChanged<T?>? onChanged;
+  final AppAsyncFieldValidator<T>? asyncValidator;
+}
+
+class AppSortableInput<T> extends StatelessWidget {
+  const AppSortableInput({
+    super.key,
+    required this.items,
+    required this.itemBuilder,
+    required this.onChanged,
+    this.itemKey,
+    this.enabled = true,
+    this.shrinkWrap = true,
+    this.padding,
+  });
+
+  final List<T> items;
+  final Widget Function(BuildContext context, int index, T item) itemBuilder;
+  final ValueChanged<List<T>> onChanged;
+  final Key Function(T item)? itemKey;
+  final bool enabled;
+  final bool shrinkWrap;
+  final EdgeInsets? padding;
+
+  @override
+  Widget build(BuildContext context) {
+    return ReorderableListView.builder(
+      shrinkWrap: shrinkWrap,
+      physics: shrinkWrap ? const NeverScrollableScrollPhysics() : null,
+      padding: padding,
+      buildDefaultDragHandles: enabled,
+      itemCount: items.length,
+      onReorderItem: enabled
+          ? (oldIndex, newIndex) {
+              final next = List<T>.of(items);
+              final item = next.removeAt(oldIndex);
+              next.insert(newIndex, item);
+              onChanged(next);
+            }
+          : (_, _) {},
+      itemBuilder: (context, index) {
+        final item = items[index];
+        return KeyedSubtree(
+          key: itemKey?.call(item) ?? ValueKey<T>(item),
+          child: itemBuilder(context, index, item),
+        );
+      },
+    );
+  }
+}
+
+class AppSortableInputFormField<T> extends FormField<List<T>> {
+  AppSortableInputFormField({
+    super.key,
+    required this.itemBuilder,
+    this.itemKey,
+    this.name,
+    this.label,
+    this.description,
+    this.required = false,
+    this.width,
+    this.onChanged,
+    super.initialValue = const [],
+    super.onSaved,
+    super.validator,
+    this.asyncValidator,
+    super.enabled = true,
+    super.autovalidateMode = AutovalidateMode.onUserInteraction,
+    super.restorationId,
+  }) : super(
+         builder: (state) {
+           final field = state.widget as AppSortableInputFormField<T>;
+           final value = List<T>.of(state.value ?? const []);
+           return AppFormFieldBinding<List<T>>(
+             name: field.name,
+             value: value,
+             asyncValidator: field.asyncValidator,
+             builder: (context, asyncError) => AppField(
+               label: field.label,
+               description: field.description,
+               errorText: state.errorText ?? asyncError,
+               required: field.required,
+               width: field.width,
+               child: AppSortableInput<T>(
+                 items: value,
+                 itemBuilder: field.itemBuilder,
+                 itemKey: field.itemKey,
+                 enabled: field.enabled,
+                 onChanged: (next) {
+                   state.didChange(next);
+                   field.onChanged?.call(next);
+                 },
+               ),
+             ),
+           );
+         },
+       );
+
+  final Widget Function(BuildContext context, int index, T item) itemBuilder;
+  final Key Function(T item)? itemKey;
+  final String? name;
+  final String? label;
+  final String? description;
+  final bool required;
+  final double? width;
+  final ValueChanged<List<T>>? onChanged;
+  final AppAsyncFieldValidator<List<T>>? asyncValidator;
+}
+
+class AppObjectInputFormField<T> extends FormField<T> {
+  AppObjectInputFormField({
+    super.key,
+    required this.converter,
+    required this.parts,
+    this.name,
+    this.label,
+    this.description,
+    this.required = false,
+    this.width,
+    this.popupBuilder,
+    this.popoverIcon,
+    this.onChanged,
+    super.initialValue,
+    super.onSaved,
+    super.validator,
+    this.asyncValidator,
+    super.enabled = true,
+    super.autovalidateMode = AutovalidateMode.onUserInteraction,
+    super.restorationId,
+  }) : super(
+         builder: (state) {
+           final field = state.widget as AppObjectInputFormField<T>;
+           return AppFormFieldBinding<T>(
+             name: field.name,
+             value: state.value,
+             asyncValidator: field.asyncValidator,
+             builder: (context, asyncError) => AppField(
+               label: field.label,
+               description: field.description,
+               errorText: state.errorText ?? asyncError,
+               required: field.required,
+               width: field.width,
+               child: _AppObjectInputControl<T>(
+                 value: state.value,
+                 converter: field.converter,
+                 parts: field.parts,
+                 popupBuilder: field.popupBuilder,
+                 popoverIcon: field.popoverIcon,
+                 enabled: field.enabled,
+                 onChanged: (value) {
+                   state.didChange(value);
+                   field.onChanged?.call(value);
+                 },
+               ),
+             ),
+           );
+         },
+       );
+
+  final shad.BiDirectionalConvert<T?, List<String?>> converter;
+  final List<shad.InputPart> parts;
+  final shad.FormattedInputPopupBuilder<T>? popupBuilder;
+  final Widget? popoverIcon;
+  final String? name;
+  final String? label;
+  final String? description;
+  final bool required;
+  final double? width;
+  final ValueChanged<T?>? onChanged;
+  final AppAsyncFieldValidator<T>? asyncValidator;
+}
+
+class _AppObjectController<T> extends ValueNotifier<T?>
+    with shad.ComponentController<T?> {
+  _AppObjectController(super.value);
+}
+
+class _AppObjectInputControl<T> extends StatefulWidget {
+  const _AppObjectInputControl({
+    required this.value,
+    required this.converter,
+    required this.parts,
+    required this.enabled,
+    required this.onChanged,
+    this.popupBuilder,
+    this.popoverIcon,
+  });
+
+  final T? value;
+  final shad.BiDirectionalConvert<T?, List<String?>> converter;
+  final List<shad.InputPart> parts;
+  final bool enabled;
+  final ValueChanged<T?> onChanged;
+  final shad.FormattedInputPopupBuilder<T>? popupBuilder;
+  final Widget? popoverIcon;
+
+  @override
+  State<_AppObjectInputControl<T>> createState() =>
+      _AppObjectInputControlState<T>();
+}
+
+class _AppObjectInputControlState<T> extends State<_AppObjectInputControl<T>> {
+  late final _AppObjectController<T> _controller = _AppObjectController<T>(
+    widget.value,
+  );
+  T? _lastEmittedValue;
+  bool _hasEmittedValue = false;
+
+  @override
+  void didUpdateWidget(covariant _AppObjectInputControl<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (_hasEmittedValue && widget.value == _lastEmittedValue) {
+      _hasEmittedValue = false;
+      return;
+    }
+    if (widget.value != _controller.value) _controller.value = widget.value;
+  }
+
+  void _handleChanged(T? value) {
+    _lastEmittedValue = value;
+    _hasEmittedValue = true;
+    widget.onChanged(value);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final height = AppTheme.maybeOf(context)?.controls.height ?? 36;
+    final scaling = shad.Theme.of(context).scaling;
+    return AppControlBox(
+      child: shad.ComponentTheme<shad.FormattedInputTheme>(
+        data: shad.FormattedInputTheme(height: height / scaling),
+        child: shad.FormattedObjectInput<T>(
+          controller: _controller,
+          converter: widget.converter,
+          parts: widget.parts,
+          popupBuilder: widget.popupBuilder,
+          popoverIcon: widget.popoverIcon,
+          enabled: widget.enabled,
+          onChanged: _handleChanged,
+        ),
+      ),
+    );
+  }
+}

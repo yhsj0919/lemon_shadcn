@@ -11,4 +11,24 @@ void main() {
     expect(LemonThemes.light.colorScheme, ColorSchemes.zinc(ThemeMode.light));
     expect(LemonThemes.dark.colorScheme, ColorSchemes.zinc(ThemeMode.dark));
   });
+
+  test('theme presets expose distinct overridable baselines', () {
+    final standard = AppThemeConfig.preset(AppThemePreset.standard);
+    final apple = AppThemeConfig.preset(AppThemePreset.apple);
+    final fluent = AppThemeConfig.preset(AppThemePreset.fluent);
+    final material = AppThemeConfig.preset(AppThemePreset.material);
+
+    expect(standard.controls.height, 36);
+    expect(apple.lightTheme.colorScheme.primary, const Color(0xff007aff));
+    expect(fluent.controls.height, 36);
+    expect(material.controls.height, 40);
+
+    final customized = apple.copyWith(
+      controls: const AppControlMetrics(height: 44),
+      shadows: const AppShadowTheme.none(),
+    );
+    expect(customized.controls.height, 44);
+    expect(customized.shadows.enabled, isFalse);
+    expect(customized.lightTheme, same(apple.lightTheme));
+  });
 }

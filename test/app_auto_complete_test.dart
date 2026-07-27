@@ -47,4 +47,70 @@ void main() {
     expect(selected, 'admin');
     expect(find.text('Administrator'), findsOneWidget);
   });
+
+  testWidgets('paged autocomplete loads more formatted options in place', (
+    tester,
+  ) async {
+    final source = AppAsyncPagedOptionSource<String>(
+      loader: (query, cursor) async => cursor == null
+          ? const AppOptionPage(
+              options: [AppOption(value: 'one', label: 'One')],
+              nextCursor: 2,
+            )
+          : const AppOptionPage(
+              options: [AppOption(value: 'two', label: 'Two')],
+            ),
+    );
+    String? selected;
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: AppAutoCompleteFormField<String>.paged(
+          pagedOptionSource: source,
+          debounce: Duration.zero,
+          onChanged: (value) => selected = value,
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Search and select'));
+    await tester.pumpAndSettle();
+    expect(find.text('One'), findsOneWidget);
+    await tester.tap(find.text('Load more'));
+    await tester.pumpAndSettle();
+    expect(find.text('Two'), findsOneWidget);
+    await tester.tap(find.text('Two'));
+    await tester.pumpAndSettle();
+    expect(selected, 'two');
+  });
+
+  testWidgets('autocomplete exposes an initial-load retry action', (
+    tester,
+  ) async {
+    var attempts = 0;
+    final source = AppAsyncOptionSource<String>(
+      loader: (_) async {
+        attempts++;
+        if (attempts == 1) throw StateError('temporary');
+        return const [AppOption(value: 'ok', label: 'Recovered')];
+      },
+    );
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: AppAutoCompleteFormField<String>.source(
+          optionSource: source,
+          debounce: Duration.zero,
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Search and select'));
+    await tester.pumpAndSettle();
+    expect(find.text('Retry'), findsOneWidget);
+    await tester.tap(find.text('Retry'));
+    await tester.pumpAndSettle();
+    expect(find.text('Recovered'), findsOneWidget);
+    expect(attempts, 2);
+  });
 }

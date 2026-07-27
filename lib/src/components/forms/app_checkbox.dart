@@ -1,0 +1,123 @@
+import 'package:flutter/widgets.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
+
+import '../../foundation/app_control_box.dart';
+import '../../foundation/app_visual_style.dart';
+import 'app_field.dart';
+import 'app_form.dart';
+
+class AppCheckbox extends StatelessWidget {
+  const AppCheckbox({
+    super.key,
+    required this.state,
+    required this.onChanged,
+    this.leading,
+    this.trailing,
+    this.tristate = false,
+    this.enabled,
+    this.size,
+    this.gap,
+    this.backgroundColor,
+    this.activeColor,
+    this.borderColor,
+    this.borderRadius,
+  });
+
+  final shad.CheckboxState state;
+  final ValueChanged<shad.CheckboxState>? onChanged;
+  final Widget? leading;
+  final Widget? trailing;
+  final bool tristate;
+  final bool? enabled;
+  final double? size;
+  final double? gap;
+  final Color? backgroundColor;
+  final Color? activeColor;
+  final Color? borderColor;
+  final BorderRadiusGeometry? borderRadius;
+
+  @override
+  Widget build(BuildContext context) {
+    final states = <WidgetState>{
+      if (state != shad.CheckboxState.unchecked) WidgetState.selected,
+      if (enabled == false || onChanged == null) WidgetState.disabled,
+    };
+    final colors = resolveAppControlVisuals(context, states);
+    return AppControlBox(
+      child: Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: shad.Checkbox(
+          state: state,
+          onChanged: onChanged,
+          leading: leading,
+          trailing: trailing,
+          tristate: tristate,
+          enabled: enabled,
+          size: size,
+          gap: gap,
+          backgroundColor: backgroundColor ?? colors?.background,
+          activeColor: activeColor ?? colors?.background ?? colors?.accent,
+          borderColor: borderColor ?? colors?.border,
+          borderRadius: borderRadius,
+        ),
+      ),
+    );
+  }
+}
+
+class AppCheckboxFormField extends FormField<bool> {
+  AppCheckboxFormField({
+    super.key,
+    this.name,
+    this.label,
+    this.description,
+    this.controlLabel,
+    this.required = false,
+    this.width,
+    this.onChanged,
+    super.initialValue = false,
+    super.onSaved,
+    super.validator,
+    this.asyncValidator,
+    super.enabled = true,
+    super.autovalidateMode = AutovalidateMode.onUserInteraction,
+    super.restorationId,
+  }) : super(
+         builder: (state) {
+           final field = state.widget as AppCheckboxFormField;
+           return AppFormFieldBinding<bool>(
+             name: field.name,
+             value: state.value,
+             asyncValidator: field.asyncValidator,
+             builder: (context, asyncError) => AppField(
+               label: field.label,
+               description: field.description,
+               errorText: state.errorText ?? asyncError,
+               required: field.required,
+               width: field.width,
+               child: AppCheckbox(
+                 state: state.value == true
+                     ? shad.CheckboxState.checked
+                     : shad.CheckboxState.unchecked,
+                 enabled: field.enabled,
+                 trailing: field.controlLabel,
+                 onChanged: (checkboxState) {
+                   final value = checkboxState == shad.CheckboxState.checked;
+                   state.didChange(value);
+                   field.onChanged?.call(value);
+                 },
+               ),
+             ),
+           );
+         },
+       );
+
+  final String? name;
+  final String? label;
+  final String? description;
+  final Widget? controlLabel;
+  final bool required;
+  final double? width;
+  final ValueChanged<bool>? onChanged;
+  final AppAsyncFieldValidator<bool>? asyncValidator;
+}

@@ -26,22 +26,103 @@ class AppShadcnScope extends StatelessWidget {
     final resolved = config ?? AppThemeConfig.standard();
     return _AppThemeConfigScope(
       config: resolved,
-      child: shad.ShadcnLayer(
-        theme: resolved.lightTheme,
-        darkTheme: resolved.darkTheme,
-        themeMode: resolved.themeMode,
-        enableScrollInterception: resolved.enableScrollInterception,
-        child: _AppOverlayHost(
-          child: shad.DrawerOverlay(
-            child: provideMaterialHost
-                ? material.Material(
-                    type: material.MaterialType.transparency,
-                    child: child,
-                  )
-                : child,
+      child: _AppLocalizationsHost(
+        child: shad.ShadcnLayer(
+          theme: resolved.lightTheme,
+          darkTheme: resolved.darkTheme,
+          themeMode: resolved.themeMode,
+          enableScrollInterception: resolved.enableScrollInterception,
+          child: _AppControlComponentThemes(
+            metrics: resolved.controls,
+            child: _AppOverlayHost(
+              child: shad.ToastLayer(
+                child: shad.DrawerOverlay(
+                  child: provideMaterialHost
+                      ? material.Material(
+                          type: material.MaterialType.transparency,
+                          child: child,
+                        )
+                      : child,
+                ),
+              ),
+            ),
           ),
         ),
       ),
+    );
+  }
+}
+
+class _AppControlComponentThemes extends StatelessWidget {
+  const _AppControlComponentThemes({
+    required this.metrics,
+    required this.child,
+  });
+
+  final AppControlMetrics metrics;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    EdgeInsetsGeometry padding(
+      BuildContext context,
+      Set<WidgetState> states,
+      EdgeInsetsGeometry current,
+    ) {
+      final resolved = current.resolve(Directionality.of(context));
+      return EdgeInsets.fromLTRB(
+        metrics.horizontalPadding,
+        resolved.top,
+        metrics.horizontalPadding,
+        resolved.bottom,
+      );
+    }
+
+    IconThemeData iconTheme(
+      BuildContext context,
+      Set<WidgetState> states,
+      IconThemeData current,
+    ) => current.copyWith(size: metrics.iconSize);
+
+    return shad.ComponentTheme<shad.PrimaryButtonTheme>(
+      data: shad.PrimaryButtonTheme(padding: padding, iconTheme: iconTheme),
+      child: shad.ComponentTheme<shad.SecondaryButtonTheme>(
+        data: shad.SecondaryButtonTheme(padding: padding, iconTheme: iconTheme),
+        child: shad.ComponentTheme<shad.OutlineButtonTheme>(
+          data: shad.OutlineButtonTheme(padding: padding, iconTheme: iconTheme),
+          child: shad.ComponentTheme<shad.GhostButtonTheme>(
+            data: shad.GhostButtonTheme(padding: padding, iconTheme: iconTheme),
+            child: shad.ComponentTheme<shad.DestructiveButtonTheme>(
+              data: shad.DestructiveButtonTheme(
+                padding: padding,
+                iconTheme: iconTheme,
+              ),
+              child: child,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AppLocalizationsHost extends StatelessWidget {
+  const _AppLocalizationsHost({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final existing = Localizations.of<shad.ShadcnLocalizations>(
+      context,
+      shad.ShadcnLocalizations,
+    );
+    if (existing != null) return child;
+    return Localizations.override(
+      context: context,
+      locale: const Locale('en'),
+      delegates: const [shad.ShadcnLocalizations.delegate],
+      child: child,
     );
   }
 }
