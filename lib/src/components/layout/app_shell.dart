@@ -3,23 +3,10 @@ import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
 import '../actions/app_button.dart';
 import '../display/app_text.dart';
+import '../navigation/app_sidebar.dart';
+import '../overlay/app_overlay_components.dart';
 
-@immutable
-class AppNavDestination {
-  const AppNavDestination({
-    required this.id,
-    required this.label,
-    required this.icon,
-    this.children = const [],
-  });
-
-  final String id;
-  final String label;
-  final IconData icon;
-  final List<AppNavDestination> children;
-}
-
-/// Router-agnostic admin shell with a grouped component sidebar.
+/// Responsive admin shell with expanded, compact, drawer, and auto sidebar modes.
 class AppShell extends StatelessWidget {
   const AppShell({
     super.key,
@@ -34,7 +21,11 @@ class AppShell extends StatelessWidget {
     this.headerActions = const [],
     this.sidebarFooter,
     this.sidebarWidth = 248,
+    this.compactSidebarWidth = 64,
+    this.expandedBreakpoint = 1080,
     this.compactBreakpoint = 720,
+    this.sidebarMode = AppSidebarType.auto,
+    this.onSidebarModeChanged,
   });
 
   final List<AppNavDestination> destinations;
@@ -48,270 +39,166 @@ class AppShell extends StatelessWidget {
   final List<Widget> headerActions;
   final Widget? sidebarFooter;
   final double sidebarWidth;
+  final double compactSidebarWidth;
+  final double expandedBreakpoint;
   final double compactBreakpoint;
+  final AppSidebarType sidebarMode;
+  final ValueChanged<AppSidebarType>? onSidebarModeChanged;
 
-  @override
-  Widget build(BuildContext context) {
-    final theme = shad.Theme.of(context);
-    final wideShell = shad.Scaffold(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 12, 0, 12),
-            child: SizedBox(
-              width: sidebarWidth,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(20),
-                child: ColoredBox(
-                  color: theme.colorScheme.card,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            AppText.title(brandTitle),
-                            if (brandSubtitle != null) ...[
-                              const SizedBox(height: 4),
-                              AppText.muted(brandSubtitle!),
-                            ],
-                          ],
-                        ),
-                      ),
-                      Expanded(
-                        child: ListView(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          children: [
-                            for (final destination in destinations)
-                              _NavigationSection(
-                                destination: destination,
-                                selectedId: selectedId,
-                                onSelected: onDestinationSelected,
-                              ),
-                          ],
-                        ),
-                      ),
-                      if (sidebarFooter != null)
-                        Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: sidebarFooter,
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (pageTitle != null)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 18, 24, 14),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              AppText.h3(pageTitle!),
-                              if (pageSubtitle != null)
-                                AppText.muted(pageSubtitle!),
-                            ],
-                          ),
-                        ),
-                        ...headerActions,
-                      ],
-                    ),
-                  ),
-                Expanded(child: child),
-              ],
-            ),
-          ),
-        ],
-      ),
+  AppSidebarType _responsiveType(double width) {
+    if (width >= expandedBreakpoint) return AppSidebarType.expanded;
+    if (width >= compactBreakpoint) return AppSidebarType.compact;
+    return AppSidebarType.drawer;
+  }
+
+  AppSidebarType _effectiveType(double width) {
+    return sidebarMode == AppSidebarType.auto
+        ? _responsiveType(width)
+        : sidebarMode;
+  }
+
+  AppSidebarType _nextType(AppSidebarType type) => switch (type) {
+        AppSidebarType.auto => AppSidebarType.expanded,
+        AppSidebarType.expanded => AppSidebarType.compact,
+        AppSidebarType.compact => AppSidebarType.drawer,
+        AppSidebarType.drawer => AppSidebarType.auto,
+      };
+
+  Widget _modeButton(AppSidebarType type) {
+    return AppIconButton(
+      tooltip: '切换侧边栏模式',
+      icon: Icon(switch (type) {
+        AppSidebarType.auto => shad.LucideIcons.monitorSmartphone,
+        AppSidebarType.expanded => shad.LucideIcons.panelLeftClose,
+        AppSidebarType.compact => shad.LucideIcons.panelLeft,
+        AppSidebarType.drawer => shad.LucideIcons.menu,
+      }),
+      onPressed: onSidebarModeChanged == null
+          ? null
+          : () => onSidebarModeChanged!(_nextType(type)),
     );
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        if (constraints.maxWidth >= compactBreakpoint) return wideShell;
-        return _CompactAppShell(
+  }
+
+  Widget _brand({bool compact = false}) {
+    if (compact) {
+      return const Center(child: Icon(shad.LucideIcons.panelLeft, size: 20));
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        AppText.title(brandTitle),
+        if (brandSubtitle != null) ...[
+          const SizedBox(height: 4),
+          AppText.muted(brandSubtitle!),
+        ],
+      ],
+    );
+  }
+
+  void _showDrawer(BuildContext context) {
+    AppDrawer.show<void>(
+      context: context,
+      position: shad.OverlayPosition.left,
+      draggable: false,
+      expands: false,
+      constraints: BoxConstraints.tightFor(width: sidebarWidth + 24),
+      builder: (overlayContext) => Padding(
+        padding: const EdgeInsets.all(12),
+        child: AppSidebar(
           destinations: destinations,
           selectedId: selectedId,
-          onDestinationSelected: onDestinationSelected,
-          brandTitle: brandTitle,
-          pageTitle: pageTitle,
-          pageSubtitle: pageSubtitle,
-          headerActions: headerActions,
-          child: child,
+          onDestinationSelected: (id) {
+            onDestinationSelected(id);
+            AppOverlay.close<void>(overlayContext);
+          },
+          header: _brand(),
+          footer: sidebarFooter,
+          expandedWidth: sidebarWidth,
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final effectiveType = _effectiveType(constraints.maxWidth);
+        final drawer = effectiveType == AppSidebarType.drawer;
+        final mode = effectiveType == AppSidebarType.compact
+            ? AppSidebarMode.compact
+            : AppSidebarMode.expanded;
+        return shad.Scaffold(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (!drawer)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 12, 0, 12),
+                  child: AppSidebar(
+                    destinations: destinations,
+                    selectedId: selectedId,
+                    onDestinationSelected: onDestinationSelected,
+                    mode: mode,
+                    header: _brand(compact: mode == AppSidebarMode.compact),
+                    footer: mode == AppSidebarMode.expanded
+                        ? sidebarFooter
+                        : null,
+                    expandedWidth: sidebarWidth,
+                    compactWidth: compactSidebarWidth,
+                  ),
+                ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (drawer ||
+                        pageTitle != null ||
+                        headerActions.isNotEmpty ||
+                        onSidebarModeChanged != null)
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(
+                          drawer ? 12 : 24,
+                          14,
+                          drawer ? 12 : 24,
+                          10,
+                        ),
+                        child: Row(
+                          children: [
+                            if (drawer) ...[
+                              AppIconButton(
+                                tooltip: '打开菜单',
+                                icon: const Icon(shad.LucideIcons.menu),
+                                onPressed: () => _showDrawer(context),
+                              ),
+                              const SizedBox(width: 12),
+                            ],
+                            if (onSidebarModeChanged != null) ...[
+                              _modeButton(sidebarMode),
+                              const SizedBox(width: 12),
+                            ],
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (pageTitle != null) AppText.h3(pageTitle!),
+                                  if (pageSubtitle != null)
+                                    AppText.muted(pageSubtitle!),
+                                ],
+                              ),
+                            ),
+                            ...headerActions,
+                          ],
+                        ),
+                      ),
+                    Expanded(child: child),
+                  ],
+                ),
+              ),
+            ],
+          ),
         );
       },
-    );
-  }
-}
-
-class _CompactAppShell extends StatelessWidget {
-  const _CompactAppShell({
-    required this.destinations,
-    required this.selectedId,
-    required this.onDestinationSelected,
-    required this.brandTitle,
-    required this.pageTitle,
-    required this.pageSubtitle,
-    required this.headerActions,
-    required this.child,
-  });
-
-  final List<AppNavDestination> destinations;
-  final String selectedId;
-  final ValueChanged<String> onDestinationSelected;
-  final String brandTitle;
-  final String? pageTitle;
-  final String? pageSubtitle;
-  final List<Widget> headerActions;
-  final Widget child;
-
-  Iterable<AppNavDestination> get _pages sync* {
-    for (final destination in destinations) {
-      if (destination.children.isEmpty) {
-        yield destination;
-      } else {
-        yield* destination.children;
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return shad.Scaffold(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
-            child: Row(
-              children: [
-                Expanded(child: AppText.title(brandTitle)),
-                ...headerActions,
-              ],
-            ),
-          ),
-          SizedBox(
-            height: 48,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              children: [
-                for (final destination in _pages)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 6),
-                    child: destination.id == selectedId
-                        ? AppButton.secondary(
-                            onPressed: () =>
-                                onDestinationSelected(destination.id),
-                            leading: Icon(destination.icon),
-                            child: Text(destination.label),
-                          )
-                        : AppButton.ghost(
-                            onPressed: () =>
-                                onDestinationSelected(destination.id),
-                            leading: Icon(destination.icon),
-                            child: Text(destination.label),
-                          ),
-                  ),
-              ],
-            ),
-          ),
-          if (pageTitle != null)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  AppText.h3(pageTitle!),
-                  if (pageSubtitle != null) AppText.muted(pageSubtitle!),
-                ],
-              ),
-            ),
-          Expanded(child: child),
-        ],
-      ),
-    );
-  }
-}
-
-class _NavigationSection extends StatelessWidget {
-  const _NavigationSection({
-    required this.destination,
-    required this.selectedId,
-    required this.onSelected,
-  });
-
-  final AppNavDestination destination;
-  final String selectedId;
-  final ValueChanged<String> onSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    if (destination.children.isEmpty) {
-      return _NavigationButton(
-        destination: destination,
-        selected: destination.id == selectedId,
-        onSelected: onSelected,
-      );
-    }
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(8, 6, 8, 8),
-            child: AppText.caption(destination.label),
-          ),
-          for (final child in destination.children)
-            _NavigationButton(
-              destination: child,
-              selected: child.id == selectedId,
-              onSelected: onSelected,
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _NavigationButton extends StatelessWidget {
-  const _NavigationButton({
-    required this.destination,
-    required this.selected,
-    required this.onSelected,
-  });
-
-  final AppNavDestination destination;
-  final bool selected;
-  final ValueChanged<String> onSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: selected
-          ? AppButton.secondary(
-              onPressed: () => onSelected(destination.id),
-              leading: Icon(destination.icon),
-              config: const AppButtonConfig(alignment: Alignment.centerLeft),
-              child: Text(destination.label),
-            )
-          : AppButton.ghost(
-              onPressed: () => onSelected(destination.id),
-              leading: Icon(destination.icon),
-              config: const AppButtonConfig(alignment: Alignment.centerLeft),
-              child: Text(destination.label),
-            ),
     );
   }
 }

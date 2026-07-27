@@ -59,6 +59,7 @@ class GalleryShell extends StatefulWidget {
 
 class _GalleryShellState extends State<GalleryShell> {
   var _selectedIndex = 0;
+  var _sidebarMode = AppSidebarType.auto;
 
   @override
   Widget build(BuildContext context) {
@@ -66,6 +67,8 @@ class _GalleryShellState extends State<GalleryShell> {
     return AppShell(
       brandTitle: 'Lemon Shadcn',
       brandSubtitle: '管理端组件示例',
+      sidebarMode: _sidebarMode,
+      onSidebarModeChanged: (mode) => setState(() => _sidebarMode = mode),
       destinations: [
         for (final group in GalleryRegistry.groups)
           AppNavDestination(

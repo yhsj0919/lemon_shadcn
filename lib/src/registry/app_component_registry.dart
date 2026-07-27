@@ -630,7 +630,7 @@ abstract final class AppComponentRegistry {
       appName: 'AppWindow',
       upstreamName: 'Window',
       category: AppComponentCategory.layout,
-      adapter: AppComponentAdapter.alias,
+      adapter: AppComponentAdapter.wrapper,
       status: AppComponentStatus.implemented,
     ),
     AppComponentRegistration(
@@ -707,6 +707,13 @@ abstract final class AppComponentRegistry {
       appName: 'AppShell',
       upstreamName: 'Scaffold / navigation composition',
       category: AppComponentCategory.layout,
+      adapter: AppComponentAdapter.independent,
+      status: AppComponentStatus.implemented,
+    ),
+    AppComponentRegistration(
+      appName: 'AppSidebar',
+      upstreamName: 'Button / HoverCard / Drawer composition',
+      category: AppComponentCategory.navigation,
       adapter: AppComponentAdapter.independent,
       status: AppComponentStatus.implemented,
     ),

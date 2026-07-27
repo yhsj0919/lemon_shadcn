@@ -37,6 +37,7 @@ export 'src/components/navigation/app_navigation_components.dart';
 export 'src/components/navigation/app_menu_components.dart';
 export 'src/components/navigation/app_dropdown_button.dart';
 export 'src/components/navigation/app_navigation_bar.dart';
+export 'src/components/navigation/app_sidebar.dart';
 export 'src/components/overlay/app_overlay_components.dart';
 export 'src/foundation/app_shadcn_scope.dart';
 export 'src/foundation/app_async_action.dart';
