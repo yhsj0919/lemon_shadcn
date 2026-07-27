@@ -4,21 +4,31 @@ import 'package:lemon_shadcn_example/main.dart';
 
 void main() {
   testWidgets('renders the component gallery', (tester) async {
+    Future<void> selectCategory(String label) async {
+      final finder = find.text(label);
+      await tester.ensureVisible(finder);
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.tap(finder);
+      await tester.pump(const Duration(milliseconds: 400));
+    }
+
     await tester.pumpWidget(const ComponentGallery());
 
     expect(find.byKey(const Key('theme-preset-picker')), findsOneWidget);
-    expect(find.text('Default'), findsOneWidget);
+    expect(find.text('默认'), findsOneWidget);
     await tester.tap(find.byKey(const Key('theme-preset-picker')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Fluent inspired').last);
+    await tester.tap(find.text('Fluent 风格').last);
     await tester.pumpAndSettle();
-    expect(find.text('Fluent inspired'), findsOneWidget);
+    expect(find.text('Fluent 风格'), findsOneWidget);
     expect(tester.takeException(), isNull);
-    expect(find.text('Button variants'), findsOneWidget);
-    expect(find.text('Async primary'), findsOneWidget);
-    expect(find.text('Buttons with icons'), findsOneWidget);
-    expect(find.text('Square icon-only buttons'), findsOneWidget);
-    expect(find.text('Circular icon-only buttons'), findsOneWidget);
+    await selectCategory('AppButton');
+
+    expect(find.text('按钮变体'), findsOneWidget);
+    expect(find.text('异步主按钮'), findsOneWidget);
+    expect(find.text('带图标按钮'), findsOneWidget);
+    expect(find.text('方形纯图标按钮'), findsOneWidget);
+    expect(find.text('圆形纯图标按钮'), findsOneWidget);
     expect(find.byKey(const Key('square-icon-button-add')), findsOneWidget);
     expect(
       find.byKey(const Key('square-icon-button-settings')),
@@ -27,55 +37,43 @@ void main() {
     expect(find.byKey(const Key('icon-button-add')), findsOneWidget);
     expect(find.byKey(const Key('icon-button-settings')), findsOneWidget);
 
-    await tester.tap(find.text('Forms'));
-    await tester.pump(const Duration(milliseconds: 400));
+    await selectCategory('AppText');
 
-    expect(find.text('Text fields'), findsOneWidget);
-    expect(find.text('Async autocomplete'), findsOneWidget);
+    expect(find.text('遵循当前主题的语义化文本角色。'), findsOneWidget);
+    expect(find.text('局部覆盖后的标题'), findsOneWidget);
 
-    await tester.tap(find.text('Data display'));
-    await tester.pump(const Duration(milliseconds: 400));
+    await selectCategory('表单基础');
 
-    expect(find.text('Avatar and badges'), findsOneWidget);
-    expect(find.text('Code snippet'), findsOneWidget);
-    expect(find.text('Tracker'), findsOneWidget);
+    expect(find.text('文本输入'), findsOneWidget);
 
-    await tester.tap(find.text('Navigation'));
-    await tester.pump(const Duration(milliseconds: 400));
+    await selectCategory('展示');
 
-    expect(find.text('Breadcrumb'), findsOneWidget);
-    expect(find.text('Pagination'), findsOneWidget);
+    expect(find.text('代码片段'), findsOneWidget);
+    expect(find.text('状态轨迹'), findsOneWidget);
 
-    await tester.tap(find.text('Menus and commands'));
-    await tester.pump(const Duration(milliseconds: 400));
+    await selectCategory('导航');
 
-    expect(find.text('Menubar'), findsOneWidget);
-    expect(find.text('Command'), findsOneWidget);
+    expect(find.text('面包屑'), findsOneWidget);
+    expect(find.text('分页'), findsOneWidget);
 
-    await tester.tap(find.text('Layout'));
-    await tester.pump(const Duration(milliseconds: 400));
+    await selectCategory('布局');
 
-    expect(find.text('Alert variants'), findsOneWidget);
-    expect(find.text('Accordion'), findsOneWidget);
-    expect(find.text('Collapsible and divider'), findsOneWidget);
+    expect(find.text('提示变体'), findsOneWidget);
 
-    await tester.tap(find.text('Structured layout'));
-    await tester.pump(const Duration(milliseconds: 400));
+    await selectCategory('数据面板');
 
-    expect(find.text('Carousel'), findsOneWidget);
-    expect(find.text('Resizable'), findsOneWidget);
+    expect(find.text('轮播'), findsOneWidget);
+    expect(find.text('可调整尺寸'), findsOneWidget);
 
-    await tester.tap(find.text('Overlay'));
-    await tester.pump(const Duration(milliseconds: 400));
+    await selectCategory('反馈');
 
-    expect(find.text('Modal surfaces'), findsOneWidget);
-    expect(find.text('Popover and hover'), findsOneWidget);
-    expect(find.text('Refresh and swipe triggers'), findsOneWidget);
+    expect(find.text('模态浮层'), findsOneWidget);
+    expect(find.text('气泡与悬浮'), findsOneWidget);
+    expect(find.text('刷新与滑动触发器'), findsOneWidget);
 
-    await tester.tap(find.text('Motion'));
-    await tester.pump(const Duration(milliseconds: 400));
+    await selectCategory('其它');
 
-    expect(find.text('Hover effects'), findsOneWidget);
-    expect(find.text('Animation builders'), findsOneWidget);
+    expect(find.text('悬浮效果'), findsOneWidget);
+    expect(find.text('动画构建器'), findsOneWidget);
   });
 }

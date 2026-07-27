@@ -14,6 +14,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
 
   lemon_shadcn:
     # The example app uses a path dependency on the parent package.

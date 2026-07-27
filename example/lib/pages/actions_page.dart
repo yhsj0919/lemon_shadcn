@@ -8,11 +8,11 @@ class ActionsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ComponentPage(
-      title: 'Actions',
-      description: 'Buttons and operations that trigger user actions.',
+      title: 'AppButton',
+      description: '按钮变体、图标按钮、异步操作与 Toggle。',
       sections: [
         ComponentSection(
-          title: 'Button variants',
+          title: '按钮变体',
           child: Wrap(
             spacing: 12,
             runSpacing: 12,
@@ -21,24 +21,23 @@ class ActionsPage extends StatelessWidget {
                 onPressed: () async {
                   await Future<void>.delayed(const Duration(milliseconds: 900));
                 },
-                loadingLabel: 'Saving',
-                child: const Text('Async primary'),
+                loadingLabel: '保存中',
+                child: const Text('异步主按钮'),
               ),
-              AppButton.secondary(
-                onPressed: () {},
-                child: const Text('Secondary'),
-              ),
-              AppButton.outline(onPressed: () {}, child: const Text('Outline')),
-              AppButton.ghost(onPressed: () {}, child: const Text('Ghost')),
+              AppButton.secondary(onPressed: () {}, child: const Text('次要按钮')),
+              AppButton.outline(onPressed: () {}, child: const Text('描边按钮')),
+              AppButton.ghost(onPressed: () {}, child: const Text('幽灵按钮')),
               AppButton.destructive(
                 onPressed: () {},
-                child: const Text('Destructive'),
+                child: const Text('危险按钮'),
               ),
+              AppButton.link(onPressed: () {}, child: const Text('链接按钮')),
+              AppButton.text(onPressed: () {}, child: const Text('文本按钮')),
             ],
           ),
         ),
         ComponentSection(
-          title: 'Buttons with icons',
+          title: '带图标按钮',
           child: Wrap(
             spacing: 12,
             runSpacing: 12,
@@ -46,56 +45,56 @@ class ActionsPage extends StatelessWidget {
               AppButton.primary(
                 onPressed: () {},
                 leading: const Icon(LucideIcons.plus),
-                child: const Text('Create item'),
+                child: const Text('新建项目'),
               ),
               AppButton.secondary(
                 onPressed: () {},
                 trailing: const Icon(LucideIcons.arrowRight),
-                child: const Text('Continue'),
+                child: const Text('继续'),
               ),
               AppButton.outline(
                 onPressed: () async {
                   await Future<void>.delayed(const Duration(milliseconds: 900));
                 },
                 leading: const Icon(LucideIcons.download),
-                loadingLabel: 'Downloading',
-                child: const Text('Download'),
+                loadingLabel: '下载中',
+                child: const Text('下载'),
               ),
               AppButton.destructive(
                 onPressed: () {},
                 leading: const Icon(LucideIcons.trash2),
-                child: const Text('Delete'),
+                child: const Text('删除'),
               ),
             ],
           ),
         ),
         ComponentSection(
-          title: 'Square icon-only buttons',
+          title: '方形纯图标按钮',
           child: Wrap(
             spacing: 12,
             runSpacing: 12,
             children: [
               AppIconButton(
                 key: const Key('square-icon-button-add'),
-                tooltip: 'Add item',
+                tooltip: '添加项目',
                 variant: AppButtonVariant.primary,
                 onPressed: () {},
                 icon: const Icon(LucideIcons.plus),
               ),
               AppIconButton(
-                tooltip: 'Search',
+                tooltip: '搜索',
                 variant: AppButtonVariant.secondary,
                 onPressed: () {},
                 icon: const Icon(LucideIcons.search),
               ),
               AppIconButton(
                 key: const Key('square-icon-button-settings'),
-                tooltip: 'Settings',
+                tooltip: '设置',
                 onPressed: () {},
                 icon: const Icon(LucideIcons.settings),
               ),
               AppIconButton(
-                tooltip: 'Delete item',
+                tooltip: '删除项目',
                 variant: AppButtonVariant.destructive,
                 onPressed: () {},
                 icon: const Icon(LucideIcons.trash2),
@@ -104,34 +103,34 @@ class ActionsPage extends StatelessWidget {
           ),
         ),
         ComponentSection(
-          title: 'Circular icon-only buttons',
+          title: '圆形纯图标按钮',
           child: Wrap(
             spacing: 12,
             runSpacing: 12,
             children: [
               AppIconButton.circle(
                 key: const Key('icon-button-add'),
-                tooltip: 'Add item',
+                tooltip: '添加项目',
                 variant: AppButtonVariant.primary,
                 onPressed: () {},
                 icon: const Icon(LucideIcons.plus),
               ),
               AppIconButton.circle(
                 key: const Key('icon-button-search'),
-                tooltip: 'Search',
+                tooltip: '搜索',
                 variant: AppButtonVariant.secondary,
                 onPressed: () {},
                 icon: const Icon(LucideIcons.search),
               ),
               AppIconButton.circle(
                 key: const Key('icon-button-settings'),
-                tooltip: 'Settings',
+                tooltip: '设置',
                 onPressed: () {},
                 icon: const Icon(LucideIcons.settings),
               ),
               AppIconButton.circle(
                 key: const Key('icon-button-delete'),
-                tooltip: 'Delete item',
+                tooltip: '删除项目',
                 variant: AppButtonVariant.destructive,
                 onPressed: () {},
                 icon: const Icon(LucideIcons.trash2),
@@ -139,11 +138,8 @@ class ActionsPage extends StatelessWidget {
             ],
           ),
         ),
-        const ComponentSection(
-          title: 'Shared async action',
-          child: _SharedActionDemo(),
-        ),
-        ComponentSection(title: 'Toggle', child: const _ToggleDemo()),
+        const ComponentSection(title: '共享异步操作', child: _SharedActionDemo()),
+        ComponentSection(title: '切换按钮', child: const _ToggleDemo()),
       ],
     );
   }
@@ -179,13 +175,13 @@ class _SharedActionDemoState extends State<_SharedActionDemo> {
       children: [
         AppButton.primary(
           action: _saveAction,
-          loadingLabel: 'Saving',
-          child: const Text('Save'),
+          loadingLabel: '保存中',
+          child: const Text('保存'),
         ),
         AppButton.outline(
           action: _saveAction,
-          loadingLabel: 'Saving',
-          child: const Text('Save from toolbar'),
+          loadingLabel: '保存中',
+          child: const Text('从工具栏保存'),
         ),
       ],
     );
@@ -207,7 +203,7 @@ class _ToggleDemoState extends State<_ToggleDemo> {
     return AppToggle(
       value: _selected,
       onChanged: (value) => setState(() => _selected = value),
-      child: const Text('Pin toolbar'),
+      child: const Text('固定工具栏'),
     );
   }
 }

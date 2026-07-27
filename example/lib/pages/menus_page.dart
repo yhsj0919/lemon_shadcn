@@ -6,75 +6,79 @@ import 'actions_page.dart';
 class MenusPage extends StatelessWidget {
   const MenusPage({super.key});
 
+  static const _commands = ['新建', '打开', '保存', '导出', '设置', '退出'];
+
   List<AppMenuItem> get _items => [
-    AppMenuButton(onPressed: (_) {}, child: const Text('New window')),
+    AppMenuButton(onPressed: (_) {}, child: const Text('新建窗口')),
     AppMenuButton(
       onPressed: (_) {},
       trailing: const AppMenuShortcut(
         activator: SingleActivator(LogicalKeyboardKey.comma, meta: true),
       ),
-      child: const Text('Preferences'),
+      child: const Text('偏好设置'),
     ),
     const AppMenuDivider(),
-    AppMenuButton(onPressed: (_) {}, child: const Text('Sign out')),
+    AppMenuButton(onPressed: (_) {}, child: const Text('退出登录')),
   ];
 
   @override
   Widget build(BuildContext context) {
     return ComponentPage(
-      title: 'Menus and commands',
-      description: 'Desktop menus, contextual actions, and command search.',
+      title: '菜单与命令',
+      description: '桌面菜单、上下文操作与命令搜索。',
       sections: [
         ComponentSection(
-          title: 'Menubar',
+          title: '菜单栏',
           child: AppMenubar(
             children: [
-              AppMenuButton(subMenu: _items, child: const Text('File')),
-              AppMenuButton(subMenu: _items, child: const Text('Account')),
+              AppMenuButton(subMenu: _items, child: const Text('文件')),
+              AppMenuButton(subMenu: _items, child: const Text('账户')),
             ],
           ),
         ),
         ComponentSection(
-          title: 'Navigation menu',
+          title: '导航菜单',
           child: AppNavigationMenu(
             children: [
-              const AppNavigationMenuItem(
-                onPressed: _noop,
-                child: Text('Overview'),
-              ),
+              const AppNavigationMenuItem(onPressed: _noop, child: Text('概览')),
               AppNavigationMenuItem(
                 content: AppNavigationMenuContentList(
                   crossAxisCount: 2,
                   children: const [
                     AppNavigationMenuContent(
-                      title: Text('Components'),
-                      content: Text('Reusable application primitives'),
+                      title: Text('组件'),
+                      content: Text('可复用的应用基础组件'),
                     ),
                     AppNavigationMenuContent(
-                      title: Text('Themes'),
-                      content: Text('Shared visual configuration'),
+                      title: Text('主题'),
+                      content: Text('共享视觉配置'),
                     ),
                   ],
                 ),
-                child: const Text('Products'),
+                child: const Text('产品'),
               ),
             ],
           ),
         ),
         ComponentSection(
-          title: 'Dropdown and context menu',
+          title: '下拉与上下文菜单',
           child: Wrap(
             spacing: 16,
             runSpacing: 16,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
+              AppDropdownButton(
+                items: _items,
+                trailing: const Icon(LucideIcons.chevronDown),
+                child: const Text('打开操作菜单'),
+              ),
               AppDropdownMenu(children: _items),
               AppContextMenu(
                 items: _items,
                 child: const AppOutlinedContainer(
                   child: Padding(
                     padding: EdgeInsets.all(20),
-                    child: Text('Right-click or long-press'),
+                    child: Text('右键单击或长按'),
                   ),
                 ),
               ),
@@ -82,28 +86,21 @@ class MenusPage extends StatelessWidget {
           ),
         ),
         ComponentSection(
-          title: 'Command',
-          child: SizedBox(
-            height: 260,
+          title: '命令面板',
+          child: AppOutlinedContainer(
             child: AppCommand(
               autofocus: false,
-              searchPlaceholder: const Text('Search actions…'),
+              searchPlaceholder: const Text('搜索命令…'),
               builder: (context, query) async* {
-                final normalized = (query ?? '').toLowerCase();
-                final labels = [
-                  'Open project',
-                  'Create component',
-                  'Settings',
-                ].where((label) => label.toLowerCase().contains(normalized));
-                yield [
-                  AppCommandCategory(
-                    title: const Text('Actions'),
-                    children: [
-                      for (final label in labels)
-                        AppCommandItem(title: Text(label), onTap: _noop),
-                    ],
-                  ),
-                ];
+                final q = (query ?? '').toLowerCase();
+                final filtered = _commands
+                    .where((command) => command.toLowerCase().contains(q))
+                    .map(
+                      (command) =>
+                          AppCommandItem(title: Text(command), onTap: _noop),
+                    )
+                    .toList();
+                yield filtered;
               },
             ),
           ),

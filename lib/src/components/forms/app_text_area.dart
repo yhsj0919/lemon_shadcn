@@ -147,23 +147,34 @@ class _AppTextAreaControlState extends State<_AppTextAreaControl> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = shad.Theme.of(context);
     final height =
         widget.height ??
         AppTheme.maybeOf(context)?.controls.textAreaHeight ??
         100;
-    return shad.TextArea(
-      controller: _controller,
-      focusNode: widget.focusNode,
-      hintText: widget.hintText,
-      initialHeight: height,
-      minHeight: widget.minHeight,
-      maxHeight: widget.maxHeight,
-      expandableHeight: widget.expandableHeight,
-      enabled: widget.enabled,
-      readOnly: widget.readOnly,
-      onChanged: (value) {
-        if (!_syncing) widget.onChanged(value);
-      },
+    return shad.ComponentTheme(
+      data: shad.FocusOutlineTheme(
+        align: 0,
+        border: Border.all(
+          color: theme.colorScheme.ring,
+          width: 1,
+          strokeAlign: BorderSide.strokeAlignInside,
+        ),
+      ),
+      child: shad.TextArea(
+        controller: _controller,
+        focusNode: widget.focusNode,
+        hintText: widget.hintText,
+        initialHeight: height,
+        minHeight: widget.minHeight,
+        maxHeight: widget.maxHeight,
+        expandableHeight: widget.expandableHeight,
+        enabled: widget.enabled,
+        readOnly: widget.readOnly,
+        onChanged: (value) {
+          if (!_syncing) widget.onChanged(value);
+        },
+      ),
     );
   }
 }

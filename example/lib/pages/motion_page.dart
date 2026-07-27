@@ -9,40 +9,40 @@ class MotionPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     return ComponentPage(
-      title: 'Motion',
-      description: 'Reusable desktop feedback with color-aware shadows.',
+      title: '动效',
+      description: '具有主题感知阴影的可复用桌面反馈。',
       sections: [
         ComponentSection(
-          title: 'Hover effects',
+          title: '悬浮效果',
           child: Wrap(
             spacing: 24,
             runSpacing: 24,
             children: [
               _Example(
-                label: 'Lift',
+                label: '上浮',
                 color: colors.primary,
-                child: const AppMotion.lift(child: _Tile(label: 'Hover me')),
+                child: const AppMotion.lift(child: _Tile(label: '悬浮查看')),
               ),
               _Example(
-                label: 'Scale',
+                label: '缩放',
                 color: colors.destructive,
-                child: const AppMotion.scale(child: _Tile(label: 'Hover me')),
+                child: const AppMotion.scale(child: _Tile(label: '悬浮查看')),
               ),
               _Example(
-                label: 'Glow',
+                label: '发光',
                 color: colors.ring,
-                child: const AppMotion.glow(child: _Tile(label: 'Hover me')),
+                child: const AppMotion.glow(child: _Tile(label: '悬浮查看')),
               ),
               _Example(
-                label: 'Tint',
+                label: '着色',
                 color: colors.accentForeground,
-                child: const AppMotion.tint(child: _Tile(label: 'Hover me')),
+                child: const AppMotion.tint(child: _Tile(label: '悬浮查看')),
               ),
             ],
           ),
         ),
         ComponentSection(
-          title: 'Y-axis lift + Z-axis depth',
+          title: 'Y 轴上浮与 Z 轴景深',
           child: AppVisualStyle(
             colors: AppVisualColors(
               border: colors.primary,
@@ -57,22 +57,17 @@ class MotionPage extends StatelessWidget {
             ),
           ),
         ),
-        const ComponentSection(
-          title: 'Selected state palette',
-          child: _SelectionPaletteDemo(),
-        ),
+        const ComponentSection(title: '选中状态色板', child: _SelectionPaletteDemo()),
         ComponentSection(
-          title: 'Animation builders',
+          title: '动画构建器',
           child: Row(
             children: [
               AppAnimatedValueBuilder<double>(
                 value: 1,
                 initialValue: 0,
                 duration: const Duration(milliseconds: 700),
-                builder: (context, value, child) => Opacity(
-                  opacity: value,
-                  child: const Text('Animated value'),
-                ),
+                builder: (context, value, child) =>
+                    Opacity(opacity: value, child: const Text('数值动画')),
               ),
               const Gap(24),
               AppRepeatedAnimationBuilder(
@@ -81,7 +76,7 @@ class MotionPage extends StatelessWidget {
                 duration: const Duration(seconds: 2),
                 builder: (context, value, child) => Transform.scale(
                   scale: .9 + value * .1,
-                  child: const Text('Repeated'),
+                  child: const Text('循环动画'),
                 ),
               ),
             ],
@@ -104,11 +99,9 @@ class _DepthTile extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text('Hover and move horizontally').h3(),
+            const Text('悬浮并水平移动').h3(),
             const Gap(8),
-            const Text(
-              'translateY/Z + rotateX/Y · press to sink',
-            ).small().muted(),
+            const Text('Y/Z 位移 + X/Y 旋转 · 按下时下沉').small().muted(),
           ],
         ),
       ),
@@ -181,9 +174,7 @@ class _SelectionPaletteDemoState extends State<_SelectionPaletteDemo> {
                 ),
                 child: DefaultTextStyle.merge(
                   style: TextStyle(color: visual.foreground),
-                  child: Text(
-                    _selected ? 'Selected · click to reset' : 'Click to select',
-                  ),
+                  child: Text(_selected ? '已选中 · 点击重置' : '点击选择'),
                 ),
               );
             },

@@ -18,6 +18,12 @@ class AppStarRating extends StatelessWidget {
     this.backgroundColor,
     this.starSize,
     this.starSpacing,
+    this.starPoints = 5,
+    this.starPointRounding,
+    this.starValleyRounding,
+    this.starSquash,
+    this.starInnerRadiusRatio,
+    this.starRotation,
     this.enabled = true,
   });
 
@@ -30,6 +36,12 @@ class AppStarRating extends StatelessWidget {
   final Color? backgroundColor;
   final double? starSize;
   final double? starSpacing;
+  final double starPoints;
+  final double? starPointRounding;
+  final double? starValleyRounding;
+  final double? starSquash;
+  final double? starInnerRadiusRatio;
+  final double? starRotation;
   final bool enabled;
 
   @override
@@ -48,6 +60,12 @@ class AppStarRating extends StatelessWidget {
       backgroundColor: backgroundColor ?? colors?.border,
       starSize: starSize,
       starSpacing: starSpacing,
+      starPoints: starPoints,
+      starPointRounding: starPointRounding,
+      starValleyRounding: starValleyRounding,
+      starSquash: starSquash,
+      starInnerRadiusRatio: starInnerRadiusRatio,
+      starRotation: starRotation,
       enabled: enabled,
     );
     if (direction == Axis.vertical) return rating;

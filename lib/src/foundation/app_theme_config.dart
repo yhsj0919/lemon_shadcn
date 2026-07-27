@@ -1,12 +1,75 @@
 import 'dart:ui' show Color, Offset;
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart' show TextStyle, Widget;
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
 import 'app_visual_style.dart';
 
+TextStyle _windowsUiStyle(TextStyle source) => TextStyle(
+  inherit: source.inherit,
+  fontFamily: 'Microsoft YaHei UI',
+  fontFamilyFallback: const ['Microsoft YaHei', 'Segoe UI'],
+  fontSize: source.fontSize,
+  fontWeight: source.fontWeight,
+  fontStyle: source.fontStyle,
+  letterSpacing: source.letterSpacing,
+  wordSpacing: source.wordSpacing,
+  height: source.height,
+  decoration: source.decoration,
+);
+
+shad.Typography _resolveTypography() {
+  const source = shad.Typography.geist();
+  if (defaultTargetPlatform != TargetPlatform.windows) return source;
+  TextStyle ui(TextStyle style) => _windowsUiStyle(style);
+  return source.copyWith(
+    sans: () => ui(source.sans),
+    mono: () => ui(source.mono),
+    xSmall: () => ui(source.xSmall),
+    small: () => ui(source.small).copyWith(height: 1.25),
+    base: () => ui(source.base),
+    large: () => ui(source.large),
+    xLarge: () => ui(source.xLarge),
+    x2Large: () => ui(source.x2Large),
+    x3Large: () => ui(source.x3Large),
+    x4Large: () => ui(source.x4Large),
+    x5Large: () => ui(source.x5Large),
+    x6Large: () => ui(source.x6Large),
+    x7Large: () => ui(source.x7Large),
+    x8Large: () => ui(source.x8Large),
+    x9Large: () => ui(source.x9Large),
+    thin: () => ui(source.thin),
+    extraLight: () => ui(source.extraLight),
+    light: () => ui(source.light),
+    normal: () => ui(source.normal),
+    medium: () => ui(source.medium),
+    semiBold: () => ui(source.semiBold),
+    bold: () => ui(source.bold),
+    extraBold: () => ui(source.extraBold),
+    black: () => ui(source.black),
+    italic: () => ui(source.italic),
+    h1: () => ui(source.h1),
+    h2: () => ui(source.h2),
+    h3: () => ui(source.h3),
+    h4: () => ui(source.h4),
+    p: () => ui(source.p),
+    blockQuote: () => ui(source.blockQuote),
+    inlineCode: () => ui(source.inlineCode),
+    lead: () => ui(source.lead),
+    textLarge: () => ui(source.textLarge),
+    textSmall: () => ui(source.textSmall),
+    textMuted: () => ui(source.textMuted),
+  );
+}
+
+final _appTypography = _resolveTypography();
+
 typedef AppErrorPresenter =
     String Function(Object error, StackTrace? stackTrace);
+
+/// Wraps the application content with optional component-specific themes.
+typedef AppThemeWrapper = Widget Function(Widget child);
 
 /// Built-in visual baselines. Presets only compose public theme tokens, so
 /// applications can safely refine the result with [AppThemeConfig.copyWith].
@@ -117,6 +180,7 @@ class AppThemeConfig {
     this.controlPalette,
     this.errorPresenter,
     this.enableScrollInterception = false,
+    this.componentThemeWrapper,
   }) : lightTheme = lightTheme ?? LemonThemes.light,
        darkTheme = darkTheme ?? LemonThemes.dark;
 
@@ -133,10 +197,12 @@ class AppThemeConfig {
       lightTheme: shad.ThemeData(
         colorScheme: shad.ColorSchemes.zinc(shad.ThemeMode.light),
         radius: radius,
+        typography: _appTypography,
       ),
       darkTheme: shad.ThemeData.dark(
         colorScheme: shad.ColorSchemes.zinc(shad.ThemeMode.dark),
         radius: radius,
+        typography: _appTypography,
       ),
       themeMode: themeMode,
       motion: motion,
@@ -162,6 +228,7 @@ class AppThemeConfig {
             const Color(0xff007aff),
           ),
           radius: 0.75,
+          typography: _appTypography,
         ),
         darkTheme: shad.ThemeData.dark(
           colorScheme: _accentScheme(
@@ -169,6 +236,7 @@ class AppThemeConfig {
             const Color(0xff0a84ff),
           ),
           radius: 0.75,
+          typography: _appTypography,
         ),
         themeMode: themeMode,
         controls: const AppControlMetrics(
@@ -196,10 +264,12 @@ class AppThemeConfig {
         lightTheme: shad.ThemeData(
           colorScheme: shad.ColorSchemes.slate(shad.ThemeMode.light),
           radius: 0.25,
+          typography: _appTypography,
         ),
         darkTheme: shad.ThemeData.dark(
           colorScheme: shad.ColorSchemes.slate(shad.ThemeMode.dark),
           radius: 0.25,
+          typography: _appTypography,
         ),
         themeMode: themeMode,
         controls: const AppControlMetrics(
@@ -230,6 +300,7 @@ class AppThemeConfig {
             const Color(0xff6750a4),
           ),
           radius: 0.75,
+          typography: _appTypography,
         ),
         darkTheme: shad.ThemeData.dark(
           colorScheme: _accentScheme(
@@ -238,6 +309,7 @@ class AppThemeConfig {
             foreground: const Color(0xff381e72),
           ),
           radius: 0.75,
+          typography: _appTypography,
         ),
         themeMode: themeMode,
         controls: const AppControlMetrics(
@@ -277,6 +349,7 @@ class AppThemeConfig {
   final AppVisualPalette? controlPalette;
   final AppErrorPresenter? errorPresenter;
   final bool enableScrollInterception;
+  final AppThemeWrapper? componentThemeWrapper;
 
   AppThemeConfig copyWith({
     shad.ThemeData? lightTheme,
@@ -288,6 +361,8 @@ class AppThemeConfig {
     AppVisualPalette? controlPalette,
     AppErrorPresenter? errorPresenter,
     bool? enableScrollInterception,
+    AppThemeWrapper? componentThemeWrapper,
+    bool clearComponentThemeWrapper = false,
   }) {
     return AppThemeConfig(
       lightTheme: lightTheme ?? this.lightTheme,
@@ -300,6 +375,9 @@ class AppThemeConfig {
       errorPresenter: errorPresenter ?? this.errorPresenter,
       enableScrollInterception:
           enableScrollInterception ?? this.enableScrollInterception,
+      componentThemeWrapper: clearComponentThemeWrapper
+          ? null
+          : (componentThemeWrapper ?? this.componentThemeWrapper),
     );
   }
 }
@@ -320,10 +398,12 @@ abstract final class LemonThemes {
   static final shad.ThemeData light = shad.ThemeData(
     colorScheme: shad.ColorSchemes.zinc(shad.ThemeMode.light),
     radius: 0.5,
+    typography: _appTypography,
   );
 
   static final shad.ThemeData dark = shad.ThemeData.dark(
     colorScheme: shad.ColorSchemes.zinc(shad.ThemeMode.dark),
     radius: 0.5,
+    typography: _appTypography,
   );
 }

@@ -92,18 +92,47 @@ class _AppChipInputState<T> extends State<AppChipInput<T>> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = shad.Theme.of(context);
     final height = AppTheme.maybeOf(context)?.controls.height ?? 36;
-    return ConstrainedBox(
-      constraints: BoxConstraints(minHeight: height),
-      child: shad.ChipInput<T>(
-        controller: _controller,
-        focusNode: widget.focusNode,
-        autofocus: widget.autofocus,
-        enabled: widget.enabled && widget.onChanged != null,
-        placeholder: widget.placeholder,
-        chipBuilder: (context, chip) => Text(_label(chip)),
-        onChipSubmitted: _parse,
-        onChipsChanged: (chips) => widget.onChanged?.call(List<T>.of(chips)),
+    final secondaryTheme =
+        shad.ComponentTheme.maybeOf<shad.SecondaryButtonTheme>(context) ??
+        const shad.SecondaryButtonTheme();
+    Decoration chipDecoration(
+      BuildContext context,
+      Set<WidgetState> states,
+      Decoration current,
+    ) {
+      if (current is! BoxDecoration) return current;
+      return current.copyWith(
+        color: theme.colorScheme.mutedForeground.withValues(alpha: 0.16),
+      );
+    }
+
+    return shad.ComponentTheme(
+      data: shad.FocusOutlineTheme(
+        align: 0,
+        border: Border.all(
+          color: theme.colorScheme.ring,
+          width: 1,
+          strokeAlign: BorderSide.strokeAlignInside,
+        ),
+      ),
+      child: shad.ComponentTheme(
+        data: secondaryTheme.copyWith(decoration: () => chipDecoration),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: height),
+          child: shad.ChipInput<T>(
+            controller: _controller,
+            focusNode: widget.focusNode,
+            autofocus: widget.autofocus,
+            enabled: widget.enabled && widget.onChanged != null,
+            placeholder: widget.placeholder,
+            chipBuilder: (context, chip) => Text(_label(chip)),
+            onChipSubmitted: _parse,
+            onChipsChanged: (chips) =>
+                widget.onChanged?.call(List<T>.of(chips)),
+          ),
+        ),
       ),
     );
   }

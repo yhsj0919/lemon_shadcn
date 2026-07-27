@@ -1,12 +1,16 @@
 # Lemon Shadcn 开发状态
 
-最后更新：2026-07-25
+最后更新：2026-07-27
 
 ## 当前里程碑
 
 0.0.53 首轮可交付基线：已完成，等待用户依据集中测试清单进行桌面与产品视觉验收。
 
 ## 已完成
+
+- [x] 合并 admin_ui 的语义文本、后台 Shell、Dropdown Button、中文本地化与
+  ComponentTheme 包装能力；Demo 改为后台式分组组件浏览器。
+- [x] `AppShell` 支持桌面侧栏和窄屏横向导航，新增组件已纳入 registry 与测试矩阵。
 
 - [x] 将原生插件模板转换为纯 Flutter 组件 package。
 - [x] 接入 `shadcn_flutter 0.0.53`。

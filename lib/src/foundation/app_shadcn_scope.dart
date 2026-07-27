@@ -3,30 +3,40 @@ import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
 import 'app_theme_config.dart';
+import 'app_localizations_zh.dart';
+import 'app_overlay_style.dart';
 
 class AppShadcnScope extends StatelessWidget {
   const AppShadcnScope({
     super.key,
     required this.child,
     this.config,
+    this.locale,
     this.provideMaterialHost = true,
   });
 
   final Widget child;
   final AppThemeConfig? config;
+  final Locale? locale;
   final bool provideMaterialHost;
 
-  static TransitionBuilder builder({AppThemeConfig? config}) {
+  static TransitionBuilder builder({AppThemeConfig? config, Locale? locale}) {
     return (context, child) =>
-        AppShadcnScope(config: config, child: child ?? const SizedBox.shrink());
+        AppShadcnScope(
+          config: config,
+          locale: locale,
+          child: child ?? const SizedBox.shrink(),
+        );
   }
 
   @override
   Widget build(BuildContext context) {
     final resolved = config ?? AppThemeConfig.standard();
+    final themedChild = resolved.componentThemeWrapper?.call(child) ?? child;
     return _AppThemeConfigScope(
       config: resolved,
       child: _AppLocalizationsHost(
+        locale: locale,
         child: shad.ShadcnLayer(
           theme: resolved.lightTheme,
           darkTheme: resolved.darkTheme,
@@ -40,9 +50,9 @@ class AppShadcnScope extends StatelessWidget {
                   child: provideMaterialHost
                       ? material.Material(
                           type: material.MaterialType.transparency,
-                          child: child,
+                          child: themedChild,
                         )
-                      : child,
+                      : themedChild,
                 ),
               ),
             ),
@@ -84,9 +94,13 @@ class _AppControlComponentThemes extends StatelessWidget {
       IconThemeData current,
     ) => current.copyWith(size: metrics.iconSize);
 
-    return shad.ComponentTheme<shad.PrimaryButtonTheme>(
-      data: shad.PrimaryButtonTheme(padding: padding, iconTheme: iconTheme),
-      child: shad.ComponentTheme<shad.SecondaryButtonTheme>(
+    return shad.ComponentTheme<shad.ModalBackdropTheme>(
+      data: shad.ModalBackdropTheme(
+        barrierColor: AppOverlayStyle.modalBarrier(context),
+      ),
+      child: shad.ComponentTheme<shad.PrimaryButtonTheme>(
+        data: shad.PrimaryButtonTheme(padding: padding, iconTheme: iconTheme),
+        child: shad.ComponentTheme<shad.SecondaryButtonTheme>(
         data: shad.SecondaryButtonTheme(padding: padding, iconTheme: iconTheme),
         child: shad.ComponentTheme<shad.OutlineButtonTheme>(
           data: shad.OutlineButtonTheme(padding: padding, iconTheme: iconTheme),
@@ -97,9 +111,22 @@ class _AppControlComponentThemes extends StatelessWidget {
                 padding: padding,
                 iconTheme: iconTheme,
               ),
-              child: child,
+              child: shad.ComponentTheme<shad.LinkButtonTheme>(
+                data: shad.LinkButtonTheme(
+                  padding: padding,
+                  iconTheme: iconTheme,
+                ),
+                child: shad.ComponentTheme<shad.TextButtonTheme>(
+                  data: shad.TextButtonTheme(
+                    padding: padding,
+                    iconTheme: iconTheme,
+                  ),
+                  child: child,
+                ),
+              ),
             ),
           ),
+        ),
         ),
       ),
     );
@@ -107,9 +134,10 @@ class _AppControlComponentThemes extends StatelessWidget {
 }
 
 class _AppLocalizationsHost extends StatelessWidget {
-  const _AppLocalizationsHost({required this.child});
+  const _AppLocalizationsHost({required this.child, this.locale});
 
   final Widget child;
+  final Locale? locale;
 
   @override
   Widget build(BuildContext context) {
@@ -117,11 +145,15 @@ class _AppLocalizationsHost extends StatelessWidget {
       context,
       shad.ShadcnLocalizations,
     );
-    if (existing != null) return child;
+    if (existing != null && locale == null) return child;
     return Localizations.override(
       context: context,
-      locale: const Locale('en'),
-      delegates: const [shad.ShadcnLocalizations.delegate],
+      locale:
+          locale ?? Localizations.maybeLocaleOf(context) ?? const Locale('zh', 'CN'),
+      delegates: const [
+        AppLocalizationsZh.delegate,
+        shad.ShadcnLocalizations.delegate,
+      ],
       child: child,
     );
   }

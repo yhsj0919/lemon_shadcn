@@ -3,12 +3,12 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
-import '../../foundation/app_control_box.dart';
 import 'app_async_option_source.dart';
 import 'app_field.dart';
 import 'app_form.dart';
 import 'app_option.dart';
 import 'app_select.dart';
+import 'app_select_control_shell.dart';
 
 typedef AppOptionSearcher<V> =
     Future<List<AppOption<V>>> Function(String query);
@@ -309,50 +309,58 @@ class _AppAutoCompleteControlState<V>
 
   @override
   Widget build(BuildContext context) {
-    return AppControlBox(
-      child: shad.Select<V>(
-        value: widget.value,
-        enabled: widget.enabled,
-        canUnselect: widget.clearable,
-        onChanged: widget.onChanged,
-        placeholder: Text(widget.placeholder).muted(),
-        valueSelectionPredicate: (selected, candidate) {
-          return selected != null &&
-              candidate is V &&
-              _equals(selected, candidate);
-        },
-        itemBuilder: (context, value) {
-          final option = _findOption(value);
-          return option?.child ?? Text(option?.label ?? value.toString());
-        },
-        popup: shad.SelectPopup<V>.builder(
-          builder: _search,
-          searchPlaceholder: Text(widget.searchPlaceholder),
-          loadingBuilder:
-              widget.loadingBuilder ??
-              (context) => const Padding(
-                padding: EdgeInsets.all(16),
-                child: Center(child: shad.CircularProgressIndicator()),
-              ),
-          emptyBuilder:
-              widget.emptyBuilder ??
-              (context) => const Padding(
-                padding: EdgeInsets.all(16),
-                child: Text('No options found'),
-              ),
-          errorBuilder: (context, error, stackTrace) {
-            Future<List<AppOption<V>>> retry() async {
-              final options = widget.pagedOptionSource == null
-                  ? await _source!.retry(_lastQuery)
-                  : (await widget.pagedOptionSource!.retry(_lastQuery)).options;
-              _remember(options);
-              return options;
-            }
+    return AppSelectControlShell(
+      enabled: widget.enabled,
+      builder: (context, popup) => shad.Select<V>(
+            value: widget.value,
+            enabled: widget.enabled,
+            canUnselect: widget.clearable,
+            onChanged: widget.onChanged,
+            placeholder: Text(widget.placeholder).muted(),
+            valueSelectionPredicate: (selected, candidate) {
+              return selected != null &&
+                  candidate is V &&
+                  _equals(selected, candidate);
+            },
+            itemBuilder: (context, value) {
+              final option = _findOption(value);
+              return option?.child ?? Text(option?.label ?? value.toString());
+            },
+            popup: (context) => popup(
+              shad.SelectPopup<V>.builder(
+                  builder: _search,
+                  searchPlaceholder: Text(widget.searchPlaceholder),
+                  loadingBuilder:
+                      widget.loadingBuilder ??
+                      (context) => const Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Center(child: shad.CircularProgressIndicator()),
+                      ),
+                  emptyBuilder:
+                      widget.emptyBuilder ??
+                      (context) => const Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Text('No options found'),
+                      ),
+                  errorBuilder: (context, error, stackTrace) {
+                    Future<List<AppOption<V>>> retry() async {
+                      final options = widget.pagedOptionSource == null
+                          ? await _source!.retry(_lastQuery)
+                          : (await widget.pagedOptionSource!.retry(_lastQuery))
+                                .options;
+                      _remember(options);
+                      return options;
+                    }
 
-            return widget.loadErrorBuilder?.call(context, error, retry) ??
-                _AppInitialLoadError<V>(error: error, retry: retry);
-          },
-        ).call,
+                    return widget.loadErrorBuilder?.call(
+                          context,
+                          error,
+                          retry,
+                        ) ??
+                        _AppInitialLoadError<V>(error: error, retry: retry);
+                  },
+              ),
+            ),
       ),
     );
   }

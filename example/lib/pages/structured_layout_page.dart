@@ -11,32 +11,41 @@ class StructuredLayoutPage extends StatefulWidget {
 
 class _StructuredLayoutPageState extends State<StructuredLayoutPage> {
   final _stepper = AppStepperController();
+  final _verticalStepper = AppStepperController();
+  List<AppTreeNode<String>> _treeNodes = [
+    AppTreeItemNode(
+      data: '项目目录',
+      expanded: true,
+      children: [
+        AppTreeItemNode(
+          data: '组件',
+          expanded: true,
+          children: [
+            AppTreeItemNode(data: '按钮.dart'),
+            AppTreeItemNode(data: '表单.dart'),
+          ],
+        ),
+        AppTreeItemNode(data: '基础设施'),
+      ],
+    ),
+    AppTreeItemNode(data: '测试'),
+  ];
 
   @override
   void dispose() {
     _stepper.dispose();
+    _verticalStepper.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final treeNodes = <AppTreeNode<String>>[
-      AppTreeItemNode(
-        data: 'lib',
-        expanded: true,
-        children: [
-          AppTreeItemNode(data: 'components'),
-          AppTreeItemNode(data: 'foundation'),
-        ],
-      ),
-      AppTreeItemNode(data: 'test'),
-    ];
     return ComponentPage(
-      title: 'Structured layout',
-      description: 'Resizable, sequential, hierarchical, and tabular layouts.',
+      title: '结构化布局',
+      description: '可调整尺寸、顺序、层级和表格布局。',
       sections: [
         ComponentSection(
-          title: 'Carousel',
+          title: '轮播',
           child: SizedBox(
             height: 120,
             child: AppCarousel(
@@ -45,99 +54,134 @@ class _StructuredLayoutPageState extends State<StructuredLayoutPage> {
               transition: const AppCarouselTransition.sliding(gap: 12),
               sizeConstraint: const AppCarouselFractionalConstraint(.72),
               itemBuilder: (context, index) =>
-                  AppCard(child: Center(child: Text('Panel ${index + 1}'))),
+                  AppCard(child: Center(child: Text('面板 ${index + 1}'))),
             ),
           ),
         ),
         const ComponentSection(
-          title: 'Resizable',
+          title: '可调整尺寸',
           child: SizedBox(
             height: 140,
             child: AppResizable.horizontal(
-              draggerBuilder: AppResizable.defaultDraggerBuilder,
               children: [
                 AppResizablePane(
                   initialSize: 180,
-                  child: Center(child: Text('Files')),
+                  child: Center(child: Text('文件')),
                 ),
-                AppResizablePane.flex(child: Center(child: Text('Editor'))),
+                AppResizablePane.flex(child: Center(child: Text('编辑者'))),
               ],
             ),
           ),
         ),
         ComponentSection(
-          title: 'Stepper',
+          title: '步进器',
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              AppStepper(
+              AppStepper.horizontal(
                 controller: _stepper,
                 steps: const [
-                  AppStep(title: Text('Account')),
-                  AppStep(title: Text('Profile')),
-                  AppStep(title: Text('Review')),
+                  AppStep(title: Text('账户')),
+                  AppStep(title: Text('个人资料')),
+                  AppStep(title: Text('确认')),
                 ],
               ),
               const Gap(12),
               AppButton.outline(
                 onPressed: () => _stepper.nextStep(),
-                child: const Text('Next step'),
+                child: const Text('下一步'),
+              ),
+              const Gap(24),
+              const Text('垂直步进器'),
+              const Gap(12),
+              AppStepper.vertical(
+                controller: _verticalStepper,
+                steps: const [
+                  AppStep(title: Text('创建账户')),
+                  AppStep(title: Text('填写资料')),
+                  AppStep(title: Text('完成确认')),
+                ],
+              ),
+              const Gap(12),
+              AppButton.outline(
+                onPressed: () => _verticalStepper.nextStep(),
+                child: const Text('下一步'),
               ),
             ],
           ),
         ),
         ComponentSection(
-          title: 'Tree',
+          title: '树形结构',
           child: SizedBox(
-            height: 150,
+            height: 220,
             child: AppTree<String>(
-              nodes: treeNodes,
+              nodes: _treeNodes,
               shrinkWrap: true,
-              builder: (context, item) => Text(item.data),
+              branchLine: BranchLine.line,
+              allowMultiSelect: false,
+              recursiveSelection: false,
+              onSelectionChanged: Tree.defaultSelectionHandler<String>(
+                _treeNodes,
+                (nodes) => setState(() => _treeNodes = nodes),
+              ),
+              builder: (context, item) => AppTreeItem(
+                onExpand: item.leaf
+                    ? null
+                    : (expanded) => setState(() {
+                          final selected = Tree.setSelectedItems<String>(
+                            _treeNodes,
+                            [item.data],
+                          );
+                          _treeNodes = expanded
+                              ? Tree.expandItem<String>(selected, item.data)
+                              : Tree.collapseItem<String>(selected, item.data);
+                        }),
+                child: Text(item.data),
+              ),
             ),
           ),
         ),
         const ComponentSection(
-          title: 'Table',
+          title: '表格',
           child: AppTable(
             rows: [
               AppTableHeader(
                 cells: [
-                  AppTableCell(child: Text('Component')),
-                  AppTableCell(child: Text('Status')),
+                  AppTableCell(child: Text('组件')),
+                  AppTableCell(child: Text('状态')),
                 ],
               ),
               AppTableRow(
                 cells: [
                   AppTableCell(child: Text('AppForm')),
-                  AppTableCell(child: Text('Ready')),
+                  AppTableCell(child: Text('正常')),
                 ],
               ),
             ],
           ),
         ),
         const ComponentSection(
-          title: 'Pinned sheet',
+          title: '固定面板',
           child: SizedBox(
             height: 180,
             child: AppPinnedSheet(
               initialStage: AppPinnedSheetStage.expanded(),
               backdropTransform: AppScaleBackdropTransform(),
-              backdrop: Center(child: Text('Backdrop content')),
-              child: AppCard(child: Center(child: Text('Pinned tools'))),
+              backdrop: Center(child: Text('背景内容')),
+              child: AppCard(child: Center(child: Text('固定工具'))),
             ),
           ),
         ),
         ComponentSection(
-          title: 'Window',
+          title: '窗口',
           child: SizedBox(
             height: 260,
             child: AppWindowNavigator(
               showTopSnapBar: false,
               initialWindows: [
                 AppWindow(
-                  title: Text('Theme preview'),
-                  content: Center(child: Text('Draggable desktop window')),
+                  title: Text('主题预览'),
+                  content: Center(child: Text('可拖动桌面窗口')),
                   bounds: Rect.fromLTWH(24, 18, 320, 200),
                 ),
               ],

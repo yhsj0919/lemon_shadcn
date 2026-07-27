@@ -4,6 +4,7 @@ import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 import '../../foundation/app_control_box.dart';
 import 'app_field.dart';
 import 'app_form.dart';
+import 'app_prompt_control_frame.dart';
 
 enum _AppDatePickerKind { single, range }
 
@@ -31,7 +32,7 @@ class AppDatePicker extends StatelessWidget {
     required this.rangeValue,
     this.onRangeChanged,
     this.placeholder,
-    this.mode = shad.PromptMode.dialog,
+    this.mode = shad.PromptMode.popover,
     this.initialView,
     this.initialViewType,
     this.popoverAlignment,
@@ -67,7 +68,7 @@ class AppDatePicker extends StatelessWidget {
         value: value,
         onChanged: onChanged,
         placeholder: placeholder,
-        mode: mode,
+        mode: mode ?? shad.PromptMode.popover,
         initialView: initialView,
         initialViewType: initialViewType,
         popoverAlignment: popoverAlignment,
@@ -85,7 +86,7 @@ class AppDatePicker extends StatelessWidget {
             value: rangeValue,
             onChanged: onRangeChanged,
             placeholder: placeholder,
-            mode: mode ?? shad.PromptMode.dialog,
+            mode: mode ?? shad.PromptMode.popover,
             initialView: initialView,
             initialViewType: initialViewType,
             popoverAlignment: popoverAlignment,
@@ -97,7 +98,9 @@ class AppDatePicker extends StatelessWidget {
         ),
       ),
     };
-    return AppControlBox(child: picker);
+    return AppControlBox(
+      child: AppPromptControlFrame(enabled: enabled, child: picker),
+    );
   }
 }
 
@@ -176,7 +179,7 @@ class AppDateRangePickerFormField extends FormField<shad.DateTimeRange> {
     this.placeholder,
     this.required = false,
     this.width,
-    this.mode = shad.PromptMode.dialog,
+    this.mode = shad.PromptMode.popover,
     this.initialView,
     this.initialViewType,
     this.stateBuilder,

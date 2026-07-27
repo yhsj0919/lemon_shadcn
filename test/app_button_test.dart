@@ -67,4 +67,23 @@ void main() {
 
     expect(find.text('Save'), findsOneWidget);
   });
+
+  testWidgets('renders link and text variants', (tester) async {
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: material.Builder(
+          builder: (context) => Row(
+            children: [
+              AppButton.link(onPressed: () {}, child: const Text('Link')),
+              AppButton.text(onPressed: () {}, child: const Text('Text')),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byType(LinkButton), findsOneWidget);
+    expect(find.byType(TextButton), findsOneWidget);
+  });
 }

@@ -3,7 +3,16 @@ import 'package:lemon_shadcn/lemon_shadcn.dart';
 import 'actions_page.dart';
 
 class NavigationPage extends StatefulWidget {
-  const NavigationPage({super.key});
+  const NavigationPage({
+    super.key,
+    this.visibleSections,
+    this.title = '导航',
+    this.description = '用于定位、分页和视图切换的组件。',
+  });
+
+  final Set<String>? visibleSections;
+  final String title;
+  final String description;
 
   @override
   State<NavigationPage> createState() => _NavigationPageState();
@@ -17,89 +26,92 @@ class _NavigationPageState extends State<NavigationPage> {
   @override
   Widget build(BuildContext context) {
     const tabs = [
-      AppTabItem(child: Text('Overview')),
-      AppTabItem(child: Text('Activity')),
-      AppTabItem(child: Text('Settings')),
+      AppTabItem(child: Text('概览')),
+      AppTabItem(child: Text('动态')),
+      AppTabItem(child: Text('设置')),
     ];
     return ComponentPage(
-      title: 'Navigation',
-      description: 'Location, paging, and view-switching components.',
-      sections: [
-        const ComponentSection(
-          title: 'Breadcrumb',
-          child: AppBreadcrumb(
-            children: [Text('Home'), Text('Components'), Text('Navigation')],
-          ),
-        ),
-        ComponentSection(
-          title: 'Pagination',
-          child: AppPagination(
-            page: _page,
-            totalPages: 8,
-            onPageChanged: (value) => setState(() => _page = value),
-          ),
-        ),
-        ComponentSection(
-          title: 'Tabs',
-          child: AppTabs(
-            index: _tab,
-            onChanged: (value) => setState(() => _tab = value),
-            children: tabs,
-          ),
-        ),
-        ComponentSection(
-          title: 'Tab list and switcher',
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              AppTabList(
+      title: widget.title,
+      description: widget.description,
+      sections:
+          <ComponentSection>[
+            const ComponentSection(
+              title: '面包屑',
+              child: AppBreadcrumb(
+                children: [Text('首页'), Text('组件'), Text('导航')],
+              ),
+            ),
+            ComponentSection(
+              title: '分页',
+              child: AppPagination(
+                page: _page,
+                totalPages: 8,
+                onPageChanged: (value) => setState(() => _page = value),
+              ),
+            ),
+            ComponentSection(
+              title: '标签页',
+              child: AppTabs(
                 index: _tab,
                 onChanged: (value) => setState(() => _tab = value),
                 children: tabs,
               ),
-              const Gap(12),
-              SizedBox(
-                height: 72,
-                child: AppSwitcher(
-                  index: _tab,
-                  direction: AxisDirection.right,
-                  onIndexChanged: (value) => setState(() => _tab = value),
-                  children: const [
-                    Center(child: Text('Overview panel')),
-                    Center(child: Text('Activity panel')),
-                    Center(child: Text('Settings panel')),
-                  ],
-                ),
+            ),
+            ComponentSection(
+              title: '标签列表与切换器',
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  AppTabList(
+                    index: _tab,
+                    onChanged: (value) => setState(() => _tab = value),
+                    children: tabs,
+                  ),
+                  const Gap(12),
+                  SizedBox(
+                    height: 72,
+                    child: AppSwitcher(
+                      index: _tab,
+                      direction: AxisDirection.right,
+                      onIndexChanged: (value) => setState(() => _tab = value),
+                      children: const [
+                        Center(child: Text('概览面板')),
+                        Center(child: Text('动态面板')),
+                        Center(child: Text('设置面板')),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        ),
-        ComponentSection(
-          title: 'Navigation bar',
-          child: AppNavigationBar(
-            selectedKey: _destination,
-            onSelected: (value) => setState(() => _destination = value),
-            alignment: AppNavigationBarAlignment.center,
-            children: const [
-              AppNavigationItem(
-                key: ValueKey('home'),
-                label: Text('Home'),
-                child: Text('H'),
+            ),
+            ComponentSection(
+              title: '导航栏',
+              child: AppNavigationBar(
+                selectedKey: _destination,
+                onSelected: (value) => setState(() => _destination = value),
+                alignment: AppNavigationBarAlignment.center,
+                children: const [
+                  AppNavigationItem(
+                    key: ValueKey('home'),
+                    label: Text('首页'),
+                    child: Icon(LucideIcons.house),
+                  ),
+                  AppNavigationItem(
+                    key: ValueKey('search'),
+                    label: Text('搜索'),
+                    child: Icon(LucideIcons.search),
+                  ),
+                  AppNavigationItem(
+                    key: ValueKey('profile'),
+                    label: Text('个人资料'),
+                    child: Icon(LucideIcons.user),
+                  ),
+                ],
               ),
-              AppNavigationItem(
-                key: ValueKey('search'),
-                label: Text('Search'),
-                child: Text('S'),
-              ),
-              AppNavigationItem(
-                key: ValueKey('profile'),
-                label: Text('Profile'),
-                child: Text('P'),
-              ),
-            ],
-          ),
-        ),
-      ],
+            ),
+          ].where((section) {
+            return widget.visibleSections?.contains(section.title) ?? true;
+          }).toList(),
     );
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
 import '../../foundation/app_control_box.dart';
+import '../../foundation/app_overlay_style.dart';
 import 'app_field.dart';
 import 'app_form.dart';
 
@@ -36,6 +37,8 @@ class _AppPhoneInputState extends State<AppPhoneInput> {
       TextEditingController();
   shad.PhoneNumber? _lastEmitted;
   bool _syncing = false;
+  bool _hasFocus = false;
+  bool _pointerActive = false;
 
   TextEditingController get _controller =>
       widget.controller ?? _internalController;
@@ -74,23 +77,77 @@ class _AppPhoneInputState extends State<AppPhoneInput> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = shad.Theme.of(context);
+    final active = widget.enabled && (_hasFocus || _pointerActive);
     return AppControlBox(
-      child: IgnorePointer(
-        ignoring: !widget.enabled,
-        child: Opacity(
-          opacity: widget.enabled ? 1 : 0.5,
-          child: shad.PhoneInput(
-            initialValue: widget.value,
-            initialCountry: widget.value?.country ?? widget.initialCountry,
-            controller: _controller,
-            onlyNumber: widget.onlyNumber,
-            countries: widget.countries,
-            searchPlaceholder: widget.searchPlaceholder,
-            onChanged: (value) {
-              if (_syncing) return;
-              _lastEmitted = value;
-              widget.onChanged?.call(value);
-            },
+      child: TapRegion(
+        onTapOutside: (_) {
+          if (_pointerActive) setState(() => _pointerActive = false);
+        },
+        child: Focus(
+          onFocusChange: (value) {
+            if (_hasFocus != value) setState(() => _hasFocus = value);
+          },
+          child: Listener(
+            onPointerDown: widget.enabled
+                ? (_) {
+                    if (!_pointerActive) {
+                      setState(() => _pointerActive = true);
+                    }
+                  }
+                : null,
+            child: Stack(
+              fit: StackFit.passthrough,
+              children: [
+                shad.ComponentTheme(
+                  data: shad.CardTheme(
+                    boxShadow: AppOverlayStyle.floatingShadows(context),
+                  ),
+                  child: shad.ComponentTheme(
+                    data: const shad.FocusOutlineTheme(
+                      border: Border.fromBorderSide(BorderSide.none),
+                    ),
+                    child: IgnorePointer(
+                      ignoring: !widget.enabled,
+                      child: Opacity(
+                        opacity: widget.enabled ? 1 : 0.5,
+                        child: shad.PhoneInput(
+                          initialValue: widget.value,
+                          initialCountry:
+                              widget.value?.country ??
+                              widget.initialCountry ??
+                              shad.Country.china,
+                          controller: _controller,
+                          onlyNumber: widget.onlyNumber,
+                          countries: widget.countries,
+                          searchPlaceholder: widget.searchPlaceholder,
+                          onChanged: (value) {
+                            if (_syncing) return;
+                            _lastEmitted = value;
+                            widget.onChanged?.call(value);
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                if (active)
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(theme.radiusMd),
+                          border: Border.all(
+                            color: theme.colorScheme.ring,
+                            width: 1,
+                            strokeAlign: BorderSide.strokeAlignInside,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       ),

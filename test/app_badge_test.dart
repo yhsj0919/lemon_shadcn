@@ -24,5 +24,10 @@ void main() {
     expect(find.byType(SecondaryBadge), findsOneWidget);
     expect(find.byType(OutlineBadge), findsOneWidget);
     expect(find.byType(DestructiveBadge), findsOneWidget);
+
+    for (final label in ['Primary', 'Secondary', 'Outline', 'Destructive']) {
+      final context = tester.element(find.text(label));
+      expect(DefaultTextStyle.of(context).style.fontSize, 14);
+    }
   });
 }

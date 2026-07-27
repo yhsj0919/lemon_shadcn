@@ -9,13 +9,14 @@ import 'app_async_option_source.dart';
 import 'app_field.dart';
 import 'app_form.dart';
 import 'app_option.dart';
+import 'app_select_control_shell.dart';
 
 typedef AppOptionLoader<V> = Future<List<AppOption<V>>> Function();
 typedef AppOptionEquals<V> = bool Function(V left, V right);
 typedef AppSelectErrorBuilder =
     Widget Function(BuildContext context, Object error, VoidCallback retry);
 
-class AppSelect<V> extends StatelessWidget {
+class AppSelect<V> extends StatefulWidget {
   const AppSelect({
     super.key,
     required this.options,
@@ -35,10 +36,16 @@ class AppSelect<V> extends StatelessWidget {
   final bool clearable;
   final AppOptionEquals<V>? equals;
 
-  bool _equals(V left, V right) => equals?.call(left, right) ?? left == right;
+  @override
+  State<AppSelect<V>> createState() => _AppSelectState<V>();
+}
+
+class _AppSelectState<V> extends State<AppSelect<V>> {
+  bool _equals(V left, V right) =>
+      widget.equals?.call(left, right) ?? left == right;
 
   AppOption<V>? _optionFor(V value) {
-    for (final option in options) {
+    for (final option in widget.options) {
       if (_equals(option.value, value)) return option;
     }
     return null;
@@ -46,35 +53,39 @@ class AppSelect<V> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    assert(_debugCheckUniqueOptions(options, _equals));
-    return AppControlBox(
-      child: shad.Select<V>(
-        value: value,
-        enabled: enabled,
-        canUnselect: clearable,
-        onChanged: enabled ? onChanged : null,
-        placeholder: Text(placeholder).muted(),
-        valueSelectionPredicate: (selected, candidate) {
-          return selected != null &&
-              candidate is V &&
-              _equals(selected, candidate);
-        },
-        itemBuilder: (context, selected) {
-          final option = _optionFor(selected);
-          return option?.child ?? Text(option?.label ?? selected.toString());
-        },
-        popup: shad.SelectPopup<V>(
-          items: shad.SelectItemList(
-            children: [
-              for (final option in options)
-                shad.SelectItemButton<V>(
-                  value: option.value,
-                  enabled: !option.disabled,
-                  child: option.child ?? Text(option.label),
+    assert(_debugCheckUniqueOptions(widget.options, _equals));
+    return AppSelectControlShell(
+      enabled: widget.enabled && widget.onChanged != null,
+      builder: (context, popup) => shad.Select<V>(
+              value: widget.value,
+              enabled: widget.enabled,
+              canUnselect: widget.clearable,
+              onChanged: widget.enabled ? widget.onChanged : null,
+              placeholder: Text(widget.placeholder).muted(),
+              valueSelectionPredicate: (selected, candidate) {
+                return selected != null &&
+                    candidate is V &&
+                    _equals(selected, candidate);
+              },
+              itemBuilder: (context, selected) {
+                final option = _optionFor(selected);
+                return option?.child ??
+                    Text(option?.label ?? selected.toString());
+              },
+              popup: (context) => popup(
+                shad.SelectPopup<V>(
+                    items: shad.SelectItemList(
+                      children: [
+                        for (final option in widget.options)
+                          shad.SelectItemButton<V>(
+                            value: option.value,
+                            enabled: !option.disabled,
+                            child: option.child ?? Text(option.label),
+                          ),
+                      ],
+                    ),
                 ),
-            ],
-          ),
-        ).call,
+              ),
       ),
     );
   }

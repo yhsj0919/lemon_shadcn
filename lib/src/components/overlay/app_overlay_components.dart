@@ -1,8 +1,8 @@
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
-typedef AppAlertDialog = shad.AlertDialog;
-typedef AppHoverCard = shad.HoverCard;
+import '../../foundation/app_overlay_style.dart';
+
 typedef AppTooltip = shad.Tooltip;
 typedef AppInstantTooltip = shad.InstantTooltip;
 typedef AppOverlayController = shad.OverlayController;
@@ -14,6 +14,50 @@ typedef AppPopoverConfiguration<T> = shad.PopoverConfiguration<T>;
 typedef AppToastOverlay = shad.ToastOverlay;
 typedef AppToastLocation = shad.ToastLocation;
 
+class AppHoverCard extends StatelessWidget {
+  const AppHoverCard({
+    super.key,
+    required this.child,
+    required this.hoverBuilder,
+    this.debounce,
+    this.wait,
+    this.popoverAlignment,
+    this.anchorAlignment,
+    this.popoverOffset,
+    this.behavior,
+    this.controller,
+    this.handler,
+  });
+
+  final Widget child;
+  final WidgetBuilder hoverBuilder;
+  final Duration? debounce;
+  final Duration? wait;
+  final AlignmentGeometry? popoverAlignment;
+  final AlignmentGeometry? anchorAlignment;
+  final Offset? popoverOffset;
+  final HitTestBehavior? behavior;
+  final shad.OverlayController? controller;
+  final shad.OverlayHandler? handler;
+
+  @override
+  Widget build(BuildContext context) {
+    return shad.HoverCard(
+      debounce: debounce,
+      wait: wait,
+      popoverAlignment: popoverAlignment,
+      anchorAlignment: anchorAlignment,
+      popoverOffset: popoverOffset,
+      behavior: behavior,
+      controller: controller,
+      handler: handler,
+      hoverBuilder: (context) =>
+          AppOverlaySurfaceTheme(child: hoverBuilder(context)),
+      child: child,
+    );
+  }
+}
+
 abstract final class AppOverlay {
   static Future<void> close<T>(BuildContext context, [T? value]) =>
       shad.closeOverlay<T>(context, value);
@@ -24,6 +68,7 @@ abstract final class AppDialog {
     required BuildContext context,
     required WidgetBuilder builder,
     bool barrierDismissible = true,
+    Color? barrierColor,
     bool useRootNavigator = true,
     bool fullScreen = false,
     AlignmentGeometry? alignment,
@@ -31,10 +76,55 @@ abstract final class AppDialog {
     return shad.DialogConfiguration<T>(
       builder: builder,
       barrierDismissible: barrierDismissible,
+      barrierColor: barrierColor,
       useRootNavigator: useRootNavigator,
       fullScreen: fullScreen,
       alignment: alignment,
     ).show(context);
+  }
+}
+
+/// A shadcn alert dialog with a softer application-level modal backdrop.
+///
+/// shadcn_flutter 0.0.53 hardcodes an 80% black barrier in [shad.AlertDialog]
+/// when no color is supplied, so the ambient backdrop theme cannot override it.
+class AppAlertDialog extends StatelessWidget {
+  const AppAlertDialog({
+    super.key,
+    this.leading,
+    this.title,
+    this.content,
+    this.actions,
+    this.trailing,
+    this.surfaceBlur,
+    this.surfaceOpacity,
+    this.barrierColor,
+    this.padding,
+  });
+
+  final Widget? leading;
+  final Widget? title;
+  final Widget? content;
+  final List<Widget>? actions;
+  final Widget? trailing;
+  final double? surfaceBlur;
+  final double? surfaceOpacity;
+  final Color? barrierColor;
+  final EdgeInsetsGeometry? padding;
+
+  @override
+  Widget build(BuildContext context) {
+    return shad.AlertDialog(
+      leading: leading,
+      title: title,
+      content: content,
+      actions: actions,
+      trailing: trailing,
+      surfaceBlur: surfaceBlur,
+      surfaceOpacity: surfaceOpacity,
+      barrierColor: barrierColor ?? AppOverlayStyle.modalBarrier(context),
+      padding: padding,
+    );
   }
 }
 
@@ -46,6 +136,7 @@ abstract final class AppDrawer {
     bool draggable = true,
     bool expands = false,
     bool barrierDismissible = true,
+    Color? barrierColor,
     BoxConstraints? constraints,
   }) {
     return shad.DrawerConfiguration<T>(
@@ -54,6 +145,7 @@ abstract final class AppDrawer {
       draggable: draggable,
       expands: expands,
       barrierDismissible: barrierDismissible,
+      barrierColor: barrierColor ?? AppOverlayStyle.modalBarrier(context),
       constraints: constraints,
     ).show(context);
   }
@@ -66,6 +158,7 @@ abstract final class AppSheet {
     shad.OverlayPosition position = shad.OverlayPosition.bottom,
     bool draggable = false,
     bool barrierDismissible = true,
+    Color? barrierColor,
     BoxConstraints? constraints,
   }) {
     return shad.SheetConfiguration<T>(
@@ -73,6 +166,7 @@ abstract final class AppSheet {
       position: position,
       draggable: draggable,
       barrierDismissible: barrierDismissible,
+      barrierColor: barrierColor ?? AppOverlayStyle.modalBarrier(context),
       constraints: constraints,
     ).show(context);
   }
@@ -82,14 +176,15 @@ abstract final class AppPopover {
   static shad.OverlayCompleter<T?> show<T>({
     required BuildContext context,
     required WidgetBuilder builder,
-    AlignmentGeometry alignment = Alignment.bottomCenter,
-    AlignmentGeometry? anchorAlignment,
-    Offset? offset,
+    AlignmentGeometry alignment = AppOverlayStyle.popoverAlignment,
+    AlignmentGeometry anchorAlignment =
+        AppOverlayStyle.popoverAnchorAlignment,
+    Offset offset = AppOverlayStyle.popoverOffset,
     bool modal = true,
     bool barrierDismissible = true,
   }) {
     return shad.PopoverConfiguration<T>(
-      builder: builder,
+      builder: (context) => AppOverlaySurfaceTheme(child: builder(context)),
       alignment: alignment,
       anchorAlignment: anchorAlignment,
       offset: offset,
@@ -112,31 +207,28 @@ abstract final class AppToast {
       location: location,
       showDuration: showDuration,
       builder: (context, overlay) => shad.Card(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Flexible(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title).semiBold(),
-                    if (message != null) ...[
-                      const shad.Gap(4),
-                      Text(message).small().muted(),
-                    ],
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title).semiBold(),
+                  if (message != null) ...[
+                    const shad.Gap(4),
+                    Text(message).small().muted(),
                   ],
-                ),
+                ],
               ),
-              const shad.Gap(12),
-              shad.Button.ghost(
-                onPressed: overlay.close,
-                child: const Icon(shad.LucideIcons.x),
-              ),
-            ],
-          ),
+            ),
+            const shad.Gap(12),
+            shad.Button.ghost(
+              onPressed: overlay.close,
+              child: const Icon(shad.LucideIcons.x),
+            ),
+          ],
         ),
       ),
     );
@@ -151,7 +243,10 @@ abstract final class AppToast {
   }) {
     return shad.showToast(
       context: context,
-      builder: builder,
+      builder: (context, overlay) => AppOverlaySurfaceTheme(
+        padding: AppOverlayStyle.toastPadding,
+        child: builder(context, overlay),
+      ),
       location: location,
       dismissible: dismissible,
       showDuration: showDuration,

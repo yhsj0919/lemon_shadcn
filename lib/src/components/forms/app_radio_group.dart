@@ -27,6 +27,7 @@ class AppRadioGroup<V> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = shad.Theme.of(context);
     final ancestor = shad.ComponentTheme.maybeOf<shad.RadioTheme>(context);
     final items = <Widget>[
       for (final option in options)
@@ -38,11 +39,18 @@ class AppRadioGroup<V> extends StatelessWidget {
               if (!optionEnabled) WidgetState.disabled,
             });
             final radioTheme = (ancestor ?? const shad.RadioTheme()).copyWith(
+              size: ancestor?.size == null ? () => 18 * theme.scaling : null,
               activeColor: colors == null
                   ? null
                   : () => colors.foreground ?? colors.accent,
               borderColor: colors == null ? null : () => colors.border,
               backgroundColor: colors == null ? null : () => colors.background,
+            );
+            final optionLabel = DefaultTextStyle.merge(
+              style: theme.typography.base.copyWith(
+                fontWeight: FontWeight.normal,
+              ),
+              child: option.child ?? Text(option.label),
             );
             return shad.ComponentTheme<shad.RadioTheme>(
               data: radioTheme,
@@ -52,7 +60,7 @@ class AppRadioGroup<V> extends StatelessWidget {
                   child: shad.RadioItem<V>(
                     value: option.value,
                     enabled: optionEnabled,
-                    trailing: option.child ?? Text(option.label),
+                    trailing: optionLabel,
                   ),
                 ),
               ),

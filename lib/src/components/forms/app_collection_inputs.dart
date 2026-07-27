@@ -1,6 +1,12 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart' show ReorderableListView;
+import 'package:flutter/material.dart'
+    show
+        Colors,
+        Material,
+        ReorderableDragStartListener,
+        ReorderableListView,
+        RoundedRectangleBorder;
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
@@ -40,14 +46,31 @@ class AppImageInput<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final current = value;
+    final theme = shad.Theme.of(context);
+    final radius = BorderRadius.circular(theme.radiusMd);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SizedBox(
-          height: height,
-          child: current == null
-              ? Center(child: placeholder ?? const Text('No image selected'))
-              : previewBuilder(context, current),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: radius,
+            border: Border.all(
+              color: theme.colorScheme.border,
+              width: 1,
+              strokeAlign: BorderSide.strokeAlignInside,
+            ),
+          ),
+          child: ClipRRect(
+            borderRadius: radius,
+            child: SizedBox(
+              height: height,
+              child: current == null
+                  ? Center(
+                      child: placeholder ?? const Text('No image selected'),
+                    )
+                  : previewBuilder(context, current),
+            ),
+          ),
         ),
         const SizedBox(height: 8),
         Wrap(
@@ -163,11 +186,22 @@ class AppSortableInput<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = shad.Theme.of(context);
     return ReorderableListView.builder(
       shrinkWrap: shrinkWrap,
       physics: shrinkWrap ? const NeverScrollableScrollPhysics() : null,
       padding: padding,
-      buildDefaultDragHandles: enabled,
+      buildDefaultDragHandles: false,
+      proxyDecorator: (child, index, animation) => Material(
+        color: Colors.white,
+        elevation: 4,
+        shadowColor: theme.colorScheme.foreground.withValues(alpha: 0.18),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(theme.radiusMd),
+          side: BorderSide(color: theme.colorScheme.border, width: 1),
+        ),
+        child: child,
+      ),
       itemCount: items.length,
       onReorderItem: enabled
           ? (oldIndex, newIndex) {
@@ -181,7 +215,35 @@ class AppSortableInput<T> extends StatelessWidget {
         final item = items[index];
         return KeyedSubtree(
           key: itemKey?.call(item) ?? ValueKey<T>(item),
-          child: itemBuilder(context, index, item),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ReorderableDragStartListener(
+                index: index,
+                enabled: enabled,
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Icon(
+                    shad.LucideIcons.gripVertical,
+                    size: 18 * theme.scaling,
+                    color: enabled
+                        ? theme.colorScheme.mutedForeground
+                        : theme.colorScheme.muted,
+                  ),
+                ),
+              ),
+              SizedBox(width: 4 * theme.scaling),
+              Flexible(
+                fit: FlexFit.loose,
+                child: DefaultTextStyle.merge(
+                  style: theme.typography.base.copyWith(
+                    fontWeight: FontWeight.normal,
+                  ),
+                  child: itemBuilder(context, index, item),
+                ),
+              ),
+            ],
+          ),
         );
       },
     );

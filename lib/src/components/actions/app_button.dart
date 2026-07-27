@@ -9,7 +9,15 @@ import '../../foundation/app_shadcn_scope.dart';
 
 typedef AppButtonCallback = FutureOr<void> Function();
 
-enum AppButtonVariant { primary, secondary, outline, ghost, destructive }
+enum AppButtonVariant {
+  primary,
+  secondary,
+  outline,
+  ghost,
+  destructive,
+  link,
+  text,
+}
 
 @immutable
 class AppButtonConfig {
@@ -146,6 +154,52 @@ abstract final class AppButton {
   }) => _AppAsyncButton(
     key: key,
     variant: AppButtonVariant.destructive,
+    onPressed: onPressed,
+    action: action,
+    loading: loading,
+    leading: leading,
+    trailing: trailing,
+    loadingLabel: loadingLabel,
+    config: config,
+    child: child,
+  );
+
+  static Widget link({
+    Key? key,
+    required Widget child,
+    AppButtonCallback? onPressed,
+    AppAsyncAction<void>? action,
+    bool? loading,
+    Widget? leading,
+    Widget? trailing,
+    String? loadingLabel,
+    AppButtonConfig config = const AppButtonConfig(),
+  }) => _AppAsyncButton(
+    key: key,
+    variant: AppButtonVariant.link,
+    onPressed: onPressed,
+    action: action,
+    loading: loading,
+    leading: leading,
+    trailing: trailing,
+    loadingLabel: loadingLabel,
+    config: config,
+    child: child,
+  );
+
+  static Widget text({
+    Key? key,
+    required Widget child,
+    AppButtonCallback? onPressed,
+    AppAsyncAction<void>? action,
+    bool? loading,
+    Widget? leading,
+    Widget? trailing,
+    String? loadingLabel,
+    AppButtonConfig config = const AppButtonConfig(),
+  }) => _AppAsyncButton(
+    key: key,
+    variant: AppButtonVariant.text,
     onPressed: onPressed,
     action: action,
     loading: loading,
@@ -430,6 +484,42 @@ class _AppAsyncButtonState extends State<_AppAsyncButton> {
         enableFeedback: widget.config.enableFeedback,
         child: child,
       ),
+      AppButtonVariant.link => shad.LinkButton(
+        onPressed: onPressed,
+        enabled: widget.config.enabled,
+        leading: widget.leading,
+        trailing: widget.trailing,
+        alignment: widget.config.alignment,
+        size: widget.config.size,
+        density: widget.iconOnly
+            ? shad.ButtonDensity.icon
+            : widget.config.density,
+        shape: widget.shapeOverride ?? widget.config.shape,
+        focusNode: widget.config.focusNode,
+        disableTransition: widget.config.disableTransition,
+        onHover: widget.config.onHover,
+        onFocus: widget.config.onFocus,
+        enableFeedback: widget.config.enableFeedback,
+        child: child,
+      ),
+      AppButtonVariant.text => shad.TextButton(
+        onPressed: onPressed,
+        enabled: widget.config.enabled,
+        leading: widget.leading,
+        trailing: widget.trailing,
+        alignment: widget.config.alignment,
+        size: widget.config.size,
+        density: widget.iconOnly
+            ? shad.ButtonDensity.icon
+            : widget.config.density,
+        shape: widget.shapeOverride ?? widget.config.shape,
+        focusNode: widget.config.focusNode,
+        disableTransition: widget.config.disableTransition,
+        onHover: widget.config.onHover,
+        onFocus: widget.config.onFocus,
+        enableFeedback: widget.config.enableFeedback,
+        child: child,
+      ),
     };
     return AppControlBox(
       height: widget.config.height,
@@ -452,29 +542,37 @@ class _AppButtonContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final foreground =
+        DefaultTextStyle.of(context).style.color ?? IconTheme.of(context).color;
     return Stack(
       alignment: Alignment.center,
       children: [
         Opacity(opacity: loading ? 0 : 1, child: child),
         if (loading)
           Positioned.fill(
-            child: Center(
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const SizedBox.square(
-                      dimension: 16,
-                      child: shad.CircularProgressIndicator(),
-                    ),
-                    if (loadingLabel != null) ...[
-                      const shad.Gap(8),
-                      Text(loadingLabel!),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final showLabel =
+                    loadingLabel != null && constraints.maxWidth >= 72;
+                return Center(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox.square(
+                        dimension: 16,
+                        child: shad.CircularProgressIndicator(
+                          color: foreground,
+                          backgroundColor: foreground?.withValues(alpha: 0.24),
+                        ),
+                      ),
+                      if (showLabel) ...[
+                        const shad.Gap(8),
+                        Flexible(child: Text(loadingLabel!)),
+                      ],
                     ],
-                  ],
-                ),
-              ),
+                  ),
+                );
+              },
             ),
           ),
       ],

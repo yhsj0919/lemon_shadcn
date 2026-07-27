@@ -4,13 +4,14 @@ import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 import '../../foundation/app_control_box.dart';
 import 'app_field.dart';
 import 'app_form.dart';
+import 'app_prompt_control_frame.dart';
 
 class AppTimePicker extends StatelessWidget {
   const AppTimePicker({
     super.key,
     required this.value,
     this.onChanged,
-    this.mode = shad.PromptMode.dialog,
+    this.mode = shad.PromptMode.popover,
     this.placeholder,
     this.popoverAlignment,
     this.popoverAnchorAlignment,
@@ -36,18 +37,21 @@ class AppTimePicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppControlBox(
-      child: shad.TimePicker(
-        value: value,
-        onChanged: onChanged,
-        mode: mode,
-        placeholder: placeholder,
-        popoverAlignment: popoverAlignment,
-        popoverAnchorAlignment: popoverAnchorAlignment,
-        popoverPadding: popoverPadding,
-        use24HourFormat: use24HourFormat,
-        showSeconds: showSeconds,
-        dialogTitle: dialogTitle,
+      child: AppPromptControlFrame(
         enabled: enabled,
+        child: shad.TimePicker(
+          value: value,
+          onChanged: onChanged,
+          mode: mode,
+          placeholder: placeholder,
+          popoverAlignment: popoverAlignment,
+          popoverAnchorAlignment: popoverAnchorAlignment,
+          popoverPadding: popoverPadding,
+          use24HourFormat: use24HourFormat,
+          showSeconds: showSeconds,
+          dialogTitle: dialogTitle,
+          enabled: enabled,
+        ),
       ),
     );
   }
@@ -62,7 +66,7 @@ class AppTimePickerFormField extends FormField<shad.TimeOfDay> {
     this.placeholder,
     this.required = false,
     this.width,
-    this.mode = shad.PromptMode.dialog,
+    this.mode = shad.PromptMode.popover,
     this.use24HourFormat,
     this.showSeconds = false,
     this.onChanged,

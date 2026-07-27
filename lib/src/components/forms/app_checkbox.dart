@@ -38,22 +38,29 @@ class AppCheckbox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = shad.Theme.of(context);
     final states = <WidgetState>{
       if (state != shad.CheckboxState.unchecked) WidgetState.selected,
       if (enabled == false || onChanged == null) WidgetState.disabled,
     };
     final colors = resolveAppControlVisuals(context, states);
+    Widget? label(Widget? child) => child == null
+        ? null
+        : DefaultTextStyle.merge(
+            style: theme.typography.base.copyWith(fontWeight: FontWeight.normal),
+            child: child,
+          );
     return AppControlBox(
       child: Align(
         alignment: AlignmentDirectional.centerStart,
         child: shad.Checkbox(
           state: state,
           onChanged: onChanged,
-          leading: leading,
-          trailing: trailing,
+          leading: label(leading),
+          trailing: label(trailing),
           tristate: tristate,
           enabled: enabled,
-          size: size,
+          size: size ?? 18 * theme.scaling,
           gap: gap,
           backgroundColor: backgroundColor ?? colors?.background,
           activeColor: activeColor ?? colors?.background ?? colors?.accent,

@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart' show listEquals;
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
 import '../../foundation/app_control_box.dart';
+import '../../foundation/app_overlay_style.dart';
 import '../../foundation/app_shadcn_scope.dart';
 import '../actions/app_button.dart';
 import 'app_field.dart';
@@ -210,24 +211,29 @@ class _AppEditablePartWidgetState extends State<_AppEditablePartWidget> {
       onKeyEvent: _onKeyEvent,
       child: SizedBox(
         width: widget.part.width,
-        child: shad.TextField(
-          focusNode: widget.data.focusNode,
-          controller: _controller,
-          enabled: widget.data.enabled,
-          maxLength: widget.part.length,
-          onChanged: _onChanged,
-          inputFormatters: widget.part.inputFormatters,
-          placeholder: widget.part.placeholder,
-          obscureText: widget.part.obscureText,
-          maxLines: 1,
-          textAlign: TextAlign.center,
-          textAlignVertical: TextAlignVertical.center,
-          padding: EdgeInsets.symmetric(horizontal: 6 * theme.scaling),
-          decoration: const BoxDecoration(),
-          border: const Border.fromBorderSide(BorderSide.none),
-          style: DefaultTextStyle.of(
-            context,
-          ).style.merge(theme.typography.mono),
+        child: shad.ComponentTheme(
+          data: const shad.FocusOutlineTheme(
+            border: Border.fromBorderSide(BorderSide.none),
+          ),
+          child: shad.TextField(
+            focusNode: widget.data.focusNode,
+            controller: _controller,
+            enabled: widget.data.enabled,
+            maxLength: widget.part.length,
+            onChanged: _onChanged,
+            inputFormatters: widget.part.inputFormatters,
+            placeholder: widget.part.placeholder,
+            obscureText: widget.part.obscureText,
+            maxLines: 1,
+            textAlign: TextAlign.center,
+            textAlignVertical: TextAlignVertical.center,
+            padding: EdgeInsets.symmetric(horizontal: 6 * theme.scaling),
+            decoration: const BoxDecoration(),
+            border: const Border.fromBorderSide(BorderSide.none),
+            style: DefaultTextStyle.of(
+              context,
+            ).style.merge(theme.typography.mono),
+          ),
         ),
       ),
     );
@@ -444,28 +450,18 @@ class AppItemPickerFormField<V> extends FormField<V> {
                required: field.required,
                width: field.width,
                child: AppControlBox(
-                 child: IgnorePointer(
-                   ignoring: !field.enabled,
-                   child: shad.ItemPicker<V>(
-                     items: shad.ItemList(
-                       field.options.map((option) => option.value).toList(),
-                     ),
-                     value: state.value,
-                     placeholder: field.placeholder,
-                     title: field.title,
-                     layout: field.layout,
-                     mode: field.mode,
-                     builder: (context, value) {
-                       final option = field.options.firstWhere(
-                         (option) => option.value == value,
-                       );
-                       return option.child ?? Text(option.label);
-                     },
-                     onChanged: (value) {
-                       state.didChange(value);
-                       field.onChanged?.call(value);
-                     },
-                   ),
+                 child: _AppItemPickerControl<V>(
+                   options: field.options,
+                   value: state.value,
+                   placeholder: field.placeholder,
+                   title: field.title,
+                   layout: field.layout,
+                   mode: field.mode ?? shad.PromptMode.popover,
+                   enabled: field.enabled,
+                   onChanged: (value) {
+                     state.didChange(value);
+                     field.onChanged?.call(value);
+                   },
                  ),
                ),
              ),
@@ -485,6 +481,107 @@ class AppItemPickerFormField<V> extends FormField<V> {
   final shad.PromptMode? mode;
   final ValueChanged<V?>? onChanged;
   final AppAsyncFieldValidator<V>? asyncValidator;
+}
+
+class _AppItemPickerControl<V> extends StatefulWidget {
+  const _AppItemPickerControl({
+    required this.options,
+    required this.value,
+    required this.mode,
+    required this.enabled,
+    required this.onChanged,
+    this.placeholder,
+    this.title,
+    this.layout,
+  });
+
+  final List<AppOption<V>> options;
+  final V? value;
+  final shad.PromptMode mode;
+  final bool enabled;
+  final ValueChanged<V?> onChanged;
+  final Widget? placeholder;
+  final Widget? title;
+  final shad.ItemPickerLayout? layout;
+
+  @override
+  State<_AppItemPickerControl<V>> createState() =>
+      _AppItemPickerControlState<V>();
+}
+
+class _AppItemPickerControlState<V>
+    extends State<_AppItemPickerControl<V>> {
+  bool _active = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = shad.Theme.of(context);
+    return TapRegion(
+      onTapOutside: (_) {
+        if (_active) setState(() => _active = false);
+      },
+      child: Listener(
+        onPointerDown: widget.enabled
+            ? (_) {
+                if (!_active) setState(() => _active = true);
+              }
+            : null,
+        child: Stack(
+          fit: StackFit.passthrough,
+          children: [
+            shad.ComponentTheme(
+              data: shad.CardTheme(
+                boxShadow: AppOverlayStyle.floatingShadows(context),
+              ),
+              child: shad.ComponentTheme(
+                data: const shad.FocusOutlineTheme(
+                  border: Border.fromBorderSide(BorderSide.none),
+                ),
+                child: IgnorePointer(
+                  ignoring: !widget.enabled,
+                  child: shad.ItemPicker<V>(
+                    items: shad.ItemList(
+                      widget.options.map((option) => option.value).toList(),
+                    ),
+                    value: widget.value,
+                    placeholder: widget.placeholder,
+                    title: widget.title,
+                    layout: widget.layout,
+                    mode: widget.mode,
+                    builder: (context, value) {
+                      final option = widget.options.firstWhere(
+                        (option) => option.value == value,
+                      );
+                      return option.child ?? Text(option.label);
+                    },
+                    onChanged: (value) {
+                      if (_active) setState(() => _active = false);
+                      widget.onChanged(value);
+                    },
+                  ),
+                ),
+              ),
+            ),
+            if (_active)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(theme.radiusMd),
+                      border: Border.all(
+                        color: theme.colorScheme.ring,
+                        width: 1,
+                        strokeAlign: BorderSide.strokeAlignInside,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class AppColorInputFormField extends FormField<shad.ColorDerivative> {
@@ -519,7 +616,7 @@ class AppColorInputFormField extends FormField<shad.ColorDerivative> {
                required: field.required,
                width: field.width,
                child: AppControlBox(
-                 child: shad.ColorInput(
+                 child: _AppColorInputControl(
                    value: state.value!,
                    enabled: field.enabled,
                    showAlpha: field.showAlpha,
@@ -544,6 +641,139 @@ class AppColorInputFormField extends FormField<shad.ColorDerivative> {
   final bool enableEyeDropper;
   final ValueChanged<shad.ColorDerivative>? onChanged;
   final AppAsyncFieldValidator<shad.ColorDerivative>? asyncValidator;
+}
+
+class _AppColorInputControl extends StatefulWidget {
+  const _AppColorInputControl({
+    required this.value,
+    required this.enabled,
+    required this.enableEyeDropper,
+    required this.onChanged,
+    this.showAlpha,
+  });
+
+  final shad.ColorDerivative value;
+  final bool enabled;
+  final bool enableEyeDropper;
+  final bool? showAlpha;
+  final ValueChanged<shad.ColorDerivative> onChanged;
+
+  @override
+  State<_AppColorInputControl> createState() => _AppColorInputControlState();
+}
+
+class _AppColorInputControlState extends State<_AppColorInputControl> {
+  bool _active = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = shad.Theme.of(context);
+    return TapRegion(
+      onTapOutside: (_) {
+        if (_active) setState(() => _active = false);
+      },
+      child: Listener(
+        onPointerDown: widget.enabled
+            ? (_) {
+                if (!_active) setState(() => _active = true);
+              }
+            : null,
+        child: Stack(
+          fit: StackFit.passthrough,
+          children: [
+            shad.ComponentTheme(
+              data: shad.CardTheme(
+                boxShadow: AppOverlayStyle.floatingShadows(context),
+              ),
+              child: shad.ComponentTheme(
+                data: const shad.FocusOutlineTheme(
+                  border: Border.fromBorderSide(BorderSide.none),
+                ),
+                child: shad.ComponentTheme(
+                  data: shad.ColorInputTheme(
+                    popoverPadding: EdgeInsets.all(8 * theme.scaling),
+                  ),
+                  child: shad.ComponentTheme(
+                    data: const shad.ColorPickerTheme(
+                      spacing: 8,
+                      controlSpacing: 6,
+                      sliderSize: 18,
+                    ),
+                    child: shad.ObjectFormField<shad.ColorDerivative>(
+                      value: widget.value,
+                      enabled: widget.enabled,
+                      mode: shad.PromptMode.popover,
+                      placeholder: const Text('选择颜色'),
+                      immediateValueChange: true,
+                      builder: (context, value) => Container(
+                        constraints: BoxConstraints(
+                          minWidth: 28 * theme.scaling,
+                          minHeight: 28 * theme.scaling,
+                        ),
+                        decoration: BoxDecoration(
+                          color: value.toColor(),
+                          borderRadius: BorderRadius.circular(theme.radiusSm),
+                          border: Border.all(color: theme.colorScheme.border),
+                        ),
+                      ),
+                      onChanged: (value) {
+                        if (value == null) return;
+                        widget.onChanged(value);
+                      },
+                      editorBuilder: (context, handler) => SizedBox(
+                        width: 340,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.topLeft,
+                          child: DefaultTextStyle.merge(
+                            textAlign: TextAlign.center,
+                            child: SizedBox(
+                              width: 480,
+                              height: 400,
+                              child: shad.ComponentTheme(
+                                data: const shad.TextFieldTheme(
+                                  padding: EdgeInsets.only(left: 18, right: 4),
+                                ),
+                                child: shad.ColorPicker(
+                                  value: handler.value ?? widget.value,
+                                  showAlpha: widget.showAlpha ?? true,
+                                  enableEyeDropper: widget.enableEyeDropper,
+                                  spacing: 8,
+                                  controlSpacing: 6,
+                                  sliderSize: 18,
+                                  onChanging: (value) => handler.value = value,
+                                  onChanged: (value) => handler.value = value,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            if (_active)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(theme.radiusMd),
+                      border: Border.all(
+                        color: theme.colorScheme.ring,
+                        width: 1,
+                        strokeAlign: BorderSide.strokeAlignInside,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class AppFormattedInputFormField extends FormField<shad.FormattedValue> {

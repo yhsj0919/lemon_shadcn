@@ -95,6 +95,32 @@ material.MaterialApp(builder: AppShadcnScope.builder(config: theme));
 
 ## 组件与 Demo
 
+Demo 使用后台组件库布局：左侧为分组导航，右侧展示当前组件页面，页头可切换主题预设。
+`AppShell` 不绑定路由库，业务项目可以使用任意路由或本地状态驱动。
+
+```dart
+AppShell(
+  destinations: const [
+    AppNavDestination(
+      id: 'components',
+      label: 'Components',
+      icon: LucideIcons.component,
+      children: [
+        AppNavDestination(
+          id: 'forms',
+          label: 'Forms',
+          icon: LucideIcons.textCursorInput,
+        ),
+      ],
+    ),
+  ],
+  selectedId: selectedId,
+  onDestinationSelected: selectPage,
+  pageTitle: 'Forms',
+  child: const FormsPage(),
+);
+```
+
 当前审计基线为 `shadcn_flutter 0.0.53`，84 项组件均有 App 公共入口，并在 example
 中按 Actions、Forms、Data display、Navigation、Menus、Layout、Structured layout、
 Overlay、Motion 分类展示。完整映射见

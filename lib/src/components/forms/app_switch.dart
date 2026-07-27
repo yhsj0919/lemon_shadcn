@@ -36,26 +36,51 @@ class AppSwitch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = shad.Theme.of(context);
     final states = <WidgetState>{
       if (value) WidgetState.selected,
       if (enabled == false || onChanged == null) WidgetState.disabled,
     };
     final colors = resolveAppControlVisuals(context, states);
+    Widget? label(Widget? child) => child == null
+        ? null
+        : DefaultTextStyle.merge(
+            style: theme.typography.base.copyWith(fontWeight: FontWeight.normal),
+            child: child,
+          );
+    final effectiveLeading = label(leading);
+    final effectiveTrailing = label(trailing);
     return AppControlBox(
       child: Align(
         alignment: AlignmentDirectional.centerStart,
-        child: shad.Switch(
-          value: value,
-          onChanged: onChanged,
-          leading: leading,
-          trailing: trailing,
-          enabled: enabled,
-          gap: gap,
-          activeColor: activeColor ?? colors?.background ?? colors?.accent,
-          inactiveColor: inactiveColor ?? colors?.background,
-          activeThumbColor: activeThumbColor ?? colors?.foreground,
-          inactiveThumbColor: inactiveThumbColor,
-          borderRadius: borderRadius,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (effectiveLeading != null) effectiveLeading,
+            if (effectiveLeading != null)
+              SizedBox(width: gap ?? 8 * theme.scaling),
+            SizedBox(
+              width: 32.4 * theme.scaling,
+              height: 18 * theme.scaling,
+              child: FittedBox(
+                fit: BoxFit.fill,
+                child: shad.Switch(
+                  value: value,
+                  onChanged: onChanged,
+                  enabled: enabled,
+                  activeColor:
+                      activeColor ?? colors?.background ?? colors?.accent,
+                  inactiveColor: inactiveColor ?? colors?.background,
+                  activeThumbColor: activeThumbColor ?? colors?.foreground,
+                  inactiveThumbColor: inactiveThumbColor,
+                  borderRadius: borderRadius,
+                ),
+              ),
+            ),
+            if (effectiveTrailing != null)
+              SizedBox(width: gap ?? 8 * theme.scaling),
+            if (effectiveTrailing != null) effectiveTrailing,
+          ],
         ),
       ),
     );

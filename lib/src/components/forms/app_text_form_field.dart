@@ -294,6 +294,7 @@ class _AppTextFieldControlState extends State<_AppTextFieldControl> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = shad.Theme.of(context);
     final features = <shad.InputFeature>[
       ...?widget.features,
       if (widget.showObscureToggle)
@@ -315,6 +316,11 @@ class _AppTextFieldControlState extends State<_AppTextFieldControl> {
     ];
     return AppControlBox(
       child: shad.TextField(
+        border: Border.all(
+          color: theme.colorScheme.border,
+          width: 1,
+          strokeAlign: BorderSide.strokeAlignInside,
+        ),
         controller: _controller,
         focusNode: widget.focusNode,
         hintText: widget.hintText,

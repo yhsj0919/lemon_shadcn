@@ -1,8 +1,38 @@
+import 'package:flutter/foundation.dart' as foundation;
 import 'package:flutter/material.dart' as material;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lemon_shadcn/lemon_shadcn.dart';
 
 void main() {
+  test('Windows typography uses one Chinese UI font for every token', () {
+    if (foundation.defaultTargetPlatform != foundation.TargetPlatform.windows) {
+      return;
+    }
+    final typography = AppThemeConfig.standard().lightTheme.typography;
+    final styles = [
+      typography.sans,
+      typography.mono,
+      typography.xSmall,
+      typography.small,
+      typography.base,
+      typography.large,
+      typography.xLarge,
+      typography.h1,
+      typography.h2,
+      typography.h3,
+      typography.h4,
+      typography.p,
+      typography.inlineCode,
+      typography.textLarge,
+      typography.textSmall,
+      typography.textMuted,
+    ];
+
+    expect(styles.map((style) => style.fontFamily).toSet(), {
+      'Microsoft YaHei UI',
+    });
+  });
+
   testWidgets('scope supplies a non-fallback default text style', (
     tester,
   ) async {
