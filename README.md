@@ -1,17 +1,20 @@
 # lemon_shadcn
 
 基于 `shadcn_flutter` 的低侵入 Flutter 应用组件层。它可以直接与现有
-`MaterialApp` 共存，不要求迁移到 `ShadcnApp`。
+`MaterialApp` 共存，不要求迁移到 `ShadcnApp`。本仓库不发布到 pub.dev，请通过
+Git / path / git dependency 接入。
 
 ## 接入
 
-只需在现有应用的 builder 中配置一次：
+本包会 re-export 上游 `shadcn_flutter`。其中与 Material 同名的类型较多
+（如 `Card`、`Button`、`TextField`），与 `package:flutter/material.dart` 同时导入时
+会发生命名冲突。推荐把 Material 加上前缀：
 
 ```dart
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' as material;
 import 'package:lemon_shadcn/lemon_shadcn.dart';
 
-MaterialApp(
+material.MaterialApp(
   builder: AppShadcnScope.builder(
     config: AppThemeConfig.standard(
       radius: .6,
@@ -84,7 +87,7 @@ final theme = AppThemeConfig.preset(AppThemePreset.apple).copyWith(
   controls: const AppControlMetrics(height: 40),
 );
 
-MaterialApp(builder: AppShadcnScope.builder(config: theme));
+material.MaterialApp(builder: AppShadcnScope.builder(config: theme));
 ```
 
 当前提供 `standard`、`apple`、`fluent`、`material`；后三者是相应设计语言的灵感基线，
@@ -96,6 +99,15 @@ MaterialApp(builder: AppShadcnScope.builder(config: theme));
 中按 Actions、Forms、Data display、Navigation、Menus、Layout、Structured layout、
 Overlay、Motion 分类展示。完整映射见
 [`docs/component-inventory.md`](docs/component-inventory.md)。
+
+## 已知边界
+
+- 上游仍为 0.x；升级必须重新跑 `tool/check_upstream.dart` 并复核映射。
+- 上游 `RawSortableList` 尚未实现，`AppSortableInput` 暂用 Flutter
+  `ReorderableListView`；Chip 替换也在 App 层规避了上游残留映射问题。
+- Image 选择由业务注入格式化领域值，不绑定平台插件。
+- 默认文案以英文为主；中文产品请覆盖 `errorPresenter`、validators 和局部 builders。
+- 更细的人工验收项见 [`docs/test-handoff.md`](docs/test-handoff.md)。
 
 ## 验证
 
