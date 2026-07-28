@@ -72,7 +72,7 @@ class _NavigationPageState extends State<NavigationPage> {
                     height: 72,
                     child: AppSwitcher(
                       index: _tab,
-                      direction: AxisDirection.right,
+                      direction: AxisDirection.left,
                       onIndexChanged: (value) => setState(() => _tab = value),
                       children: const [
                         Center(child: Text('概览面板')),
@@ -89,7 +89,6 @@ class _NavigationPageState extends State<NavigationPage> {
               child: AppNavigationBar(
                 selectedKey: _destination,
                 onSelected: (value) => setState(() => _destination = value),
-                alignment: AppNavigationBarAlignment.center,
                 children: const [
                   AppNavigationItem(
                     key: ValueKey('home'),

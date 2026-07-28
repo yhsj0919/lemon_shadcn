@@ -357,14 +357,14 @@ abstract final class AppComponentRegistry {
       appName: 'AppTabs',
       upstreamName: 'Tabs',
       category: AppComponentCategory.navigation,
-      adapter: AppComponentAdapter.alias,
+      adapter: AppComponentAdapter.independent,
       status: AppComponentStatus.implemented,
     ),
     AppComponentRegistration(
       appName: 'AppTabList',
       upstreamName: 'TabList',
       category: AppComponentCategory.navigation,
-      adapter: AppComponentAdapter.alias,
+      adapter: AppComponentAdapter.independent,
       status: AppComponentStatus.implemented,
     ),
     AppComponentRegistration(
@@ -623,7 +623,7 @@ abstract final class AppComponentRegistry {
       appName: 'AppNavigationBar',
       upstreamName: 'NavigationBar',
       category: AppComponentCategory.navigation,
-      adapter: AppComponentAdapter.alias,
+      adapter: AppComponentAdapter.independent,
       status: AppComponentStatus.implemented,
     ),
     AppComponentRegistration(

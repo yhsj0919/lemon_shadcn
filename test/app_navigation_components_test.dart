@@ -39,11 +39,12 @@ void main() {
     );
 
     tester.widget<Pagination>(find.byType(Pagination)).onPageChanged(2);
-    tester.widget<Tabs>(find.byType(Tabs)).onChanged(1);
+    tester.widget<AppTabs>(find.byType(AppTabs)).onChanged(1);
     expect(page, 2);
     expect(tab, 1);
     expect(find.byType(Breadcrumb), findsOneWidget);
-    expect(find.byType(TabList), findsOneWidget);
+    expect(find.byType(AppTabs), findsOneWidget);
+    expect(find.byType(AppTabList), findsOneWidget);
   });
 
   testWidgets('steps and timeline aliases render categorized layout data', (

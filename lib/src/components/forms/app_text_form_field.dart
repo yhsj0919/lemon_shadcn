@@ -302,12 +302,13 @@ class _AppTextFieldControlState extends State<_AppTextFieldControl> {
           Semantics(
             button: true,
             label: _obscureText ? 'Show password' : 'Hide password',
-            child: shad.GhostButton(
-              density: shad.ButtonDensity.iconDense,
+            child: shad.IconButton.text(
+              density: shad.ButtonDensity.compact,
+              enabled: widget.enabled,
               onPressed: widget.enabled
                   ? () => setState(() => _obscureText = !_obscureText)
                   : null,
-              child: Icon(
+              icon: Icon(
                 _obscureText ? shad.LucideIcons.eye : shad.LucideIcons.eyeOff,
               ),
             ),

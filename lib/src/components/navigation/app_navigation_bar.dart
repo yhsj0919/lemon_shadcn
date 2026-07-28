@@ -3,7 +3,6 @@ import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
 import '../../foundation/app_visual_style.dart';
 
-typedef AppNavigationBar = shad.NavigationBar;
 typedef AppNavigationButton = shad.NavigationButton;
 typedef AppNavigationBarAlignment = shad.NavigationBarAlignment;
 typedef AppNavigationRailAlignment = shad.NavigationRailAlignment;
@@ -11,6 +10,103 @@ typedef AppNavigationContainerType = shad.NavigationContainerType;
 typedef AppNavigationLabelType = shad.NavigationLabelType;
 typedef AppNavigationLabelPosition = shad.NavigationLabelPosition;
 typedef AppNavigationLabelSize = shad.NavigationLabelSize;
+
+/// Horizontal/vertical navigation bar with equal-width items by default.
+class AppNavigationBar extends StatelessWidget {
+  const AppNavigationBar({
+    super.key,
+    required this.children,
+    this.alignment = AppNavigationBarAlignment.start,
+    this.direction,
+    this.labelType = AppNavigationLabelType.all,
+    this.labelPosition = AppNavigationLabelPosition.bottom,
+    this.labelSize = AppNavigationLabelSize.small,
+    this.backgroundColor,
+    this.padding,
+    this.surfaceOpacity,
+    this.surfaceBlur,
+    this.selectedKey,
+    this.onSelected,
+    this.expanded = false,
+    this.keepCrossAxisSize,
+    this.keepMainAxisSize,
+    this.expandedSize,
+    this.collapsedSize,
+    this.spacing,
+    this.equalWidth = true,
+  });
+
+  final List<Widget> children;
+  final AppNavigationBarAlignment alignment;
+  final Axis? direction;
+  final AppNavigationLabelType labelType;
+  final AppNavigationLabelPosition labelPosition;
+  final AppNavigationLabelSize labelSize;
+  final Color? backgroundColor;
+  final EdgeInsetsGeometry? padding;
+  final double? surfaceOpacity;
+  final double? surfaceBlur;
+  final Key? selectedKey;
+  final ValueChanged<Key?>? onSelected;
+  final bool expanded;
+  final bool? keepCrossAxisSize;
+  final bool? keepMainAxisSize;
+  final double? expandedSize;
+  final double? collapsedSize;
+  final double? spacing;
+
+  /// When true (default) and [direction] is horizontal, navigation items share
+  /// equal width like a typical bottom navigation bar.
+  final bool equalWidth;
+
+  static bool _isNavigationItem(Widget child) {
+    return child is AppNavigationItem ||
+        child is shad.NavigationItem ||
+        child is shad.NavigationButton;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final axis = direction ?? Axis.horizontal;
+    final useEqualWidth = equalWidth && axis == Axis.horizontal;
+    final resolvedChildren = useEqualWidth
+        ? [
+            for (final child in children)
+              if (_isNavigationItem(child))
+                Expanded(child: Center(child: child))
+              else
+                child,
+          ]
+        : children;
+
+    final bar = shad.NavigationBar(
+      alignment: alignment,
+      direction: direction,
+      labelType: labelType,
+      labelPosition: labelPosition,
+      labelSize: labelSize,
+      backgroundColor: backgroundColor,
+      padding: padding,
+      surfaceOpacity: surfaceOpacity,
+      surfaceBlur: surfaceBlur,
+      selectedKey: selectedKey,
+      onSelected: onSelected,
+      expanded: expanded,
+      keepCrossAxisSize: keepCrossAxisSize,
+      keepMainAxisSize: keepMainAxisSize,
+      expandedSize: expandedSize,
+      collapsedSize: collapsedSize,
+      spacing: spacing,
+      children: resolvedChildren,
+    );
+
+    // Ensure equal-width items get a bounded main-axis extent.
+    if (useEqualWidth) {
+      return SizedBox(width: double.infinity, child: bar);
+    }
+    return bar;
+  }
+}
 
 class AppNavigationItem extends StatelessWidget {
   const AppNavigationItem({
@@ -24,7 +120,7 @@ class AppNavigationItem extends StatelessWidget {
     this.spacing,
     this.alignment,
     this.enabled,
-    this.overflow = shad.NavigationOverflow.clip,
+    this.overflow = shad.NavigationOverflow.ellipsis,
     this.marginAlignment,
   });
 
@@ -42,17 +138,35 @@ class AppNavigationItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final data = shad.Data.maybeOf<shad.NavigationControlData>(context);
+    final isSidebar =
+        data?.containerType == shad.NavigationContainerType.sidebar;
+    // Match upstream defaults: icon density for bar/rail, normal for sidebar.
+    final defaultStyle = isSidebar
+        ? const shad.ButtonStyle.ghost()
+        : const shad.ButtonStyle.ghost(density: shad.ButtonDensity.icon);
+    final defaultSelectedStyle = isSidebar
+        ? const shad.ButtonStyle.secondary()
+        : const shad.ButtonStyle.secondary(density: shad.ButtonDensity.icon);
+
+    final resolvedLabel = label == null
+        ? null
+        : DefaultTextStyle.merge(
+            maxLines: 1,
+            softWrap: false,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            child: label!,
+          );
+
     return shad.NavigationItem(
       key: key,
-      label: label,
+      label: resolvedLabel,
       selected: selected,
       onChanged: onChanged,
-      style: _withControlPalette(
-        style ?? const shad.ButtonStyle.ghost(),
-        selected: false,
-      ),
+      style: _withControlPalette(style ?? defaultStyle, selected: false),
       selectedStyle: _withControlPalette(
-        selectedStyle ?? const shad.ButtonStyle.secondary(),
+        selectedStyle ?? defaultSelectedStyle,
         selected: true,
       ),
       spacing: spacing,
