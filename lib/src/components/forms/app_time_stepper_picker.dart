@@ -116,86 +116,91 @@ class _AppTimeStepperEditorState extends State<_AppTimeStepperEditor> {
   @override
   Widget build(BuildContext context) {
     final theme = shad.Theme.of(context);
-    return Stack(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(12, 16, 12, 12),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Wrap(
-                spacing: 12,
-                runSpacing: 16,
-                alignment: WrapAlignment.center,
-                children: [
-                  _TimeUnitControl(
-                    label: '时',
-                    value: _value.hour,
-                    maxValue: 23,
-                    coarseStep: 5,
-                    onDecrease: () => _change(hours: -5),
-                    onIncrease: () => _change(hours: 5),
-                    onFineDecrease: () => _change(hours: -1),
-                    onFineIncrease: () => _change(hours: 1),
-                    onInput: _setHour,
-                    onConfirm: _confirm,
-                    onCancel: _cancel,
-                  ),
-                  SizedBox(
-                    width: 24,
-                    height: 44,
-                    child: Center(child: const Text(':').x3Large()),
-                  ),
-                  _TimeUnitControl(
-                    label: '分',
-                    value: _value.minute,
-                    maxValue: 59,
-                    coarseStep: widget.minuteStep,
-                    onDecrease: () => _change(minutes: -widget.minuteStep),
-                    onIncrease: () => _change(minutes: widget.minuteStep),
-                    onFineDecrease: () => _change(minutes: -1),
-                    onFineIncrease: () => _change(minutes: 1),
-                    onInput: _setMinute,
-                    onConfirm: _confirm,
-                    onCancel: _cancel,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  AppButton.text(onPressed: _clear, child: const Text('清空')),
-                  const SizedBox(width: 20),
-                  AppButton.outline(
-                    onPressed: _cancel,
-                    child: const Text('取消'),
-                  ),
-                  const SizedBox(width: 8),
-                  AppButton.primary(
-                    onPressed: _confirm,
-                    child: const Text('确定'),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        Positioned(
-          bottom: 60,
-          right: 12,
-          child: shad.Tooltip(
-            tooltip: (context) => const shad.TooltipContainer(
-              child: Text('↑↓ 调整 1，按住 Shift 调整 5'),
-            ),
-            child: Icon(
-              shad.LucideIcons.circleHelp,
-              size: 14,
-              color: theme.colorScheme.mutedForeground.withValues(alpha: 0.65),
+    return IntrinsicWidth(
+      child: Stack(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 16, 12, 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _TimeUnitControl(
+                      label: '时',
+                      value: _value.hour,
+                      maxValue: 23,
+                      coarseStep: 5,
+                      onDecrease: () => _change(hours: -5),
+                      onIncrease: () => _change(hours: 5),
+                      onFineDecrease: () => _change(hours: -1),
+                      onFineIncrease: () => _change(hours: 1),
+                      onInput: _setHour,
+                      onConfirm: _confirm,
+                      onCancel: _cancel,
+                    ),
+                    const SizedBox(width: 12),
+                    SizedBox(
+                      width: 24,
+                      height: 44,
+                      child: Center(child: const Text(':').x3Large()),
+                    ),
+                    const SizedBox(width: 12),
+                    _TimeUnitControl(
+                      label: '分',
+                      value: _value.minute,
+                      maxValue: 59,
+                      coarseStep: widget.minuteStep,
+                      onDecrease: () => _change(minutes: -widget.minuteStep),
+                      onIncrease: () => _change(minutes: widget.minuteStep),
+                      onFineDecrease: () => _change(minutes: -1),
+                      onFineIncrease: () => _change(minutes: 1),
+                      onInput: _setMinute,
+                      onConfirm: _confirm,
+                      onCancel: _cancel,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    AppButton.text(onPressed: _clear, child: const Text('清空')),
+                    const Spacer(),
+                    AppButton.outline(
+                      onPressed: _cancel,
+                      child: const Text('取消'),
+                    ),
+                    const SizedBox(width: 8),
+                    AppButton.primary(
+                      onPressed: _confirm,
+                      child: const Text('确定'),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
-        ),
-      ],
+          Positioned(
+            bottom: 60,
+            right: 12,
+            child: shad.Tooltip(
+              tooltip: (context) => const shad.TooltipContainer(
+                child: Text('↑↓ 调整 1，按住 Shift 调整 5'),
+              ),
+              child: Icon(
+                shad.LucideIcons.circleHelp,
+                size: 14,
+                color: theme.colorScheme.mutedForeground.withValues(
+                  alpha: 0.65,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

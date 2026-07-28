@@ -148,41 +148,45 @@ class _AppSingleDateEditorState extends State<_AppSingleDateEditor> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        shad.DatePickerDialog(
-          initialView: widget.initialView,
-          initialViewType: widget.initialViewType ?? shad.CalendarViewType.date,
-          selectionMode: shad.CalendarSelectionMode.single,
-          initialValue: _value == null
-              ? null
-              : shad.CalendarValue.single(_value!),
-          stateBuilder: widget.stateBuilder,
-          onChanged: (value) {
-            final next = value == null
+    return IntrinsicWidth(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          shad.DatePickerDialog(
+            initialView: widget.initialView,
+            initialViewType:
+                widget.initialViewType ?? shad.CalendarViewType.date,
+            selectionMode: shad.CalendarSelectionMode.single,
+            initialValue: _value == null
                 ? null
-                : (value as shad.SingleCalendarValue).date;
-            setState(() => _value = next);
-            if (!widget.showActions) widget.handler.value = next;
-          },
-        ),
-        if (widget.showActions)
-          _AppDateActions(
-            onClear: () {
-              widget.handler.value = null;
-              widget.handler.close();
-            },
-            onCancel: () {
-              widget.handler.value = _initialValue;
-              widget.handler.close();
-            },
-            onConfirm: () {
-              widget.handler.value = _value;
-              widget.handler.close();
+                : shad.CalendarValue.single(_value!),
+            stateBuilder: widget.stateBuilder,
+            onChanged: (value) {
+              final next = value == null
+                  ? null
+                  : (value as shad.SingleCalendarValue).date;
+              setState(() => _value = next);
+              if (!widget.showActions) widget.handler.value = next;
             },
           ),
-      ],
+          if (widget.showActions)
+            _AppDateActions(
+              onClear: () {
+                widget.handler.value = null;
+                widget.handler.close();
+              },
+              onCancel: () {
+                widget.handler.value = _initialValue;
+                widget.handler.close();
+              },
+              onConfirm: () {
+                widget.handler.value = _value;
+                widget.handler.close();
+              },
+            ),
+        ],
+      ),
     );
   }
 }
@@ -212,16 +216,17 @@ class _AppRangeDateEditorState extends State<_AppRangeDateEditor> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        LayoutBuilder(
-          builder: (context, constraints) => shad.DatePickerDialog(
+    return IntrinsicWidth(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          shad.DatePickerDialog(
             initialView: widget.initialView,
             initialViewType:
                 widget.initialViewType ?? shad.CalendarViewType.date,
             selectionMode: shad.CalendarSelectionMode.range,
-            viewMode: constraints.maxWidth < 500
+            viewMode: MediaQuery.sizeOf(context).width < 500
                 ? shad.CalendarSelectionMode.single
                 : shad.CalendarSelectionMode.range,
             initialValue: _value == null
@@ -237,23 +242,23 @@ class _AppRangeDateEditorState extends State<_AppRangeDateEditor> {
               if (!widget.showActions) widget.handler.value = next;
             },
           ),
-        ),
-        if (widget.showActions)
-          _AppDateActions(
-            onClear: () {
-              widget.handler.value = null;
-              widget.handler.close();
-            },
-            onCancel: () {
-              widget.handler.value = _initialValue;
-              widget.handler.close();
-            },
-            onConfirm: () {
-              widget.handler.value = _value;
-              widget.handler.close();
-            },
-          ),
-      ],
+          if (widget.showActions)
+            _AppDateActions(
+              onClear: () {
+                widget.handler.value = null;
+                widget.handler.close();
+              },
+              onCancel: () {
+                widget.handler.value = _initialValue;
+                widget.handler.close();
+              },
+              onConfirm: () {
+                widget.handler.value = _value;
+                widget.handler.close();
+              },
+            ),
+        ],
+      ),
     );
   }
 }
