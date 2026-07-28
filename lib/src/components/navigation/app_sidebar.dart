@@ -3,6 +3,7 @@ import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
 import '../actions/app_button.dart';
 import '../display/app_text.dart';
+import '../layout/app_layout_components.dart';
 import '../overlay/app_overlay_components.dart';
 
 enum AppSidebarMode { expanded, compact }
@@ -26,7 +27,8 @@ class AppNavDestination {
   final List<AppNavDestination> children;
 
   bool contains(String destinationId) =>
-      id == destinationId || children.any((child) => child.contains(destinationId));
+      id == destinationId ||
+      children.any((child) => child.contains(destinationId));
 }
 
 /// Sidebar navigation with shared expanded and icon-only presentations.
@@ -82,62 +84,59 @@ class _AppSidebarState extends State<AppSidebar> {
 
   bool _expandAncestors(AppNavDestination destination) {
     if (destination.id == widget.selectedId) return true;
-    final containsSelection =
-        destination.children.any(_expandAncestors);
+    final containsSelection = destination.children.any(_expandAncestors);
     if (containsSelection) _expanded.add(destination.id);
     return containsSelection;
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = shad.Theme.of(context);
     final compact = widget.mode == AppSidebarMode.compact;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 180),
       curve: Curves.easeOutCubic,
       width: compact ? widget.compactWidth : widget.expandedWidth,
-      decoration: BoxDecoration(
-        color: theme.colorScheme.card,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: theme.colorScheme.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (widget.header != null)
-            Padding(
-              padding: EdgeInsets.all(compact ? 8 : 16),
-              child: widget.header,
+      child: AppCard(
+        padding: EdgeInsets.zero,
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (widget.header != null)
+              Padding(
+                padding: EdgeInsets.all(compact ? 8 : 16),
+                child: widget.header,
+              ),
+            Expanded(
+              child: ListView(
+                padding: EdgeInsets.symmetric(horizontal: compact ? 8 : 10),
+                children: [
+                  for (final destination in widget.destinations)
+                    compact
+                        ? _CompactDestination(
+                            destination: destination,
+                            selectedId: widget.selectedId,
+                            onSelected: widget.onDestinationSelected,
+                          )
+                        : _ExpandedDestination(
+                            destination: destination,
+                            selectedId: widget.selectedId,
+                            expandedIds: _expanded,
+                            onToggle: (id) => setState(() {
+                              if (!_expanded.remove(id)) _expanded.add(id);
+                            }),
+                            onSelected: widget.onDestinationSelected,
+                          ),
+                ],
+              ),
             ),
-          Expanded(
-            child: ListView(
-              padding: EdgeInsets.symmetric(horizontal: compact ? 8 : 10),
-              children: [
-                for (final destination in widget.destinations)
-                  compact
-                      ? _CompactDestination(
-                          destination: destination,
-                          selectedId: widget.selectedId,
-                          onSelected: widget.onDestinationSelected,
-                        )
-                      : _ExpandedDestination(
-                          destination: destination,
-                          selectedId: widget.selectedId,
-                          expandedIds: _expanded,
-                          onToggle: (id) => setState(() {
-                            if (!_expanded.remove(id)) _expanded.add(id);
-                          }),
-                          onSelected: widget.onDestinationSelected,
-                        ),
-              ],
-            ),
-          ),
-          if (widget.footer != null)
-            Padding(
-              padding: EdgeInsets.all(compact ? 8 : 12),
-              child: widget.footer,
-            ),
-        ],
+            if (widget.footer != null)
+              Padding(
+                padding: EdgeInsets.all(compact ? 8 : 12),
+                child: widget.footer,
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -367,9 +366,6 @@ class _SidebarButton extends StatelessWidget {
             config: const AppButtonConfig(alignment: Alignment.centerLeft),
             child: Text(destination.label),
           );
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: button,
-    );
+    return Padding(padding: const EdgeInsets.only(bottom: 4), child: button);
   }
 }

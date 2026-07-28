@@ -253,10 +253,8 @@ class _FormsPageState extends State<FormsPage> {
                     label: '章节顺序',
                     initialValue: const ['概览', '动态', '设置'],
                     itemBuilder: (context, index, item) => AppCard(
-                      child: Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Text('${index + 1}. $item'),
-                      ),
+                      padding: const EdgeInsets.all(12),
+                      child: Text('${index + 1}. $item'),
                     ),
                   ),
                   const Gap(12),

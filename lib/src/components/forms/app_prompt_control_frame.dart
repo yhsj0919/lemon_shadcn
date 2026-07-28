@@ -19,50 +19,55 @@ class AppPromptControlFrame extends StatefulWidget {
 }
 
 class _AppPromptControlFrameState extends State<AppPromptControlFrame> {
-  bool _active = false;
+  bool _pointerActive = false;
+  bool _focused = false;
 
-  void _setActive(bool value) {
-    if (!mounted || _active == value) return;
-    setState(() => _active = value);
+  void _setPointerActive(bool value) {
+    if (!mounted || _pointerActive == value) return;
+    setState(() => _pointerActive = value);
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = shad.Theme.of(context);
+    final active = widget.enabled && (_pointerActive || _focused);
     return TapRegion(
-      onTapOutside: (_) => _setActive(false),
-      child: Listener(
-        onPointerDown: widget.enabled ? (_) => _setActive(true) : null,
-        child: Stack(
-          fit: StackFit.passthrough,
-          children: [
-            shad.ComponentTheme(
-              data: shad.CardTheme(
-                boxShadow: AppOverlayStyle.floatingShadows(context),
-              ),
-              child: shad.ComponentTheme(
-                data: const shad.FocusOutlineTheme(
-                  border: Border.fromBorderSide(BorderSide.none),
+      onTapOutside: (_) => _setPointerActive(false),
+      child: Focus(
+        onFocusChange: (value) {
+          if (_focused != value) setState(() => _focused = value);
+        },
+        child: Listener(
+          onPointerDown: widget.enabled ? (_) => _setPointerActive(true) : null,
+          child: Stack(
+            fit: StackFit.passthrough,
+            children: [
+              shad.ComponentTheme(
+                data: AppOverlayStyle.cardTheme(context),
+                child: shad.ComponentTheme(
+                  data: const shad.FocusOutlineTheme(
+                    border: Border.fromBorderSide(BorderSide.none),
+                  ),
+                  child: widget.child,
                 ),
-                child: widget.child,
               ),
-            ),
-            if (_active && widget.enabled)
-              Positioned.fill(
-                child: IgnorePointer(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(theme.radiusMd),
-                      border: Border.all(
-                        color: theme.colorScheme.ring,
-                        width: 1,
-                        strokeAlign: BorderSide.strokeAlignInside,
+              if (active)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(theme.radiusMd),
+                        border: Border.all(
+                          color: theme.colorScheme.ring,
+                          width: 1,
+                          strokeAlign: BorderSide.strokeAlignInside,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );

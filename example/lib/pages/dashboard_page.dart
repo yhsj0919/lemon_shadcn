@@ -43,12 +43,10 @@ class _MetricCard extends StatelessWidget {
     return SizedBox(
       width: 180,
       child: AppCard(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [AppText.muted(label), const Gap(8), AppText.h2(value)],
-          ),
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [AppText.muted(label), const Gap(8), AppText.h2(value)],
         ),
       ),
     );

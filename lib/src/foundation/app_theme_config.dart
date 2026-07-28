@@ -78,7 +78,7 @@ enum AppThemePreset { standard, apple, fluent, material }
 @immutable
 class AppControlMetrics {
   const AppControlMetrics({
-    this.height = 36,
+    this.height = 34,
     this.horizontalPadding = 12,
     this.iconSize = 16,
     this.contentGap = 8,
@@ -140,12 +140,12 @@ class AppShadowTheme {
   const AppShadowTheme({
     this.enabled = true,
     this.colorMode = AppShadowColorMode.auto,
-    this.ambientOpacity = 0.06,
-    this.colorOpacity = 0.18,
-    this.darkColorOpacity = 0.24,
-    this.blurRadius = 18,
-    this.spreadRadius = -4,
-    this.offset = const Offset(0, 6),
+    this.ambientOpacity = 0.03,
+    this.colorOpacity = 0.10,
+    this.darkColorOpacity = 0.16,
+    this.blurRadius = 14,
+    this.spreadRadius = -5,
+    this.offset = const Offset(0, 4),
   });
 
   const AppShadowTheme.none()
@@ -240,7 +240,7 @@ class AppThemeConfig {
         ),
         themeMode: themeMode,
         controls: const AppControlMetrics(
-          height: 36,
+          height: 34,
           horizontalPadding: 14,
           iconSize: 16,
           contentGap: 8,
@@ -273,7 +273,7 @@ class AppThemeConfig {
         ),
         themeMode: themeMode,
         controls: const AppControlMetrics(
-          height: 36,
+          height: 34,
           horizontalPadding: 10,
           iconSize: 16,
           contentGap: 6,
@@ -313,7 +313,7 @@ class AppThemeConfig {
         ),
         themeMode: themeMode,
         controls: const AppControlMetrics(
-          height: 40,
+          height: 36,
           horizontalPadding: 16,
           iconSize: 18,
           contentGap: 8,

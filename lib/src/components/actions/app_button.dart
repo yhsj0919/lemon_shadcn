@@ -5,6 +5,7 @@ import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
 import '../../foundation/app_async_action.dart';
 import '../../foundation/app_control_box.dart';
+import '../../foundation/app_interactive_style.dart';
 import '../../foundation/app_shadcn_scope.dart';
 
 typedef AppButtonCallback = FutureOr<void> Function();
@@ -18,6 +19,8 @@ enum AppButtonVariant {
   link,
   text,
 }
+
+enum AppButtonPressEffect { none, returnToBase, lift }
 
 @immutable
 class AppButtonConfig {
@@ -33,6 +36,10 @@ class AppButtonConfig {
     this.onHover,
     this.onFocus,
     this.enableFeedback,
+    this.pressEffect = AppButtonPressEffect.none,
+    this.pressDuration = const Duration(milliseconds: 90),
+    this.hoverLift = false,
+    this.hoverDuration = const Duration(milliseconds: 180),
   });
 
   final double? height;
@@ -46,6 +53,10 @@ class AppButtonConfig {
   final ValueChanged<bool>? onHover;
   final ValueChanged<bool>? onFocus;
   final bool? enableFeedback;
+  final AppButtonPressEffect pressEffect;
+  final Duration pressDuration;
+  final bool hoverLift;
+  final Duration hoverDuration;
 }
 
 abstract final class AppButton {
@@ -308,6 +319,8 @@ class _AppAsyncButton extends StatefulWidget {
 class _AppAsyncButtonState extends State<_AppAsyncButton> {
   bool _loading = false;
   bool _running = false;
+  bool _pressed = false;
+  bool _hovered = false;
 
   bool get _effectiveLoading =>
       widget.loading ?? widget.action?.isLoading ?? _loading;
@@ -334,6 +347,11 @@ class _AppAsyncButtonState extends State<_AppAsyncButton> {
 
   void _actionChanged() {
     if (mounted) setState(() {});
+  }
+
+  void _handleHover(bool value) {
+    if (_hovered != value) setState(() => _hovered = value);
+    widget.config.onHover?.call(value);
   }
 
   @override
@@ -392,6 +410,34 @@ class _AppAsyncButtonState extends State<_AppAsyncButton> {
     );
     final enabled = widget.action != null || widget.onPressed != null;
     final onPressed = !enabled || _effectiveRunning ? null : _press;
+    final destructiveStyle = shad.ButtonStyle.destructive(
+      size: widget.config.size,
+      density: widget.iconOnly
+          ? shad.ButtonDensity.icon
+          : widget.config.density,
+      shape: widget.shapeOverride ?? widget.config.shape,
+    );
+    final secondaryStyle = shad.ButtonStyle.secondary(
+      size: widget.config.size,
+      density: widget.iconOnly
+          ? shad.ButtonDensity.icon
+          : widget.config.density,
+      shape: widget.shapeOverride ?? widget.config.shape,
+    );
+    final linkStyle = shad.ButtonStyle.link(
+      size: widget.config.size,
+      density: widget.iconOnly
+          ? shad.ButtonDensity.icon
+          : widget.config.density,
+      shape: widget.shapeOverride ?? widget.config.shape,
+    );
+    final textStyle = shad.ButtonStyle.text(
+      size: widget.config.size,
+      density: widget.iconOnly
+          ? shad.ButtonDensity.icon
+          : widget.config.density,
+      shape: widget.shapeOverride ?? widget.config.shape,
+    );
 
     final button = switch (widget.variant) {
       AppButtonVariant.primary => shad.PrimaryButton(
@@ -407,25 +453,21 @@ class _AppAsyncButtonState extends State<_AppAsyncButton> {
         shape: widget.shapeOverride ?? widget.config.shape,
         focusNode: widget.config.focusNode,
         disableTransition: widget.config.disableTransition,
-        onHover: widget.config.onHover,
+        onHover: _handleHover,
         onFocus: widget.config.onFocus,
         enableFeedback: widget.config.enableFeedback,
         child: child,
       ),
-      AppButtonVariant.secondary => shad.SecondaryButton(
+      AppButtonVariant.secondary => shad.Button(
         onPressed: onPressed,
         enabled: widget.config.enabled,
         leading: widget.leading,
         trailing: widget.trailing,
         alignment: widget.config.alignment,
-        size: widget.config.size,
-        density: widget.iconOnly
-            ? shad.ButtonDensity.icon
-            : widget.config.density,
-        shape: widget.shapeOverride ?? widget.config.shape,
+        style: AppInteractiveStyle.hover(secondaryStyle),
         focusNode: widget.config.focusNode,
         disableTransition: widget.config.disableTransition,
-        onHover: widget.config.onHover,
+        onHover: _handleHover,
         onFocus: widget.config.onFocus,
         enableFeedback: widget.config.enableFeedback,
         child: child,
@@ -443,7 +485,7 @@ class _AppAsyncButtonState extends State<_AppAsyncButton> {
         shape: widget.shapeOverride ?? widget.config.shape,
         focusNode: widget.config.focusNode,
         disableTransition: widget.config.disableTransition,
-        onHover: widget.config.onHover,
+        onHover: _handleHover,
         onFocus: widget.config.onFocus,
         enableFeedback: widget.config.enableFeedback,
         child: child,
@@ -461,70 +503,145 @@ class _AppAsyncButtonState extends State<_AppAsyncButton> {
         shape: widget.shapeOverride ?? widget.config.shape,
         focusNode: widget.config.focusNode,
         disableTransition: widget.config.disableTransition,
-        onHover: widget.config.onHover,
+        onHover: _handleHover,
         onFocus: widget.config.onFocus,
         enableFeedback: widget.config.enableFeedback,
         child: child,
       ),
-      AppButtonVariant.destructive => shad.DestructiveButton(
+      AppButtonVariant.destructive => shad.Button(
         onPressed: onPressed,
         enabled: widget.config.enabled,
         leading: widget.leading,
         trailing: widget.trailing,
         alignment: widget.config.alignment,
-        size: widget.config.size,
-        density: widget.iconOnly
-            ? shad.ButtonDensity.icon
-            : widget.config.density,
-        shape: widget.shapeOverride ?? widget.config.shape,
+        style: destructiveStyle.copyWith(
+          decoration: (context, states, value) {
+            if (states.contains(WidgetState.hovered) &&
+                !states.contains(WidgetState.pressed)) {
+              final normalStates = Set<WidgetState>.of(states)
+                ..remove(WidgetState.hovered);
+              return destructiveStyle.decoration(context, normalStates);
+            }
+            return value;
+          },
+        ),
         focusNode: widget.config.focusNode,
         disableTransition: widget.config.disableTransition,
-        onHover: widget.config.onHover,
+        onHover: _handleHover,
         onFocus: widget.config.onFocus,
         enableFeedback: widget.config.enableFeedback,
         child: child,
       ),
-      AppButtonVariant.link => shad.LinkButton(
+      AppButtonVariant.link => shad.Button(
         onPressed: onPressed,
         enabled: widget.config.enabled,
         leading: widget.leading,
         trailing: widget.trailing,
         alignment: widget.config.alignment,
-        size: widget.config.size,
-        density: widget.iconOnly
-            ? shad.ButtonDensity.icon
-            : widget.config.density,
-        shape: widget.shapeOverride ?? widget.config.shape,
+        style: AppInteractiveStyle.hover(
+          linkStyle,
+          tone: AppInteractiveHoverTone.accent,
+        ),
         focusNode: widget.config.focusNode,
         disableTransition: widget.config.disableTransition,
-        onHover: widget.config.onHover,
+        onHover: _handleHover,
         onFocus: widget.config.onFocus,
         enableFeedback: widget.config.enableFeedback,
         child: child,
       ),
-      AppButtonVariant.text => shad.TextButton(
+      AppButtonVariant.text => shad.Button(
         onPressed: onPressed,
         enabled: widget.config.enabled,
         leading: widget.leading,
         trailing: widget.trailing,
         alignment: widget.config.alignment,
-        size: widget.config.size,
-        density: widget.iconOnly
-            ? shad.ButtonDensity.icon
-            : widget.config.density,
-        shape: widget.shapeOverride ?? widget.config.shape,
+        style: AppInteractiveStyle.hover(
+          textStyle,
+          tone: AppInteractiveHoverTone.accent,
+        ),
         focusNode: widget.config.focusNode,
         disableTransition: widget.config.disableTransition,
-        onHover: widget.config.onHover,
+        onHover: _handleHover,
         onFocus: widget.config.onFocus,
         enableFeedback: widget.config.enableFeedback,
         child: child,
       ),
     };
-    return AppControlBox(
+    final control = AppControlBox(
       height: widget.config.height,
       square: widget.iconOnly,
       child: button,
+    );
+    final enabledForPress =
+        enabled && widget.config.enabled && !_effectiveRunning;
+    final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    final hoverActive =
+        _hovered && enabledForPress && widget.config.hoverLift && !reduceMotion;
+    final (offset, scale) = _pressed && enabledForPress
+        ? switch (widget.config.pressEffect) {
+            AppButtonPressEffect.none => (Offset.zero, 1.0),
+            AppButtonPressEffect.returnToBase => (Offset.zero, 1.0),
+            AppButtonPressEffect.lift => (const Offset(0, -1), 1.01),
+          }
+        : hoverActive
+        ? (const Offset(0, -1), 1.0)
+        : (Offset.zero, 1.0);
+    final theme = shad.Theme.of(context);
+    final backgroundless =
+        widget.variant == AppButtonVariant.outline ||
+        widget.variant == AppButtonVariant.ghost ||
+        widget.variant == AppButtonVariant.link ||
+        widget.variant == AppButtonVariant.text;
+    final shadowColor = switch (widget.variant) {
+      AppButtonVariant.primary => theme.colorScheme.primary,
+      AppButtonVariant.secondary => theme.colorScheme.secondaryForeground,
+      AppButtonVariant.destructive => theme.colorScheme.destructive,
+      AppButtonVariant.outline ||
+      AppButtonVariant.ghost ||
+      AppButtonVariant.link ||
+      AppButtonVariant.text => theme.colorScheme.foreground,
+    };
+    final circular =
+        widget.iconOnly ||
+        widget.shapeOverride == shad.ButtonShape.circle ||
+        widget.config.shape == shad.ButtonShape.circle;
+    return Listener(
+      onPointerDown:
+          enabledForPress &&
+              widget.config.pressEffect != AppButtonPressEffect.none
+          ? (_) => setState(() => _pressed = true)
+          : null,
+      onPointerUp: _pressed ? (_) => setState(() => _pressed = false) : null,
+      onPointerCancel: _pressed
+          ? (_) => setState(() => _pressed = false)
+          : null,
+      child: AnimatedContainer(
+        duration: reduceMotion
+            ? Duration.zero
+            : _pressed
+            ? widget.config.pressDuration
+            : widget.config.hoverDuration,
+        curve: Curves.easeOutCubic,
+        transform: Matrix4.diagonal3Values(scale, scale, 1)
+          ..setTranslationRaw(offset.dx, offset.dy, 0),
+        transformAlignment: Alignment.center,
+        decoration: BoxDecoration(
+          borderRadius: circular
+              ? BorderRadius.circular(999)
+              : theme.borderRadiusMd,
+          boxShadow: hoverActive && !_pressed && !backgroundless
+              ? [
+                  BoxShadow(
+                    color: shadowColor.withValues(alpha: 0.16),
+                    blurRadius: 10,
+                    spreadRadius: -4,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : const [],
+        ),
+        child: control,
+      ),
     );
   }
 }

@@ -45,7 +45,9 @@ class AppSwitch extends StatelessWidget {
     Widget? label(Widget? child) => child == null
         ? null
         : DefaultTextStyle.merge(
-            style: theme.typography.base.copyWith(fontWeight: FontWeight.normal),
+            style: theme.typography.base.copyWith(
+              fontWeight: FontWeight.normal,
+            ),
             child: child,
           );
     final effectiveLeading = label(leading);
@@ -56,7 +58,7 @@ class AppSwitch extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (effectiveLeading != null) effectiveLeading,
+            ?effectiveLeading,
             if (effectiveLeading != null)
               SizedBox(width: gap ?? 8 * theme.scaling),
             SizedBox(
@@ -72,14 +74,15 @@ class AppSwitch extends StatelessWidget {
                       activeColor ?? colors?.background ?? colors?.accent,
                   inactiveColor: inactiveColor ?? colors?.background,
                   activeThumbColor: activeThumbColor ?? colors?.foreground,
-                  inactiveThumbColor: inactiveThumbColor,
+                  inactiveThumbColor:
+                      inactiveThumbColor ?? theme.colorScheme.mutedForeground,
                   borderRadius: borderRadius,
                 ),
               ),
             ),
             if (effectiveTrailing != null)
               SizedBox(width: gap ?? 8 * theme.scaling),
-            if (effectiveTrailing != null) effectiveTrailing,
+            ?effectiveTrailing,
           ],
         ),
       ),

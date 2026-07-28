@@ -8,6 +8,114 @@ import '../foundation/app_visual_style.dart';
 
 enum AppMotionEffect { none, tint, lift, scale, glow, depth }
 
+enum AppEntranceEffect { fade, slideUp, scale }
+
+/// Ready-to-use one-shot entrance animations.
+class AppEntranceAnimation extends StatelessWidget {
+  const AppEntranceAnimation.fade({
+    super.key,
+    required this.child,
+    this.duration = const Duration(milliseconds: 240),
+    this.curve = Curves.easeOutCubic,
+  }) : effect = AppEntranceEffect.fade;
+
+  const AppEntranceAnimation.slideUp({
+    super.key,
+    required this.child,
+    this.duration = const Duration(milliseconds: 280),
+    this.curve = Curves.easeOutCubic,
+  }) : effect = AppEntranceEffect.slideUp;
+
+  const AppEntranceAnimation.scale({
+    super.key,
+    required this.child,
+    this.duration = const Duration(milliseconds: 220),
+    this.curve = Curves.easeOutBack,
+  }) : effect = AppEntranceEffect.scale;
+
+  final Widget child;
+  final AppEntranceEffect effect;
+  final Duration duration;
+  final Curve curve;
+
+  @override
+  Widget build(BuildContext context) {
+    final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    return shad.AnimatedValueBuilder<double>(
+      initialValue: 0,
+      value: 1,
+      duration: reduceMotion ? Duration.zero : duration,
+      curve: curve,
+      child: child,
+      builder: (context, value, child) => switch (effect) {
+        AppEntranceEffect.fade => Opacity(opacity: value, child: child),
+        AppEntranceEffect.slideUp => Opacity(
+          opacity: value,
+          child: Transform.translate(
+            offset: Offset(0, 12 * (1 - value)),
+            child: child,
+          ),
+        ),
+        AppEntranceEffect.scale => Opacity(
+          opacity: value.clamp(0, 1),
+          child: Transform.scale(scale: 0.92 + 0.08 * value, child: child),
+        ),
+      },
+    );
+  }
+}
+
+enum AppLoopEffect { pulse, float }
+
+/// Ready-to-use continuous animations with seamless ping-pong playback.
+class AppLoopAnimation extends StatelessWidget {
+  const AppLoopAnimation.pulse({
+    super.key,
+    required this.child,
+    this.duration = const Duration(milliseconds: 900),
+    this.curve = Curves.easeInOut,
+    this.play = true,
+  }) : effect = AppLoopEffect.pulse;
+
+  const AppLoopAnimation.float({
+    super.key,
+    required this.child,
+    this.duration = const Duration(milliseconds: 1200),
+    this.curve = Curves.easeInOut,
+    this.play = true,
+  }) : effect = AppLoopEffect.float;
+
+  final Widget child;
+  final AppLoopEffect effect;
+  final Duration duration;
+  final Curve curve;
+  final bool play;
+
+  @override
+  Widget build(BuildContext context) {
+    final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    return shad.RepeatedAnimationBuilder<double>(
+      start: 0,
+      end: 1,
+      duration: duration,
+      curve: curve,
+      mode: shad.LoopingMode.pingPong,
+      play: play && !reduceMotion,
+      child: child,
+      builder: (context, value, child) => switch (effect) {
+        AppLoopEffect.pulse => Transform.scale(
+          scale: 0.82 + value * 0.18,
+          child: child,
+        ),
+        AppLoopEffect.float => Transform.translate(
+          offset: Offset(0, -6 * value),
+          child: child,
+        ),
+      },
+    );
+  }
+}
+
 class AppMotion extends StatefulWidget {
   const AppMotion({
     super.key,
@@ -127,6 +235,8 @@ class _AppMotionState extends State<AppMotion> {
   @override
   Widget build(BuildContext context) {
     final config = AppTheme.maybeOf(context) ?? AppThemeConfig.standard();
+    final borderRadius =
+        widget.borderRadius ?? shad.Theme.of(context).borderRadiusLg;
     final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
     final animate = widget.enabled && config.motion.enabled && !reduceMotion;
     final activeHover = animate && _hovered && !_pressed;
@@ -146,7 +256,9 @@ class _AppMotionState extends State<AppMotion> {
         (widget.effect == AppMotionEffect.lift ||
             widget.effect == AppMotionEffect.glow ||
             widget.effect == AppMotionEffect.depth);
-    final tint = activeHover && widget.effect == AppMotionEffect.tint
+    final shadowIntensity =
+        widget.shadowColorMode == AppShadowColorMode.background ? 1.8 : 1.0;
+    final tint = animate && _hovered && widget.effect == AppMotionEffect.tint
         ? _resolveShadowColor(context, config).withValues(alpha: 0.08)
         : null;
 
@@ -196,7 +308,7 @@ class _AppMotionState extends State<AppMotion> {
                     alignment: Alignment.center,
                     child: DecoratedBox(
                       decoration: BoxDecoration(
-                        borderRadius: widget.borderRadius,
+                        borderRadius: borderRadius,
                         boxShadow: _resolveShadows(
                           context,
                           config,
@@ -218,12 +330,14 @@ class _AppMotionState extends State<AppMotion> {
             transform: transform,
             transformAlignment: Alignment.center,
             decoration: BoxDecoration(
-              color: tint,
-              borderRadius: widget.borderRadius,
+              borderRadius: borderRadius,
               boxShadow: showShadow
-                  ? _resolveShadows(context, config)
+                  ? _resolveShadows(context, config, intensity: shadowIntensity)
                   : const [],
             ),
+            foregroundDecoration: tint == null
+                ? null
+                : BoxDecoration(color: tint, borderRadius: borderRadius),
             child: widget.child,
           );
 
@@ -268,7 +382,15 @@ class _AppMotionState extends State<AppMotion> {
             visual?.background ??
             colors.primary,
     };
-    return _soften(source ?? colors.primary);
+    final resolved = source ?? colors.primary;
+    if (mode == AppShadowColorMode.background) {
+      final hsl = HSLColor.fromColor(resolved);
+      return hsl
+          .withSaturation((hsl.saturation * 0.72).clamp(0, 1))
+          .withLightness(hsl.lightness.clamp(0.28, 0.38))
+          .toColor();
+    }
+    return _soften(resolved);
   }
 
   List<BoxShadow> _resolveShadows(

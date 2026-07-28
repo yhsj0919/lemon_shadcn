@@ -8,6 +8,7 @@ class MotionPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    const followCardColor = Color(0xFF14B8A6);
     return ComponentPage(
       title: '动效',
       description: '具有主题感知阴影的可复用桌面反馈。',
@@ -38,6 +39,21 @@ class MotionPage extends StatelessWidget {
                 color: colors.accentForeground,
                 child: const AppMotion.tint(child: _Tile(label: '悬浮查看')),
               ),
+              _Example(
+                label: '跟随卡片颜色',
+                color: followCardColor,
+                child: const AppVisualStyle(
+                  colors: AppVisualColors(background: followCardColor),
+                  child: AppMotion.glow(
+                    shadowColorMode: AppShadowColorMode.background,
+                    child: _Tile(
+                      label: '悬浮查看',
+                      background: followCardColor,
+                      foreground: Color(0xFFFFFFFF),
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -58,29 +74,106 @@ class MotionPage extends StatelessWidget {
           ),
         ),
         const ComponentSection(title: '选中状态色板', child: _SelectionPaletteDemo()),
+        const ComponentSection(title: '数值动画', child: _NumericAnimationDemo()),
         ComponentSection(
           title: '动画构建器',
-          child: Row(
-            children: [
-              AppAnimatedValueBuilder<double>(
-                value: 1,
-                initialValue: 0,
-                duration: const Duration(milliseconds: 700),
-                builder: (context, value, child) =>
-                    Opacity(opacity: value, child: const Text('数值动画')),
-              ),
-              const Gap(24),
-              AppRepeatedAnimationBuilder(
-                start: 0,
-                end: 1,
-                duration: const Duration(seconds: 2),
-                builder: (context, value, child) => Transform.scale(
-                  scale: .9 + value * .1,
-                  child: const Text('循环动画'),
+          child: _AnimationBuildersDemo(color: colors.primary),
+        ),
+      ],
+    );
+  }
+}
+
+class _AnimationBuildersDemo extends StatefulWidget {
+  const _AnimationBuildersDemo({required this.color});
+
+  final Color color;
+
+  @override
+  State<_AnimationBuildersDemo> createState() => _AnimationBuildersDemoState();
+}
+
+class _AnimationBuildersDemoState extends State<_AnimationBuildersDemo> {
+  int _replayKey = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppEntranceAnimation.fade(
+              key: ValueKey(_replayKey),
+              duration: const Duration(milliseconds: 700),
+              child: const Icon(LucideIcons.sparkles),
+            ),
+            const Gap(8),
+            const Text('淡入动画').small().muted(),
+            const Gap(8),
+            AppButton.outline(
+              onPressed: () => setState(() => _replayKey++),
+              child: const Text('重播'),
+            ),
+          ],
+        ),
+        const Gap(24),
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppLoopAnimation.pulse(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: widget.color,
+                  shape: BoxShape.circle,
                 ),
+                child: const SizedBox.square(dimension: 20),
               ),
-            ],
+            ),
+            const Gap(8),
+            const Text('循环动画').small().muted(),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _NumericAnimationDemo extends StatefulWidget {
+  const _NumericAnimationDemo();
+
+  @override
+  State<_NumericAnimationDemo> createState() => _NumericAnimationDemoState();
+}
+
+class _NumericAnimationDemoState extends State<_NumericAnimationDemo> {
+  double _target = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          width: 96,
+          child: AppAnimatedValueBuilder<double>(
+            value: _target,
+            initialValue: 0,
+            duration: const Duration(milliseconds: 700),
+            curve: Curves.easeOutCubic,
+            builder: (context, value, child) => Text(
+              value.round().toString(),
+              textAlign: TextAlign.center,
+            ).h2(),
           ),
+        ),
+        const Gap(16),
+        AppButton.outline(
+          onPressed: () {
+            setState(() => _target = _target == 100 ? 0 : 100);
+          },
+          child: const Text('切换数值'),
         ),
       ],
     );
@@ -213,17 +306,24 @@ class _Example extends StatelessWidget {
 }
 
 class _Tile extends StatelessWidget {
-  const _Tile({required this.label});
+  const _Tile({required this.label, this.background, this.foreground});
 
   final String label;
+  final Color? background;
+  final Color? foreground;
 
   @override
   Widget build(BuildContext context) {
     return Card(
+      filled: background != null,
+      fillColor: background,
+      borderColor: background,
       child: SizedBox(
         width: 140,
         height: 88,
-        child: Center(child: Text(label)),
+        child: Center(
+          child: Text(label, style: TextStyle(color: foreground)),
+        ),
       ),
     );
   }

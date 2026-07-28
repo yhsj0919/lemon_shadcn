@@ -85,8 +85,7 @@ class OverlayPage extends StatelessWidget {
                 builder: (anchorContext) => AppButton.outline(
                   onPressed: () => AppPopover.show<void>(
                     context: anchorContext,
-                    builder: (context) =>
-                        const AppCard(child: Text('气泡内容')),
+                    builder: (context) => const AppCard(child: Text('气泡内容')),
                   ),
                   child: const Text('气泡弹层'),
                 ),
@@ -136,10 +135,8 @@ class OverlayPage extends StatelessWidget {
                 handler: SwiperHandler.drawer,
                 builder: (context) => _panel(context, '滑动抽屉'),
                 child: const AppCard(
-                  child: Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Text('滑动触发器（示例中已禁用）'),
-                  ),
+                  padding: EdgeInsets.all(16),
+                  child: Text('滑动触发器（示例中已禁用）'),
                 ),
               ),
             ],

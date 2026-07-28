@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
 import '../../foundation/app_compact_label_style.dart';
+import '../../foundation/app_interactive_style.dart';
 
 typedef AppAvatar = shad.Avatar;
 typedef AppAvatarBadge = shad.AvatarBadge;
@@ -35,15 +36,18 @@ class AppChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final compactStyle = AppCompactLabelStyle.apply(
+      style ?? shad.ButtonVariance.secondary,
+    );
     return shad.ComponentTheme<shad.ChipTheme>(
       data: const shad.ChipTheme(padding: AppCompactLabelStyle.padding),
       child: shad.Chip(
         leading: leading,
         trailing: trailing,
         onPressed: onPressed,
-        style: AppCompactLabelStyle.apply(
-          style ?? shad.ButtonVariance.secondary,
-        ),
+        style: onPressed == null
+            ? compactStyle
+            : AppInteractiveStyle.hover(compactStyle),
         child: child,
       ),
     );

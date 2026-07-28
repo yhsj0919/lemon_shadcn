@@ -43,6 +43,7 @@ export 'src/foundation/app_shadcn_scope.dart';
 export 'src/foundation/app_async_action.dart';
 export 'src/foundation/app_component_themes.dart';
 export 'src/foundation/app_compact_label_style.dart';
+export 'src/foundation/app_interactive_style.dart';
 export 'src/foundation/app_localizations_zh.dart';
 export 'src/foundation/app_overlay_style.dart';
 export 'src/foundation/app_control_box.dart';

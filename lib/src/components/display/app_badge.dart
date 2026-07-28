@@ -2,9 +2,18 @@ import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
 import '../../foundation/app_compact_label_style.dart';
+import '../../foundation/app_interactive_style.dart';
 
 /// Semantic badge variants exposed through one App-prefixed facade.
 abstract final class AppBadge {
+  static shad.AbstractButtonStyle _style(
+    shad.AbstractButtonStyle base,
+    bool interactive,
+  ) {
+    final compact = AppCompactLabelStyle.apply(base);
+    return interactive ? AppInteractiveStyle.hover(compact) : compact;
+  }
+
   static Widget primary({
     Key? key,
     required Widget child,
@@ -17,7 +26,7 @@ abstract final class AppBadge {
     onPressed: onPressed,
     leading: leading,
     trailing: trailing,
-    style: AppCompactLabelStyle.apply(style ?? shad.ButtonVariance.primary),
+    style: _style(style ?? shad.ButtonVariance.primary, onPressed != null),
     child: child,
   );
 
@@ -33,7 +42,7 @@ abstract final class AppBadge {
     onPressed: onPressed,
     leading: leading,
     trailing: trailing,
-    style: AppCompactLabelStyle.apply(style ?? shad.ButtonVariance.secondary),
+    style: _style(style ?? shad.ButtonVariance.secondary, onPressed != null),
     child: child,
   );
 
@@ -49,7 +58,7 @@ abstract final class AppBadge {
     onPressed: onPressed,
     leading: leading,
     trailing: trailing,
-    style: AppCompactLabelStyle.apply(style ?? shad.ButtonVariance.outline),
+    style: _style(style ?? shad.ButtonVariance.outline, onPressed != null),
     child: child,
   );
 
@@ -65,9 +74,7 @@ abstract final class AppBadge {
     onPressed: onPressed,
     leading: leading,
     trailing: trailing,
-    style: AppCompactLabelStyle.apply(
-      style ?? shad.ButtonVariance.destructive,
-    ),
+    style: _style(style ?? shad.ButtonVariance.destructive, onPressed != null),
     child: child,
   );
 }

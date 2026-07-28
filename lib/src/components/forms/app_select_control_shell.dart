@@ -55,8 +55,9 @@ class _AppSelectControlShellState extends State<AppSelectControlShell> {
     Widget popup(Widget child) => _AppSelectPopupSurface(
       onDisposed: () => _setOpen(false),
       child: shad.ComponentTheme(
-        data: shad.CardTheme(
-          boxShadow: AppOverlayStyle.floatingShadows(context),
+        data: AppOverlayStyle.cardTheme(
+          context,
+          borderRadius: theme.borderRadiusMd,
         ),
         child: child,
       ),
@@ -77,10 +78,7 @@ class _AppSelectControlShellState extends State<AppSelectControlShell> {
 }
 
 class _AppSelectPopupSurface extends StatefulWidget {
-  const _AppSelectPopupSurface({
-    required this.child,
-    required this.onDisposed,
-  });
+  const _AppSelectPopupSurface({required this.child, required this.onDisposed});
 
   final Widget child;
   final VoidCallback onDisposed;

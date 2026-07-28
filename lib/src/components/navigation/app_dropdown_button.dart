@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
 import '../actions/app_button.dart';
+import 'app_menu_components.dart';
 
 /// Button variants supported by [AppDropdownButton].
 enum AppDropdownButtonVariant { primary, secondary, outline, ghost }
@@ -49,7 +50,7 @@ class _AppDropdownButtonState extends State<AppDropdownButton> {
         alignment: widget.alignment ?? Alignment.bottomLeft,
         anchorAlignment: widget.anchorAlignment,
         offset: widget.offset,
-        builder: (context) => shad.DropdownMenu(children: widget.items),
+        builder: (context) => AppDropdownMenu(children: widget.items),
       ).show(buttonContext);
     }
 

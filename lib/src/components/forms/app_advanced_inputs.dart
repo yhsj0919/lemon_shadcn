@@ -11,6 +11,7 @@ import '../../foundation/app_shadcn_scope.dart';
 import '../actions/app_button.dart';
 import 'app_field.dart';
 import 'app_form.dart';
+import 'app_prompt_control_frame.dart';
 import 'app_option.dart';
 
 typedef AppInput = shad.TextField;
@@ -509,8 +510,7 @@ class _AppItemPickerControl<V> extends StatefulWidget {
       _AppItemPickerControlState<V>();
 }
 
-class _AppItemPickerControlState<V>
-    extends State<_AppItemPickerControl<V>> {
+class _AppItemPickerControlState<V> extends State<_AppItemPickerControl<V>> {
   bool _active = false;
 
   @override
@@ -530,9 +530,7 @@ class _AppItemPickerControlState<V>
           fit: StackFit.passthrough,
           children: [
             shad.ComponentTheme(
-              data: shad.CardTheme(
-                boxShadow: AppOverlayStyle.floatingShadows(context),
-              ),
+              data: AppOverlayStyle.cardTheme(context),
               child: shad.ComponentTheme(
                 data: const shad.FocusOutlineTheme(
                   border: Border.fromBorderSide(BorderSide.none),
@@ -643,7 +641,7 @@ class AppColorInputFormField extends FormField<shad.ColorDerivative> {
   final AppAsyncFieldValidator<shad.ColorDerivative>? asyncValidator;
 }
 
-class _AppColorInputControl extends StatefulWidget {
+class _AppColorInputControl extends StatelessWidget {
   const _AppColorInputControl({
     required this.value,
     required this.enabled,
@@ -659,117 +657,70 @@ class _AppColorInputControl extends StatefulWidget {
   final ValueChanged<shad.ColorDerivative> onChanged;
 
   @override
-  State<_AppColorInputControl> createState() => _AppColorInputControlState();
-}
-
-class _AppColorInputControlState extends State<_AppColorInputControl> {
-  bool _active = false;
-
-  @override
   Widget build(BuildContext context) {
     final theme = shad.Theme.of(context);
-    return TapRegion(
-      onTapOutside: (_) {
-        if (_active) setState(() => _active = false);
-      },
-      child: Listener(
-        onPointerDown: widget.enabled
-            ? (_) {
-                if (!_active) setState(() => _active = true);
-              }
-            : null,
-        child: Stack(
-          fit: StackFit.passthrough,
-          children: [
-            shad.ComponentTheme(
-              data: shad.CardTheme(
-                boxShadow: AppOverlayStyle.floatingShadows(context),
+    return AppPromptControlFrame(
+      enabled: enabled,
+      child: shad.ComponentTheme(
+        data: shad.ColorInputTheme(
+          popoverPadding: EdgeInsets.all(8 * theme.scaling),
+        ),
+        child: shad.ComponentTheme(
+          data: const shad.ColorPickerTheme(
+            spacing: 8,
+            controlSpacing: 6,
+            sliderSize: 18,
+          ),
+          child: shad.ObjectFormField<shad.ColorDerivative>(
+            value: value,
+            enabled: enabled,
+            mode: shad.PromptMode.popover,
+            placeholder: const Text('选择颜色'),
+            immediateValueChange: true,
+            builder: (context, value) => Container(
+              constraints: BoxConstraints(
+                minWidth: 28 * theme.scaling,
+                minHeight: 28 * theme.scaling,
               ),
-              child: shad.ComponentTheme(
-                data: const shad.FocusOutlineTheme(
-                  border: Border.fromBorderSide(BorderSide.none),
-                ),
-                child: shad.ComponentTheme(
-                  data: shad.ColorInputTheme(
-                    popoverPadding: EdgeInsets.all(8 * theme.scaling),
-                  ),
-                  child: shad.ComponentTheme(
-                    data: const shad.ColorPickerTheme(
-                      spacing: 8,
-                      controlSpacing: 6,
-                      sliderSize: 18,
-                    ),
-                    child: shad.ObjectFormField<shad.ColorDerivative>(
-                      value: widget.value,
-                      enabled: widget.enabled,
-                      mode: shad.PromptMode.popover,
-                      placeholder: const Text('选择颜色'),
-                      immediateValueChange: true,
-                      builder: (context, value) => Container(
-                        constraints: BoxConstraints(
-                          minWidth: 28 * theme.scaling,
-                          minHeight: 28 * theme.scaling,
-                        ),
-                        decoration: BoxDecoration(
-                          color: value.toColor(),
-                          borderRadius: BorderRadius.circular(theme.radiusSm),
-                          border: Border.all(color: theme.colorScheme.border),
-                        ),
+              decoration: BoxDecoration(
+                color: value.toColor(),
+                borderRadius: BorderRadius.circular(theme.radiusSm),
+                border: Border.all(color: theme.colorScheme.border),
+              ),
+            ),
+            onChanged: (value) {
+              if (value != null) onChanged(value);
+            },
+            editorBuilder: (context, handler) => SizedBox(
+              width: 340,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.topLeft,
+                child: DefaultTextStyle.merge(
+                  textAlign: TextAlign.center,
+                  child: SizedBox(
+                    width: 480,
+                    height: 400,
+                    child: shad.ComponentTheme(
+                      data: const shad.TextFieldTheme(
+                        padding: EdgeInsets.only(left: 18, right: 4),
                       ),
-                      onChanged: (value) {
-                        if (value == null) return;
-                        widget.onChanged(value);
-                      },
-                      editorBuilder: (context, handler) => SizedBox(
-                        width: 340,
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          alignment: Alignment.topLeft,
-                          child: DefaultTextStyle.merge(
-                            textAlign: TextAlign.center,
-                            child: SizedBox(
-                              width: 480,
-                              height: 400,
-                              child: shad.ComponentTheme(
-                                data: const shad.TextFieldTheme(
-                                  padding: EdgeInsets.only(left: 18, right: 4),
-                                ),
-                                child: shad.ColorPicker(
-                                  value: handler.value ?? widget.value,
-                                  showAlpha: widget.showAlpha ?? true,
-                                  enableEyeDropper: widget.enableEyeDropper,
-                                  spacing: 8,
-                                  controlSpacing: 6,
-                                  sliderSize: 18,
-                                  onChanging: (value) => handler.value = value,
-                                  onChanged: (value) => handler.value = value,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
+                      child: shad.ColorPicker(
+                        value: handler.value ?? value,
+                        showAlpha: showAlpha ?? true,
+                        enableEyeDropper: enableEyeDropper,
+                        spacing: 8,
+                        controlSpacing: 6,
+                        sliderSize: 18,
+                        onChanging: (value) => handler.value = value,
+                        onChanged: (value) => handler.value = value,
                       ),
                     ),
                   ),
                 ),
               ),
             ),
-            if (_active)
-              Positioned.fill(
-                child: IgnorePointer(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(theme.radiusMd),
-                      border: Border.all(
-                        color: theme.colorScheme.ring,
-                        width: 1,
-                        strokeAlign: BorderSide.strokeAlignInside,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-          ],
+          ),
         ),
       ),
     );

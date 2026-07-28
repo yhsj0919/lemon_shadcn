@@ -3,6 +3,8 @@ import 'package:lemon_shadcn/lemon_shadcn.dart';
 
 import 'actions_page.dart';
 
+void _noop() {}
+
 class DataDisplayPage extends StatelessWidget {
   const DataDisplayPage({
     super.key,
@@ -40,7 +42,10 @@ class DataDisplayPage extends StatelessWidget {
                     ],
                   ),
                   AppBadge.primary(child: const Text('主要')),
-                  AppBadge.secondary(child: const Text('次要按钮')),
+                  AppBadge.secondary(
+                    onPressed: _noop,
+                    child: const Text('次要按钮'),
+                  ),
                   AppBadge.outline(child: const Text('描边按钮')),
                   AppBadge.destructive(child: const Text('危险按钮')),
                 ],
@@ -85,13 +90,13 @@ class DataDisplayPage extends StatelessWidget {
                 value: AppCalendarValue.single(DateTime.now()),
               ),
             ),
-            const ComponentSection(
+            ComponentSection(
               title: '芯片',
               child: Wrap(
                 spacing: 8,
                 children: [
-                  AppChip(child: Text('Flutter')),
-                  AppChip(child: Text('桌面端')),
+                  const AppChip(child: Text('Flutter')),
+                  AppChip(onPressed: _noop, child: const Text('桌面端')),
                 ],
               ),
             ),

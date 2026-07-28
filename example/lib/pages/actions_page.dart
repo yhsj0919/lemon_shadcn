@@ -37,6 +37,36 @@ class ActionsPage extends StatelessWidget {
           ),
         ),
         ComponentSection(
+          title: '按钮动效',
+          child: Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              AppButton.primary(
+                onPressed: () {},
+                config: const AppButtonConfig(
+                  hoverLift: true,
+                  pressEffect: AppButtonPressEffect.returnToBase,
+                ),
+                child: const Text('悬浮上移 · 按下回位'),
+              ),
+              AppButton.secondary(
+                onPressed: () {},
+                config: const AppButtonConfig(
+                  hoverLift: true,
+                  pressEffect: AppButtonPressEffect.lift,
+                ),
+                child: const Text('悬浮上移 · 按下上浮'),
+              ),
+              AppButton.text(
+                onPressed: () {},
+                config: const AppButtonConfig(hoverLift: true),
+                child: const Text('纯文字悬浮'),
+              ),
+            ],
+          ),
+        ),
+        ComponentSection(
           title: '带图标按钮',
           child: Wrap(
             spacing: 12,
@@ -253,12 +283,10 @@ class ComponentSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [Text(title).h3(), const Gap(20), child],
-        ),
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [Text(title).h3(), const Gap(20), child],
       ),
     );
   }

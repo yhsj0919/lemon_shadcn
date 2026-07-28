@@ -5,7 +5,6 @@ import 'actions_page.dart';
 
 class MenusPage extends StatelessWidget {
   const MenusPage({super.key});
-
   static const _commands = ['新建', '打开', '保存', '导出', '设置', '退出'];
 
   List<AppMenuItem> get _items => [
@@ -40,18 +39,20 @@ class MenusPage extends StatelessWidget {
           title: '导航菜单',
           child: AppNavigationMenu(
             children: [
-              const AppNavigationMenuItem(onPressed: _noop, child: Text('概览')),
+              AppNavigationMenuItem(onPressed: _noop, child: const Text('概览')),
               AppNavigationMenuItem(
                 content: AppNavigationMenuContentList(
                   crossAxisCount: 2,
-                  children: const [
+                  children: [
                     AppNavigationMenuContent(
-                      title: Text('组件'),
-                      content: Text('可复用的应用基础组件'),
+                      onPressed: _noop,
+                      title: const Text('组件'),
+                      content: const Text('可复用的应用基础组件'),
                     ),
                     AppNavigationMenuContent(
-                      title: Text('主题'),
-                      content: Text('共享视觉配置'),
+                      onPressed: _noop,
+                      title: const Text('主题'),
+                      content: const Text('共享视觉配置'),
                     ),
                   ],
                 ),
@@ -76,10 +77,8 @@ class MenusPage extends StatelessWidget {
               AppContextMenu(
                 items: _items,
                 child: const AppOutlinedContainer(
-                  child: Padding(
-                    padding: EdgeInsets.all(20),
-                    child: Text('右键单击或长按'),
-                  ),
+                  padding: EdgeInsets.all(20),
+                  child: Text('右键单击或长按'),
                 ),
               ),
             ],
@@ -87,22 +86,20 @@ class MenusPage extends StatelessWidget {
         ),
         ComponentSection(
           title: '命令面板',
-          child: AppOutlinedContainer(
-            child: AppCommand(
-              autofocus: false,
-              searchPlaceholder: const Text('搜索命令…'),
-              builder: (context, query) async* {
-                final q = (query ?? '').toLowerCase();
-                final filtered = _commands
-                    .where((command) => command.toLowerCase().contains(q))
-                    .map(
-                      (command) =>
-                          AppCommandItem(title: Text(command), onTap: _noop),
-                    )
-                    .toList();
-                yield filtered;
-              },
-            ),
+          child: AppCommand(
+            autofocus: false,
+            searchPlaceholder: const Text('搜索命令…'),
+            builder: (context, query) async* {
+              final q = (query ?? '').toLowerCase();
+              final filtered = _commands
+                  .where((command) => command.toLowerCase().contains(q))
+                  .map(
+                    (command) =>
+                        AppCommandItem(title: Text(command), onTap: _noop),
+                  )
+                  .toList();
+              yield filtered;
+            },
           ),
         ),
       ],

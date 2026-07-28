@@ -97,32 +97,30 @@ class _GalleryShellState extends State<GalleryShell> {
       pageTitle: selected.label,
       pageSubtitle: selected.subtitle,
       headerActions: [
-        material.DropdownButton<AppThemePreset>(
+        SizedBox(
           key: const Key('theme-preset-picker'),
-          value: widget.preset,
-          underline: const SizedBox.shrink(),
-          onChanged: (value) {
-            if (value != null) widget.onPresetChanged(value);
-          },
-          items: [
-            for (final preset in AppThemePreset.values)
-              material.DropdownMenuItem(
-                value: preset,
-                child: Text(_presetLabel(preset)),
-              ),
-          ],
+          width: 152,
+          child: AppSelect<AppThemePreset>(
+            value: widget.preset,
+            placeholder: '选择主题',
+            onChanged: (value) {
+              if (value != null) widget.onPresetChanged(value);
+            },
+            options: [
+              for (final preset in AppThemePreset.values)
+                AppOption(value: preset, label: _presetLabel(preset)),
+            ],
+          ),
         ),
       ],
       sidebarFooter: const Card(
-        child: Padding(
-          padding: EdgeInsets.all(12),
-          child: Row(
-            children: [
-              Icon(LucideIcons.sparkles),
-              Gap(10),
-              Expanded(child: AppText.muted('基于 shadcn_flutter 0.0.53 构建')),
-            ],
-          ),
+        padding: EdgeInsets.all(12),
+        child: Row(
+          children: [
+            Icon(LucideIcons.sparkles),
+            Gap(10),
+            Expanded(child: AppText.muted('基于 shadcn_flutter 0.0.53 构建')),
+          ],
         ),
       ),
       child: AppScaffold(child: selected.builder(context)),
