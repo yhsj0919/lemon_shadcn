@@ -54,16 +54,173 @@ class AppTimeStepperPicker extends StatelessWidget {
   }
 }
 
+/// A single field that edits the calendar date and time in one popover.
+class AppDateTimePicker extends StatelessWidget {
+  const AppDateTimePicker({
+    super.key,
+    required this.value,
+    this.onChanged,
+    this.minuteStep = 5,
+    this.mode = shad.PromptMode.popover,
+    this.placeholder,
+    this.enabled = true,
+  }) : assert(minuteStep > 0 && minuteStep <= 59);
+
+  final DateTime? value;
+  final ValueChanged<DateTime?>? onChanged;
+  final int minuteStep;
+  final shad.PromptMode mode;
+  final Widget? placeholder;
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) {
+    final picker = shad.ObjectFormField<DateTime>(
+      value: value,
+      onChanged: onChanged,
+      enabled: enabled,
+      mode: mode,
+      immediateValueChange: false,
+      popoverPadding: EdgeInsets.zero,
+      placeholder: placeholder ?? const Text('选择日期和时间'),
+      trailing: const Icon(shad.LucideIcons.calendarClock),
+      builder: (context, value) => Text(_formatDateTime(value)),
+      editorBuilder: (context, handler) =>
+          _AppDateTimeEditor(handler: handler, minuteStep: minuteStep),
+    );
+    return AppControlBox(
+      child: AppPromptControlFrame(enabled: enabled, child: picker),
+    );
+  }
+}
+
+String _formatDateTime(DateTime value) =>
+    '${value.year.toString().padLeft(4, '0')}-'
+    '${value.month.toString().padLeft(2, '0')}-'
+    '${value.day.toString().padLeft(2, '0')} '
+    '${value.hour.toString().padLeft(2, '0')}:'
+    '${value.minute.toString().padLeft(2, '0')}';
+
+class _AppDateTimeEditor extends StatefulWidget {
+  const _AppDateTimeEditor({required this.handler, required this.minuteStep});
+
+  final shad.ObjectFormHandler<DateTime> handler;
+  final int minuteStep;
+
+  @override
+  State<_AppDateTimeEditor> createState() => _AppDateTimeEditorState();
+}
+
+class _AppDateTimeEditorState extends State<_AppDateTimeEditor> {
+  late final DateTime? _initialValue = widget.handler.value;
+  late DateTime _value = _initialValue ?? DateTime.now();
+
+  void _setDate(DateTime date) {
+    setState(() {
+      _value = DateTime(
+        date.year,
+        date.month,
+        date.day,
+        _value.hour,
+        _value.minute,
+      );
+    });
+  }
+
+  void _setTime(shad.TimeOfDay time) {
+    _value = DateTime(
+      _value.year,
+      _value.month,
+      _value.day,
+      time.hour,
+      time.minute,
+    );
+  }
+
+  void _clear() {
+    widget.handler.value = null;
+    widget.handler.close();
+  }
+
+  void _cancel() {
+    widget.handler.value = _initialValue;
+    widget.handler.close();
+  }
+
+  void _confirm([shad.TimeOfDay? time]) {
+    if (time != null) _setTime(time);
+    widget.handler.value = _value;
+    widget.handler.close();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return IntrinsicWidth(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            shad.DatePickerDialog(
+              selectionMode: shad.CalendarSelectionMode.single,
+              initialViewType: shad.CalendarViewType.date,
+              initialValue: shad.CalendarValue.single(_value),
+              onChanged: (value) {
+                if (value case shad.SingleCalendarValue(:final date)) {
+                  _setDate(date);
+                }
+              },
+            ),
+            const SizedBox(height: 8),
+            Align(
+              child: _AppTimeStepperEditor(
+                initialValue: shad.TimeOfDay(
+                  hour: _value.hour,
+                  minute: _value.minute,
+                ),
+                minuteStep: widget.minuteStep,
+                showActions: false,
+                onChanged: _setTime,
+                onCancel: _cancel,
+                onConfirm: _confirm,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                AppButton.text(onPressed: _clear, child: const Text('清空')),
+                const Spacer(),
+                AppButton.outline(onPressed: _cancel, child: const Text('取消')),
+                const SizedBox(width: 8),
+                AppButton.primary(onPressed: _confirm, child: const Text('确定')),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _AppTimeStepperEditor extends StatefulWidget {
   const _AppTimeStepperEditor({
     required this.initialValue,
     required this.minuteStep,
-    required this.handler,
+    this.handler,
+    this.onChanged,
+    this.onCancel,
+    this.onConfirm,
+    this.showActions = true,
   });
 
   final shad.TimeOfDay? initialValue;
   final int minuteStep;
-  final shad.ObjectFormHandler<shad.TimeOfDay> handler;
+  final shad.ObjectFormHandler<shad.TimeOfDay>? handler;
+  final ValueChanged<shad.TimeOfDay>? onChanged;
+  final VoidCallback? onCancel;
+  final ValueChanged<shad.TimeOfDay>? onConfirm;
+  final bool showActions;
 
   @override
   State<_AppTimeStepperEditor> createState() => _AppTimeStepperEditorState();
@@ -96,21 +253,24 @@ class _AppTimeStepperEditorState extends State<_AppTimeStepperEditor> {
   void _setValue(shad.TimeOfDay value) {
     if (_value == value) return;
     setState(() => _value = value);
+    widget.onChanged?.call(value);
   }
 
   void _clear() {
-    widget.handler.value = null;
-    widget.handler.close();
+    widget.handler?.value = null;
+    widget.handler?.close();
   }
 
   void _cancel() {
-    widget.handler.value = widget.initialValue;
-    widget.handler.close();
+    if (widget.onCancel case final callback?) return callback();
+    widget.handler?.value = widget.initialValue;
+    widget.handler?.close();
   }
 
   void _confirm() {
-    widget.handler.value = _value;
-    widget.handler.close();
+    if (widget.onConfirm case final callback?) return callback(_value);
+    widget.handler?.value = _value;
+    widget.handler?.close();
   }
 
   @override
@@ -164,27 +324,32 @@ class _AppTimeStepperEditorState extends State<_AppTimeStepperEditor> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    AppButton.text(onPressed: _clear, child: const Text('清空')),
-                    const Spacer(),
-                    AppButton.outline(
-                      onPressed: _cancel,
-                      child: const Text('取消'),
-                    ),
-                    const SizedBox(width: 8),
-                    AppButton.primary(
-                      onPressed: _confirm,
-                      child: const Text('确定'),
-                    ),
-                  ],
-                ),
+                if (widget.showActions) ...[
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      AppButton.text(
+                        onPressed: _clear,
+                        child: const Text('清空'),
+                      ),
+                      const Spacer(),
+                      AppButton.outline(
+                        onPressed: _cancel,
+                        child: const Text('取消'),
+                      ),
+                      const SizedBox(width: 8),
+                      AppButton.primary(
+                        onPressed: _confirm,
+                        child: const Text('确定'),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
           Positioned(
-            bottom: 60,
+            bottom: widget.showActions ? 60 : 0,
             right: 12,
             child: shad.Tooltip(
               tooltip: (context) => const shad.TooltipContainer(
@@ -455,6 +620,60 @@ class _TimeValueBoxState extends State<_TimeValueBox> {
       ),
     );
   }
+}
+
+class AppDateTimePickerFormField extends FormField<DateTime> {
+  AppDateTimePickerFormField({
+    super.key,
+    this.name,
+    this.label,
+    this.description,
+    this.required = false,
+    this.width,
+    this.minuteStep = 5,
+    this.onChanged,
+    super.initialValue,
+    super.onSaved,
+    super.validator,
+    this.asyncValidator,
+    super.enabled = true,
+    super.autovalidateMode = AutovalidateMode.onUserInteraction,
+    super.restorationId,
+  }) : super(
+         builder: (state) {
+           final field = state.widget as AppDateTimePickerFormField;
+           return AppFormFieldBinding<DateTime>(
+             name: field.name,
+             value: state.value,
+             asyncValidator: field.asyncValidator,
+             builder: (context, asyncError) => AppField(
+               label: field.label,
+               description: field.description,
+               errorText: state.errorText ?? asyncError,
+               required: field.required,
+               width: field.width,
+               child: AppDateTimePicker(
+                 value: state.value,
+                 minuteStep: field.minuteStep,
+                 enabled: field.enabled,
+                 onChanged: (value) {
+                   state.didChange(value);
+                   field.onChanged?.call(value);
+                 },
+               ),
+             ),
+           );
+         },
+       );
+
+  final String? name;
+  final String? label;
+  final String? description;
+  final bool required;
+  final double? width;
+  final int minuteStep;
+  final ValueChanged<DateTime?>? onChanged;
+  final AppAsyncFieldValidator<DateTime>? asyncValidator;
 }
 
 class AppTimeStepperPickerFormField extends FormField<shad.TimeOfDay> {

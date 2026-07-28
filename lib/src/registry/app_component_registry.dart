@@ -207,6 +207,13 @@ abstract final class AppComponentRegistry {
       status: AppComponentStatus.implemented,
     ),
     AppComponentRegistration(
+      appName: 'AppDateTimePicker',
+      upstreamName: 'ObjectFormField / DatePickerDialog / TimeOfDay',
+      category: AppComponentCategory.forms,
+      adapter: AppComponentAdapter.independent,
+      status: AppComponentStatus.implemented,
+    ),
+    AppComponentRegistration(
       appName: 'AppLegacyTimePicker',
       upstreamName: 'TimePicker',
       category: AppComponentCategory.forms,

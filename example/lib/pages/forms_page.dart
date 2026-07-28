@@ -188,6 +188,8 @@ class _FormsPageState extends State<FormsPage> {
                   const Gap(12),
                   AppDateRangePickerFormField(label: '日期范围'),
                   const Gap(12),
+                  AppDateTimePickerFormField(label: '日期时间'),
+                  const Gap(12),
                   AppTimePickerFormField(label: '开始时间', use24HourFormat: true),
                 ],
               ),
