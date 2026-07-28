@@ -46,6 +46,7 @@ class MotionPage extends StatelessWidget {
                   colors: AppVisualColors(background: followCardColor),
                   child: AppMotion.glow(
                     shadowColorMode: AppShadowColorMode.background,
+                    hoverLift: true,
                     child: _Tile(
                       label: '悬浮查看',
                       background: followCardColor,

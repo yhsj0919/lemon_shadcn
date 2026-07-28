@@ -5,9 +5,71 @@ import '../../foundation/app_control_box.dart';
 import 'app_field.dart';
 import 'app_form.dart';
 import 'app_prompt_control_frame.dart';
+import 'app_time_stepper_picker.dart';
 
 class AppTimePicker extends StatelessWidget {
   const AppTimePicker({
+    super.key,
+    required this.value,
+    this.onChanged,
+    this.mode = shad.PromptMode.popover,
+    this.placeholder,
+    this.popoverAlignment,
+    this.popoverAnchorAlignment,
+    this.popoverPadding,
+    this.use24HourFormat,
+    this.showSeconds = false,
+    this.dialogTitle,
+    this.enabled = true,
+  });
+
+  final shad.TimeOfDay? value;
+  final ValueChanged<shad.TimeOfDay?>? onChanged;
+  final shad.PromptMode mode;
+  final Widget? placeholder;
+  final AlignmentGeometry? popoverAlignment;
+  final AlignmentGeometry? popoverAnchorAlignment;
+  final EdgeInsetsGeometry? popoverPadding;
+  final bool? use24HourFormat;
+  final bool showSeconds;
+  final Widget? dialogTitle;
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!showSeconds) {
+      return AppTimeStepperPicker(
+        value: value,
+        onChanged: onChanged,
+        mode: mode,
+        placeholder: placeholder,
+        enabled: enabled,
+      );
+    }
+    return AppControlBox(
+      child: AppPromptControlFrame(
+        enabled: enabled,
+        child: shad.TimePicker(
+          value: value,
+          onChanged: onChanged,
+          mode: mode,
+          placeholder: placeholder,
+          popoverAlignment: popoverAlignment,
+          popoverAnchorAlignment: popoverAnchorAlignment,
+          popoverPadding: popoverPadding,
+          use24HourFormat: use24HourFormat,
+          showSeconds: showSeconds,
+          dialogTitle: dialogTitle,
+          enabled: enabled,
+        ),
+      ),
+    );
+  }
+}
+
+/// The original shadcn input-based time picker, retained for compatibility.
+class AppLegacyTimePicker extends StatelessWidget {
+  const AppLegacyTimePicker({
     super.key,
     required this.value,
     this.onChanged,

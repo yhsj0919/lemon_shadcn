@@ -29,6 +29,7 @@ export 'src/components/forms/app_star_rating.dart';
 export 'src/components/forms/app_switch.dart';
 export 'src/components/forms/app_text_area.dart';
 export 'src/components/forms/app_time_picker.dart';
+export 'src/components/forms/app_time_stepper_picker.dart';
 export 'src/components/forms/app_text_form_field.dart';
 export 'src/components/layout/app_layout_components.dart';
 export 'src/components/layout/app_shell.dart';

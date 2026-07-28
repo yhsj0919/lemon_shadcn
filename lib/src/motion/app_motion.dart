@@ -124,6 +124,7 @@ class AppMotion extends StatefulWidget {
     this.enabled = true,
     this.shadowColorMode,
     this.shadowColor,
+    this.hoverLift = false,
     this.borderRadius,
     this.cursor,
   });
@@ -134,6 +135,7 @@ class AppMotion extends StatefulWidget {
     this.enabled = true,
     this.shadowColorMode,
     this.shadowColor,
+    this.hoverLift = false,
     this.borderRadius,
     this.cursor,
   }) : effect = AppMotionEffect.lift;
@@ -144,6 +146,7 @@ class AppMotion extends StatefulWidget {
     this.enabled = true,
     this.shadowColorMode,
     this.shadowColor,
+    this.hoverLift = false,
     this.borderRadius,
     this.cursor,
   }) : effect = AppMotionEffect.scale;
@@ -154,6 +157,7 @@ class AppMotion extends StatefulWidget {
     this.enabled = true,
     this.shadowColorMode,
     this.shadowColor,
+    this.hoverLift = false,
     this.borderRadius,
     this.cursor,
   }) : effect = AppMotionEffect.tint;
@@ -164,6 +168,7 @@ class AppMotion extends StatefulWidget {
     this.enabled = true,
     this.shadowColorMode,
     this.shadowColor,
+    this.hoverLift = false,
     this.borderRadius,
     this.cursor,
   }) : effect = AppMotionEffect.glow;
@@ -174,6 +179,7 @@ class AppMotion extends StatefulWidget {
     this.enabled = true,
     this.shadowColorMode,
     this.shadowColor,
+    this.hoverLift = false,
     this.borderRadius,
     this.cursor,
   }) : effect = AppMotionEffect.depth;
@@ -183,6 +189,9 @@ class AppMotion extends StatefulWidget {
   final bool enabled;
   final AppShadowColorMode? shadowColorMode;
   final Color? shadowColor;
+
+  /// Adds the standard hover translation without changing the selected effect.
+  final bool hoverLift;
   final BorderRadiusGeometry? borderRadius;
   final MouseCursor? cursor;
 
@@ -250,6 +259,8 @@ class _AppMotionState extends State<AppMotion> {
         : 1.0;
     final offset = activeHover && widget.effect == AppMotionEffect.lift
         ? config.motion.hoverOffset
+        : activeHover && widget.hoverLift
+        ? config.motion.hoverOffset * 0.5
         : Offset.zero;
     final showShadow =
         activeHover &&
@@ -257,7 +268,7 @@ class _AppMotionState extends State<AppMotion> {
             widget.effect == AppMotionEffect.glow ||
             widget.effect == AppMotionEffect.depth);
     final shadowIntensity =
-        widget.shadowColorMode == AppShadowColorMode.background ? 1.8 : 1.0;
+        widget.shadowColorMode == AppShadowColorMode.background ? 2.4 : 1.0;
     final tint = animate && _hovered && widget.effect == AppMotionEffect.tint
         ? _resolveShadowColor(context, config).withValues(alpha: 0.08)
         : null;
@@ -386,8 +397,8 @@ class _AppMotionState extends State<AppMotion> {
     if (mode == AppShadowColorMode.background) {
       final hsl = HSLColor.fromColor(resolved);
       return hsl
-          .withSaturation((hsl.saturation * 0.72).clamp(0, 1))
-          .withLightness(hsl.lightness.clamp(0.28, 0.38))
+          .withSaturation((hsl.saturation * 0.9).clamp(0, 1))
+          .withLightness(hsl.lightness.clamp(0.26, 0.34))
           .toColor();
     }
     return _soften(resolved);
@@ -402,6 +413,22 @@ class _AppMotionState extends State<AppMotion> {
     if (!theme.enabled) return const [];
     final color = _resolveShadowColor(context, config);
     final dark = MediaQuery.platformBrightnessOf(context) == Brightness.dark;
+    final mode = widget.shadowColorMode ?? theme.colorMode;
+    if (mode == AppShadowColorMode.background) {
+      return [
+        BoxShadow(
+          color: color.withValues(alpha: (dark ? 0.18 : 0.12) * intensity),
+          blurRadius: 7,
+          offset: const Offset(0, 2),
+        ),
+        BoxShadow(
+          color: color.withValues(alpha: (dark ? 0.34 : 0.28) * intensity),
+          blurRadius: 12,
+          spreadRadius: -2,
+          offset: const Offset(0, 4),
+        ),
+      ];
+    }
     final colorOpacity = dark ? theme.darkColorOpacity : theme.colorOpacity;
     return [
       BoxShadow(

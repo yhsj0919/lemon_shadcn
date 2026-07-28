@@ -1,12 +1,18 @@
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
+import '../actions/app_button.dart';
 import '../../foundation/app_control_box.dart';
 import 'app_field.dart';
 import 'app_form.dart';
 import 'app_prompt_control_frame.dart';
 
 enum _AppDatePickerKind { single, range }
+
+String _formatAppDate(DateTime value) =>
+    '${value.year.toString().padLeft(4, '0')}-'
+    '${value.month.toString().padLeft(2, '0')}-'
+    '${value.day.toString().padLeft(2, '0')}';
 
 class AppDatePicker extends StatelessWidget {
   const AppDatePicker({
@@ -63,43 +69,219 @@ class AppDatePicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = shad.ShadcnLocalizations.of(context);
+    final resolvedMode = mode ?? shad.PromptMode.popover;
     final picker = switch (_kind) {
-      _AppDatePickerKind.single => shad.DatePicker(
+      _AppDatePickerKind.single => shad.ObjectFormField<DateTime>(
         value: value,
         onChanged: onChanged,
-        placeholder: placeholder,
-        mode: mode ?? shad.PromptMode.popover,
-        initialView: initialView,
-        initialViewType: initialViewType,
+        enabled: enabled,
+        mode: resolvedMode,
+        immediateValueChange: false,
+        placeholder: placeholder ?? Text(localizations.placeholderDatePicker),
+        trailing: const Icon(shad.LucideIcons.calendarDays),
         popoverAlignment: popoverAlignment,
         popoverAnchorAlignment: popoverAnchorAlignment,
         popoverPadding: popoverPadding,
         dialogTitle: dialogTitle,
-        stateBuilder: stateBuilder,
-        enabled: enabled,
+        builder: (context, value) => Text(_formatAppDate(value)),
+        editorBuilder: (context, handler) => _AppSingleDateEditor(
+          handler: handler,
+          initialView: initialView,
+          initialViewType: initialViewType,
+          stateBuilder: stateBuilder,
+          showActions: resolvedMode == shad.PromptMode.popover,
+        ),
       ),
-      _AppDatePickerKind.range => IgnorePointer(
-        ignoring: !enabled,
-        child: Opacity(
-          opacity: enabled ? 1 : 0.5,
-          child: shad.DateRangePicker(
-            value: rangeValue,
-            onChanged: onRangeChanged,
-            placeholder: placeholder,
-            mode: mode ?? shad.PromptMode.popover,
-            initialView: initialView,
-            initialViewType: initialViewType,
-            popoverAlignment: popoverAlignment,
-            popoverAnchorAlignment: popoverAnchorAlignment,
-            popoverPadding: popoverPadding,
-            dialogTitle: dialogTitle,
-            stateBuilder: stateBuilder,
-          ),
+      _AppDatePickerKind.range => shad.ObjectFormField<shad.DateTimeRange>(
+        value: rangeValue,
+        onChanged: onRangeChanged,
+        enabled: enabled,
+        mode: resolvedMode,
+        immediateValueChange: false,
+        placeholder: placeholder ?? Text(localizations.placeholderDatePicker),
+        trailing: const Icon(shad.LucideIcons.calendarRange),
+        popoverAlignment: popoverAlignment,
+        popoverAnchorAlignment: popoverAnchorAlignment,
+        popoverPadding: popoverPadding,
+        dialogTitle: dialogTitle,
+        builder: (context, value) => Text(
+          '${_formatAppDate(value.start)} - ${_formatAppDate(value.end)}',
+        ),
+        editorBuilder: (context, handler) => _AppRangeDateEditor(
+          handler: handler,
+          initialView: initialView,
+          initialViewType: initialViewType,
+          stateBuilder: stateBuilder,
+          showActions: resolvedMode == shad.PromptMode.popover,
         ),
       ),
     };
     return AppControlBox(
       child: AppPromptControlFrame(enabled: enabled, child: picker),
+    );
+  }
+}
+
+class _AppSingleDateEditor extends StatefulWidget {
+  const _AppSingleDateEditor({
+    required this.handler,
+    required this.showActions,
+    this.initialView,
+    this.initialViewType,
+    this.stateBuilder,
+  });
+
+  final shad.ObjectFormHandler<DateTime> handler;
+  final bool showActions;
+  final shad.CalendarView? initialView;
+  final shad.CalendarViewType? initialViewType;
+  final shad.DateStateBuilder? stateBuilder;
+
+  @override
+  State<_AppSingleDateEditor> createState() => _AppSingleDateEditorState();
+}
+
+class _AppSingleDateEditorState extends State<_AppSingleDateEditor> {
+  late final DateTime? _initialValue = widget.handler.value;
+  late DateTime? _value = _initialValue;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        shad.DatePickerDialog(
+          initialView: widget.initialView,
+          initialViewType: widget.initialViewType ?? shad.CalendarViewType.date,
+          selectionMode: shad.CalendarSelectionMode.single,
+          initialValue: _value == null
+              ? null
+              : shad.CalendarValue.single(_value!),
+          stateBuilder: widget.stateBuilder,
+          onChanged: (value) {
+            final next = value == null
+                ? null
+                : (value as shad.SingleCalendarValue).date;
+            setState(() => _value = next);
+            if (!widget.showActions) widget.handler.value = next;
+          },
+        ),
+        if (widget.showActions)
+          _AppDateActions(
+            onClear: () {
+              widget.handler.value = null;
+              widget.handler.close();
+            },
+            onCancel: () {
+              widget.handler.value = _initialValue;
+              widget.handler.close();
+            },
+            onConfirm: () {
+              widget.handler.value = _value;
+              widget.handler.close();
+            },
+          ),
+      ],
+    );
+  }
+}
+
+class _AppRangeDateEditor extends StatefulWidget {
+  const _AppRangeDateEditor({
+    required this.handler,
+    required this.showActions,
+    this.initialView,
+    this.initialViewType,
+    this.stateBuilder,
+  });
+
+  final shad.ObjectFormHandler<shad.DateTimeRange> handler;
+  final bool showActions;
+  final shad.CalendarView? initialView;
+  final shad.CalendarViewType? initialViewType;
+  final shad.DateStateBuilder? stateBuilder;
+
+  @override
+  State<_AppRangeDateEditor> createState() => _AppRangeDateEditorState();
+}
+
+class _AppRangeDateEditorState extends State<_AppRangeDateEditor> {
+  late final shad.DateTimeRange? _initialValue = widget.handler.value;
+  late shad.DateTimeRange? _value = _initialValue;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        LayoutBuilder(
+          builder: (context, constraints) => shad.DatePickerDialog(
+            initialView: widget.initialView,
+            initialViewType:
+                widget.initialViewType ?? shad.CalendarViewType.date,
+            selectionMode: shad.CalendarSelectionMode.range,
+            viewMode: constraints.maxWidth < 500
+                ? shad.CalendarSelectionMode.single
+                : shad.CalendarSelectionMode.range,
+            initialValue: _value == null
+                ? null
+                : shad.CalendarValue.range(_value!.start, _value!.end),
+            stateBuilder: widget.stateBuilder,
+            onChanged: (value) {
+              final range = value?.toRange();
+              final next = range == null
+                  ? null
+                  : shad.DateTimeRange(range.start, range.end);
+              setState(() => _value = next);
+              if (!widget.showActions) widget.handler.value = next;
+            },
+          ),
+        ),
+        if (widget.showActions)
+          _AppDateActions(
+            onClear: () {
+              widget.handler.value = null;
+              widget.handler.close();
+            },
+            onCancel: () {
+              widget.handler.value = _initialValue;
+              widget.handler.close();
+            },
+            onConfirm: () {
+              widget.handler.value = _value;
+              widget.handler.close();
+            },
+          ),
+      ],
+    );
+  }
+}
+
+class _AppDateActions extends StatelessWidget {
+  const _AppDateActions({
+    required this.onClear,
+    required this.onCancel,
+    required this.onConfirm,
+  });
+
+  final VoidCallback onClear;
+  final VoidCallback onCancel;
+  final VoidCallback onConfirm;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Row(
+        children: [
+          AppButton.text(onPressed: onClear, child: const Text('清空')),
+          const Spacer(),
+          AppButton.outline(onPressed: onCancel, child: const Text('取消')),
+          const SizedBox(width: 8),
+          AppButton.primary(onPressed: onConfirm, child: const Text('确定')),
+        ],
+      ),
     );
   }
 }
