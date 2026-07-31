@@ -1,15 +1,16 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart' as material;
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lemon_shadcn/lemon_shadcn.dart';
+import 'package:lemon_shadcn/shadcn.dart' as shad;
 
 void main() {
   testWidgets('works inside MaterialApp without ShadcnApp', (tester) async {
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(),
-        home: material.Builder(
+        home: Builder(
           builder: (context) =>
               AppButton.primary(onPressed: () {}, child: const Text('Save')),
         ),
@@ -30,7 +31,7 @@ void main() {
     var presses = 0;
 
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(
           config: AppThemeConfig.standard(
             motion: const AppMotionTheme(
@@ -39,7 +40,7 @@ void main() {
             ),
           ),
         ),
-        home: material.Builder(
+        home: Builder(
           builder: (context) => AppButton.primary(
             onPressed: () {
               presses++;
@@ -51,10 +52,10 @@ void main() {
       ),
     );
 
-    final widthBefore = tester.getSize(find.byType(PrimaryButton)).width;
+    final widthBefore = tester.getSize(find.byType(shad.PrimaryButton)).width;
     await tester.tap(find.text('Save'));
     await tester.pump(const Duration(milliseconds: 1));
-    final widthDuring = tester.getSize(find.byType(PrimaryButton)).width;
+    final widthDuring = tester.getSize(find.byType(shad.PrimaryButton)).width;
     await tester.tap(find.byType(CircularProgressIndicator));
     await tester.pump();
 
@@ -70,9 +71,9 @@ void main() {
 
   testWidgets('renders link and text variants', (tester) async {
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(),
-        home: material.Builder(
+        home: Builder(
           builder: (context) => Row(
             children: [
               AppButton.link(onPressed: () {}, child: const Text('Link')),
@@ -83,7 +84,7 @@ void main() {
       ),
     );
 
-    expect(find.byType(LinkButton), findsOneWidget);
-    expect(find.byType(TextButton), findsOneWidget);
+    expect(find.byType(shad.LinkButton), findsOneWidget);
+    expect(find.byType(shad.TextButton), findsOneWidget);
   });
 }

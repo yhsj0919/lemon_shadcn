@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart' as material;
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lemon_shadcn/lemon_shadcn.dart';
 
@@ -12,7 +12,7 @@ void main() {
     String? saved;
 
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(),
         home: AppForm(
           controller: controller,
@@ -43,7 +43,7 @@ void main() {
     final controller = AppFormController();
 
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(),
         home: AppForm(
           controller: controller,
@@ -75,7 +75,7 @@ void main() {
     final requests = <String, Completer<String?>>{};
 
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(),
         home: AppForm(
           controller: controller,
@@ -113,7 +113,7 @@ void main() {
       crossValidators: [(_) => pending.future],
     );
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(),
         home: AppForm(
           controller: controller,
@@ -158,7 +158,7 @@ void main() {
       ],
     );
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(),
         home: AppForm(
           controller: controller,
@@ -195,7 +195,7 @@ void main() {
     final controller = AppFormController();
     Map<String, Object?>? submitted;
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(),
         home: AppForm(
           controller: controller,
@@ -224,7 +224,7 @@ void main() {
     final request = Completer<void>();
     final action = controller.createSubmitAction((values) => request.future);
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(),
         home: AppForm(
           controller: controller,
@@ -252,7 +252,7 @@ void main() {
   ) async {
     final controller = AppFormController();
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(),
         home: AppForm(
           controller: controller,
@@ -280,7 +280,7 @@ void main() {
     var showDynamic = true;
     var disabledValidated = false;
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(),
         home: StatefulBuilder(
           builder: (context, setState) {
@@ -326,7 +326,7 @@ void main() {
   ) async {
     final controller = AppFormController();
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(
           config: AppThemeConfig.standard(
             errorPresenter: (error, stackTrace) => 'Unable to save form',

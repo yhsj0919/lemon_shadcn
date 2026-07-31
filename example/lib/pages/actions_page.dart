@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:lemon_shadcn/lemon_shadcn.dart';
+import 'package:lemon_shadcn/shadcn.dart';
 
 class ActionsPage extends StatelessWidget {
   const ActionsPage({super.key});

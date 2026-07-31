@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart' as material;
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lemon_shadcn/lemon_shadcn.dart';
 
@@ -13,7 +13,7 @@ void main() {
       AppTabItem(child: Text('Second')),
     ];
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(),
         home: Column(
           children: [
@@ -38,11 +38,11 @@ void main() {
       ),
     );
 
-    tester.widget<Pagination>(find.byType(Pagination)).onPageChanged(2);
+    tester.widget<AppPagination>(find.byType(AppPagination)).onPageChanged(2);
     tester.widget<AppTabs>(find.byType(AppTabs)).onChanged(1);
     expect(page, 2);
     expect(tab, 1);
-    expect(find.byType(Breadcrumb), findsOneWidget);
+    expect(find.byType(AppBreadcrumb), findsOneWidget);
     expect(find.byType(AppTabs), findsOneWidget);
     expect(find.byType(AppTabList), findsOneWidget);
   });
@@ -51,7 +51,7 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(),
         home: Column(
           children: [
@@ -68,7 +68,7 @@ void main() {
         ),
       ),
     );
-    expect(find.byType(Steps), findsOneWidget);
-    expect(find.byType(Timeline), findsOneWidget);
+    expect(find.byType(AppSteps), findsOneWidget);
+    expect(find.byType(AppTimeline), findsOneWidget);
   });
 }

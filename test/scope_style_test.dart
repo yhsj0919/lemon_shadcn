@@ -1,7 +1,8 @@
 import 'package:flutter/foundation.dart' as foundation;
-import 'package:flutter/material.dart' as material;
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lemon_shadcn/lemon_shadcn.dart';
+import 'package:lemon_shadcn/shadcn.dart' as shad;
 
 void main() {
   test('Windows typography uses one Chinese UI font for every token', () {
@@ -37,22 +38,22 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(),
-        home: const material.Text('Hosted text'),
+        home: const Text('Hosted text'),
       ),
     );
 
     final context = tester.element(find.text('Hosted text'));
-    final style = material.DefaultTextStyle.of(context).style;
+    final style = DefaultTextStyle.of(context).style;
 
-    expect(material.Material.of(context), isNotNull);
+    expect(Material.of(context), isNotNull);
     expect(
       style.decoration,
       isNot(
-        material.TextDecoration.combine([
-          material.TextDecoration.underline,
-          material.TextDecoration.overline,
+        TextDecoration.combine([
+          TextDecoration.underline,
+          TextDecoration.overline,
         ]),
       ),
     );
@@ -62,10 +63,10 @@ void main() {
   testWidgets('control metrics feed upstream button component themes', (
     tester,
   ) async {
-    PrimaryButtonTheme? buttonTheme;
+    shad.PrimaryButtonTheme? buttonTheme;
     BuildContext? themedContext;
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(
           config: AppThemeConfig.standard(
             controls: const AppControlMetrics(
@@ -77,7 +78,7 @@ void main() {
         home: Builder(
           builder: (context) {
             themedContext = context;
-            buttonTheme = ComponentTheme.maybeOf<PrimaryButtonTheme>(context);
+            buttonTheme = shad.ComponentTheme.maybeOf<shad.PrimaryButtonTheme>(context);
             return AppButton.primary(
               onPressed: () {},
               child: const Text('Metrics'),

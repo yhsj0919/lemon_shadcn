@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart' as material;
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lemon_shadcn/lemon_shadcn.dart';
 
@@ -8,7 +8,7 @@ void main() {
   ) async {
     Key? selected;
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(),
         home: Column(
           children: [
@@ -50,7 +50,7 @@ void main() {
     const selectedBackground = Color(0xff2457d6);
     const selectedForeground = Color(0xfff8fafc);
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(
           config: AppThemeConfig.standard(
             controlPalette: const AppVisualPalette(
@@ -70,8 +70,8 @@ void main() {
       ),
     );
 
-    final item = tester.widget<NavigationItem>(find.byType(NavigationItem));
-    final context = tester.element(find.byType(NavigationItem));
+    final item = tester.widget<AppNavigationItem>(find.byType(AppNavigationItem));
+    final context = tester.element(find.byType(AppNavigationItem));
     final decoration = item.selectedStyle!.decoration(context, {
       WidgetState.selected,
     });

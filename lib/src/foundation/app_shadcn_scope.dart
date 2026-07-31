@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart' as material;
+import 'package:flutter/material.dart' show Material, MaterialType;
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
@@ -48,8 +48,8 @@ class AppShadcnScope extends StatelessWidget {
               child: shad.ToastLayer(
                 child: shad.DrawerOverlay(
                   child: provideMaterialHost
-                      ? material.Material(
-                          type: material.MaterialType.transparency,
+                      ? Material(
+                          type: MaterialType.transparency,
                           child: themedChild,
                         )
                       : themedChild,

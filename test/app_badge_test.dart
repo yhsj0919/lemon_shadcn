@@ -1,13 +1,14 @@
-import 'package:flutter/material.dart' as material;
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lemon_shadcn/lemon_shadcn.dart';
+import 'package:lemon_shadcn/shadcn.dart' as shad;
 
 void main() {
   testWidgets('badge facade maps semantic variants to upstream widgets', (
     tester,
   ) async {
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(),
         home: Wrap(
           children: [
@@ -20,10 +21,10 @@ void main() {
       ),
     );
 
-    expect(find.byType(PrimaryBadge), findsOneWidget);
-    expect(find.byType(SecondaryBadge), findsOneWidget);
-    expect(find.byType(OutlineBadge), findsOneWidget);
-    expect(find.byType(DestructiveBadge), findsOneWidget);
+    expect(find.byType(shad.PrimaryBadge), findsOneWidget);
+    expect(find.byType(shad.SecondaryBadge), findsOneWidget);
+    expect(find.byType(shad.OutlineBadge), findsOneWidget);
+    expect(find.byType(shad.DestructiveBadge), findsOneWidget);
 
     for (final label in ['Primary', 'Secondary', 'Outline', 'Destructive']) {
       final context = tester.element(find.text(label));

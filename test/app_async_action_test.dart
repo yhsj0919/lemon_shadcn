@@ -1,8 +1,9 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart' as material;
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lemon_shadcn/lemon_shadcn.dart';
+import 'package:lemon_shadcn/shadcn.dart' as shad;
 
 void main() {
   test('joins duplicate execution and exposes result state', () async {
@@ -43,7 +44,7 @@ void main() {
     );
 
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(),
         home: Row(
           children: [
@@ -63,11 +64,11 @@ void main() {
     expect(calls, 1);
     expect(find.byType(AppCircularProgressIndicator), findsNWidgets(2));
     expect(
-      tester.widget<PrimaryButton>(find.byType(PrimaryButton)).onPressed,
+      tester.widget<shad.PrimaryButton>(find.byType(shad.PrimaryButton)).onPressed,
       isNull,
     );
     expect(
-      tester.widget<OutlineButton>(find.byType(OutlineButton)).onPressed,
+      tester.widget<shad.OutlineButton>(find.byType(shad.OutlineButton)).onPressed,
       isNull,
     );
 
@@ -84,7 +85,7 @@ void main() {
     final completer = Completer<void>();
     var calls = 0;
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(
           config: AppThemeConfig.standard(
             motion: const AppMotionTheme(loadingDelay: Duration(seconds: 1)),
@@ -104,7 +105,7 @@ void main() {
     await tester.pump();
     expect(calls, 1);
     expect(
-      tester.widget<PrimaryButton>(find.byType(PrimaryButton)).onPressed,
+      tester.widget<shad.PrimaryButton>(find.byType(shad.PrimaryButton)).onPressed,
       isNull,
     );
     completer.complete();
@@ -117,7 +118,7 @@ void main() {
     final focusNode = FocusNode();
     addTearDown(focusNode.dispose);
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(),
         home: Align(
           alignment: Alignment.topLeft,
@@ -126,9 +127,9 @@ void main() {
             config: AppButtonConfig(
               height: 44,
               alignment: Alignment.centerLeft,
-              size: ButtonSize.small,
-              density: ButtonDensity.dense,
-              shape: ButtonShape.circle,
+              size: shad.ButtonSize.small,
+              density: shad.ButtonDensity.dense,
+              shape: shad.ButtonShape.circle,
               focusNode: focusNode,
               enableFeedback: false,
             ),
@@ -138,11 +139,11 @@ void main() {
       ),
     );
 
-    final button = tester.widget<SecondaryButton>(find.byType(SecondaryButton));
+    final button = tester.widget<shad.SecondaryButton>(find.byType(shad.SecondaryButton));
     expect(button.alignment, Alignment.centerLeft);
-    expect(button.size, ButtonSize.small);
-    expect(button.density, ButtonDensity.dense);
-    expect(button.shape, ButtonShape.circle);
+    expect(button.size, shad.ButtonSize.small);
+    expect(button.density, shad.ButtonDensity.dense);
+    expect(button.shape, shad.ButtonShape.circle);
     expect(button.focusNode, same(focusNode));
     expect(button.enableFeedback, isFalse);
     expect(tester.getSize(find.byType(AppControlBox)).height, 44);
@@ -150,7 +151,7 @@ void main() {
 
   testWidgets('icon button shortcuts keep square dimensions', (tester) async {
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(
           config: AppThemeConfig.standard(
             controls: const AppControlMetrics(height: 40),
@@ -179,8 +180,8 @@ void main() {
       expect(tester.getSize(find.byWidget(element.widget)), const Size(40, 40));
     }
     expect(
-      tester.widget<OutlineButton>(find.byType(OutlineButton).last).shape,
-      ButtonShape.circle,
+      tester.widget<shad.OutlineButton>(find.byType(shad.OutlineButton).last).shape,
+      shad.ButtonShape.circle,
     );
   });
 }

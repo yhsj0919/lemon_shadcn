@@ -1,13 +1,14 @@
-import 'package:flutter/widgets.dart' as widgets;
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lemon_shadcn/lemon_shadcn.dart';
+import 'package:lemon_shadcn/shadcn.dart' as shad;
 
 Widget _host(Widget child, {Locale locale = const Locale('en')}) {
-  return widgets.Localizations(
+  return Localizations(
     locale: locale,
-    delegates: const [widgets.DefaultWidgetsLocalizations.delegate],
-    child: widgets.Directionality(
-      textDirection: widgets.TextDirection.ltr,
+    delegates: const [DefaultWidgetsLocalizations.delegate],
+    child: Directionality(
+      textDirection: TextDirection.ltr,
       child: AppShadcnScope(child: child),
     ),
   );
@@ -25,7 +26,7 @@ void main() {
   testWidgets('AppTextTheme overrides a semantic role', (tester) async {
     await tester.pumpWidget(
       _host(
-        const ComponentTheme<AppTextTheme>(
+        const shad.ComponentTheme<AppTextTheme>(
           data: AppTextTheme(h1: TextStyle(fontSize: 42)),
           child: AppText.h1('Custom heading'),
         ),
@@ -42,7 +43,7 @@ void main() {
       _host(
         Builder(
           builder: (context) {
-            saveLabel = ShadcnLocalizations.of(context).buttonSave;
+            saveLabel = shad.ShadcnLocalizations.of(context).buttonSave;
             return const SizedBox.shrink();
           },
         ),
@@ -62,17 +63,17 @@ void main() {
             AppNavDestination(
               id: 'components',
               label: 'Components',
-              icon: LucideIcons.component,
+              icon: AppLucideIcons.component,
               children: [
                 AppNavDestination(
                   id: 'actions',
                   label: 'Actions',
-                  icon: LucideIcons.mousePointerClick,
+                  icon: AppLucideIcons.mousePointerClick,
                 ),
                 AppNavDestination(
                   id: 'forms',
                   label: 'Forms',
-                  icon: LucideIcons.textCursorInput,
+                  icon: AppLucideIcons.textCursorInput,
                 ),
               ],
             ),
@@ -104,12 +105,12 @@ void main() {
             AppNavDestination(
               id: 'actions',
               label: 'Actions',
-              icon: LucideIcons.mousePointerClick,
+              icon: AppLucideIcons.mousePointerClick,
             ),
             AppNavDestination(
               id: 'forms',
               label: 'Forms',
-              icon: LucideIcons.textCursorInput,
+              icon: AppLucideIcons.textCursorInput,
             ),
           ],
           selectedId: 'actions',

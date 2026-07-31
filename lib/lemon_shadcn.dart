@@ -1,7 +1,12 @@
 /// Lemon's shared Flutter component library.
+///
+/// Exports App-prefixed APIs only. Upstream `shadcn_flutter` is **not**
+/// re-exported here so existing Material pages can import this package without
+/// name clashes. Icon fonts are available as `AppLucideIcons`, `AppRadixIcons`,
+/// `AppBootstrapIcons`, and `AppMaterialIcons`. For other upstream widgets or
+/// types (`Card`, `Gap`, `Theme`, …), import `package:lemon_shadcn/shadcn.dart`.
 library;
 
-export 'package:shadcn_flutter/shadcn_flutter.dart';
 export 'src/components/actions/app_button.dart';
 export 'src/components/actions/app_toggle.dart';
 export 'src/components/display/app_badge.dart';
@@ -44,6 +49,7 @@ export 'src/foundation/app_shadcn_scope.dart';
 export 'src/foundation/app_async_action.dart';
 export 'src/foundation/app_component_themes.dart';
 export 'src/foundation/app_compact_label_style.dart';
+export 'src/foundation/app_icons.dart';
 export 'src/foundation/app_interactive_style.dart';
 export 'src/foundation/app_localizations_zh.dart';
 export 'src/foundation/app_overlay_style.dart';

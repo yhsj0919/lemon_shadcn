@@ -223,6 +223,6 @@
 
 - 使用 `ShadcnLayer` 接入现有 `MaterialApp`，不要求 `ShadcnApp`。
 - 上游仍处于 0.x，升级可能包含 breaking changes，批量映射前需稳定公共 API。
-- 公共入口会 re-export 上游 API；与 Material 同名类型并存时，推荐
-  `import 'package:flutter/material.dart' as material`。
+- 默认公共入口只导出 App API；上游通过 `package:lemon_shadcn/shadcn.dart`
+  显式引入。与未加前缀的 Material 同时导入上游时仍可能撞名。
 - 本仓库设置 `publish_to: none`，仅通过 Git / path 依赖接入，不发布到 pub.dev。

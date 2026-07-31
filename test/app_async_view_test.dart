@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart' as material;
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lemon_shadcn/lemon_shadcn.dart';
 
@@ -10,7 +10,7 @@ void main() {
   ) async {
     final completer = Completer<List<String>>();
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(),
         home: AppAsyncView<List<String>>(
           load: () => completer.future,
@@ -28,7 +28,7 @@ void main() {
   testWidgets('default error state retries the loader', (tester) async {
     var attempts = 0;
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(),
         home: AppAsyncView<String>(
           load: () {
@@ -53,7 +53,7 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(
           config: AppThemeConfig.standard(
             errorPresenter: (error, stackTrace) => 'Unable to load data',

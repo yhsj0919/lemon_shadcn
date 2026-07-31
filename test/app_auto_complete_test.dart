@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart' as material;
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lemon_shadcn/lemon_shadcn.dart';
 
@@ -18,7 +18,7 @@ void main() {
     }
 
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(),
         home: AppAutoCompleteFormField<String>.async(
           searchOptions: search,
@@ -63,7 +63,7 @@ void main() {
     );
     String? selected;
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(),
         home: AppAutoCompleteFormField<String>.paged(
           pagedOptionSource: source,
@@ -96,7 +96,7 @@ void main() {
       },
     );
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(),
         home: AppAutoCompleteFormField<String>.source(
           optionSource: source,

@@ -1,5 +1,5 @@
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart' as material;
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lemon_shadcn/lemon_shadcn.dart';
 
@@ -7,20 +7,20 @@ void main() {
   testWidgets('lift keeps layout size and derives shadow from border color', (
     tester,
   ) async {
-    const motionKey = material.ValueKey('motion');
+    const motionKey = ValueKey('motion');
 
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(),
-        home: const material.Center(
+        home: const Center(
           child: AppVisualStyle(
             colors: AppVisualColors(
-              background: material.Color(0xfffef2f2),
-              border: material.Color(0xffef4444),
+              background: Color(0xfffef2f2),
+              border: Color(0xffef4444),
             ),
             child: AppMotion.lift(
               key: motionKey,
-              child: material.SizedBox(width: 160, height: 80),
+              child: SizedBox(width: 160, height: 80),
             ),
           ),
         ),
@@ -29,7 +29,7 @@ void main() {
 
     final sizeBefore = tester.getSize(find.byKey(motionKey));
     final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
-    await mouse.addPointer(location: material.Offset.zero);
+    await mouse.addPointer(location: Offset.zero);
     await mouse.moveTo(tester.getCenter(find.byKey(motionKey)));
     await tester.pumpAndSettle();
 
@@ -44,21 +44,21 @@ void main() {
 
     expect(sizeAfter, sizeBefore);
     expect(decoration.boxShadow, hasLength(2));
-    expect(decoration.boxShadow!.last.color, isNot(material.Colors.black));
-    expect(decoration.boxShadow!.last.color, isNot(material.Colors.white));
+    expect(decoration.boxShadow!.last.color, isNot(Colors.black));
+    expect(decoration.boxShadow!.last.color, isNot(Colors.white));
   });
 
   testWidgets('depth combines upward Y and forward Z translation', (
     tester,
   ) async {
-    const motionKey = material.ValueKey('depth-motion');
+    const motionKey = ValueKey('depth-motion');
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(),
-        home: const material.Center(
+        home: const Center(
           child: AppMotion.depth(
             key: motionKey,
-            child: material.SizedBox(width: 200, height: 100),
+            child: SizedBox(width: 200, height: 100),
           ),
         ),
       ),
@@ -66,9 +66,9 @@ void main() {
 
     final sizeBefore = tester.getSize(find.byKey(motionKey));
     final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
-    await mouse.addPointer(location: material.Offset.zero);
+    await mouse.addPointer(location: Offset.zero);
     final bounds = tester.getRect(find.byKey(motionKey));
-    final corner = material.Offset(bounds.right - 8, bounds.bottom - 8);
+    final corner = Offset(bounds.right - 8, bounds.bottom - 8);
     await mouse.moveTo(corner);
     await tester.pumpAndSettle();
 

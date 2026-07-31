@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart' as material;
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lemon_shadcn/lemon_shadcn.dart';
 
@@ -9,7 +9,7 @@ void main() {
     ];
 
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(),
         home: Column(
           children: [
@@ -40,7 +40,7 @@ void main() {
 
   testWidgets('command alias consumes a stream builder', (tester) async {
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(),
         home: AppCommand(
           autofocus: false,
@@ -61,15 +61,15 @@ void main() {
 
   testWidgets('AppCommand fills a loose-width parent', (tester) async {
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(),
-        home: material.Align(
-          alignment: material.Alignment.topLeft,
-          child: material.SizedBox(
+        home: Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(
             width: 360,
             height: 300,
-            child: material.Column(
-              crossAxisAlignment: material.CrossAxisAlignment.start,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 AppCommand(
                   autofocus: false,
@@ -90,7 +90,7 @@ void main() {
     await tester.pump();
     expect(
       tester.getSize(find.byType(AppCommand)),
-      const material.Size(360, 280),
+      const Size(360, 280),
     );
     expect(tester.takeException(), isNull);
   });
@@ -98,11 +98,11 @@ void main() {
   testWidgets('AppDropdownButton opens an anchored menu', (tester) async {
     var selected = false;
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(),
-        home: material.Scaffold(
-          body: material.Align(
-            alignment: material.Alignment.topLeft,
+        home: Scaffold(
+          body: Align(
+            alignment: Alignment.topLeft,
             child: AppDropdownButton(
               items: [
                 AppMenuButton(

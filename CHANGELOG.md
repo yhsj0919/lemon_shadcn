@@ -1,3 +1,13 @@
+## Unreleased
+
+* Stop re-exporting `shadcn_flutter` from `lemon_shadcn.dart` so Material pages
+  can import App APIs without name clashes. Opt in via
+  `package:lemon_shadcn/shadcn.dart` when upstream widgets or types are needed.
+* Export icon font aliases (`AppLucideIcons`, `AppRadixIcons`,
+  `AppBootstrapIcons`, `AppMaterialIcons`) from the default entry.
+* Drop `import … as material` across the package, example, and tests; use plain
+  Material imports with App aliases (or `shadcn.dart as shad` when needed).
+
 ## 0.0.1
 
 * Convert the generated plugin skeleton into a cross-platform component package.

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart' as material;
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lemon_shadcn/lemon_shadcn.dart';
 
@@ -11,13 +11,13 @@ void main() {
   testWidgets('selects and saves a formatted option in native Form', (
     tester,
   ) async {
-    final formKey = material.GlobalKey<material.FormState>();
+    final formKey = GlobalKey<FormState>();
     String? saved;
 
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(),
-        home: material.Form(
+        home: Form(
           key: formKey,
           child: AppSelectFormField<String>(
             label: 'Role',
@@ -54,7 +54,7 @@ void main() {
     }
 
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(),
         home: AppSelectFormField<String>.async(loadOptions: loadOptions),
       ),
@@ -73,7 +73,7 @@ void main() {
   ) async {
     var loads = 0;
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(),
         home: AppSelectFormField<String>.async(
           loadOptions: () async {
@@ -96,7 +96,7 @@ void main() {
 
   testWidgets('select rejects duplicate option identity', (tester) async {
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(),
         home: const AppSelect<String>(
           options: [

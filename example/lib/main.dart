@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart' as material;
+import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:lemon_shadcn/lemon_shadcn.dart';
 
 import 'gallery/gallery_registry.dart';
 
-void main() => material.runApp(const ComponentGallery());
+void main() => runApp(const ComponentGallery());
 
 class ComponentGallery extends StatefulWidget {
   const ComponentGallery({super.key});
@@ -18,21 +18,21 @@ class _ComponentGalleryState extends State<ComponentGallery> {
 
   @override
   Widget build(BuildContext context) {
-    return material.MaterialApp(
+    return MaterialApp(
       title: 'Lemon Shadcn',
-      locale: const material.Locale('zh', 'CN'),
+      locale: const Locale('zh', 'CN'),
       supportedLocales: const [
-        material.Locale('zh', 'CN'),
-        material.Locale('en'),
+        Locale('zh', 'CN'),
+        Locale('en'),
       ],
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      themeMode: material.ThemeMode.system,
+      themeMode: ThemeMode.system,
       builder: AppShadcnScope.builder(
-        locale: const material.Locale('zh', 'CN'),
+        locale: const Locale('zh', 'CN'),
         config: AppThemeConfig.preset(_preset),
       ),
       home: GalleryShell(
@@ -113,12 +113,12 @@ class _GalleryShellState extends State<GalleryShell> {
           ),
         ),
       ],
-      sidebarFooter: const Card(
+      sidebarFooter: const AppCard(
         padding: EdgeInsets.all(12),
         child: Row(
           children: [
-            Icon(LucideIcons.sparkles),
-            Gap(10),
+            Icon(AppLucideIcons.sparkles),
+            SizedBox(width: 10),
             Expanded(child: AppText.muted('基于 shadcn_flutter 0.0.53 构建')),
           ],
         ),
@@ -129,35 +129,35 @@ class _GalleryShellState extends State<GalleryShell> {
 }
 
 IconData _groupIcon(String group) => switch (group) {
-  '概览' => LucideIcons.layoutDashboard,
-  'App 组件' => LucideIcons.component,
-  '基础组件' => LucideIcons.blocks,
-  '表单组件' => LucideIcons.listChecks,
-  '反馈与展示' => LucideIcons.layoutPanelTop,
-  '布局组件' => LucideIcons.panelsTopLeft,
-  '导航组件' => LucideIcons.route,
-  _ => LucideIcons.ellipsis,
+  '概览' => AppLucideIcons.layoutDashboard,
+  'App 组件' => AppLucideIcons.component,
+  '基础组件' => AppLucideIcons.blocks,
+  '表单组件' => AppLucideIcons.listChecks,
+  '反馈与展示' => AppLucideIcons.layoutPanelTop,
+  '布局组件' => AppLucideIcons.panelsTopLeft,
+  '导航组件' => AppLucideIcons.route,
+  _ => AppLucideIcons.ellipsis,
 };
 
 IconData _componentIcon(String id) => switch (id) {
-  'app-button' => LucideIcons.mousePointerClick,
-  'app-text' => LucideIcons.type,
-  'app-badge' => LucideIcons.tag,
-  'dashboard' => LucideIcons.gauge,
-  'form-basic' => LucideIcons.textCursorInput,
-  'form-advanced' => LucideIcons.listChecks,
-  'pickers' => LucideIcons.pipette,
-  'date-time' => LucideIcons.calendar,
-  'feedback' => LucideIcons.messageSquareWarning,
-  'display' => LucideIcons.chartNoAxesColumn,
-  'navigation' => LucideIcons.route,
-  'navigation-chrome' => LucideIcons.panelLeft,
-  'menus' => LucideIcons.menu,
-  'layout' => LucideIcons.panelsTopLeft,
-  'data-panel' => LucideIcons.tableProperties,
-  'overlay' => LucideIcons.layers,
-  'motion' => LucideIcons.sparkles,
-  _ => LucideIcons.component,
+  'app-button' => AppLucideIcons.mousePointerClick,
+  'app-text' => AppLucideIcons.type,
+  'app-badge' => AppLucideIcons.tag,
+  'dashboard' => AppLucideIcons.gauge,
+  'form-basic' => AppLucideIcons.textCursorInput,
+  'form-advanced' => AppLucideIcons.listChecks,
+  'pickers' => AppLucideIcons.pipette,
+  'date-time' => AppLucideIcons.calendar,
+  'feedback' => AppLucideIcons.messageSquareWarning,
+  'display' => AppLucideIcons.chartNoAxesColumn,
+  'navigation' => AppLucideIcons.route,
+  'navigation-chrome' => AppLucideIcons.panelLeft,
+  'menus' => AppLucideIcons.menu,
+  'layout' => AppLucideIcons.panelsTopLeft,
+  'data-panel' => AppLucideIcons.tableProperties,
+  'overlay' => AppLucideIcons.layers,
+  'motion' => AppLucideIcons.sparkles,
+  _ => AppLucideIcons.component,
 };
 
 String _presetLabel(AppThemePreset preset) => switch (preset) {

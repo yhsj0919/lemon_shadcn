@@ -1,6 +1,7 @@
-import 'package:flutter/material.dart' as material;
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lemon_shadcn/lemon_shadcn.dart';
+import 'package:lemon_shadcn/shadcn.dart' as shad;
 
 void main() {
   testWidgets('choice fields register values and share control height', (
@@ -9,7 +10,7 @@ void main() {
     final controller = AppFormController();
 
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(
           config: AppThemeConfig.standard(
             controls: const AppControlMetrics(height: 40),
@@ -37,7 +38,7 @@ void main() {
               ),
               AppSliderFormField(
                 name: 'volume',
-                initialValue: const SliderValue.single(0.4),
+                initialValue: const shad.SliderValue.single(0.4),
               ),
             ],
           ),
@@ -53,7 +54,7 @@ void main() {
     expect(controller.value<bool>('terms'), isTrue);
     expect(controller.value<bool>('notifications'), isTrue);
     expect(controller.value<String>('density'), 'standard');
-    expect(controller.value<SliderValue>('volume')!.value, 0.4);
+    expect(controller.value<shad.SliderValue>('volume')!.value, 0.4);
 
     for (final element in find.byType(AppControlBox).evaluate()) {
       expect(tester.getSize(find.byWidget(element.widget)).height, 40);
@@ -63,7 +64,7 @@ void main() {
   testWidgets('checkbox validation uses native Form semantics', (tester) async {
     final controller = AppFormController();
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(),
         home: AppForm(
           controller: controller,
@@ -78,7 +79,7 @@ void main() {
 
     expect(await controller.validate(), isFalse);
     await tester.pump();
-    expect(find.byIcon(LucideIcons.triangleAlert), findsOneWidget);
+    expect(find.byIcon(AppLucideIcons.triangleAlert), findsOneWidget);
 
     await tester.tap(find.text('Accept terms'));
     await tester.pump();
@@ -88,12 +89,12 @@ void main() {
   testWidgets('global control palette updates selected internal colors', (
     tester,
   ) async {
-    const selected = material.Color(0xff336699);
-    const foreground = material.Color(0xffffffff);
-    const border = material.Color(0xff224466);
-    const explicit = material.Color(0xffcc5500);
+    const selected = Color(0xff336699);
+    const foreground = Color(0xffffffff);
+    const border = Color(0xff224466);
+    const explicit = Color(0xffcc5500);
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(
           config: AppThemeConfig.standard(
             controlPalette: const AppVisualPalette(
@@ -109,7 +110,7 @@ void main() {
         home: Column(
           children: [
             AppCheckbox(
-              state: CheckboxState.checked,
+              state: shad.CheckboxState.checked,
               activeColor: explicit,
               onChanged: (_) {},
             ),
@@ -119,7 +120,7 @@ void main() {
               onChanged: (_) {},
               options: const [AppOption(value: 'selected', label: 'Selected')],
             ),
-            AppSlider(value: const SliderValue.single(0.5), onChanged: (_) {}),
+            AppSlider(value: const shad.SliderValue.single(0.5), onChanged: (_) {}),
           ],
         ),
       ),
@@ -134,9 +135,9 @@ void main() {
     expect(appSwitch.activeThumbColor, foreground);
 
     final radioTheme = tester
-        .widgetList<ComponentTheme<RadioTheme>>(
+        .widgetList<shad.ComponentTheme<shad.RadioTheme>>(
           find.byWidgetPredicate(
-            (widget) => widget is ComponentTheme<RadioTheme>,
+            (widget) => widget is shad.ComponentTheme<shad.RadioTheme>,
           ),
         )
         .single
@@ -145,9 +146,9 @@ void main() {
     expect(radioTheme.borderColor, border);
 
     final sliderTheme = tester
-        .widgetList<ComponentTheme<SliderTheme>>(
+        .widgetList<shad.ComponentTheme<shad.SliderTheme>>(
           find.byWidgetPredicate(
-            (widget) => widget is ComponentTheme<SliderTheme>,
+            (widget) => widget is shad.ComponentTheme<shad.SliderTheme>,
           ),
         )
         .single
@@ -160,7 +161,7 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(
           config: AppThemeConfig.standard(
             controls: const AppControlMetrics(height: 40),
@@ -171,7 +172,7 @@ void main() {
           child: SizedBox(
             width: 240,
             child: AppSlider(
-              value: const SliderValue.single(0.6),
+              value: const shad.SliderValue.single(0.6),
               onChanged: (_) {},
             ),
           ),

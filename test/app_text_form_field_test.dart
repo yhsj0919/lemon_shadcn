@@ -1,6 +1,6 @@
 import 'dart:ui' show PointerDeviceKind;
 
-import 'package:flutter/material.dart' as material;
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lemon_shadcn/lemon_shadcn.dart';
 
@@ -8,12 +8,12 @@ void main() {
   testWidgets('integrates with native Form validation and reset', (
     tester,
   ) async {
-    final formKey = material.GlobalKey<material.FormState>();
+    final formKey = GlobalKey<FormState>();
 
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(),
-        home: material.Form(
+        home: Form(
           key: formKey,
           child: AppTextFormField.email(
             label: 'Email',
@@ -48,10 +48,10 @@ void main() {
 
   testWidgets('supports an explicit field width', (tester) async {
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(),
-        home: material.Align(
-          alignment: material.Alignment.topLeft,
+        home: Align(
+          alignment: Alignment.topLeft,
           child: AppTextFormField(label: 'Name', width: 320),
         ),
       ),
@@ -63,12 +63,12 @@ void main() {
   testWidgets('shows label-less errors in a stable trailing tooltip', (
     tester,
   ) async {
-    final formKey = material.GlobalKey<material.FormState>();
+    final formKey = GlobalKey<FormState>();
 
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(),
-        home: material.Form(
+        home: Form(
           key: formKey,
           child: AppTextFormField.email(label: null, initialValue: 'invalid'),
         ),
@@ -80,7 +80,7 @@ void main() {
     await tester.pump();
 
     expect(tester.getSize(find.byType(AppField)), sizeBefore);
-    final warning = find.byIcon(LucideIcons.triangleAlert);
+    final warning = find.byIcon(AppLucideIcons.triangleAlert);
     expect(warning, findsOneWidget);
 
     final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
@@ -94,7 +94,7 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(),
         home: AppTextFormField.password(required: true, initialValue: 'secret'),
       ),
@@ -107,11 +107,11 @@ void main() {
     expect(input.autofillHints, contains(AutofillHints.password));
     final size = tester.getSize(find.byType(AppControlBox));
 
-    await tester.tap(find.byIcon(LucideIcons.eye));
+    await tester.tap(find.byIcon(AppLucideIcons.eye));
     await tester.pump();
     input = tester.widget<TextField>(find.byType(TextField));
     expect(input.obscureText, isFalse);
-    expect(find.byIcon(LucideIcons.eyeOff), findsOneWidget);
+    expect(find.byIcon(AppLucideIcons.eyeOff), findsOneWidget);
     expect(tester.getSize(find.byType(AppControlBox)), size);
   });
 }

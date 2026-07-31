@@ -6,15 +6,15 @@ Git / path / git dependency 接入。
 
 ## 接入
 
-本包会 re-export 上游 `shadcn_flutter`。其中与 Material 同名的类型较多
-（如 `Card`、`Button`、`TextField`），与 `package:flutter/material.dart` 同时导入时
-会发生命名冲突。推荐把 Material 加上前缀：
+默认入口 `lemon_shadcn.dart` **只导出 App 前缀 API**，不会混入上游
+`shadcn_flutter` 组件，因此可以直接与现有 Material 页面共存，无需给 Material
+加前缀：
 
 ```dart
-import 'package:flutter/material.dart' as material;
+import 'package:flutter/material.dart';
 import 'package:lemon_shadcn/lemon_shadcn.dart';
 
-material.MaterialApp(
+MaterialApp(
   builder: AppShadcnScope.builder(
     config: AppThemeConfig.standard(
       radius: .6,
@@ -25,7 +25,7 @@ material.MaterialApp(
 );
 ```
 
-之后页面只表达内容和行为：
+页面继续用 Material，需要时再换成 App 组件：
 
 ```dart
 AppButton.primary(onPressed: save, child: const Text('Save'));
@@ -35,6 +35,28 @@ AppTextFormField.email(
   label: 'Email',
   required: true,
 );
+```
+
+明确需要上游能力（如 `Gap`、`Card`、shadcn `Theme`）时再引入：
+
+```dart
+import 'package:lemon_shadcn/shadcn.dart';
+// 或：import 'package:shadcn_flutter/shadcn_flutter.dart';
+```
+
+图标已通过 App 别名从默认入口导出，无需再引上游：
+
+```dart
+Icon(AppLucideIcons.plus);
+Icon(AppRadixIcons.chevronDown);
+Icon(AppBootstrapIcons.alarm);
+Icon(AppMaterialIcons.add);
+```
+
+与未加前缀的 `material.dart` 同时导入上游时仍会有命名冲突；需要上游时请：
+
+```dart
+import 'package:lemon_shadcn/shadcn.dart' as shad;
 ```
 
 `AppShadcnScope` 会补齐上游主题、Material Surface、Overlay、Drawer、Toast 和
@@ -87,7 +109,7 @@ final theme = AppThemeConfig.preset(AppThemePreset.apple).copyWith(
   controls: const AppControlMetrics(height: 40),
 );
 
-material.MaterialApp(builder: AppShadcnScope.builder(config: theme));
+MaterialApp(builder: AppShadcnScope.builder(config: theme));
 ```
 
 当前提供 `standard`、`apple`、`fluent`、`material`；后三者是相应设计语言的灵感基线，

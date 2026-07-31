@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart' as material;
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lemon_shadcn/lemon_shadcn.dart';
 
@@ -8,7 +8,7 @@ void main() {
   ) async {
     final controller = AppFormController();
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(),
         home: AppForm(
           controller: controller,
@@ -34,7 +34,7 @@ void main() {
   testWidgets('sortable field stores reordered domain values', (tester) async {
     List<String>? changed;
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(),
         home: AppSortableInputFormField<String>(
           initialValue: const ['A', 'B', 'C'],
@@ -48,8 +48,8 @@ void main() {
     final input = tester.widget<AppSortableInput<String>>(
       find.byType(AppSortableInput<String>),
     );
-    final list = tester.widget<material.ReorderableListView>(
-      find.byType(material.ReorderableListView),
+    final list = tester.widget<ReorderableListView>(
+      find.byType(ReorderableListView),
     );
     expect(input.items, ['A', 'B', 'C']);
     list.onReorderItem!(0, 2);
@@ -66,7 +66,7 @@ void main() {
       (parts) => parts.first,
     );
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(),
         home: Align(
           alignment: Alignment.topLeft,

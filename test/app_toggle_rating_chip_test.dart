@@ -1,6 +1,7 @@
-import 'package:flutter/material.dart' as material;
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lemon_shadcn/lemon_shadcn.dart';
+import 'package:lemon_shadcn/shadcn.dart' as shad;
 
 void main() {
   testWidgets('toggle and rating fields collect values and reset', (
@@ -8,7 +9,7 @@ void main() {
   ) async {
     final controller = AppFormController();
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(
           config: AppThemeConfig.standard(
             controls: const AppControlMetrics(height: 42),
@@ -26,8 +27,8 @@ void main() {
       ),
     );
 
-    tester.widget<Toggle>(find.byType(Toggle)).onChanged!(true);
-    tester.widget<StarRating>(find.byType(StarRating)).onChanged!(4.5);
+    tester.widget<shad.Toggle>(find.byType(shad.Toggle)).onChanged!(true);
+    tester.widget<shad.StarRating>(find.byType(shad.StarRating)).onChanged!(4.5);
     await tester.pump();
     expect(controller.value<bool>('pinned'), isTrue);
     expect(controller.value<double>('rating'), 4.5);
@@ -44,7 +45,7 @@ void main() {
     (tester) async {
       final controller = AppFormController();
       await tester.pumpWidget(
-        material.MaterialApp(
+        MaterialApp(
           builder: AppShadcnScope.builder(),
           home: AppForm(
             controller: controller,
@@ -56,11 +57,11 @@ void main() {
         ),
       );
 
-      ChipInput<String> input() =>
-          tester.widget<ChipInput<String>>(find.byType(ChipInput<String>));
+      shad.ChipInput<String> input() =>
+          tester.widget<shad.ChipInput<String>>(find.byType(shad.ChipInput<String>));
       final editingController = input().controller!;
       editingController.text = '${editingController.text}desktop';
-      editingController.selection = TextSelection.collapsed(
+      editingController.selection = shad.TextSelection.collapsed(
         offset: editingController.text.length,
       );
       editingController.insertChipAtCursor(input().onChipSubmitted);
@@ -69,7 +70,7 @@ void main() {
       expect(controller.value<List<String>>('tags'), ['flutter', 'desktop']);
 
       editingController.text = '${editingController.text}desktop';
-      editingController.selection = TextSelection.collapsed(
+      editingController.selection = shad.TextSelection.collapsed(
         offset: editingController.text.length,
       );
       editingController.insertChipAtCursor(input().onChipSubmitted);

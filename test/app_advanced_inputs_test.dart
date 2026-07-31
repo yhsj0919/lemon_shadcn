@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart' as material;
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lemon_shadcn/lemon_shadcn.dart';
 
@@ -15,14 +15,14 @@ void main() {
       AppFormattedParts.editable('123', length: 3),
     ]);
     final initialColor = AppColorDerivative.fromColor(
-      const material.Color(0xff336699),
+      const Color(0xff336699),
     );
     final nextColor = AppColorDerivative.fromColor(
-      const material.Color(0xffcc5500),
+      const Color(0xffcc5500),
     );
     final controller = AppFormController();
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(),
         home: AppForm(
           controller: controller,
@@ -40,11 +40,11 @@ void main() {
     );
 
     tester
-            .widget<FormattedInput>(find.byType(FormattedInput))
+            .widget<AppFormattedInput>(find.byType(AppFormattedInput))
             .controller!
             .value =
         nextFormatted;
-    tester.widget<ColorInput>(find.byType(ColorInput)).onChanged!(nextColor);
+    tester.widget<AppColorInput>(find.byType(AppColorInput)).onChanged!(nextColor);
     await tester.pump();
     expect(controller.value<AppFormattedValue>('reference'), nextFormatted);
     expect(controller.value<AppColorDerivative>('color'), nextColor);
@@ -55,7 +55,7 @@ void main() {
     expect(controller.value<AppColorDerivative>('color'), initialColor);
     expect(
       tester
-          .widget<FormattedInput>(find.byType(FormattedInput))
+          .widget<AppFormattedInput>(find.byType(AppFormattedInput))
           .controller!
           .value,
       initialFormatted,
@@ -67,7 +67,7 @@ void main() {
   ) async {
     final controller = AppFormController();
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(),
         home: AppForm(
           controller: controller,
@@ -97,7 +97,7 @@ void main() {
     await tester.pump();
     expect(controller.value<String>('plan'), 'team');
     tester
-        .widget<ItemPicker<String>>(find.byType(ItemPicker<String>))
+        .widget<AppItemPicker<String>>(find.byType(AppItemPicker<String>))
         .onChanged!('star');
     await tester.pump();
     expect(controller.value<String>('icon'), 'star');
@@ -107,7 +107,7 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(),
         home: const AppControlBox(child: AppInput(initialValue: 'Raw input')),
       ),
@@ -120,7 +120,7 @@ void main() {
   ) async {
     final controller = AppFormController();
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(
           config: AppThemeConfig.standard(
             controls: const AppControlMetrics(height: 40),
@@ -147,7 +147,7 @@ void main() {
       ),
     );
 
-    final formatted = find.byType(FormattedInput);
+    final formatted = find.byType(AppFormattedInput);
     final control = find.byType(AppControlBox);
     expect(tester.getSize(formatted).height, 40);
     expect(tester.getCenter(formatted).dy, tester.getCenter(control).dy);

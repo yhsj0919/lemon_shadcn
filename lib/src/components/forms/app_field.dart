@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'package:flutter/material.dart' as material;
+import 'package:flutter/material.dart' show Tooltip;
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
 class AppField extends StatelessWidget {
@@ -117,7 +117,7 @@ class _UnlabelledFieldControl extends StatelessWidget {
               : Semantics(
                   liveRegion: true,
                   label: errorText,
-                  child: material.Tooltip(
+                  child: Tooltip(
                     message: errorText!,
                     child: Icon(
                       shad.LucideIcons.triangleAlert,

@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart' as material;
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lemon_shadcn/lemon_shadcn.dart';
+import 'package:lemon_shadcn/shadcn.dart' as shad;
 
 void main() {
   testWidgets('date and time fields register strongly typed values and reset', (
@@ -9,14 +10,14 @@ void main() {
   ) async {
     final controller = AppFormController();
     final initialDate = DateTime(2026, 7, 25);
-    const initialTime = TimeOfDay(hour: 9, minute: 30);
-    final initialRange = DateTimeRange(
+    const initialTime = shad.TimeOfDay(hour: 9, minute: 30);
+    final initialRange = shad.DateTimeRange(
       DateTime(2026, 7, 25),
       DateTime(2026, 7, 27),
     );
 
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(),
         home: AppForm(
           controller: controller,
@@ -35,31 +36,31 @@ void main() {
     );
 
     final nextDate = DateTime(2026, 8, 1);
-    final nextRange = DateTimeRange(DateTime(2026, 8, 1), DateTime(2026, 8, 3));
-    const nextTime = TimeOfDay(hour: 14, minute: 45);
-    tester.widget<DatePicker>(find.byType(DatePicker)).onChanged!(nextDate);
-    tester.widget<DateRangePicker>(find.byType(DateRangePicker)).onChanged!(
+    final nextRange = shad.DateTimeRange(DateTime(2026, 8, 1), DateTime(2026, 8, 3));
+    const nextTime = shad.TimeOfDay(hour: 14, minute: 45);
+    tester.widget<shad.DatePicker>(find.byType(shad.DatePicker)).onChanged!(nextDate);
+    tester.widget<shad.DateRangePicker>(find.byType(shad.DateRangePicker)).onChanged!(
       nextRange,
     );
-    tester.widget<TimePicker>(find.byType(TimePicker)).onChanged!(nextTime);
+    tester.widget<shad.TimePicker>(find.byType(shad.TimePicker)).onChanged!(nextTime);
     await tester.pump();
 
     expect(controller.value<DateTime>('date'), nextDate);
-    expect(controller.value<DateTimeRange>('range'), nextRange);
-    expect(controller.value<TimeOfDay>('time'), nextTime);
+    expect(controller.value<shad.DateTimeRange>('range'), nextRange);
+    expect(controller.value<shad.TimeOfDay>('time'), nextTime);
 
     controller.reset();
     await tester.pump();
     expect(controller.value<DateTime>('date'), initialDate);
-    expect(controller.value<DateTimeRange>('range'), initialRange);
-    expect(controller.value<TimeOfDay>('time'), initialTime);
+    expect(controller.value<shad.DateTimeRange>('range'), initialRange);
+    expect(controller.value<shad.TimeOfDay>('time'), initialTime);
   });
 
   testWidgets('date picker opens inside the shared overlay host', (
     tester,
   ) async {
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(),
         home: AppDatePicker(
           value: null,
@@ -82,7 +83,7 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(),
         home: AppTimePicker(
           value: null,

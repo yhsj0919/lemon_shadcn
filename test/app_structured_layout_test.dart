@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart' as material;
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lemon_shadcn/lemon_shadcn.dart';
 
@@ -9,7 +9,7 @@ void main() {
     final stepper = AppStepperController();
     addTearDown(stepper.dispose);
     await tester.pumpWidget(
-      material.MaterialApp(
+      MaterialApp(
         builder: AppShadcnScope.builder(),
         home: SingleChildScrollView(
           child: Column(
@@ -60,10 +60,10 @@ void main() {
       ),
     );
 
-    expect(find.byType(Carousel), findsOneWidget);
-    expect(find.byType(ResizablePanel), findsOneWidget);
-    expect(find.byType(Stepper), findsOneWidget);
-    expect(find.byType(Tree<String>), findsOneWidget);
-    expect(find.byType(Table), findsOneWidget);
+    expect(find.byType(AppCarousel), findsOneWidget);
+    expect(find.byType(AppResizablePanel), findsOneWidget);
+    expect(find.byType(AppStepper), findsOneWidget);
+    expect(find.byType(AppTree<String>), findsOneWidget);
+    expect(find.byType(AppTable), findsOneWidget);
   });
 }
