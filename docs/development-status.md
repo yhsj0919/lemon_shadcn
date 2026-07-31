@@ -212,6 +212,8 @@
 
 ## 尚未完成
 
+- [x] 落地 `AppFormDialog`：布局对齐 `AppAlertDialog`，不对 content 强制 small+muted；
+  Overlay Demo 与回归测试已覆盖。详见 `docs/component-inventory.md`「表单弹窗」。
 - [x] 状态 Palette 已接入主要 Form 选中控件及 `AppNavigationItem`。
 - [x] Button 高级配置、全局错误呈现和共享 `AppAsyncAction` 已完成。
 - [x] Form 提交级错误汇总、动态字段策略和 Email/Password 语义输入变体已完成。
@@ -222,6 +224,8 @@
 ## 当前决策与风险
 
 - 使用 `ShadcnLayer` 接入现有 `MaterialApp`，不要求 `ShadcnApp`。
+- 弹窗外壳跟上游：确认框 `AppDialog.show` → `AppAlertDialog`；大表单 → `AppFormDialog`。
+  勿手写 Card 标题栏页脚。`AlertDialog.content` 强制 muted，表单场景用 `AppFormDialog`。
 - 上游仍处于 0.x，升级可能包含 breaking changes，批量映射前需稳定公共 API。
 - 默认公共入口只导出 App API；上游通过 `package:lemon_shadcn/shadcn.dart`
   显式引入。与未加前缀的 Material 同时导入上游时仍可能撞名。

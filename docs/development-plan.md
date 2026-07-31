@@ -1023,6 +1023,18 @@ Element 复用使字段状态和 name 短暂错配。
 减少重复 Dialog 模板。确认后复用异步 Button 行为。确认机制不与 destructive
 视觉变体强制绑定。
 
+### 13.12a 表单弹窗 AppFormDialog
+
+确认框继续用 `AppAlertDialog`（上游对 `content` 强制 `small` + `muted`）。
+大表单使用 `AppFormDialog`：
+
+- 外壳仍经 `AppDialog.show` 打开，字段为 `title` / `content` / `actions`（对齐 Alert 结构）；
+- **不对** `content` 强制 muted/small，正文色保持主题默认；
+- 可选 `constraints` 控制大表单最大宽度；
+- 对话框内按钮默认静止动效（与现有 `AppButtonMotionScope.disable` 一致）。
+
+见 `docs/component-inventory.md`「表单弹窗」与 Overlay Demo。
+
 ### 13.13 标准页面状态与响应式布局（后期增强）
 
 计划按需要提供：

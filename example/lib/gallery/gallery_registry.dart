@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import '../pages/actions_page.dart';
 import '../pages/data_display_page.dart';
 import '../pages/dashboard_page.dart';
+import '../pages/devices/devices_page.dart';
 import '../pages/forms_page.dart';
 import '../pages/layout_page.dart';
 import '../pages/menus_page.dart';
@@ -39,6 +40,13 @@ abstract final class GalleryRegistry {
       subtitle: '组件覆盖与示例入口概览',
       group: '概览',
       builder: (_) => const DashboardPage(),
+    ),
+    GalleryEntry(
+      id: 'devices',
+      label: '设备管理',
+      subtitle: '左右分栏、筛选、表单弹窗的管理端场景示例',
+      group: '场景示例',
+      builder: (_) => const DevicesPage(),
     ),
     GalleryEntry(
       id: 'app-button',

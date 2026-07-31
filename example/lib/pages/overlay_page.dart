@@ -58,6 +58,38 @@ class OverlayPage extends StatelessWidget {
                 child: const Text('对话框'),
               ),
               AppButton.outline(
+                onPressed: () => AppDialog.show<void>(
+                  context: context,
+                  builder: (dialogContext) => AppFormDialog(
+                    title: const Text('编辑名称'),
+                    constraints: const BoxConstraints(maxWidth: 420),
+                    content: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const Text('表单弹窗保持正文色，不对 content 强制 muted。'),
+                        const Gap(12),
+                        const AppTextFormField(
+                          label: '名称',
+                          hintText: '请输入名称',
+                        ),
+                      ],
+                    ),
+                    actions: [
+                      AppButton.outline(
+                        onPressed: () => AppOverlay.close(dialogContext),
+                        child: const Text('取消'),
+                      ),
+                      AppButton.primary(
+                        onPressed: () => AppOverlay.close(dialogContext),
+                        child: const Text('保存'),
+                      ),
+                    ],
+                  ),
+                ),
+                child: const Text('表单对话框'),
+              ),
+              AppButton.outline(
                 onPressed: () => AppDrawer.show<void>(
                   context: context,
                   position: OverlayPosition.right,

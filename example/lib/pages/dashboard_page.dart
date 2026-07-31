@@ -19,7 +19,7 @@ class DashboardPage extends StatelessWidget {
             runSpacing: 12,
             children: const [
               _MetricCard(label: '组件登记', value: '84'),
-              _MetricCard(label: '示例分类', value: '16'),
+              _MetricCard(label: '示例分类', value: '17'),
               _MetricCard(label: '上游版本', value: '0.0.53'),
             ],
           ),

@@ -25,7 +25,8 @@ enum AppButtonVariant {
 enum AppButtonPressEffect { none, returnToBase, lift }
 
 /// Disables default [AppButton] hover-lift inside chrome subtrees (menus,
-/// sidebar, toolbars). Standalone AppButtons outside this scope keep motion.
+/// sidebar, toolbars, dialogs). Standalone AppButtons outside this scope keep
+/// motion.
 class AppButtonMotionScope extends InheritedWidget {
   const AppButtonMotionScope({
     super.key,

@@ -1,7 +1,7 @@
 # shadcn_flutter 组件转换清单
 
 基线版本：`shadcn_flutter 0.0.53`  
-更新日期：2026-07-25
+更新日期：2026-07-31
 
 ## 口径
 
@@ -22,7 +22,7 @@
 | Disclosure | Accordion | AppAccordion | 完成 |
 | Disclosure | Collapsible | AppCollapsible | 完成 |
 | Feedback | Alert | AppAlert / AppAlert.destructive | 完成 |
-| Feedback | Alert Dialog | AppAlertDialog / AppDialog.show | 完成 |
+| Feedback | Alert Dialog | AppAlertDialog / AppDialog.show | 完成（见下方「表单弹窗」） |
 | Feedback | Circular Progress | AppCircularProgressIndicator | 完成 |
 | Feedback | Progress Bar | AppProgress | 完成 |
 | Feedback | Skeleton | AppSkeleton | 完成 |
@@ -58,7 +58,7 @@
 | Navigation | Tabs | AppTabs | 完成 |
 | Navigation | Tab List | AppTabList | 完成 |
 | Navigation | Tree | AppTree | 完成 |
-| Surfaces | Dialog | AppDialog.show | 完成 |
+| Surfaces | Dialog | AppDialog.show / AppFormDialog | 完成 |
 | Surfaces | Drawer | AppDrawer.show | 完成 |
 | Surfaces | Hover Card | AppHoverCard | 完成 |
 | Surfaces | Popover | AppPopover.show | 完成 |
@@ -105,3 +105,38 @@
 | Scrollbar | AppScrollbar / AppScrollbarView | 完成 |
 | Selectable Text | AppSelectableText | 完成 |
 | Color Input | AppColorInput / AppColorInputFormField | 完成 |
+
+## 表单弹窗（AppFormDialog）
+
+官方弹窗外壳：
+- 确认框：`AppDialog.show` → `AppAlertDialog(title / content / actions)`
+- 大表单：`AppDialog.show` → `AppFormDialog(title / content / actions)`
+
+不要手写 `ConstrainedBox` / `AppCard` 标题栏页脚；表单控件用 lemon，外壳跟上游结构。
+
+**区别：** 上游 `AlertDialog`（及 `AppAlertDialog`）会对 `content` 强制 `.small().muted()`。
+`AppFormDialog` 布局对齐 Alert，但 **不对** content 强制 muted/small；可选 `constraints`
+控制最大宽度。对话框内按钮默认静止动效（`AppButtonMotionScope.disable`）。
+
+用法：
+
+```dart
+AppDialog.show<void>(
+  context: context,
+  builder: (dialogContext) => AppFormDialog(
+    title: const Text('编辑资料'),
+    constraints: const BoxConstraints(maxWidth: 420),
+    content: /* AppForm / 字段列 */ null,
+    actions: [
+      AppButton.outline(
+        onPressed: () => AppOverlay.close(dialogContext),
+        child: const Text('取消'),
+      ),
+      AppButton.primary(
+        onPressed: () {},
+        child: const Text('保存'),
+      ),
+    ],
+  ),
+);
+```

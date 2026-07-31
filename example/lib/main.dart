@@ -130,6 +130,7 @@ class _GalleryShellState extends State<GalleryShell> {
 
 IconData _groupIcon(String group) => switch (group) {
   '概览' => AppLucideIcons.layoutDashboard,
+  '场景示例' => AppLucideIcons.monitor,
   'App 组件' => AppLucideIcons.component,
   '基础组件' => AppLucideIcons.blocks,
   '表单组件' => AppLucideIcons.listChecks,
@@ -144,6 +145,7 @@ IconData _componentIcon(String id) => switch (id) {
   'app-text' => AppLucideIcons.type,
   'app-badge' => AppLucideIcons.tag,
   'dashboard' => AppLucideIcons.gauge,
+  'devices' => AppLucideIcons.monitor,
   'form-basic' => AppLucideIcons.textCursorInput,
   'form-advanced' => AppLucideIcons.listChecks,
   'pickers' => AppLucideIcons.pipette,

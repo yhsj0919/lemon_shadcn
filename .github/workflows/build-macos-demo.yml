@@ -1,0 +1,134 @@
+name: Build macOS Demo
+
+on:
+  workflow_dispatch:
+    inputs:
+      create_release:
+        description: 'Upload zip to a GitHub Release'
+        type: boolean
+        default: true
+      release_tag:
+        description: 'Release tag (empty = demo-macos-YYYYMMDD-run_id)'
+        type: string
+        required: false
+        default: ''
+  push:
+    tags:
+      - 'demo-macos-*'
+      - 'v*'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-macos-demo-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-macos:
+    name: Build example (macOS)
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: example
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Flutter doctor
+        run: |
+          flutter --version
+          flutter doctor -v
+          # Package requires flutter: '>=3.35.1'
+          python3 - <<'PY'
+          import re, subprocess, sys
+          out = subprocess.check_output(["flutter", "--version"], text=True)
+          m = re.search(r"Flutter\s+(\d+)\.(\d+)\.(\d+)", out)
+          if not m:
+              sys.exit("Could not parse Flutter version")
+          ver = tuple(int(x) for x in m.groups())
+          if ver < (3, 35, 1):
+              sys.exit(f"Flutter {ver} is below required 3.35.1")
+          print(f"Flutter version OK: {'.'.join(map(str, ver))}")
+          PY
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Enable macOS desktop
+        run: flutter config --enable-macos-desktop
+
+      - name: Build macOS release
+        run: flutter build macos --release
+
+      - name: Package .app as zip
+        run: |
+          set -euo pipefail
+          APP_PATH="build/macos/Build/Products/Release/lemon_shadcn_example.app"
+          test -d "$APP_PATH"
+          mkdir -p dist
+          # ditto preserves macOS resource forks / executable bits better than zip
+          ditto -c -k --sequesterRsrc --keepParent \
+            "$APP_PATH" \
+            "dist/LemonShadcn-Demo-macos.zip"
+          ls -lh dist/
+
+      - name: Resolve artifact name / release tag
+        id: meta
+        shell: bash
+        run: |
+          set -euo pipefail
+          DATE="$(date -u +%Y%m%d)"
+          DEFAULT_TAG="demo-macos-${DATE}-${{ github.run_id }}"
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            TAG="${GITHUB_REF_NAME}"
+          elif [[ -n "${{ inputs.release_tag }}" ]]; then
+            TAG="${{ inputs.release_tag }}"
+          else
+            TAG="$DEFAULT_TAG"
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "artifact=LemonShadcn-Demo-macos-${TAG}.zip" >> "$GITHUB_OUTPUT"
+          mv dist/LemonShadcn-Demo-macos.zip "dist/LemonShadcn-Demo-macos-${TAG}.zip"
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.meta.outputs.artifact }}
+          path: example/dist/${{ steps.meta.outputs.artifact }}
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Create GitHub Release
+        if: >-
+          github.event_name == 'push' ||
+          (github.event_name == 'workflow_dispatch' && inputs.create_release)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.meta.outputs.tag }}
+          name: Lemon Shadcn Demo (macOS) ${{ steps.meta.outputs.tag }}
+          body: |
+            macOS desktop build of the `example` component gallery.
+
+            ### Download
+            Unpack `LemonShadcn-Demo-macos-*.zip`, then open `lemon_shadcn_example.app`.
+
+            ### Gatekeeper
+            This build is **unsigned**. On first launch macOS may block it:
+            1. Right-click the app → **Open**
+            2. Or: System Settings → Privacy & Security → allow the blocked app
+
+            Built from `${{ github.sha }}` on `${{ github.ref_name }}`.
+          files: example/dist/${{ steps.meta.outputs.artifact }}
+          draft: false
+          prerelease: true
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

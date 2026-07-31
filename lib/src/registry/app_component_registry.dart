@@ -466,6 +466,13 @@ abstract final class AppComponentRegistry {
       status: AppComponentStatus.implemented,
     ),
     AppComponentRegistration(
+      appName: 'AppFormDialog',
+      upstreamName: 'AlertDialog',
+      category: AppComponentCategory.overlay,
+      adapter: AppComponentAdapter.independent,
+      status: AppComponentStatus.implemented,
+    ),
+    AppComponentRegistration(
       appName: 'AppDialog',
       upstreamName: 'DialogConfiguration',
       category: AppComponentCategory.overlay,

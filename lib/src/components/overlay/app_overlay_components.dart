@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
+import '../actions/app_button.dart';
 import '../../foundation/app_overlay_style.dart';
 
 typedef AppTooltip = shad.Tooltip;
@@ -74,7 +75,9 @@ abstract final class AppDialog {
     AlignmentGeometry? alignment,
   }) {
     return shad.DialogConfiguration<T>(
-      builder: builder,
+      builder: (dialogContext) => AppButtonMotionScope.disable(
+        child: builder(dialogContext),
+      ),
       barrierDismissible: barrierDismissible,
       barrierColor: barrierColor,
       useRootNavigator: useRootNavigator,
@@ -114,16 +117,134 @@ class AppAlertDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return shad.AlertDialog(
-      leading: leading,
-      title: title,
-      content: content,
-      actions: actions,
-      trailing: trailing,
-      surfaceBlur: surfaceBlur,
-      surfaceOpacity: surfaceOpacity,
-      barrierColor: barrierColor ?? AppOverlayStyle.modalBarrier(context),
-      padding: padding,
+    // Dialog actions stay still by default; pass AppButtonConfig.interactive
+    // (or interactive: true) on a specific button to opt back into lift.
+    return AppButtonMotionScope.disable(
+      child: shad.AlertDialog(
+        leading: leading,
+        title: title,
+        content: content,
+        actions: actions,
+        trailing: trailing,
+        surfaceBlur: surfaceBlur,
+        surfaceOpacity: surfaceOpacity,
+        barrierColor: barrierColor ?? AppOverlayStyle.modalBarrier(context),
+        padding: padding,
+      ),
+    );
+  }
+}
+
+/// Form-oriented dialog shell aligned with [AppAlertDialog].
+///
+/// Upstream [shad.AlertDialog] forces `content` through `.small().muted()`
+/// (confirmation copy). This shell keeps the same chrome and title treatment
+/// but leaves [content] at normal body typography for forms and denser copy.
+class AppFormDialog extends StatelessWidget {
+  const AppFormDialog({
+    super.key,
+    this.leading,
+    this.title,
+    this.content,
+    this.actions,
+    this.trailing,
+    this.surfaceBlur,
+    this.surfaceOpacity,
+    this.barrierColor,
+    this.padding,
+    this.constraints,
+  });
+
+  final Widget? leading;
+  final Widget? title;
+  final Widget? content;
+  final List<Widget>? actions;
+  final Widget? trailing;
+  final double? surfaceBlur;
+  final double? surfaceOpacity;
+  final Color? barrierColor;
+  final EdgeInsetsGeometry? padding;
+  final BoxConstraints? constraints;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = shad.Theme.of(context);
+    final scaling = theme.scaling;
+    final densityGap = theme.density.baseGap * scaling;
+    final densityContainerPadding =
+        theme.density.baseContainerPadding * scaling;
+
+    final headerChildren = <Widget>[
+      ?leading?.iconXLarge().iconMutedForeground(),
+      if (title != null || content != null)
+        Flexible(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ?title?.large().semiBold(),
+              if (title != null && content != null)
+                SizedBox(height: densityGap),
+              // Intentionally no .small().muted() — form body copy.
+              ?content,
+            ],
+          ),
+        ),
+      ?trailing?.iconXLarge().iconMutedForeground(),
+    ];
+
+    final bodyChildren = <Widget>[
+      Flexible(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (var i = 0; i < headerChildren.length; i++) ...[
+              if (i > 0) SizedBox(width: densityGap * 2),
+              headerChildren[i],
+            ],
+          ],
+        ),
+      ),
+      if (actions != null && actions!.isNotEmpty) ...[
+        SizedBox(height: densityGap * 2),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          mainAxisSize: MainAxisSize.min,
+          children: shad.join(actions!, SizedBox(width: densityGap)).toList(),
+        ),
+      ],
+    ];
+
+    Widget surface = shad.ModalContainer(
+      fillColor: theme.colorScheme.popover,
+      filled: true,
+      borderRadius: theme.borderRadiusXxl,
+      borderWidth: 1 * scaling,
+      borderColor: theme.colorScheme.muted,
+      padding: padding ?? EdgeInsets.all(densityContainerPadding * 1.5),
+      surfaceBlur: surfaceBlur ?? theme.surfaceBlur,
+      surfaceOpacity: surfaceOpacity ?? theme.surfaceOpacity,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: bodyChildren,
+      ),
+    );
+
+    if (constraints != null) {
+      surface = ConstrainedBox(constraints: constraints!, child: surface);
+    }
+
+    return AppButtonMotionScope.disable(
+      child: shad.ModalBackdrop(
+        borderRadius: theme.borderRadiusXxl,
+        barrierColor: barrierColor ?? AppOverlayStyle.modalBarrier(context),
+        surfaceClip: shad.ModalBackdrop.shouldClipSurface(
+          surfaceOpacity ?? theme.surfaceOpacity,
+        ),
+        child: surface,
+      ),
     );
   }
 }

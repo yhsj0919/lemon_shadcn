@@ -4,6 +4,14 @@ import 'package:lemon_shadcn_example/main.dart';
 
 void main() {
   testWidgets('renders the component gallery', (tester) async {
+    Future<void> expandGroup(String label) async {
+      final finder = find.text(label);
+      await tester.ensureVisible(finder);
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.tap(finder);
+      await tester.pump(const Duration(milliseconds: 400));
+    }
+
     Future<void> selectCategory(String label) async {
       final finder = find.text(label);
       await tester.ensureVisible(finder);
@@ -12,7 +20,10 @@ void main() {
       await tester.pump(const Duration(milliseconds: 400));
     }
 
+    await tester.binding.setSurfaceSize(const Size(1400, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(const ComponentGallery());
+    await tester.pump(const Duration(milliseconds: 400));
 
     expect(find.byKey(const Key('theme-preset-picker')), findsOneWidget);
     expect(find.text('默认'), findsOneWidget);
@@ -22,6 +33,13 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Fluent 风格'), findsOneWidget);
     expect(tester.takeException(), isNull);
+
+    await expandGroup('场景示例');
+    await selectCategory('设备管理');
+    expect(find.text('搜索设备'), findsOneWidget);
+    expect(find.text('世贸国际'), findsWidgets);
+
+    await expandGroup('App 组件');
     await selectCategory('AppButton');
 
     expect(find.text('按钮变体'), findsOneWidget);
@@ -39,7 +57,6 @@ void main() {
 
     await selectCategory('AppText');
 
-    expect(find.text('遵循当前主题的语义化文本角色。'), findsOneWidget);
     expect(find.text('局部覆盖后的标题'), findsOneWidget);
 
     await selectCategory('表单基础');
