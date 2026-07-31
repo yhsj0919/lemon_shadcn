@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lemon_shadcn/lemon_shadcn.dart';
-import 'package:lemon_shadcn/shadcn.dart' as shad;
 
 void main() {
   test('exposes package metadata', () {
@@ -10,8 +9,8 @@ void main() {
   });
 
   test('provides light and dark theme tokens', () {
-    expect(LemonThemes.light.colorScheme, shad.ColorSchemes.zinc(shad.ThemeMode.light));
-    expect(LemonThemes.dark.colorScheme, shad.ColorSchemes.zinc(shad.ThemeMode.dark));
+    expect(LemonThemes.light.colorScheme, AppColorSchemes.zinc(AppThemeMode.light));
+    expect(LemonThemes.dark.colorScheme, AppColorSchemes.zinc(AppThemeMode.dark));
   });
 
   test('theme presets expose distinct overridable baselines', () {

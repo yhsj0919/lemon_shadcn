@@ -2,8 +2,8 @@ import 'dart:ui' show Color, Offset;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart' show TextStyle, Widget;
-import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
+import 'app_theme_aliases.dart';
 import 'app_visual_style.dart';
 
 TextStyle _windowsUiStyle(TextStyle source) => TextStyle(
@@ -19,8 +19,8 @@ TextStyle _windowsUiStyle(TextStyle source) => TextStyle(
   decoration: source.decoration,
 );
 
-shad.Typography _resolveTypography() {
-  const source = shad.Typography.geist();
+AppTypography _resolveTypography() {
+  const source = AppTypography.geist();
   if (defaultTargetPlatform != TargetPlatform.windows) return source;
   TextStyle ui(TextStyle style) => _windowsUiStyle(style);
   return source.copyWith(
@@ -171,9 +171,9 @@ class AppShadowTheme {
 @immutable
 class AppThemeConfig {
   AppThemeConfig({
-    shad.ThemeData? lightTheme,
-    shad.ThemeData? darkTheme,
-    this.themeMode = shad.ThemeMode.system,
+    AppThemeData? lightTheme,
+    AppThemeData? darkTheme,
+    this.themeMode = AppThemeMode.system,
     this.motion = const AppMotionTheme(),
     this.shadows = const AppShadowTheme(),
     this.controls = const AppControlMetrics(),
@@ -186,7 +186,7 @@ class AppThemeConfig {
 
   factory AppThemeConfig.standard({
     double radius = 0.5,
-    shad.ThemeMode themeMode = shad.ThemeMode.system,
+    AppThemeMode themeMode = AppThemeMode.system,
     AppMotionTheme motion = const AppMotionTheme(),
     AppShadowTheme shadows = const AppShadowTheme(),
     AppControlMetrics controls = const AppControlMetrics(),
@@ -194,13 +194,13 @@ class AppThemeConfig {
     AppErrorPresenter? errorPresenter,
   }) {
     return AppThemeConfig(
-      lightTheme: shad.ThemeData(
-        colorScheme: shad.ColorSchemes.zinc(shad.ThemeMode.light),
+      lightTheme: AppThemeData(
+        colorScheme: AppColorSchemes.zinc(AppThemeMode.light),
         radius: radius,
         typography: _appTypography,
       ),
-      darkTheme: shad.ThemeData.dark(
-        colorScheme: shad.ColorSchemes.zinc(shad.ThemeMode.dark),
+      darkTheme: AppThemeData.dark(
+        colorScheme: AppColorSchemes.zinc(AppThemeMode.dark),
         radius: radius,
         typography: _appTypography,
       ),
@@ -215,24 +215,24 @@ class AppThemeConfig {
 
   factory AppThemeConfig.preset(
     AppThemePreset preset, {
-    shad.ThemeMode themeMode = shad.ThemeMode.system,
+    AppThemeMode themeMode = AppThemeMode.system,
     AppErrorPresenter? errorPresenter,
     bool enableScrollInterception = false,
   }) {
     final config = switch (preset) {
       AppThemePreset.standard => AppThemeConfig.standard(themeMode: themeMode),
       AppThemePreset.apple => AppThemeConfig(
-        lightTheme: shad.ThemeData(
+        lightTheme: AppThemeData(
           colorScheme: _accentScheme(
-            shad.ThemeMode.light,
+            AppThemeMode.light,
             const Color(0xff007aff),
           ),
           radius: 0.75,
           typography: _appTypography,
         ),
-        darkTheme: shad.ThemeData.dark(
+        darkTheme: AppThemeData.dark(
           colorScheme: _accentScheme(
-            shad.ThemeMode.dark,
+            AppThemeMode.dark,
             const Color(0xff0a84ff),
           ),
           radius: 0.75,
@@ -261,13 +261,13 @@ class AppThemeConfig {
         ),
       ),
       AppThemePreset.fluent => AppThemeConfig(
-        lightTheme: shad.ThemeData(
-          colorScheme: shad.ColorSchemes.slate(shad.ThemeMode.light),
+        lightTheme: AppThemeData(
+          colorScheme: AppColorSchemes.slate(AppThemeMode.light),
           radius: 0.25,
           typography: _appTypography,
         ),
-        darkTheme: shad.ThemeData.dark(
-          colorScheme: shad.ColorSchemes.slate(shad.ThemeMode.dark),
+        darkTheme: AppThemeData.dark(
+          colorScheme: AppColorSchemes.slate(AppThemeMode.dark),
           radius: 0.25,
           typography: _appTypography,
         ),
@@ -294,17 +294,17 @@ class AppThemeConfig {
         ),
       ),
       AppThemePreset.material => AppThemeConfig(
-        lightTheme: shad.ThemeData(
+        lightTheme: AppThemeData(
           colorScheme: _accentScheme(
-            shad.ThemeMode.light,
+            AppThemeMode.light,
             const Color(0xff6750a4),
           ),
           radius: 0.75,
           typography: _appTypography,
         ),
-        darkTheme: shad.ThemeData.dark(
+        darkTheme: AppThemeData.dark(
           colorScheme: _accentScheme(
-            shad.ThemeMode.dark,
+            AppThemeMode.dark,
             const Color(0xffd0bcff),
             foreground: const Color(0xff381e72),
           ),
@@ -340,9 +340,9 @@ class AppThemeConfig {
     );
   }
 
-  final shad.ThemeData lightTheme;
-  final shad.ThemeData darkTheme;
-  final shad.ThemeMode themeMode;
+  final AppThemeData lightTheme;
+  final AppThemeData darkTheme;
+  final AppThemeMode themeMode;
   final AppMotionTheme motion;
   final AppShadowTheme shadows;
   final AppControlMetrics controls;
@@ -352,9 +352,9 @@ class AppThemeConfig {
   final AppThemeWrapper? componentThemeWrapper;
 
   AppThemeConfig copyWith({
-    shad.ThemeData? lightTheme,
-    shad.ThemeData? darkTheme,
-    shad.ThemeMode? themeMode,
+    AppThemeData? lightTheme,
+    AppThemeData? darkTheme,
+    AppThemeMode? themeMode,
     AppMotionTheme? motion,
     AppShadowTheme? shadows,
     AppControlMetrics? controls,
@@ -382,12 +382,12 @@ class AppThemeConfig {
   }
 }
 
-shad.ColorScheme _accentScheme(
-  shad.ThemeMode mode,
+AppColorScheme _accentScheme(
+  AppThemeMode mode,
   Color primary, {
   Color foreground = const Color(0xffffffff),
 }) {
-  return shad.ColorSchemes.slate(mode).copyWith(
+  return AppColorSchemes.slate(mode).copyWith(
     primary: () => primary,
     primaryForeground: () => foreground,
     ring: () => primary,
@@ -395,14 +395,14 @@ shad.ColorScheme _accentScheme(
 }
 
 abstract final class LemonThemes {
-  static final shad.ThemeData light = shad.ThemeData(
-    colorScheme: shad.ColorSchemes.zinc(shad.ThemeMode.light),
+  static final AppThemeData light = AppThemeData(
+    colorScheme: AppColorSchemes.zinc(AppThemeMode.light),
     radius: 0.5,
     typography: _appTypography,
   );
 
-  static final shad.ThemeData dark = shad.ThemeData.dark(
-    colorScheme: shad.ColorSchemes.zinc(shad.ThemeMode.dark),
+  static final AppThemeData dark = AppThemeData.dark(
+    colorScheme: AppColorSchemes.zinc(AppThemeMode.dark),
     radius: 0.5,
     typography: _appTypography,
   );

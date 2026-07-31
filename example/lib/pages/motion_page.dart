@@ -8,7 +8,7 @@ class MotionPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
+    final colors = ShadcnTheme.of(context).colorScheme;
     const followCardColor = Color(0xFF14B8A6);
     return ComponentPage(
       title: '动效',
@@ -217,7 +217,7 @@ class _SelectionPaletteDemoState extends State<_SelectionPaletteDemo> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
+    final colors = ShadcnTheme.of(context).colorScheme;
     final states = <WidgetState>{
       if (_hovered) WidgetState.hovered,
       if (_selected) WidgetState.selected,

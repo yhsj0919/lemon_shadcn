@@ -2,9 +2,9 @@
 ///
 /// Exports App-prefixed APIs only. Upstream `shadcn_flutter` is **not**
 /// re-exported here so existing Material pages can import this package without
-/// name clashes. Icon fonts are available as `AppLucideIcons`, `AppRadixIcons`,
-/// `AppBootstrapIcons`, and `AppMaterialIcons`. For other upstream widgets or
-/// types (`Card`, `Gap`, `Theme`, …), import `package:lemon_shadcn/shadcn.dart`.
+/// name clashes. Icons and design-theme tokens are available as App aliases
+/// (`AppLucideIcons`, `ShadcnTheme`, `AppThemeData`, …). For other upstream
+/// widgets (`Card`, `Gap`, …), import `package:lemon_shadcn/shadcn.dart`.
 library;
 
 export 'src/components/actions/app_button.dart';
@@ -54,6 +54,7 @@ export 'src/foundation/app_interactive_style.dart';
 export 'src/foundation/app_localizations_zh.dart';
 export 'src/foundation/app_overlay_style.dart';
 export 'src/foundation/app_control_box.dart';
+export 'src/foundation/app_theme_aliases.dart';
 export 'src/foundation/app_theme_config.dart';
 export 'src/foundation/app_visual_style.dart';
 export 'src/lemon_shadcn.dart';

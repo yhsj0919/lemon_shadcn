@@ -44,14 +44,24 @@ import 'package:lemon_shadcn/shadcn.dart';
 // 或：import 'package:shadcn_flutter/shadcn_flutter.dart';
 ```
 
-图标已通过 App 别名从默认入口导出，无需再引上游：
+图标与设计主题已通过 App 别名从默认入口导出，无需再引上游：
 
 ```dart
 Icon(AppLucideIcons.plus);
 Icon(AppRadixIcons.chevronDown);
 Icon(AppBootstrapIcons.alarm);
 Icon(AppMaterialIcons.add);
+
+final colors = ShadcnTheme.of(context).colorScheme;
+final theme = AppThemeConfig(
+  lightTheme: AppThemeData(
+    colorScheme: AppColorSchemes.zinc(AppThemeMode.light),
+  ),
+);
 ```
+
+> `AppTheme` 仍是配置 Scope（[AppThemeConfig]）；上游 shadcn `Theme` 对应
+> `ShadcnTheme`，避免撞名。
 
 与未加前缀的 `material.dart` 同时导入上游时仍会有命名冲突；需要上游时请：
 

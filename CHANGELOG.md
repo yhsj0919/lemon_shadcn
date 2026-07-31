@@ -5,6 +5,10 @@
   `package:lemon_shadcn/shadcn.dart` when upstream widgets or types are needed.
 * Export icon font aliases (`AppLucideIcons`, `AppRadixIcons`,
   `AppBootstrapIcons`, `AppMaterialIcons`) from the default entry.
+* Export design-theme aliases (`ShadcnTheme`, `AppThemeData`,
+  `AppColorScheme`, `AppColorSchemes`, `AppThemeMode`, `AppTypography`,
+  `AppComponentTheme`) so Material pages can read tokens without importing
+  upstream.
 * Drop `import … as material` across the package, example, and tests; use plain
   Material imports with App aliases (or `shadcn.dart as shad` when needed).
 
