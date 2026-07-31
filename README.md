@@ -17,8 +17,8 @@ import 'package:lemon_shadcn/lemon_shadcn.dart';
 MaterialApp(
   builder: AppShadcnScope.builder(
     config: AppThemeConfig.standard(
+      primary: const Color(0xFF2563EB), // 品牌主色；省略则用 zinc 默认
       radius: .6,
-      controls: const AppControlMetrics(height: 40),
     ),
   ),
   home: const ExistingPage(),
@@ -48,20 +48,33 @@ import 'package:lemon_shadcn/shadcn.dart';
 
 ```dart
 Icon(AppLucideIcons.plus);
-Icon(AppRadixIcons.chevronDown);
-Icon(AppBootstrapIcons.alarm);
-Icon(AppMaterialIcons.add);
 
 final colors = ShadcnTheme.of(context).colorScheme;
 final theme = AppThemeConfig(
   lightTheme: AppThemeData(
     colorScheme: AppColorSchemes.zinc(AppThemeMode.light),
+    typography: AppTypography.system(), // 默认；也可用 AppTypography.geist()
+  ),
+  textTheme: AppTextTheme.admin().copyWith(
+    title: const TextStyle(fontWeight: FontWeight.w700),
   ),
 );
 ```
 
+语义文本直接用变体，少改字号：
+
+```dart
+AppText.h3('页面标题');
+AppText.body('正文');
+AppText.helper('表单说明');
+AppText.error('校验失败');
+```
+
 > `AppTheme` 仍是配置 Scope（[AppThemeConfig]）；上游 shadcn `Theme` 对应
 > `ShadcnTheme`，避免撞名。
+>
+> `AppShadcnScope` 默认会把 shadcn 的主色与 sans `fontFamily` 同步进 Material
+> `ThemeData`，便于混用 Material 控件。可用 `syncMaterialTheme: false` 关闭。
 
 与未加前缀的 `material.dart` 同时导入上游时仍会有命名冲突；需要上游时请：
 
@@ -103,7 +116,7 @@ AppForm(
 `AppThemeConfig` 集中管理：
 
 - light/dark shadcn theme 与圆角；
-- 控件高度、内边距、图标尺寸和内容间距；
+- 控件高度、内边距、图标尺寸和内容间距（默认高度 34，无需特意配 `height: 40`）；
 - Hover/Press/Depth 动画；
 - 根据背景、边框、Accent 或组件颜色派生的动态阴影；
 - selected/hovered/focused/disabled/error 状态 Palette；
@@ -115,11 +128,15 @@ AppForm(
 内置主题预设可以直接用于全局 Scope，并在此基础上覆盖少量产品 token：
 
 ```dart
-final theme = AppThemeConfig.preset(AppThemePreset.apple).copyWith(
-  controls: const AppControlMetrics(height: 40),
-);
+final theme = AppThemeConfig.preset(AppThemePreset.apple);
 
 MaterialApp(builder: AppShadcnScope.builder(config: theme));
+```
+
+仅改品牌主色时优先：
+
+```dart
+AppThemeConfig.standard(primary: Color(0xFF2563EB));
 ```
 
 当前提供 `standard`、`apple`、`fluent`、`material`；后三者是相应设计语言的灵感基线，
@@ -136,12 +153,12 @@ AppShell(
     AppNavDestination(
       id: 'components',
       label: 'Components',
-      icon: LucideIcons.component,
+      icon: AppLucideIcons.component,
       children: [
         AppNavDestination(
           id: 'forms',
           label: 'Forms',
-          icon: LucideIcons.textCursorInput,
+          icon: AppLucideIcons.textCursorInput,
         ),
       ],
     ),

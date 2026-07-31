@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart' show Material, MaterialType;
+import 'package:flutter/material.dart' show Material, MaterialType, Theme;
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
+import '../components/display/app_text.dart';
 import 'app_theme_config.dart';
 import 'app_localizations_zh.dart';
 import 'app_overlay_style.dart';
@@ -13,6 +14,7 @@ class AppShadcnScope extends StatelessWidget {
     this.config,
     this.locale,
     this.provideMaterialHost = true,
+    this.syncMaterialTheme = true,
   });
 
   final Widget child;
@@ -20,11 +22,20 @@ class AppShadcnScope extends StatelessWidget {
   final Locale? locale;
   final bool provideMaterialHost;
 
-  static TransitionBuilder builder({AppThemeConfig? config, Locale? locale}) {
+  /// When true (default), mirrors shadcn primary + sans fontFamily into the
+  /// ambient Material [ThemeData] so existing Material widgets stay on brand.
+  final bool syncMaterialTheme;
+
+  static TransitionBuilder builder({
+    AppThemeConfig? config,
+    Locale? locale,
+    bool syncMaterialTheme = true,
+  }) {
     return (context, child) =>
         AppShadcnScope(
           config: config,
           locale: locale,
+          syncMaterialTheme: syncMaterialTheme,
           child: child ?? const SizedBox.shrink(),
         );
   }
@@ -32,7 +43,14 @@ class AppShadcnScope extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final resolved = config ?? AppThemeConfig.standard();
-    final themedChild = resolved.componentThemeWrapper?.call(child) ?? child;
+    var themedChild = resolved.componentThemeWrapper?.call(child) ?? child;
+    final textTheme = resolved.textTheme;
+    if (textTheme != null) {
+      themedChild = shad.ComponentTheme<AppTextTheme>(
+        data: textTheme,
+        child: themedChild,
+      );
+    }
     return _AppThemeConfigScope(
       config: resolved,
       child: _AppLocalizationsHost(
@@ -47,12 +65,15 @@ class AppShadcnScope extends StatelessWidget {
             child: _AppOverlayHost(
               child: shad.ToastLayer(
                 child: shad.DrawerOverlay(
-                  child: provideMaterialHost
-                      ? Material(
-                          type: MaterialType.transparency,
-                          child: themedChild,
-                        )
-                      : themedChild,
+                  child: _MaterialThemeBridge(
+                    enabled: syncMaterialTheme,
+                    child: provideMaterialHost
+                        ? Material(
+                            type: MaterialType.transparency,
+                            child: themedChild,
+                          )
+                        : themedChild,
+                  ),
                 ),
               ),
             ),
@@ -60,6 +81,59 @@ class AppShadcnScope extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// Copies shadcn primary / UI font into Material so mixed trees stay aligned.
+class _MaterialThemeBridge extends StatelessWidget {
+  const _MaterialThemeBridge({required this.enabled, required this.child});
+
+  final bool enabled;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!enabled) return child;
+    // Prefer ancestor [Theme] so Scope still works without MaterialApp
+    // (widget tests) and without depending on Theme.maybeOf availability.
+    final themeWidget = context.findAncestorWidgetOfExactType<Theme>();
+    if (themeWidget == null) return child;
+
+    final material = themeWidget.data;
+    final shadTheme = shad.Theme.of(context);
+    final colors = shadTheme.colorScheme;
+    final sans = shadTheme.typography.sans;
+    // Platform stacks often leave fontFamily null and rely on fallbacks
+    // (e.g. Android). Prefer an explicit family so Material TextTheme.apply
+    // actually replaces Roboto / the host default.
+    final fontFamily =
+        sans.fontFamily ?? sans.fontFamilyFallback?.firstOrNull;
+    final fontPackage = _fontPackageFor(fontFamily);
+    final bridged = material.copyWith(
+      colorScheme: material.colorScheme.copyWith(
+        primary: colors.primary,
+        onPrimary: colors.primaryForeground,
+      ),
+      primaryColor: colors.primary,
+      textTheme: material.textTheme.apply(
+        fontFamily: fontFamily,
+        fontFamilyFallback: sans.fontFamilyFallback,
+        package: fontPackage,
+      ),
+      primaryTextTheme: material.primaryTextTheme.apply(
+        fontFamily: fontFamily,
+        fontFamilyFallback: sans.fontFamilyFallback,
+        package: fontPackage,
+      ),
+    );
+    return Theme(data: bridged, child: child);
+  }
+
+  static String? _fontPackageFor(String? fontFamily) {
+    return switch (fontFamily) {
+      'GeistSans' || 'GeistMono' => 'shadcn_flutter',
+      _ => null,
+    };
   }
 }
 

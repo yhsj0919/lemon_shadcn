@@ -51,8 +51,8 @@ MaterialApp.router(
   builder: (context, child) {
     return AppShadcnScope(
       config: AppThemeConfig.standard(
+        primary: const Color(0xFF2563EB),
         radius: .6,
-        controls: const AppControlMetrics(height: 40),
       ),
       child: child!,
     );

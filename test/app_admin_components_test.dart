@@ -19,8 +19,28 @@ void main() {
     await tester.pumpWidget(_host(const AppText.h1('Admin heading')));
 
     final text = tester.widget<Text>(find.text('Admin heading'));
-    expect(text.style?.fontSize, isNotNull);
+    expect(text.style?.fontSize, 24);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('AppText compact roles use admin sizes', (tester) async {
+    await tester.pumpWidget(
+      _host(
+        const Column(
+          children: [
+            AppText.h3('Page'),
+            AppText.body('Body'),
+            AppText.caption('Meta'),
+            AppText.error('Bad'),
+          ],
+        ),
+      ),
+    );
+
+    expect(tester.widget<Text>(find.text('Page')).style?.fontSize, 18);
+    expect(tester.widget<Text>(find.text('Body')).style?.fontSize, 14);
+    expect(tester.widget<Text>(find.text('Meta')).style?.fontSize, 12);
+    expect(tester.widget<Text>(find.text('Bad')).style?.fontSize, 12);
   });
 
   testWidgets('AppTextTheme overrides a semantic role', (tester) async {
@@ -35,6 +55,29 @@ void main() {
 
     final text = tester.widget<Text>(find.text('Custom heading'));
     expect(text.style?.fontSize, 42);
+  });
+
+  testWidgets('AppThemeConfig.textTheme applies globally', (tester) async {
+    await tester.pumpWidget(
+      Localizations(
+        locale: const Locale('en'),
+        delegates: const [DefaultWidgetsLocalizations.delegate],
+        child: Directionality(
+          textDirection: TextDirection.ltr,
+          child: AppShadcnScope(
+            config: AppThemeConfig.standard(
+              textTheme: AppTextTheme.comfortable(),
+            ),
+            child: const AppText.body('Comfortable body'),
+          ),
+        ),
+      ),
+    );
+
+    expect(
+      tester.widget<Text>(find.text('Comfortable body')).style?.fontSize,
+      16,
+    );
   });
 
   testWidgets('scope provides Chinese shadcn localizations', (tester) async {
@@ -56,6 +99,10 @@ void main() {
 
   testWidgets('AppShell selects a destination', (tester) async {
     var selected = 'actions';
+    // Default surface (~800) is compact; force expanded so child labels are visible.
+    await tester.binding.setSurfaceSize(const Size(1200, 800));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
     await tester.pumpWidget(
       _host(
         AppShell(

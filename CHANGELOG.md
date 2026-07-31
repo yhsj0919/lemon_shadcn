@@ -6,11 +6,21 @@
 * Export icon font aliases (`AppLucideIcons`, `AppRadixIcons`,
   `AppBootstrapIcons`, `AppMaterialIcons`) from the default entry.
 * Export design-theme aliases (`ShadcnTheme`, `AppThemeData`,
-  `AppColorScheme`, `AppColorSchemes`, `AppThemeMode`, `AppTypography`,
-  `AppComponentTheme`) so Material pages can read tokens without importing
-  upstream.
+  `AppColorScheme`, `AppColorSchemes`, `AppThemeMode`, `AppComponentTheme`)
+  so Material pages can read tokens without importing upstream.
+* Add `AppTypography.system()` / `geist()` and default Lemon themes to system
+  UI fonts (Windows: Microsoft YaHei UI). Marked `TODO(upstream)` until
+  `shadcn_flutter` ships an equivalent default.
+* Add `AppThemeConfig.standard(primary: …)` so brand accent avoids large
+  `copyWith` on light/dark schemes.
+* `AppShadcnScope` mirrors shadcn primary + sans `fontFamily` into Material
+  `ThemeData` by default (`syncMaterialTheme`).
+* Tighten `AppText` to an admin-compact scale, add section/helper/error/lead
+  variants, and wire global `AppThemeConfig.textTheme`.
 * Drop `import … as material` across the package, example, and tests; use plain
   Material imports with App aliases (or `shadcn.dart as shad` when needed).
+* Docs: default control height is 34 — examples no longer imply `height: 40`
+  is required.
 
 ## 0.0.1
 

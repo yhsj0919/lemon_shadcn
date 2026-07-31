@@ -9,7 +9,9 @@ void main() {
     if (foundation.defaultTargetPlatform != foundation.TargetPlatform.windows) {
       return;
     }
-    final typography = AppThemeConfig.standard().lightTheme.typography;
+    final typography = AppTypography.system(
+      platform: foundation.TargetPlatform.windows,
+    );
     final styles = [
       typography.sans,
       typography.mono,
@@ -31,7 +33,27 @@ void main() {
 
     expect(styles.map((style) => style.fontFamily).toSet(), {
       'Microsoft YaHei UI',
+      'Consolas',
     });
+  });
+
+  test('LemonThemes default typography uses AppTypography.system', () {
+    if (foundation.defaultTargetPlatform != foundation.TargetPlatform.windows) {
+      return;
+    }
+    expect(
+      AppThemeConfig.standard().lightTheme.typography.sans.fontFamily,
+      'Microsoft YaHei UI',
+    );
+  });
+
+  test('AppThemeConfig.standard(primary) overrides zinc accent', () {
+    const brand = Color(0xFF2563EB);
+    final config = AppThemeConfig.standard(primary: brand);
+    expect(config.lightTheme.colorScheme.primary, brand);
+    expect(config.darkTheme.colorScheme.primary, brand);
+    expect(config.lightTheme.colorScheme.ring, brand);
+    expect(config.controls.height, 34);
   });
 
   testWidgets('scope supplies a non-fallback default text style', (
@@ -58,6 +80,66 @@ void main() {
       ),
     );
     expect(style.color, isNotNull);
+  });
+
+  testWidgets('scope syncs Material primary and fontFamily', (tester) async {
+    const brand = Color(0xFF0EA5E9);
+    late ThemeData materialTheme;
+    late shad.ThemeData shadTheme;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.purple),
+          useMaterial3: true,
+        ),
+        builder: AppShadcnScope.builder(
+          config: AppThemeConfig.standard(primary: brand),
+        ),
+        home: Builder(
+          builder: (context) {
+            materialTheme = Theme.of(context);
+            shadTheme = ShadcnTheme.of(context);
+            return const Text('Synced');
+          },
+        ),
+      ),
+    );
+
+    expect(materialTheme.colorScheme.primary, brand);
+    expect(materialTheme.colorScheme.onPrimary, shadTheme.colorScheme.primaryForeground);
+    final expectedFamily =
+        shadTheme.typography.sans.fontFamily ??
+        shadTheme.typography.sans.fontFamilyFallback?.first;
+    expect(materialTheme.textTheme.bodyMedium?.fontFamily, expectedFamily);
+  });
+
+  testWidgets('syncMaterialTheme: false leaves Material primary alone', (
+    tester,
+  ) async {
+    const brand = Color(0xFF0EA5E9);
+    late Color materialPrimary;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.purple),
+          useMaterial3: true,
+        ),
+        builder: AppShadcnScope.builder(
+          config: AppThemeConfig.standard(primary: brand),
+          syncMaterialTheme: false,
+        ),
+        home: Builder(
+          builder: (context) {
+            materialPrimary = Theme.of(context).colorScheme.primary;
+            return const Text('Unsynced');
+          },
+        ),
+      ),
+    );
+
+    expect(materialPrimary, isNot(brand));
   });
 
   testWidgets('control metrics feed upstream button component themes', (

@@ -1,69 +1,13 @@
 import 'dart:ui' show Color, Offset;
 
-import 'package:flutter/foundation.dart';
-import 'package:flutter/widgets.dart' show TextStyle, Widget;
+import 'package:flutter/foundation.dart' show immutable;
+import 'package:flutter/widgets.dart' show Widget;
 
+import '../components/display/app_text.dart';
 import 'app_theme_aliases.dart';
 import 'app_visual_style.dart';
 
-TextStyle _windowsUiStyle(TextStyle source) => TextStyle(
-  inherit: source.inherit,
-  fontFamily: 'Microsoft YaHei UI',
-  fontFamilyFallback: const ['Microsoft YaHei', 'Segoe UI'],
-  fontSize: source.fontSize,
-  fontWeight: source.fontWeight,
-  fontStyle: source.fontStyle,
-  letterSpacing: source.letterSpacing,
-  wordSpacing: source.wordSpacing,
-  height: source.height,
-  decoration: source.decoration,
-);
-
-AppTypography _resolveTypography() {
-  const source = AppTypography.geist();
-  if (defaultTargetPlatform != TargetPlatform.windows) return source;
-  TextStyle ui(TextStyle style) => _windowsUiStyle(style);
-  return source.copyWith(
-    sans: () => ui(source.sans),
-    mono: () => ui(source.mono),
-    xSmall: () => ui(source.xSmall),
-    small: () => ui(source.small).copyWith(height: 1.25),
-    base: () => ui(source.base),
-    large: () => ui(source.large),
-    xLarge: () => ui(source.xLarge),
-    x2Large: () => ui(source.x2Large),
-    x3Large: () => ui(source.x3Large),
-    x4Large: () => ui(source.x4Large),
-    x5Large: () => ui(source.x5Large),
-    x6Large: () => ui(source.x6Large),
-    x7Large: () => ui(source.x7Large),
-    x8Large: () => ui(source.x8Large),
-    x9Large: () => ui(source.x9Large),
-    thin: () => ui(source.thin),
-    extraLight: () => ui(source.extraLight),
-    light: () => ui(source.light),
-    normal: () => ui(source.normal),
-    medium: () => ui(source.medium),
-    semiBold: () => ui(source.semiBold),
-    bold: () => ui(source.bold),
-    extraBold: () => ui(source.extraBold),
-    black: () => ui(source.black),
-    italic: () => ui(source.italic),
-    h1: () => ui(source.h1),
-    h2: () => ui(source.h2),
-    h3: () => ui(source.h3),
-    h4: () => ui(source.h4),
-    p: () => ui(source.p),
-    blockQuote: () => ui(source.blockQuote),
-    inlineCode: () => ui(source.inlineCode),
-    lead: () => ui(source.lead),
-    textLarge: () => ui(source.textLarge),
-    textSmall: () => ui(source.textSmall),
-    textMuted: () => ui(source.textMuted),
-  );
-}
-
-final _appTypography = _resolveTypography();
+final _appTypography = AppTypography.system();
 
 typedef AppErrorPresenter =
     String Function(Object error, StackTrace? stackTrace);
@@ -178,29 +122,54 @@ class AppThemeConfig {
     this.shadows = const AppShadowTheme(),
     this.controls = const AppControlMetrics(),
     this.controlPalette,
+    this.textTheme,
     this.errorPresenter,
     this.enableScrollInterception = false,
     this.componentThemeWrapper,
   }) : lightTheme = lightTheme ?? LemonThemes.light,
        darkTheme = darkTheme ?? LemonThemes.dark;
 
+  /// Zinc baseline with optional brand [primary] (and matching ring).
+  ///
+  /// Prefer this over rebuilding both [lightTheme]/[darkTheme] via
+  /// [copyWith] when only the product accent changes:
+  ///
+  /// ```dart
+  /// AppThemeConfig.standard(primary: Color(0xFF2563EB));
+  /// ```
+  ///
+  /// Default [controls] height is 34 — override only when the product needs a
+  /// different control size, not as a required setup step.
   factory AppThemeConfig.standard({
+    Color? primary,
+    Color primaryForeground = const Color(0xffffffff),
     double radius = 0.5,
     AppThemeMode themeMode = AppThemeMode.system,
     AppMotionTheme motion = const AppMotionTheme(),
     AppShadowTheme shadows = const AppShadowTheme(),
     AppControlMetrics controls = const AppControlMetrics(),
     AppVisualPalette? controlPalette,
+    AppTextTheme? textTheme,
     AppErrorPresenter? errorPresenter,
   }) {
+    AppColorScheme scheme(AppThemeMode mode) {
+      final base = AppColorSchemes.zinc(mode);
+      if (primary == null) return base;
+      return base.copyWith(
+        primary: () => primary,
+        primaryForeground: () => primaryForeground,
+        ring: () => primary,
+      );
+    }
+
     return AppThemeConfig(
       lightTheme: AppThemeData(
-        colorScheme: AppColorSchemes.zinc(AppThemeMode.light),
+        colorScheme: scheme(AppThemeMode.light),
         radius: radius,
         typography: _appTypography,
       ),
       darkTheme: AppThemeData.dark(
-        colorScheme: AppColorSchemes.zinc(AppThemeMode.dark),
+        colorScheme: scheme(AppThemeMode.dark),
         radius: radius,
         typography: _appTypography,
       ),
@@ -209,6 +178,7 @@ class AppThemeConfig {
       shadows: shadows,
       controls: controls,
       controlPalette: controlPalette,
+      textTheme: textTheme,
       errorPresenter: errorPresenter,
     );
   }
@@ -347,6 +317,7 @@ class AppThemeConfig {
   final AppShadowTheme shadows;
   final AppControlMetrics controls;
   final AppVisualPalette? controlPalette;
+  final AppTextTheme? textTheme;
   final AppErrorPresenter? errorPresenter;
   final bool enableScrollInterception;
   final AppThemeWrapper? componentThemeWrapper;
@@ -359,6 +330,8 @@ class AppThemeConfig {
     AppShadowTheme? shadows,
     AppControlMetrics? controls,
     AppVisualPalette? controlPalette,
+    AppTextTheme? textTheme,
+    bool clearTextTheme = false,
     AppErrorPresenter? errorPresenter,
     bool? enableScrollInterception,
     AppThemeWrapper? componentThemeWrapper,
@@ -372,6 +345,7 @@ class AppThemeConfig {
       shadows: shadows ?? this.shadows,
       controls: controls ?? this.controls,
       controlPalette: controlPalette ?? this.controlPalette,
+      textTheme: clearTextTheme ? null : (textTheme ?? this.textTheme),
       errorPresenter: errorPresenter ?? this.errorPresenter,
       enableScrollInterception:
           enableScrollInterception ?? this.enableScrollInterception,
