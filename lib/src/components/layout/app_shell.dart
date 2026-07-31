@@ -67,6 +67,7 @@ class AppShell extends StatelessWidget {
   Widget _modeButton(AppSidebarType type) {
     return AppIconButton(
       tooltip: '切换侧边栏模式',
+      config: AppButtonConfig.plain,
       icon: Icon(switch (type) {
         AppSidebarType.auto => shad.LucideIcons.monitorSmartphone,
         AppSidebarType.expanded => shad.LucideIcons.panelLeftClose,
@@ -168,6 +169,7 @@ class AppShell extends StatelessWidget {
                             if (drawer) ...[
                               AppIconButton(
                                 tooltip: '打开菜单',
+                                config: AppButtonConfig.plain,
                                 icon: const Icon(shad.LucideIcons.menu),
                                 onPressed: () => _showDrawer(context),
                               ),

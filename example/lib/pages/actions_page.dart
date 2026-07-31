@@ -25,15 +25,30 @@ class ActionsPage extends StatelessWidget {
                 loadingLabel: '保存中',
                 child: const Text('异步主按钮'),
               ),
-              AppButton.secondary(onPressed: () {}, child: const Text('次要按钮')),
-              AppButton.outline(onPressed: () {}, child: const Text('描边按钮')),
-              AppButton.ghost(onPressed: () {}, child: const Text('幽灵按钮')),
+              AppButton.secondary(
+                onPressed: () {},
+                child: const Text('次要按钮'),
+              ),
+              AppButton.outline(
+                onPressed: () {},
+                child: const Text('描边按钮'),
+              ),
+              AppButton.ghost(
+                onPressed: () {},
+                child: const Text('幽灵按钮'),
+              ),
               AppButton.destructive(
                 onPressed: () {},
                 child: const Text('危险按钮'),
               ),
-              AppButton.link(onPressed: () {}, child: const Text('链接按钮')),
-              AppButton.text(onPressed: () {}, child: const Text('文本按钮')),
+              AppButton.link(
+                onPressed: () {},
+                child: const Text('链接按钮'),
+              ),
+              AppButton.text(
+                onPressed: () {},
+                child: const Text('文本按钮'),
+              ),
             ],
           ),
         ),
@@ -42,27 +57,35 @@ class ActionsPage extends StatelessWidget {
           child: Wrap(
             spacing: 12,
             runSpacing: 12,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               AppButton.primary(
                 onPressed: () {},
-                config: const AppButtonConfig(
-                  hoverLift: true,
-                  pressEffect: AppButtonPressEffect.returnToBase,
-                ),
-                child: const Text('悬浮上移 · 按下回位'),
+                child: const Text('默认：悬浮上浮 · 按下回落'),
               ),
-              AppButton.secondary(
+              AppButton.primary(
                 onPressed: () {},
-                config: const AppButtonConfig(
-                  hoverLift: true,
-                  pressEffect: AppButtonPressEffect.lift,
-                ),
-                child: const Text('悬浮上移 · 按下上浮'),
+                config: AppButtonConfig.plain,
+                child: const Text('关闭动效'),
               ),
-              AppButton.text(
+              AppIconButton(
+                tooltip: '图标默认动效',
+                variant: AppButtonVariant.primary,
                 onPressed: () {},
-                config: const AppButtonConfig(hoverLift: true),
-                child: const Text('纯文字悬浮'),
+                icon: const Icon(LucideIcons.plus),
+              ),
+              AppIconButton.circle(
+                tooltip: '圆形默认动效',
+                variant: AppButtonVariant.secondary,
+                onPressed: () {},
+                icon: const Icon(LucideIcons.search),
+              ),
+              AppIconButton(
+                tooltip: '图标关闭动效',
+                variant: AppButtonVariant.outline,
+                config: AppButtonConfig.plain,
+                onPressed: () {},
+                icon: const Icon(LucideIcons.settings),
               ),
             ],
           ),
@@ -76,7 +99,7 @@ class ActionsPage extends StatelessWidget {
               AppButton.primary(
                 onPressed: () {},
                 leading: const Icon(LucideIcons.plus),
-                child: const Text('新建项目'),
+                child: const Text('新建页面'),
               ),
               AppButton.secondary(
                 onPressed: () {},
@@ -107,7 +130,7 @@ class ActionsPage extends StatelessWidget {
             children: [
               AppIconButton(
                 key: const Key('square-icon-button-add'),
-                tooltip: '添加项目',
+                tooltip: '添加页面',
                 variant: AppButtonVariant.primary,
                 onPressed: () {},
                 icon: const Icon(LucideIcons.plus),
@@ -125,7 +148,7 @@ class ActionsPage extends StatelessWidget {
                 icon: const Icon(LucideIcons.settings),
               ),
               AppIconButton(
-                tooltip: '删除项目',
+                tooltip: '删除页面',
                 variant: AppButtonVariant.destructive,
                 onPressed: () {},
                 icon: const Icon(LucideIcons.trash2),
@@ -141,7 +164,7 @@ class ActionsPage extends StatelessWidget {
             children: [
               AppIconButton.circle(
                 key: const Key('icon-button-add'),
-                tooltip: '添加项目',
+                tooltip: '添加页面',
                 variant: AppButtonVariant.primary,
                 onPressed: () {},
                 icon: const Icon(LucideIcons.plus),
@@ -161,7 +184,7 @@ class ActionsPage extends StatelessWidget {
               ),
               AppIconButton.circle(
                 key: const Key('icon-button-delete'),
-                tooltip: '删除项目',
+                tooltip: '删除页面',
                 variant: AppButtonVariant.destructive,
                 onPressed: () {},
                 icon: const Icon(LucideIcons.trash2),
@@ -170,7 +193,7 @@ class ActionsPage extends StatelessWidget {
           ),
         ),
         const ComponentSection(title: '共享异步操作', child: _SharedActionDemo()),
-        ComponentSection(title: '切换按钮', child: const _ToggleDemo()),
+        const ComponentSection(title: '切换按钮', child: _ToggleDemo()),
       ],
     );
   }

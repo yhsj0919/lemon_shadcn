@@ -2,11 +2,35 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
+import '../actions/app_button.dart';
 import '../../foundation/app_overlay_style.dart';
 
 // Keep these public surfaces as aliases so constructor and behavior changes in
 // shadcn_flutter remain visible during upgrades instead of being copied here.
-typedef AppMenubar = shad.Menubar;
+class AppMenubar extends StatelessWidget {
+  const AppMenubar({
+    super.key,
+    required this.children,
+    this.popoverOffset,
+    this.border = true,
+  });
+
+  final List<shad.MenuItem> children;
+  final Offset? popoverOffset;
+  final bool border;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppButtonMotionScope.disable(
+      child: shad.Menubar(
+        popoverOffset: popoverOffset,
+        border: border,
+        children: children,
+      ),
+    );
+  }
+}
+
 typedef AppNavigationMenuContent = shad.NavigationMenuContent;
 
 class AppNavigationMenuContentList extends StatelessWidget {
@@ -141,12 +165,14 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
 
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => _hoverVersion++,
-      onExit: (_) => _scheduleClose(),
-      child: shad.Data<_AppNavigationMenuState>.inherit(
-        data: this,
-        child: Row(mainAxisSize: MainAxisSize.min, children: widget.children),
+    return AppButtonMotionScope.disable(
+      child: MouseRegion(
+        onEnter: (_) => _hoverVersion++,
+        onExit: (_) => _scheduleClose(),
+        child: shad.Data<_AppNavigationMenuState>.inherit(
+          data: this,
+          child: Row(mainAxisSize: MainAxisSize.min, children: widget.children),
+        ),
       ),
     );
   }
@@ -239,16 +265,18 @@ class AppMenuPopup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppOverlayShadow(
-      borderRadius: borderRadius ?? shad.Theme.of(context).borderRadiusMd,
-      child: shad.MenuPopup(
-        surfaceOpacity: surfaceOpacity,
-        surfaceBlur: surfaceBlur,
-        padding: padding,
-        fillColor: fillColor,
-        borderColor: borderColor,
-        borderRadius: borderRadius,
-        children: children,
+    return AppButtonMotionScope.disable(
+      child: AppOverlayShadow(
+        borderRadius: borderRadius ?? shad.Theme.of(context).borderRadiusMd,
+        child: shad.MenuPopup(
+          surfaceOpacity: surfaceOpacity,
+          surfaceBlur: surfaceBlur,
+          padding: padding,
+          fillColor: fillColor,
+          borderColor: borderColor,
+          borderRadius: borderRadius,
+          children: children,
+        ),
       ),
     );
   }

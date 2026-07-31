@@ -61,6 +61,17 @@ class TypographyPage extends StatelessWidget {
           ),
         ),
         ComponentSection(
+          title: '列表角色',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AppText.listItem('列表主文 / 导航项 · 14'),
+              Gap(6),
+              AppText.listSecondary('列表副文 / 分组标题 · 12 muted'),
+            ],
+          ),
+        ),
+        ComponentSection(
           title: '局部主题覆盖',
           child: ComponentTheme<AppTextTheme>(
             data: AppTextTheme(

@@ -17,7 +17,7 @@ class AppDropdownButton extends StatefulWidget {
     this.enabled = true,
     this.leading,
     this.trailing,
-    this.config = const AppButtonConfig(),
+    this.config = AppButtonConfig.plain,
     this.alignment,
     this.anchorAlignment,
     this.offset,
@@ -85,6 +85,8 @@ class _AppDropdownButtonState extends State<AppDropdownButton> {
         child: widget.child,
       ),
     };
-    return SizedBox(key: _buttonKey, child: button);
+    return AppButtonMotionScope.disable(
+      child: SizedBox(key: _buttonKey, child: button),
+    );
   }
 }

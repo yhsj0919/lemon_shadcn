@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import 'app_shadcn_scope.dart';
+import 'app_theme_config.dart';
 
 @immutable
 class AppVisualColors {
@@ -92,23 +93,27 @@ class AppAnimatedVisualStyle extends StatelessWidget {
     required this.states,
     required this.palette,
     required this.child,
-    this.duration = const Duration(milliseconds: 150),
+    this.duration,
     this.curve = Curves.easeOutCubic,
   });
 
   final Set<WidgetState> states;
   final AppVisualPalette palette;
   final Widget child;
-  final Duration duration;
+
+  /// Null → [AppMotionTokens.hoverDuration] from theme.
+  final Duration? duration;
   final Curve curve;
 
   @override
   Widget build(BuildContext context) {
     final target = palette.resolve(states);
     final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    final motion =
+        AppTheme.maybeOf(context)?.motion.tokens ?? AppMotionTokens.standard;
     return TweenAnimationBuilder<AppVisualColors>(
       tween: _AppVisualColorsTween(end: target),
-      duration: reduceMotion ? Duration.zero : duration,
+      duration: reduceMotion ? Duration.zero : (duration ?? motion.hoverDuration),
       curve: curve,
       builder: (context, colors, child) {
         return AppVisualStyle(colors: colors, child: child!);

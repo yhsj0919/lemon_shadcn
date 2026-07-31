@@ -92,50 +92,52 @@ class _AppSidebarState extends State<AppSidebar> {
   @override
   Widget build(BuildContext context) {
     final compact = widget.mode == AppSidebarMode.compact;
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 180),
-      curve: Curves.easeOutCubic,
-      width: compact ? widget.compactWidth : widget.expandedWidth,
-      child: AppCard(
-        padding: EdgeInsets.zero,
-        clipBehavior: Clip.antiAlias,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (widget.header != null)
-              Padding(
-                padding: EdgeInsets.all(compact ? 8 : 16),
-                child: widget.header,
+    return AppButtonMotionScope.disable(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOutCubic,
+        width: compact ? widget.compactWidth : widget.expandedWidth,
+        child: AppCard(
+          padding: EdgeInsets.zero,
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (widget.header != null)
+                Padding(
+                  padding: EdgeInsets.all(compact ? 8 : 16),
+                  child: widget.header,
+                ),
+              Expanded(
+                child: ListView(
+                  padding: EdgeInsets.symmetric(horizontal: compact ? 8 : 10),
+                  children: [
+                    for (final destination in widget.destinations)
+                      compact
+                          ? _CompactDestination(
+                              destination: destination,
+                              selectedId: widget.selectedId,
+                              onSelected: widget.onDestinationSelected,
+                            )
+                          : _ExpandedDestination(
+                              destination: destination,
+                              selectedId: widget.selectedId,
+                              expandedIds: _expanded,
+                              onToggle: (id) => setState(() {
+                                if (!_expanded.remove(id)) _expanded.add(id);
+                              }),
+                              onSelected: widget.onDestinationSelected,
+                            ),
+                  ],
+                ),
               ),
-            Expanded(
-              child: ListView(
-                padding: EdgeInsets.symmetric(horizontal: compact ? 8 : 10),
-                children: [
-                  for (final destination in widget.destinations)
-                    compact
-                        ? _CompactDestination(
-                            destination: destination,
-                            selectedId: widget.selectedId,
-                            onSelected: widget.onDestinationSelected,
-                          )
-                        : _ExpandedDestination(
-                            destination: destination,
-                            selectedId: widget.selectedId,
-                            expandedIds: _expanded,
-                            onToggle: (id) => setState(() {
-                              if (!_expanded.remove(id)) _expanded.add(id);
-                            }),
-                            onSelected: widget.onDestinationSelected,
-                          ),
-                ],
-              ),
-            ),
-            if (widget.footer != null)
-              Padding(
-                padding: EdgeInsets.all(compact ? 8 : 12),
-                child: widget.footer,
-              ),
-          ],
+              if (widget.footer != null)
+                Padding(
+                  padding: EdgeInsets.all(compact ? 8 : 12),
+                  child: widget.footer,
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -234,12 +236,14 @@ class _CompactDestination extends StatelessWidget {
               onPressed: destination.children.isEmpty
                   ? () => onSelected(destination.id)
                   : () {},
+              config: AppButtonConfig.plain,
               child: Icon(destination.icon, size: 19),
             )
           : AppButton.ghost(
               onPressed: destination.children.isEmpty
                   ? () => onSelected(destination.id)
                   : () {},
+              config: AppButtonConfig.plain,
               child: Icon(destination.icon, size: 19),
             ),
     );
@@ -247,7 +251,7 @@ class _CompactDestination extends StatelessWidget {
       return Padding(
         padding: const EdgeInsets.only(bottom: 4),
         child: shad.Tooltip(
-          tooltip: (context) => Text(destination.label),
+          tooltip: (context) => AppText.listItem(destination.label),
           child: trigger,
         ),
       );
@@ -268,7 +272,7 @@ class _CompactDestination extends StatelessWidget {
               children: [
                 Padding(
                   padding: const EdgeInsets.fromLTRB(10, 4, 10, 8),
-                  child: AppText.caption(destination.label),
+                  child: AppText.listSecondary(destination.label),
                 ),
                 for (final child in destination.children)
                   _PopoverDestination(
@@ -321,7 +325,7 @@ class _PopoverDestination extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(10, 4, 10, 6),
-            child: AppText.caption(destination.label),
+            child: AppText.listSecondary(destination.label),
           ),
           for (final child in destination.children)
             _PopoverDestination(
@@ -351,20 +355,27 @@ class _SidebarButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final label = AppText.listItem(destination.label);
     final button = selected
         ? AppButton.secondary(
             onPressed: onPressed,
             leading: Icon(destination.icon, size: 18),
             trailing: trailing,
-            config: const AppButtonConfig(alignment: Alignment.centerLeft),
-            child: Text(destination.label),
+            config: const AppButtonConfig(
+              alignment: Alignment.centerLeft,
+            ),
+
+            child: label,
           )
         : AppButton.ghost(
             onPressed: onPressed,
             leading: Icon(destination.icon, size: 18),
             trailing: trailing,
-            config: const AppButtonConfig(alignment: Alignment.centerLeft),
-            child: Text(destination.label),
+            config: const AppButtonConfig(
+              alignment: Alignment.centerLeft,
+            ),
+
+            child: label,
           );
     return Padding(padding: const EdgeInsets.only(bottom: 4), child: button);
   }

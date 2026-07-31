@@ -2,6 +2,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
+import 'app_shadcn_scope.dart';
+import 'app_theme_config.dart';
+
 enum AppInteractiveHoverTone { accent, deepen }
 
 /// Shared state styling for controls implemented with shadcn button styles.
@@ -72,6 +75,8 @@ class _AppInkWellState extends State<AppInkWell> {
   @override
   Widget build(BuildContext context) {
     final theme = shad.Theme.of(context);
+    final motion =
+        AppTheme.maybeOf(context)?.motion.tokens ?? AppMotionTokens.standard;
     final radius = widget.borderRadius ?? theme.borderRadiusMd;
     final overlayOpacity = !widget.enabled
         ? 0.0
@@ -111,7 +116,7 @@ class _AppInkWellState extends State<AppInkWell> {
           onTapUp: _pressed ? (_) => setState(() => _pressed = false) : null,
           onTapCancel: _pressed ? () => setState(() => _pressed = false) : null,
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 120),
+            duration: motion.pressDuration,
             foregroundDecoration: BoxDecoration(
               color: theme.colorScheme.foreground.withValues(
                 alpha: overlayOpacity,

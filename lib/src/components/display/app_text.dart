@@ -18,6 +18,10 @@ enum AppTextRole {
   body,
   bodyStrong,
   label,
+  /// Primary line in nav / select / Material list rows.
+  listItem,
+  /// Secondary line or group header under a list item.
+  listSecondary,
   caption,
   helper,
   error,
@@ -40,6 +44,8 @@ class AppTextTheme extends shad.ComponentThemeData {
     this.body,
     this.bodyStrong,
     this.label,
+    this.listItem,
+    this.listSecondary,
     this.caption,
     this.helper,
     this.error,
@@ -65,6 +71,8 @@ class AppTextTheme extends shad.ComponentThemeData {
       body: const TextStyle(fontSize: 16, fontWeight: FontWeight.w400),
       bodyStrong: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
       label: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+      listItem: const TextStyle(fontSize: 16, fontWeight: FontWeight.w400),
+      listSecondary: const TextStyle(fontSize: 14, fontWeight: FontWeight.w400),
       caption: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400),
       helper: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400),
       error: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400),
@@ -85,6 +93,8 @@ class AppTextTheme extends shad.ComponentThemeData {
   final TextStyle? body;
   final TextStyle? bodyStrong;
   final TextStyle? label;
+  final TextStyle? listItem;
+  final TextStyle? listSecondary;
   final TextStyle? caption;
   final TextStyle? helper;
   final TextStyle? error;
@@ -104,6 +114,8 @@ class AppTextTheme extends shad.ComponentThemeData {
     AppTextRole.body => body,
     AppTextRole.bodyStrong => bodyStrong,
     AppTextRole.label => label,
+    AppTextRole.listItem => listItem ?? body,
+    AppTextRole.listSecondary => listSecondary ?? caption,
     AppTextRole.caption => caption,
     AppTextRole.helper => helper ?? caption,
     AppTextRole.error => error ?? caption,
@@ -124,6 +136,8 @@ class AppTextTheme extends shad.ComponentThemeData {
     TextStyle? body,
     TextStyle? bodyStrong,
     TextStyle? label,
+    TextStyle? listItem,
+    TextStyle? listSecondary,
     TextStyle? caption,
     TextStyle? helper,
     TextStyle? error,
@@ -143,6 +157,8 @@ class AppTextTheme extends shad.ComponentThemeData {
       body: body ?? this.body,
       bodyStrong: bodyStrong ?? this.bodyStrong,
       label: label ?? this.label,
+      listItem: listItem ?? this.listItem,
+      listSecondary: listSecondary ?? this.listSecondary,
       caption: caption ?? this.caption,
       helper: helper ?? this.helper,
       error: error ?? this.error,
@@ -167,6 +183,8 @@ class AppTextTheme extends shad.ComponentThemeData {
       body: body ?? other.body,
       bodyStrong: bodyStrong ?? other.bodyStrong,
       label: label ?? other.label,
+      listItem: listItem ?? other.listItem,
+      listSecondary: listSecondary ?? other.listSecondary,
       caption: caption ?? other.caption,
       helper: helper ?? other.helper,
       error: error ?? other.error,
@@ -205,10 +223,12 @@ class AppTextTheme extends shad.ComponentThemeData {
         sized(16, weight: FontWeight.w600),
       AppTextRole.subtitle => sized(14, color: muted),
       AppTextRole.lead => sized(16),
-      AppTextRole.body => sized(14),
+      AppTextRole.body || AppTextRole.listItem => sized(14),
       AppTextRole.bodyStrong => sized(14, weight: FontWeight.w500),
       AppTextRole.label => sized(14, weight: FontWeight.w500),
-      AppTextRole.caption || AppTextRole.helper => sized(12, color: muted),
+      AppTextRole.caption ||
+      AppTextRole.helper ||
+      AppTextRole.listSecondary => sized(12, color: muted),
       AppTextRole.error => sized(12, color: colors.destructive),
       AppTextRole.code => sized(13, weight: FontWeight.w500, mono: true),
       AppTextRole.muted => sized(14, color: muted),
@@ -363,6 +383,26 @@ class AppText extends StatelessWidget {
     this.overflow,
     this.softWrap,
   }) : role = AppTextRole.label;
+
+  const AppText.listItem(
+    this.data, {
+    super.key,
+    this.style,
+    this.textAlign,
+    this.maxLines,
+    this.overflow,
+    this.softWrap,
+  }) : role = AppTextRole.listItem;
+
+  const AppText.listSecondary(
+    this.data, {
+    super.key,
+    this.style,
+    this.textAlign,
+    this.maxLines,
+    this.overflow,
+    this.softWrap,
+  }) : role = AppTextRole.listSecondary;
 
   const AppText.caption(
     this.data, {

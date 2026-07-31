@@ -28,13 +28,24 @@ MaterialApp(
 页面继续用 Material，需要时再换成 App 组件：
 
 ```dart
-AppButton.primary(onPressed: save, child: const Text('Save'));
+AppButton.primary(onPressed: save, child: const Text('Save')); // 默认上浮动效
 
-AppTextFormField.email(
-  name: 'email',
-  label: 'Email',
-  required: true,
+// 关掉某个按钮
+AppButton.primary(
+  config: AppButtonConfig.plain,
+  onPressed: save,
+  child: const Text('Save'),
 );
+```
+
+文字与图标按钮、以及 `AppMotion` 悬浮反馈，共用 `AppMotionTheme.tokens`
+（`AppMotionTokens`）这一套动效参数。
+
+菜单 / 侧栏等 chrome 已包在 `AppButtonMotionScope.disable` 内，其中的 AppButton
+不会上浮。业务若自建菜单树也可包一层：
+
+```dart
+AppButtonMotionScope.disable(child: YourMenu());
 ```
 
 明确需要上游能力（如 `Gap`、`Card`、shadcn `Theme`）时再引入：

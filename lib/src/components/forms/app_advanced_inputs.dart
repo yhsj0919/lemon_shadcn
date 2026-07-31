@@ -342,12 +342,14 @@ class AppMultipleChoice<V> extends StatelessWidget {
                         onPressed: canChoose
                             ? () => shad.Choice.choose(context, option.value)
                             : null,
+                        config: AppButtonConfig.plain,
                         child: option.child ?? Text(option.label),
                       )
                     : AppButton.outline(
                         onPressed: canChoose
                             ? () => shad.Choice.choose(context, option.value)
                             : null,
+                        config: AppButtonConfig.plain,
                         child: option.child ?? Text(option.label),
                       );
                 return button;

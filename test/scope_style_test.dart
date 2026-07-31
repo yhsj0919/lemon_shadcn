@@ -142,6 +142,25 @@ void main() {
     expect(materialPrimary, isNot(brand));
   });
 
+  testWidgets('scope syncs Material list tile text styles', (tester) async {
+    late ListTileThemeData listTileTheme;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: Builder(
+          builder: (context) {
+            listTileTheme = ListTileTheme.of(context);
+            return const ListTile(title: Text('Title'), subtitle: Text('Sub'));
+          },
+        ),
+      ),
+    );
+
+    expect(listTileTheme.titleTextStyle?.fontSize, 14);
+    expect(listTileTheme.subtitleTextStyle?.fontSize, 12);
+  });
+
   testWidgets('control metrics feed upstream button component themes', (
     tester,
   ) async {

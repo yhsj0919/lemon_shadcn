@@ -43,6 +43,22 @@ void main() {
     expect(tester.widget<Text>(find.text('Bad')).style?.fontSize, 12);
   });
 
+  testWidgets('AppText list roles use admin sizes', (tester) async {
+    await tester.pumpWidget(
+      _host(
+        const Column(
+          children: [
+            AppText.listItem('Row'),
+            AppText.listSecondary('Meta'),
+          ],
+        ),
+      ),
+    );
+
+    expect(tester.widget<Text>(find.text('Row')).style?.fontSize, 14);
+    expect(tester.widget<Text>(find.text('Meta')).style?.fontSize, 12);
+  });
+
   testWidgets('AppTextTheme overrides a semantic role', (tester) async {
     await tester.pumpWidget(
       _host(

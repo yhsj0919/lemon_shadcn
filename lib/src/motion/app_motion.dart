@@ -5,6 +5,7 @@ import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 import '../foundation/app_shadcn_scope.dart';
 import '../foundation/app_theme_config.dart';
 import '../foundation/app_visual_style.dart';
+import 'app_hover_press_ticker.dart';
 
 enum AppMotionEffect { none, tint, lift, scale, glow, depth }
 
@@ -189,8 +190,6 @@ class AppMotion extends StatefulWidget {
   final bool enabled;
   final AppShadowColorMode? shadowColorMode;
   final Color? shadowColor;
-
-  /// Adds the standard hover translation without changing the selected effect.
   final bool hoverLift;
   final BorderRadiusGeometry? borderRadius;
   final MouseCursor? cursor;
@@ -199,20 +198,44 @@ class AppMotion extends StatefulWidget {
   State<AppMotion> createState() => _AppMotionState();
 }
 
-class _AppMotionState extends State<AppMotion> {
-  bool _hovered = false;
-  bool _pressed = false;
+class _AppMotionState extends State<AppMotion> with TickerProviderStateMixin {
+  late final AppHoverPressTicker _ticker = AppHoverPressTicker(this);
   double _depthX = 0;
   double _depthY = 0;
+  bool _hovered = false;
+  bool _pressed = false;
 
-  void _setHovered(bool value) {
-    if (!widget.enabled || _hovered == value) return;
-    setState(() => _hovered = value);
+  AppMotionTokens _tokens(AppThemeConfig config) => config.motion.tokens;
+
+  bool _canAnimate(AppThemeConfig config) {
+    final reduce = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    return widget.enabled && config.motion.enabled && !reduce;
   }
 
-  void _setPressed(bool value) {
+  @override
+  void dispose() {
+    _ticker.dispose();
+    super.dispose();
+  }
+
+  void _setHovered(bool value, AppThemeConfig config) {
+    if (!widget.enabled || _hovered == value) return;
+    _hovered = value;
+    _ticker.setHover(
+      value,
+      animate: _canAnimate(config),
+      tokens: _tokens(config),
+    );
+  }
+
+  void _setPressed(bool value, AppThemeConfig config) {
     if (!widget.enabled || _pressed == value) return;
-    setState(() => _pressed = value);
+    _pressed = value;
+    _ticker.setPress(
+      value,
+      animate: _canAnimate(config),
+      tokens: _tokens(config),
+    );
   }
 
   void _updateDepth(PointerHoverEvent event) {
@@ -238,126 +261,90 @@ class _AppMotionState extends State<AppMotion> {
     if (!widget.enabled && (_hovered || _pressed)) {
       _hovered = false;
       _pressed = false;
+      _ticker.reset();
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final config = AppTheme.maybeOf(context) ?? AppThemeConfig.standard();
+    final tokens = _tokens(config);
+    final animate = _canAnimate(config);
+    _ticker.sync(tokens);
+
     final borderRadius =
         widget.borderRadius ?? shad.Theme.of(context).borderRadiusLg;
-    final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
-    final animate = widget.enabled && config.motion.enabled && !reduceMotion;
-    final activeHover = animate && _hovered && !_pressed;
-    final activePress = animate && _pressed;
-    final scale = activePress
-        ? config.motion.pressedScale
-        : activeHover &&
-              (widget.effect == AppMotionEffect.scale ||
-                  widget.effect == AppMotionEffect.lift)
-        ? config.motion.hoverScale
-        : 1.0;
-    final offset = activeHover && widget.effect == AppMotionEffect.lift
-        ? config.motion.hoverOffset
-        : activeHover && widget.hoverLift
-        ? config.motion.hoverOffset * 0.5
-        : Offset.zero;
-    final showShadow =
-        activeHover &&
-        (widget.effect == AppMotionEffect.lift ||
-            widget.effect == AppMotionEffect.glow ||
-            widget.effect == AppMotionEffect.depth);
-    final shadowIntensity =
-        widget.shadowColorMode == AppShadowColorMode.background ? 2.4 : 1.0;
-    final tint = animate && _hovered && widget.effect == AppMotionEffect.tint
-        ? _resolveShadowColor(context, config).withValues(alpha: 0.08)
-        : null;
-
-    final transform = Matrix4.identity()
-      ..setEntry(0, 0, scale)
-      ..setEntry(1, 1, scale)
-      ..setTranslationRaw(offset.dx, offset.dy, 0);
 
     final surface = widget.effect == AppMotionEffect.depth
-        ? TweenAnimationBuilder<_DepthTilt>(
-            tween: _DepthTiltTween(
-              end: _DepthTilt(
-                x: animate && _hovered ? _depthX : 0,
-                y: animate && _hovered ? _depthY : 0,
-              ),
-            ),
-            duration: animate ? config.motion.depthTiltDuration : Duration.zero,
-            curve: Curves.easeOutCubic,
-            builder: (context, tilt, child) {
-              final elevationTarget = !animate || !_hovered
-                  ? 0.0
-                  : _pressed
-                  ? 1 - config.motion.depthPressAmount
-                  : 1.0;
-              final elevationDuration = !animate
-                  ? Duration.zero
-                  : _pressed
-                  ? config.motion.depthPressDuration
-                  : config.motion.depthDuration;
-              final elevationCurve = _hovered && !_pressed
-                  ? Curves.easeOutBack
-                  : Curves.easeOutCubic;
-              return TweenAnimationBuilder<double>(
-                tween: Tween<double>(end: elevationTarget),
-                duration: elevationDuration,
-                curve: elevationCurve,
-                builder: (context, elevation, child) {
-                  final lift = config.motion.depthOffsetY * elevation;
-                  final z = config.motion.depthTranslateZ * elevation;
-                  final matrix = Matrix4.identity()
-                    ..setEntry(3, 2, config.motion.depthPerspective)
-                    ..setTranslationRaw(0, lift, z)
-                    ..rotateX(tilt.y * config.motion.depthRotateY * 0.72)
-                    ..rotateY(-tilt.x * config.motion.depthRotateY);
-                  return Transform(
-                    transform: matrix,
-                    alignment: Alignment.center,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        borderRadius: borderRadius,
-                        boxShadow: _resolveShadows(
-                          context,
-                          config,
-                          intensity: elevation.clamp(0, 1).toDouble(),
-                        ),
-                      ),
-                      child: child,
+        ? _buildDepth(config, borderRadius, animate, tokens)
+        : AnimatedBuilder(
+            animation: _ticker.listenable,
+            builder: (context, child) {
+              final hoverT = animate ? _ticker.hover.value : (_hovered ? 1.0 : 0.0);
+              final pressT = animate ? _ticker.press.value : (_pressed ? 1.0 : 0.0);
+              final settled = hoverT * (1.0 - pressT * 0.72);
+              final hoverScaleEffect =
+                  widget.effect == AppMotionEffect.scale ||
+                  widget.effect == AppMotionEffect.lift;
+              final scale =
+                  1.0 +
+                  (tokens.hoverScale - 1.0) *
+                      hoverT *
+                      (1.0 - pressT) *
+                      (hoverScaleEffect ? 1.0 : 0.0) +
+                  (tokens.pressedScale - 1.0) * pressT;
+              final liftFactor = widget.effect == AppMotionEffect.lift
+                  ? 1.0
+                  : widget.hoverLift
+                  ? 0.5
+                  : 0.0;
+              final offset = tokens.hoverOffset * settled * liftFactor;
+              final shadowCapable =
+                  widget.effect == AppMotionEffect.lift ||
+                  widget.effect == AppMotionEffect.glow;
+              final shadowIntensity =
+                  (shadowCapable ? settled : 0.0) *
+                  (widget.shadowColorMode == AppShadowColorMode.background
+                      ? 2.4
+                      : 1.0);
+              final tint = widget.effect == AppMotionEffect.tint
+                  ? _resolveShadowColor(context, config).withValues(
+                      alpha: 0.08 * settled.clamp(0.0, 1.0),
+                    )
+                  : null;
+
+              return Transform(
+                alignment: Alignment.center,
+                transform: Matrix4.identity()
+                  ..setEntry(0, 0, scale)
+                  ..setEntry(1, 1, scale)
+                  ..setTranslationRaw(offset.dx, offset.dy, 0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: borderRadius,
+                    boxShadow: _resolveShadows(
+                      context,
+                      config,
+                      intensity: shadowIntensity,
                     ),
-                  );
-                },
-                child: child,
+                  ),
+                  foregroundDecoration: tint == null
+                      ? null
+                      : BoxDecoration(color: tint, borderRadius: borderRadius),
+                  child: child,
+                ),
               );
             },
-            child: widget.child,
-          )
-        : AnimatedContainer(
-            duration: animate ? config.motion.duration : Duration.zero,
-            curve: Curves.easeOutCubic,
-            transform: transform,
-            transformAlignment: Alignment.center,
-            decoration: BoxDecoration(
-              borderRadius: borderRadius,
-              boxShadow: showShadow
-                  ? _resolveShadows(context, config, intensity: shadowIntensity)
-                  : const [],
-            ),
-            foregroundDecoration: tint == null
-                ? null
-                : BoxDecoration(color: tint, borderRadius: borderRadius),
             child: widget.child,
           );
 
     return MouseRegion(
       cursor: widget.cursor ?? MouseCursor.defer,
-      onEnter: (_) => _setHovered(true),
+      onEnter: (_) => _setHovered(true, config),
       onHover: _updateDepth,
       onExit: (_) {
-        _setHovered(false);
+        _setHovered(false, config);
+        _setPressed(false, config);
         if (_depthX != 0 || _depthY != 0) {
           setState(() {
             _depthX = 0;
@@ -367,11 +354,74 @@ class _AppMotionState extends State<AppMotion> {
       },
       child: Listener(
         behavior: HitTestBehavior.translucent,
-        onPointerDown: (_) => _setPressed(true),
-        onPointerUp: (_) => _setPressed(false),
-        onPointerCancel: (_) => _setPressed(false),
+        onPointerDown: (_) => _setPressed(true, config),
+        onPointerUp: (_) => _setPressed(false, config),
+        onPointerCancel: (_) => _setPressed(false, config),
         child: surface,
       ),
+    );
+  }
+
+  Widget _buildDepth(
+    AppThemeConfig config,
+    BorderRadiusGeometry borderRadius,
+    bool animate,
+    AppMotionTokens tokens,
+  ) {
+    final hovered = animate && _hovered;
+    final pressed = animate && _pressed;
+    return TweenAnimationBuilder<_DepthTilt>(
+      tween: _DepthTiltTween(
+        end: _DepthTilt(x: hovered ? _depthX : 0, y: hovered ? _depthY : 0),
+      ),
+      duration: animate ? config.motion.depthTiltDuration : Duration.zero,
+      curve: Curves.easeInOutCubic,
+      builder: (context, tilt, child) {
+        final elevationTarget = !hovered
+            ? 0.0
+            : pressed
+            ? 1 - config.motion.depthPressAmount
+            : 1.0;
+        return TweenAnimationBuilder<double>(
+          tween: Tween<double>(end: elevationTarget),
+          duration: !animate
+              ? Duration.zero
+              : pressed
+              ? tokens.pressDuration
+              : config.motion.depthDuration,
+          curve: hovered && !pressed
+              ? Curves.easeOutCubic
+              : Curves.easeInOutCubic,
+          builder: (context, elevation, child) {
+            final matrix = Matrix4.identity()
+              ..setEntry(3, 2, config.motion.depthPerspective)
+              ..setTranslationRaw(
+                0,
+                config.motion.depthOffsetY * elevation,
+                config.motion.depthTranslateZ * elevation,
+              )
+              ..rotateX(tilt.y * config.motion.depthRotateY * 0.72)
+              ..rotateY(-tilt.x * config.motion.depthRotateY);
+            return Transform(
+              transform: matrix,
+              alignment: Alignment.center,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: borderRadius,
+                  boxShadow: _resolveShadows(
+                    context,
+                    config,
+                    intensity: elevation.clamp(0, 1).toDouble(),
+                  ),
+                ),
+                child: child,
+              ),
+            );
+          },
+          child: child,
+        );
+      },
+      child: widget.child,
     );
   }
 
@@ -401,7 +451,8 @@ class _AppMotionState extends State<AppMotion> {
           .withLightness(hsl.lightness.clamp(0.26, 0.34))
           .toColor();
     }
-    return _soften(resolved);
+    final hsl = HSLColor.fromColor(resolved);
+    return hsl.withSaturation((hsl.saturation * 0.72).clamp(0, 1)).toColor();
   }
 
   List<BoxShadow> _resolveShadows(
@@ -443,11 +494,6 @@ class _AppMotionState extends State<AppMotion> {
         offset: theme.offset,
       ),
     ];
-  }
-
-  Color _soften(Color color) {
-    final hsl = HSLColor.fromColor(color);
-    return hsl.withSaturation((hsl.saturation * 0.72).clamp(0, 1)).toColor();
   }
 }
 

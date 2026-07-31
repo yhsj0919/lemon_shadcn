@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart' show Material, MaterialType, Theme;
+import 'package:flutter/material.dart'
+    show Material, MaterialType, Theme;
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
@@ -109,21 +110,59 @@ class _MaterialThemeBridge extends StatelessWidget {
     final fontFamily =
         sans.fontFamily ?? sans.fontFamilyFallback?.firstOrNull;
     final fontPackage = _fontPackageFor(fontFamily);
+    final listItem = AppTextTheme.resolve(
+      context,
+      AppTextRole.listItem,
+      null,
+    );
+    final listSecondary = AppTextTheme.resolve(
+      context,
+      AppTextRole.listSecondary,
+      null,
+    );
+    final textTheme = material.textTheme.apply(
+      fontFamily: fontFamily,
+      fontFamilyFallback: sans.fontFamilyFallback,
+      package: fontPackage,
+    );
+    // Merge list scale onto themed styles so null fontFamily on system stacks
+    // does not wipe the family applied above.
+    TextStyle listStyle(TextStyle? host, TextStyle role) =>
+        host?.merge(role) ?? role;
     final bridged = material.copyWith(
       colorScheme: material.colorScheme.copyWith(
         primary: colors.primary,
         onPrimary: colors.primaryForeground,
       ),
       primaryColor: colors.primary,
-      textTheme: material.textTheme.apply(
-        fontFamily: fontFamily,
-        fontFamilyFallback: sans.fontFamilyFallback,
-        package: fontPackage,
+      textTheme: textTheme.copyWith(
+        titleMedium: listStyle(textTheme.titleMedium, listItem),
+        titleSmall: listStyle(textTheme.titleSmall, listItem),
+        bodyLarge: listStyle(textTheme.bodyLarge, listItem),
+        bodyMedium: listStyle(textTheme.bodyMedium, listItem),
+        bodySmall: listStyle(textTheme.bodySmall, listSecondary),
+        labelLarge: listStyle(
+          textTheme.labelLarge,
+          listItem.copyWith(fontWeight: FontWeight.w500),
+        ),
+        labelMedium: listStyle(
+          textTheme.labelMedium,
+          listSecondary.copyWith(fontWeight: FontWeight.w500),
+        ),
+        labelSmall: listStyle(textTheme.labelSmall, listSecondary),
       ),
       primaryTextTheme: material.primaryTextTheme.apply(
         fontFamily: fontFamily,
         fontFamilyFallback: sans.fontFamilyFallback,
         package: fontPackage,
+      ),
+      listTileTheme: material.listTileTheme.copyWith(
+        titleTextStyle: listStyle(textTheme.titleMedium, listItem),
+        subtitleTextStyle: listStyle(textTheme.bodySmall, listSecondary),
+        leadingAndTrailingTextStyle: listStyle(
+          textTheme.labelSmall,
+          listSecondary,
+        ),
       ),
     );
     return Theme(data: bridged, child: child);

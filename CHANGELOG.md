@@ -17,6 +17,12 @@
   `ThemeData` by default (`syncMaterialTheme`).
 * Tighten `AppText` to an admin-compact scale, add section/helper/error/lead
   variants, and wire global `AppThemeConfig.textTheme`.
+* Add `AppText.listItem` / `listSecondary` for nav and list rows; sidebar and
+  Material `ListTileTheme` follow the same 14 / 12 scale.
+* AppButton defaults to interactive motion; chrome (`AppIconButton`, sidebar,
+  dropdown) passes `AppButtonConfig.plain` so they stay still. Opt out globally
+  with `AppMotionTheme(interactive: false)` or per button with
+  `config: AppButtonConfig.plain`.
 * Drop `import … as material` across the package, example, and tests; use plain
   Material imports with App aliases (or `shadcn.dart as shad` when needed).
 * Docs: default control height is 34 — examples no longer imply `height: 40`

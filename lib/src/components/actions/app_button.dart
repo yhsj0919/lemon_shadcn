@@ -7,6 +7,8 @@ import '../../foundation/app_async_action.dart';
 import '../../foundation/app_control_box.dart';
 import '../../foundation/app_interactive_style.dart';
 import '../../foundation/app_shadcn_scope.dart';
+import '../../foundation/app_theme_config.dart';
+import '../../motion/app_hover_press_ticker.dart';
 
 typedef AppButtonCallback = FutureOr<void> Function();
 
@@ -21,6 +23,33 @@ enum AppButtonVariant {
 }
 
 enum AppButtonPressEffect { none, returnToBase, lift }
+
+/// Disables default [AppButton] hover-lift inside chrome subtrees (menus,
+/// sidebar, toolbars). Standalone AppButtons outside this scope keep motion.
+class AppButtonMotionScope extends InheritedWidget {
+  const AppButtonMotionScope({
+    super.key,
+    required this.enabled,
+    required super.child,
+  });
+
+  /// Prefer this around menus / nav chrome.
+  const AppButtonMotionScope.disable({super.key, required super.child})
+    : enabled = false;
+
+  final bool enabled;
+
+  /// Whether null-config AppButtons may use interactive motion here.
+  static bool allowsMotion(BuildContext context) {
+    final scope = context
+        .dependOnInheritedWidgetOfExactType<AppButtonMotionScope>();
+    return scope?.enabled ?? true;
+  }
+
+  @override
+  bool updateShouldNotify(AppButtonMotionScope oldWidget) =>
+      enabled != oldWidget.enabled;
+}
 
 @immutable
 class AppButtonConfig {
@@ -37,10 +66,27 @@ class AppButtonConfig {
     this.onFocus,
     this.enableFeedback,
     this.pressEffect = AppButtonPressEffect.none,
-    this.pressDuration = const Duration(milliseconds: 90),
+    this.pressDuration,
     this.hoverLift = false,
-    this.hoverDuration = const Duration(milliseconds: 180),
+    this.hoverDuration,
   });
+
+  /// Hover lift + press returns to rest. Magnitudes come from
+  /// [AppMotionTheme.tokens] (shared by text and icon buttons).
+  static const interactive = AppButtonConfig(
+    hoverLift: true,
+    pressEffect: AppButtonPressEffect.returnToBase,
+  );
+
+  /// Hover lift + press lifts slightly further.
+  static const interactiveLift = AppButtonConfig(
+    hoverLift: true,
+    pressEffect: AppButtonPressEffect.lift,
+  );
+
+  /// Explicit no-motion config. Pass this from chrome (nav, toolbars) when a
+  /// global interactive default must stay still for this embed.
+  static const plain = AppButtonConfig();
 
   final double? height;
   final bool enabled;
@@ -54,9 +100,75 @@ class AppButtonConfig {
   final ValueChanged<bool>? onFocus;
   final bool? enableFeedback;
   final AppButtonPressEffect pressEffect;
-  final Duration pressDuration;
+
+  /// Null → [AppMotionTokens.pressDuration] from theme.
+  final Duration? pressDuration;
   final bool hoverLift;
-  final Duration hoverDuration;
+
+  /// Null → [AppMotionTokens.hoverDuration] from theme.
+  final Duration? hoverDuration;
+
+  AppButtonConfig copyWith({
+    double? height,
+    bool? enabled,
+    AlignmentGeometry? alignment,
+    shad.ButtonSize? size,
+    shad.ButtonDensity? density,
+    shad.ButtonShape? shape,
+    FocusNode? focusNode,
+    bool? disableTransition,
+    ValueChanged<bool>? onHover,
+    ValueChanged<bool>? onFocus,
+    bool? enableFeedback,
+    AppButtonPressEffect? pressEffect,
+    Duration? pressDuration,
+    bool? hoverLift,
+    Duration? hoverDuration,
+  }) {
+    return AppButtonConfig(
+      height: height ?? this.height,
+      enabled: enabled ?? this.enabled,
+      alignment: alignment ?? this.alignment,
+      size: size ?? this.size,
+      density: density ?? this.density,
+      shape: shape ?? this.shape,
+      focusNode: focusNode ?? this.focusNode,
+      disableTransition: disableTransition ?? this.disableTransition,
+      onHover: onHover ?? this.onHover,
+      onFocus: onFocus ?? this.onFocus,
+      enableFeedback: enableFeedback ?? this.enableFeedback,
+      pressEffect: pressEffect ?? this.pressEffect,
+      pressDuration: pressDuration ?? this.pressDuration,
+      hoverLift: hoverLift ?? this.hoverLift,
+      hoverDuration: hoverDuration ?? this.hoverDuration,
+    );
+  }
+
+  /// Resolves call-site config against theme + [AppButtonMotionScope].
+  ///
+  /// - `config == null` → [interactive] by default (standalone CTAs)
+  /// - inside [AppButtonMotionScope.disable] → [plain] when config omitted
+  /// - `config != null` → call site wins fully
+  /// - `interactive: true` → forces hover lift + return-to-base on top
+  static AppButtonConfig resolve(
+    BuildContext context,
+    AppButtonConfig? config, {
+    bool interactive = false,
+  }) {
+    final themeInteractive =
+        AppTheme.maybeOf(context)?.motion.interactive ?? true;
+    final motionInteractive =
+        themeInteractive && AppButtonMotionScope.allowsMotion(context);
+    var resolved = config ??
+        (motionInteractive ? AppButtonConfig.interactive : plain);
+    if (!interactive) return resolved;
+    return resolved.copyWith(
+      hoverLift: true,
+      pressEffect: resolved.pressEffect == AppButtonPressEffect.none
+          ? AppButtonPressEffect.returnToBase
+          : resolved.pressEffect,
+    );
+  }
 }
 
 abstract final class AppButton {
@@ -69,7 +181,8 @@ abstract final class AppButton {
     Widget? leading,
     Widget? trailing,
     String? loadingLabel,
-    AppButtonConfig config = const AppButtonConfig(),
+    bool interactive = false,
+    AppButtonConfig? config,
   }) => _AppAsyncButton(
     key: key,
     variant: AppButtonVariant.primary,
@@ -79,6 +192,7 @@ abstract final class AppButton {
     leading: leading,
     trailing: trailing,
     loadingLabel: loadingLabel,
+    interactive: interactive,
     config: config,
     child: child,
   );
@@ -92,7 +206,8 @@ abstract final class AppButton {
     Widget? leading,
     Widget? trailing,
     String? loadingLabel,
-    AppButtonConfig config = const AppButtonConfig(),
+    bool interactive = false,
+    AppButtonConfig? config,
   }) => _AppAsyncButton(
     key: key,
     variant: AppButtonVariant.secondary,
@@ -102,6 +217,7 @@ abstract final class AppButton {
     leading: leading,
     trailing: trailing,
     loadingLabel: loadingLabel,
+    interactive: interactive,
     config: config,
     child: child,
   );
@@ -115,7 +231,8 @@ abstract final class AppButton {
     Widget? leading,
     Widget? trailing,
     String? loadingLabel,
-    AppButtonConfig config = const AppButtonConfig(),
+    bool interactive = false,
+    AppButtonConfig? config,
   }) => _AppAsyncButton(
     key: key,
     variant: AppButtonVariant.outline,
@@ -125,6 +242,7 @@ abstract final class AppButton {
     leading: leading,
     trailing: trailing,
     loadingLabel: loadingLabel,
+    interactive: interactive,
     config: config,
     child: child,
   );
@@ -138,7 +256,8 @@ abstract final class AppButton {
     Widget? leading,
     Widget? trailing,
     String? loadingLabel,
-    AppButtonConfig config = const AppButtonConfig(),
+    bool interactive = false,
+    AppButtonConfig? config,
   }) => _AppAsyncButton(
     key: key,
     variant: AppButtonVariant.ghost,
@@ -148,6 +267,7 @@ abstract final class AppButton {
     leading: leading,
     trailing: trailing,
     loadingLabel: loadingLabel,
+    interactive: interactive,
     config: config,
     child: child,
   );
@@ -161,7 +281,8 @@ abstract final class AppButton {
     Widget? leading,
     Widget? trailing,
     String? loadingLabel,
-    AppButtonConfig config = const AppButtonConfig(),
+    bool interactive = false,
+    AppButtonConfig? config,
   }) => _AppAsyncButton(
     key: key,
     variant: AppButtonVariant.destructive,
@@ -171,6 +292,7 @@ abstract final class AppButton {
     leading: leading,
     trailing: trailing,
     loadingLabel: loadingLabel,
+    interactive: interactive,
     config: config,
     child: child,
   );
@@ -184,7 +306,8 @@ abstract final class AppButton {
     Widget? leading,
     Widget? trailing,
     String? loadingLabel,
-    AppButtonConfig config = const AppButtonConfig(),
+    bool interactive = false,
+    AppButtonConfig? config,
   }) => _AppAsyncButton(
     key: key,
     variant: AppButtonVariant.link,
@@ -194,6 +317,7 @@ abstract final class AppButton {
     leading: leading,
     trailing: trailing,
     loadingLabel: loadingLabel,
+    interactive: interactive,
     config: config,
     child: child,
   );
@@ -207,7 +331,8 @@ abstract final class AppButton {
     Widget? leading,
     Widget? trailing,
     String? loadingLabel,
-    AppButtonConfig config = const AppButtonConfig(),
+    bool interactive = false,
+    AppButtonConfig? config,
   }) => _AppAsyncButton(
     key: key,
     variant: AppButtonVariant.text,
@@ -217,6 +342,7 @@ abstract final class AppButton {
     leading: leading,
     trailing: trailing,
     loadingLabel: loadingLabel,
+    interactive: interactive,
     config: config,
     child: child,
   );
@@ -226,6 +352,9 @@ abstract final class AppButton {
 ///
 /// The default constructor uses the rectangular shape. Use [AppIconButton.circle]
 /// for the circular shape; both follow the globally configured control height.
+///
+/// Motion follows [AppButtonConfig.resolve]: interactive by default, plain
+/// inside [AppButtonMotionScope.disable], or pass [config] / [interactive].
 class AppIconButton extends StatelessWidget {
   const AppIconButton({
     super.key,
@@ -235,7 +364,8 @@ class AppIconButton extends StatelessWidget {
     this.action,
     this.loading,
     this.variant = AppButtonVariant.outline,
-    this.config = const AppButtonConfig(),
+    this.config,
+    this.interactive = false,
   }) : _circle = false,
        assert(action == null || onPressed == null);
 
@@ -247,7 +377,8 @@ class AppIconButton extends StatelessWidget {
     this.action,
     this.loading,
     this.variant = AppButtonVariant.outline,
-    this.config = const AppButtonConfig(),
+    this.config,
+    this.interactive = false,
   }) : _circle = true,
        assert(action == null || onPressed == null);
 
@@ -257,7 +388,8 @@ class AppIconButton extends StatelessWidget {
   final AppAsyncAction<void>? action;
   final bool? loading;
   final AppButtonVariant variant;
-  final AppButtonConfig config;
+  final AppButtonConfig? config;
+  final bool interactive;
   final bool _circle;
 
   @override
@@ -273,6 +405,7 @@ class AppIconButton extends StatelessWidget {
           action: action,
           loading: loading,
           config: config,
+          interactive: interactive,
           iconOnly: true,
           shapeOverride: _circle
               ? shad.ButtonShape.circle
@@ -295,7 +428,8 @@ class _AppAsyncButton extends StatefulWidget {
     this.leading,
     this.trailing,
     this.loadingLabel,
-    this.config = const AppButtonConfig(),
+    this.config,
+    this.interactive = false,
     this.iconOnly = false,
     this.shapeOverride,
   }) : assert(action == null || onPressed == null);
@@ -308,7 +442,8 @@ class _AppAsyncButton extends StatefulWidget {
   final Widget? leading;
   final Widget? trailing;
   final String? loadingLabel;
-  final AppButtonConfig config;
+  final AppButtonConfig? config;
+  final bool interactive;
   final bool iconOnly;
   final shad.ButtonShape? shapeOverride;
 
@@ -316,19 +451,32 @@ class _AppAsyncButton extends StatefulWidget {
   State<_AppAsyncButton> createState() => _AppAsyncButtonState();
 }
 
-class _AppAsyncButtonState extends State<_AppAsyncButton> {
+class _AppAsyncButtonState extends State<_AppAsyncButton>
+    with TickerProviderStateMixin {
   bool _loading = false;
   bool _running = false;
   bool _pressed = false;
   bool _hovered = false;
 
+  late final AppHoverPressTicker _ticker = AppHoverPressTicker(this);
+
+  /// Resolved during [build] so pointer handlers never call
+  /// `dependOnInheritedWidgetOfExactType` outside the build phase.
+  AppButtonConfig _config = AppButtonConfig.plain;
+  AppMotionTokens _motion = AppMotionTokens.standard;
+
   bool get _effectiveLoading =>
       widget.loading ?? widget.action?.isLoading ?? _loading;
   bool get _effectiveRunning =>
-      !widget.config.enabled ||
+      !_config.enabled ||
       widget.loading == true ||
       widget.action?.isRunning == true ||
       _running;
+
+  bool get _animate {
+    final reduce = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    return !reduce;
+  }
 
   @override
   void initState() {
@@ -350,13 +498,33 @@ class _AppAsyncButtonState extends State<_AppAsyncButton> {
   }
 
   void _handleHover(bool value) {
-    if (_hovered != value) setState(() => _hovered = value);
-    widget.config.onHover?.call(value);
+    if (!mounted || _hovered == value) {
+      if (mounted) _config.onHover?.call(value);
+      return;
+    }
+    _hovered = value;
+    if (!_config.hoverLift) {
+      _ticker.hover.value = 0;
+    } else {
+      _ticker.setHover(value, animate: _animate, tokens: _motion);
+    }
+    _config.onHover?.call(value);
+  }
+
+  void _setPressed(bool value) {
+    if (!mounted || _pressed == value) return;
+    _pressed = value;
+    if (_config.pressEffect == AppButtonPressEffect.none) {
+      _ticker.press.value = 0;
+    } else {
+      _ticker.setPress(value, animate: _animate, tokens: _motion);
+    }
   }
 
   @override
   void dispose() {
     widget.action?.removeListener(_actionChanged);
+    _ticker.dispose();
     super.dispose();
   }
 
@@ -402,6 +570,15 @@ class _AppAsyncButtonState extends State<_AppAsyncButton> {
 
   @override
   Widget build(BuildContext context) {
+    _config = AppButtonConfig.resolve(
+      context,
+      widget.config,
+      interactive: widget.interactive,
+    );
+    _motion =
+        AppTheme.maybeOf(context)?.motion.tokens ?? AppMotionTokens.standard;
+    _ticker.sync(_motion);
+
     final loading = _effectiveLoading;
     final child = _AppButtonContent(
       loading: loading,
@@ -411,109 +588,107 @@ class _AppAsyncButtonState extends State<_AppAsyncButton> {
     final enabled = widget.action != null || widget.onPressed != null;
     final onPressed = !enabled || _effectiveRunning ? null : _press;
     final destructiveStyle = shad.ButtonStyle.destructive(
-      size: widget.config.size,
+      size: _config.size,
       density: widget.iconOnly
           ? shad.ButtonDensity.icon
-          : widget.config.density,
-      shape: widget.shapeOverride ?? widget.config.shape,
+          : _config.density,
+      shape: widget.shapeOverride ?? _config.shape,
     );
     final secondaryStyle = shad.ButtonStyle.secondary(
-      size: widget.config.size,
+      size: _config.size,
       density: widget.iconOnly
           ? shad.ButtonDensity.icon
-          : widget.config.density,
-      shape: widget.shapeOverride ?? widget.config.shape,
+          : _config.density,
+      shape: widget.shapeOverride ?? _config.shape,
     );
     final linkStyle = shad.ButtonStyle.link(
-      size: widget.config.size,
+      size: _config.size,
       density: widget.iconOnly
           ? shad.ButtonDensity.icon
-          : widget.config.density,
-      shape: widget.shapeOverride ?? widget.config.shape,
+          : _config.density,
+      shape: widget.shapeOverride ?? _config.shape,
     );
     final textStyle = shad.ButtonStyle.text(
-      size: widget.config.size,
+      size: _config.size,
       density: widget.iconOnly
           ? shad.ButtonDensity.icon
-          : widget.config.density,
-      shape: widget.shapeOverride ?? widget.config.shape,
+          : _config.density,
+      shape: widget.shapeOverride ?? _config.shape,
     );
 
+    // Motion hover is owned by the outer MouseRegion. Keep Button.onHover only
+    // for style state; avoid wiring _handleHover twice.
     final button = switch (widget.variant) {
       AppButtonVariant.primary => shad.PrimaryButton(
         onPressed: onPressed,
-        enabled: widget.config.enabled,
+        enabled: _config.enabled,
         leading: widget.leading,
         trailing: widget.trailing,
-        alignment: widget.config.alignment,
-        size: widget.config.size,
+        alignment: _config.alignment,
+        size: _config.size,
         density: widget.iconOnly
             ? shad.ButtonDensity.icon
-            : widget.config.density,
-        shape: widget.shapeOverride ?? widget.config.shape,
-        focusNode: widget.config.focusNode,
-        disableTransition: widget.config.disableTransition,
-        onHover: _handleHover,
-        onFocus: widget.config.onFocus,
-        enableFeedback: widget.config.enableFeedback,
+            : _config.density,
+        shape: widget.shapeOverride ?? _config.shape,
+        focusNode: _config.focusNode,
+        disableTransition: _config.disableTransition,
+        onFocus: _config.onFocus,
+        enableFeedback: _config.enableFeedback,
         child: child,
       ),
       AppButtonVariant.secondary => shad.Button(
         onPressed: onPressed,
-        enabled: widget.config.enabled,
+        enabled: _config.enabled,
         leading: widget.leading,
         trailing: widget.trailing,
-        alignment: widget.config.alignment,
+        alignment: _config.alignment,
         style: AppInteractiveStyle.hover(secondaryStyle),
-        focusNode: widget.config.focusNode,
-        disableTransition: widget.config.disableTransition,
-        onHover: _handleHover,
-        onFocus: widget.config.onFocus,
-        enableFeedback: widget.config.enableFeedback,
+        focusNode: _config.focusNode,
+        disableTransition: _config.disableTransition,
+        onFocus: _config.onFocus,
+        enableFeedback: _config.enableFeedback,
         child: child,
       ),
       AppButtonVariant.outline => shad.OutlineButton(
         onPressed: onPressed,
-        enabled: widget.config.enabled,
+        enabled: _config.enabled,
         leading: widget.leading,
         trailing: widget.trailing,
-        alignment: widget.config.alignment,
-        size: widget.config.size,
+        alignment: _config.alignment,
+        size: _config.size,
         density: widget.iconOnly
             ? shad.ButtonDensity.icon
-            : widget.config.density,
-        shape: widget.shapeOverride ?? widget.config.shape,
-        focusNode: widget.config.focusNode,
-        disableTransition: widget.config.disableTransition,
-        onHover: _handleHover,
-        onFocus: widget.config.onFocus,
-        enableFeedback: widget.config.enableFeedback,
+            : _config.density,
+        shape: widget.shapeOverride ?? _config.shape,
+        focusNode: _config.focusNode,
+        disableTransition: _config.disableTransition,
+        onFocus: _config.onFocus,
+        enableFeedback: _config.enableFeedback,
         child: child,
       ),
       AppButtonVariant.ghost => shad.GhostButton(
         onPressed: onPressed,
-        enabled: widget.config.enabled,
+        enabled: _config.enabled,
         leading: widget.leading,
         trailing: widget.trailing,
-        alignment: widget.config.alignment,
-        size: widget.config.size,
+        alignment: _config.alignment,
+        size: _config.size,
         density: widget.iconOnly
             ? shad.ButtonDensity.icon
-            : widget.config.density,
-        shape: widget.shapeOverride ?? widget.config.shape,
-        focusNode: widget.config.focusNode,
-        disableTransition: widget.config.disableTransition,
-        onHover: _handleHover,
-        onFocus: widget.config.onFocus,
-        enableFeedback: widget.config.enableFeedback,
+            : _config.density,
+        shape: widget.shapeOverride ?? _config.shape,
+        focusNode: _config.focusNode,
+        disableTransition: _config.disableTransition,
+        onFocus: _config.onFocus,
+        enableFeedback: _config.enableFeedback,
         child: child,
       ),
       AppButtonVariant.destructive => shad.Button(
         onPressed: onPressed,
-        enabled: widget.config.enabled,
+        enabled: _config.enabled,
         leading: widget.leading,
         trailing: widget.trailing,
-        alignment: widget.config.alignment,
+        alignment: _config.alignment,
         style: destructiveStyle.copyWith(
           decoration: (context, states, value) {
             if (states.contains(WidgetState.hovered) &&
@@ -525,67 +700,59 @@ class _AppAsyncButtonState extends State<_AppAsyncButton> {
             return value;
           },
         ),
-        focusNode: widget.config.focusNode,
-        disableTransition: widget.config.disableTransition,
-        onHover: _handleHover,
-        onFocus: widget.config.onFocus,
-        enableFeedback: widget.config.enableFeedback,
+        focusNode: _config.focusNode,
+        disableTransition: _config.disableTransition,
+        onFocus: _config.onFocus,
+        enableFeedback: _config.enableFeedback,
         child: child,
       ),
       AppButtonVariant.link => shad.Button(
         onPressed: onPressed,
-        enabled: widget.config.enabled,
+        enabled: _config.enabled,
         leading: widget.leading,
         trailing: widget.trailing,
-        alignment: widget.config.alignment,
+        alignment: _config.alignment,
         style: AppInteractiveStyle.hover(
           linkStyle,
           tone: AppInteractiveHoverTone.accent,
         ),
-        focusNode: widget.config.focusNode,
-        disableTransition: widget.config.disableTransition,
-        onHover: _handleHover,
-        onFocus: widget.config.onFocus,
-        enableFeedback: widget.config.enableFeedback,
+        focusNode: _config.focusNode,
+        disableTransition: _config.disableTransition,
+        onFocus: _config.onFocus,
+        enableFeedback: _config.enableFeedback,
         child: child,
       ),
       AppButtonVariant.text => shad.Button(
         onPressed: onPressed,
-        enabled: widget.config.enabled,
+        enabled: _config.enabled,
         leading: widget.leading,
         trailing: widget.trailing,
-        alignment: widget.config.alignment,
+        alignment: _config.alignment,
         style: AppInteractiveStyle.hover(
           textStyle,
           tone: AppInteractiveHoverTone.accent,
         ),
-        focusNode: widget.config.focusNode,
-        disableTransition: widget.config.disableTransition,
-        onHover: _handleHover,
-        onFocus: widget.config.onFocus,
-        enableFeedback: widget.config.enableFeedback,
+        focusNode: _config.focusNode,
+        disableTransition: _config.disableTransition,
+        onFocus: _config.onFocus,
+        enableFeedback: _config.enableFeedback,
         child: child,
       ),
     };
     final control = AppControlBox(
-      height: widget.config.height,
+      height: _config.height,
       square: widget.iconOnly,
       child: button,
     );
+    final config = _config;
+    final wantsMotion =
+        config.hoverLift || config.pressEffect != AppButtonPressEffect.none;
+    // Chrome / plain buttons: no transform wrapper, no hover jump.
+    if (!wantsMotion) return control;
+
     final enabledForPress =
-        enabled && widget.config.enabled && !_effectiveRunning;
+        enabled && config.enabled && !_effectiveRunning;
     final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
-    final hoverActive =
-        _hovered && enabledForPress && widget.config.hoverLift && !reduceMotion;
-    final (offset, scale) = _pressed && enabledForPress
-        ? switch (widget.config.pressEffect) {
-            AppButtonPressEffect.none => (Offset.zero, 1.0),
-            AppButtonPressEffect.returnToBase => (Offset.zero, 1.0),
-            AppButtonPressEffect.lift => (const Offset(0, -1), 1.01),
-          }
-        : hoverActive
-        ? (const Offset(0, -1), 1.0)
-        : (Offset.zero, 1.0);
     final theme = shad.Theme.of(context);
     final backgroundless =
         widget.variant == AppButtonVariant.outline ||
@@ -604,45 +771,78 @@ class _AppAsyncButtonState extends State<_AppAsyncButton> {
     final circular =
         widget.iconOnly ||
         widget.shapeOverride == shad.ButtonShape.circle ||
-        widget.config.shape == shad.ButtonShape.circle;
-    return Listener(
-      onPointerDown:
-          enabledForPress &&
-              widget.config.pressEffect != AppButtonPressEffect.none
-          ? (_) => setState(() => _pressed = true)
-          : null,
-      onPointerUp: _pressed ? (_) => setState(() => _pressed = false) : null,
-      onPointerCancel: _pressed
-          ? (_) => setState(() => _pressed = false)
-          : null,
-      child: AnimatedContainer(
-        duration: reduceMotion
-            ? Duration.zero
-            : _pressed
-            ? widget.config.pressDuration
-            : widget.config.hoverDuration,
-        curve: Curves.easeOutCubic,
-        transform: Matrix4.diagonal3Values(scale, scale, 1)
-          ..setTranslationRaw(offset.dx, offset.dy, 0),
-        transformAlignment: Alignment.center,
-        decoration: BoxDecoration(
-          borderRadius: circular
-              ? BorderRadius.circular(999)
-              : theme.borderRadiusMd,
-          boxShadow: hoverActive && !_pressed && !backgroundless
-              ? [
-                  BoxShadow(
-                    color: shadowColor.withValues(alpha: 0.16),
-                    blurRadius: 10,
-                    spreadRadius: -4,
-                    offset: const Offset(0, 4),
+        config.shape == shad.ButtonShape.circle;
+
+    return MouseRegion(
+      onEnter: enabledForPress ? (_) => _handleHover(true) : null,
+      onExit: (_) {
+        _handleHover(false);
+        _setPressed(false);
+      },
+      child: Listener(
+        behavior: HitTestBehavior.translucent,
+        onPointerDown:
+            enabledForPress &&
+                config.pressEffect != AppButtonPressEffect.none
+            ? (_) => _setPressed(true)
+            : null,
+        onPointerUp: (_) => _setPressed(false),
+        onPointerCancel: (_) => _setPressed(false),
+        child: AnimatedBuilder(
+          animation: _ticker.listenable,
+          builder: (context, child) {
+            final hoverT = !config.hoverLift || !enabledForPress
+                ? 0.0
+                : reduceMotion
+                ? (_hovered ? 1.0 : 0.0)
+                : _ticker.hover.value;
+            final pressT =
+                config.pressEffect == AppButtonPressEffect.none ||
+                    !enabledForPress
+                ? 0.0
+                : reduceMotion
+                ? (_pressed ? 1.0 : 0.0)
+                : _ticker.press.value;
+
+            final hoverY = _motion.hoverOffset.dy * hoverT;
+            final settle = -_motion.hoverOffset.dy;
+            final (pressY, scale) = switch (config.pressEffect) {
+              AppButtonPressEffect.none => (0.0, 1.0),
+              AppButtonPressEffect.returnToBase => (
+                settle * pressT * hoverT +
+                    _motion.unhoveredPressNudge * pressT * (1.0 - hoverT),
+                1.0 + (_motion.pressedScale - 1.0) * pressT,
+              ),
+              AppButtonPressEffect.lift => (
+                -_motion.pressExtraLift * pressT,
+                1.0 + (1.0 - _motion.pressedScale) * 0.4 * pressT,
+              ),
+            };
+            final shadowT = (hoverT * (1.0 - pressT * 0.85)).clamp(0.0, 1.0);
+
+            return Transform.translate(
+              offset: Offset(0, hoverY + pressY),
+              child: Transform.scale(
+                scale: scale,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    borderRadius: circular
+                        ? BorderRadius.circular(999)
+                        : theme.borderRadiusMd,
+                    boxShadow: backgroundless
+                        ? const []
+                        : _motion.hoverShadow(shadowColor, shadowT),
                   ),
-                ]
-              : const [],
+                  child: child,
+                ),
+              ),
+            );
+          },
+          child: control,
         ),
-        child: control,
       ),
     );
+
   }
 }
 

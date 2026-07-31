@@ -1,6 +1,5 @@
-import 'dart:ui' show Color, Offset;
-
 import 'package:flutter/foundation.dart' show immutable;
+import 'package:flutter/painting.dart' show BoxShadow, Color, Offset;
 import 'package:flutter/widgets.dart' show Widget;
 
 import '../components/display/app_text.dart';
@@ -40,16 +39,76 @@ class AppControlMetrics {
   final double textAreaHeight;
 }
 
+/// Shared interactive motion tokens for [AppButton], [AppIconButton], and
+/// [AppMotion].
+///
+/// Configure once via [AppMotionTheme.tokens].
+@immutable
+class AppMotionTokens {
+  const AppMotionTokens({
+    this.hoverOffset = const Offset(0, -3),
+    this.hoverScale = 1.015,
+    this.pressedScale = 0.96,
+    this.pressExtraLift = 1.5,
+    this.unhoveredPressNudge = 1.0,
+    this.hoverDuration = const Duration(milliseconds: 240),
+    this.pressDuration = const Duration(milliseconds: 140),
+    this.hoverShadowOpacity = 0.14,
+  });
+
+  static const standard = AppMotionTokens();
+
+  final Offset hoverOffset;
+  final double hoverScale;
+  final double pressedScale;
+  final double pressExtraLift;
+  final double unhoveredPressNudge;
+  final Duration hoverDuration;
+  final Duration pressDuration;
+  final double hoverShadowOpacity;
+
+  /// Hover elevation shadow; [strength] 0..1 keeps list shape stable for lerps.
+  List<BoxShadow> hoverShadow(Color color, double strength) {
+    final t = strength.clamp(0.0, 1.0);
+    return [
+      BoxShadow(
+        color: color.withValues(alpha: hoverShadowOpacity * t),
+        blurRadius: 10 + 6 * t,
+        spreadRadius: -4,
+        offset: Offset(0, 3 + 3 * t),
+      ),
+    ];
+  }
+
+  AppMotionTokens copyWith({
+    Offset? hoverOffset,
+    double? hoverScale,
+    double? pressedScale,
+    double? pressExtraLift,
+    double? unhoveredPressNudge,
+    Duration? hoverDuration,
+    Duration? pressDuration,
+    double? hoverShadowOpacity,
+  }) {
+    return AppMotionTokens(
+      hoverOffset: hoverOffset ?? this.hoverOffset,
+      hoverScale: hoverScale ?? this.hoverScale,
+      pressedScale: pressedScale ?? this.pressedScale,
+      pressExtraLift: pressExtraLift ?? this.pressExtraLift,
+      unhoveredPressNudge: unhoveredPressNudge ?? this.unhoveredPressNudge,
+      hoverDuration: hoverDuration ?? this.hoverDuration,
+      pressDuration: pressDuration ?? this.pressDuration,
+      hoverShadowOpacity: hoverShadowOpacity ?? this.hoverShadowOpacity,
+    );
+  }
+}
+
 @immutable
 class AppMotionTheme {
   const AppMotionTheme({
     this.enabled = true,
-    this.duration = const Duration(milliseconds: 150),
     this.loadingDelay = const Duration(milliseconds: 120),
     this.minimumLoadingDuration = const Duration(milliseconds: 250),
-    this.hoverScale = 1.015,
-    this.pressedScale = 0.985,
-    this.hoverOffset = const Offset(0, -2),
     this.depthPerspective = 0.0012,
     this.depthDuration = const Duration(milliseconds: 320),
     this.depthTiltDuration = const Duration(milliseconds: 100),
@@ -58,15 +117,13 @@ class AppMotionTheme {
     this.depthOffsetY = -10,
     this.depthTranslateZ = 18,
     this.depthPressAmount = 0.42,
+    this.tokens = const AppMotionTokens(),
+    this.interactive = true,
   });
 
   final bool enabled;
-  final Duration duration;
   final Duration loadingDelay;
   final Duration minimumLoadingDuration;
-  final double hoverScale;
-  final double pressedScale;
-  final Offset hoverOffset;
   final double depthPerspective;
   final Duration depthDuration;
   final Duration depthTiltDuration;
@@ -75,6 +132,10 @@ class AppMotionTheme {
   final double depthOffsetY;
   final double depthTranslateZ;
   final double depthPressAmount;
+  final AppMotionTokens tokens;
+
+  /// When true (default), [AppButton]s that omit config use interactive motion.
+  final bool interactive;
 }
 
 enum AppShadowColorMode { auto, background, border, accent, primary, custom }
@@ -216,10 +277,12 @@ class AppThemeConfig {
           contentGap: 8,
         ),
         motion: const AppMotionTheme(
-          duration: Duration(milliseconds: 220),
-          hoverScale: 1.01,
-          pressedScale: 0.98,
-          hoverOffset: Offset(0, -1),
+          tokens: AppMotionTokens(
+            hoverOffset: Offset(0, -1),
+            hoverScale: 1.01,
+            pressedScale: 0.98,
+            hoverDuration: Duration(milliseconds: 220),
+          ),
         ),
         shadows: const AppShadowTheme(
           ambientOpacity: 0.05,
@@ -249,10 +312,13 @@ class AppThemeConfig {
           contentGap: 6,
         ),
         motion: const AppMotionTheme(
-          duration: Duration(milliseconds: 120),
-          hoverScale: 1,
-          pressedScale: 0.99,
-          hoverOffset: Offset.zero,
+          tokens: AppMotionTokens(
+            hoverOffset: Offset.zero,
+            hoverScale: 1,
+            pressedScale: 0.99,
+            hoverDuration: Duration(milliseconds: 120),
+            pressDuration: Duration(milliseconds: 100),
+          ),
         ),
         shadows: const AppShadowTheme(
           ambientOpacity: 0.04,
@@ -289,10 +355,12 @@ class AppThemeConfig {
           contentGap: 8,
         ),
         motion: const AppMotionTheme(
-          duration: Duration(milliseconds: 200),
-          hoverScale: 1.01,
-          pressedScale: 0.97,
-          hoverOffset: Offset(0, -1),
+          tokens: AppMotionTokens(
+            hoverOffset: Offset(0, -1),
+            hoverScale: 1.01,
+            pressedScale: 0.97,
+            hoverDuration: Duration(milliseconds: 200),
+          ),
         ),
         shadows: const AppShadowTheme(
           ambientOpacity: 0.08,

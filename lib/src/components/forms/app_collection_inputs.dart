@@ -84,11 +84,13 @@ class AppImageInput<T> extends StatelessWidget {
                       if (picked != null) onChanged(picked);
                     }
                   : null,
+              config: AppButtonConfig.plain,
               child: Text(current == null ? 'Choose image' : 'Replace image'),
             ),
             if (current != null && allowRemove)
               AppButton.ghost(
                 onPressed: enabled ? () => onChanged(null) : null,
+                config: AppButtonConfig.plain,
                 child: const Text('Remove'),
               ),
           ],

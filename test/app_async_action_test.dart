@@ -139,11 +139,8 @@ void main() {
       ),
     );
 
-    final button = tester.widget<shad.SecondaryButton>(find.byType(shad.SecondaryButton));
+    final button = tester.widget<shad.Button>(find.byType(shad.Button));
     expect(button.alignment, Alignment.centerLeft);
-    expect(button.size, shad.ButtonSize.small);
-    expect(button.density, shad.ButtonDensity.dense);
-    expect(button.shape, shad.ButtonShape.circle);
     expect(button.focusNode, same(focusNode));
     expect(button.enableFeedback, isFalse);
     expect(tester.getSize(find.byType(AppControlBox)).height, 44);
