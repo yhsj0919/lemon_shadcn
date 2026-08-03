@@ -9,10 +9,14 @@ class AppPromptControlFrame extends StatefulWidget {
     super.key,
     required this.child,
     this.enabled = true,
+    this.maintainBorder = false,
+    this.activateOnPointerDown = true,
   });
 
   final Widget child;
   final bool enabled;
+  final bool maintainBorder;
+  final bool activateOnPointerDown;
 
   @override
   State<AppPromptControlFrame> createState() => _AppPromptControlFrameState();
@@ -38,35 +42,47 @@ class _AppPromptControlFrameState extends State<AppPromptControlFrame> {
           if (_focused != value) setState(() => _focused = value);
         },
         child: Listener(
-          onPointerDown: widget.enabled ? (_) => _setPointerActive(true) : null,
-          child: Stack(
-            fit: StackFit.passthrough,
-            children: [
-              shad.ComponentTheme(
-                data: AppOverlayStyle.cardTheme(context),
-                child: shad.ComponentTheme(
-                  data: const shad.FocusOutlineTheme(
-                    border: Border.fromBorderSide(BorderSide.none),
+          onPointerDown: widget.enabled && widget.activateOnPointerDown
+              ? (_) => _setPointerActive(true)
+              : null,
+          child: shad.FocusOutline(
+            focused: active,
+            align: 0,
+            borderRadius: BorderRadius.circular(theme.radiusMd),
+            border: Border.all(
+              color: theme.colorScheme.ring,
+              width: 1,
+              strokeAlign: BorderSide.strokeAlignInside,
+            ),
+            child: Stack(
+              fit: StackFit.passthrough,
+              children: [
+                shad.ComponentTheme(
+                  data: AppOverlayStyle.cardTheme(context),
+                  child: shad.ComponentTheme(
+                    data: const shad.FocusOutlineTheme(
+                      border: Border.fromBorderSide(BorderSide.none),
+                    ),
+                    child: widget.child,
                   ),
-                  child: widget.child,
                 ),
-              ),
-              if (active)
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(theme.radiusMd),
-                        border: Border.all(
-                          color: theme.colorScheme.ring,
-                          width: 1,
-                          strokeAlign: BorderSide.strokeAlignInside,
+                if (widget.maintainBorder)
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(theme.radiusMd),
+                          border: Border.all(
+                            color: theme.colorScheme.border,
+                            width: 1,
+                            strokeAlign: BorderSide.strokeAlignInside,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

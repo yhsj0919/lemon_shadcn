@@ -21,10 +21,7 @@ class _ComponentGalleryState extends State<ComponentGallery> {
     return MaterialApp(
       title: 'Lemon Shadcn',
       locale: const Locale('zh', 'CN'),
-      supportedLocales: const [
-        Locale('zh', 'CN'),
-        Locale('en'),
-      ],
+      supportedLocales: const [Locale('zh', 'CN'), Locale('en')],
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
@@ -69,24 +66,31 @@ class _GalleryShellState extends State<GalleryShell> {
       brandSubtitle: '管理端组件示例',
       sidebarMode: _sidebarMode,
       onSidebarModeChanged: (mode) => setState(() => _sidebarMode = mode),
-      destinations: [
-        for (final group in GalleryRegistry.groups)
-          AppNavDestination(
-            id: 'group-${group.hashCode}',
-            label: group,
-            icon: _groupIcon(group),
-            children: [
-              for (final entry in GalleryRegistry.entries.where(
-                (entry) => entry.group == group,
-              ))
-                AppNavDestination(
-                  id: entry.id,
-                  label: entry.label,
-                  icon: _componentIcon(entry.id),
+      sidebarContent: AppSidebarContent(
+        groups: [
+          AppSidebarGroup(
+            label: '组件分类',
+            items: [
+              for (final group in GalleryRegistry.groups)
+                AppSidebarMenuItem(
+                  id: 'group-${group.hashCode}',
+                  label: group,
+                  icon: _groupIcon(group),
+                  children: [
+                    for (final entry in GalleryRegistry.entries.where(
+                      (entry) => entry.group == group,
+                    ))
+                      AppSidebarMenuItem(
+                        id: entry.id,
+                        label: entry.label,
+                        icon: _componentIcon(entry.id),
+                      ),
+                  ],
                 ),
             ],
           ),
-      ],
+        ],
+      ),
       selectedId: selected.id,
       onDestinationSelected: (id) {
         final index = GalleryRegistry.entries.indexWhere(

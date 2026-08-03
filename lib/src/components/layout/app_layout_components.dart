@@ -7,7 +7,6 @@ import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 typedef AppAccordion = shad.Accordion;
 typedef AppAccordionItem = shad.AccordionItem;
 typedef AppAccordionTrigger = shad.AccordionTrigger;
-typedef AppAlert = shad.Alert;
 typedef AppCard = shad.Card;
 typedef AppDivider = shad.Divider;
 typedef AppOutlinedContainer = shad.OutlinedContainer;
@@ -33,6 +32,174 @@ typedef AppScaffold = shad.Scaffold;
 typedef AppAppBar = shad.AppBar;
 typedef AppDashedLine = shad.DashedLine;
 typedef AppDashedContainer = shad.DashedContainer;
+
+enum AppAlertVariant { standard, info, success, warning, destructive, custom }
+
+/// Semantic alert variants built on the upstream [shad.Alert] layout.
+class AppAlert extends StatelessWidget {
+  const AppAlert({
+    super.key,
+    this.leading,
+    this.title,
+    this.content,
+    this.trailing,
+  }) : variant = AppAlertVariant.standard,
+       backgroundColor = null,
+       borderColor = null,
+       foregroundColor = null;
+
+  const AppAlert.info({
+    super.key,
+    this.leading,
+    this.title,
+    this.content,
+    this.trailing,
+  }) : variant = AppAlertVariant.info,
+       backgroundColor = null,
+       borderColor = null,
+       foregroundColor = null;
+
+  const AppAlert.success({
+    super.key,
+    this.leading,
+    this.title,
+    this.content,
+    this.trailing,
+  }) : variant = AppAlertVariant.success,
+       backgroundColor = null,
+       borderColor = null,
+       foregroundColor = null;
+
+  const AppAlert.warning({
+    super.key,
+    this.leading,
+    this.title,
+    this.content,
+    this.trailing,
+  }) : variant = AppAlertVariant.warning,
+       backgroundColor = null,
+       borderColor = null,
+       foregroundColor = null;
+
+  const AppAlert.destructive({
+    super.key,
+    this.leading,
+    this.title,
+    this.content,
+    this.trailing,
+  }) : variant = AppAlertVariant.destructive,
+       backgroundColor = null,
+       borderColor = null,
+       foregroundColor = null;
+
+  const AppAlert.custom({
+    super.key,
+    this.leading,
+    this.title,
+    this.content,
+    this.trailing,
+    required this.backgroundColor,
+    required this.borderColor,
+    required this.foregroundColor,
+  }) : variant = AppAlertVariant.custom;
+
+  final Widget? leading;
+  final Widget? title;
+  final Widget? content;
+  final Widget? trailing;
+  final AppAlertVariant variant;
+  final Color? backgroundColor;
+  final Color? borderColor;
+  final Color? foregroundColor;
+
+  @override
+  Widget build(BuildContext context) {
+    if (variant == AppAlertVariant.standard) {
+      return shad.Alert(
+        leading: leading,
+        title: title,
+        content: content,
+        trailing: trailing,
+      );
+    }
+    final theme = shad.Theme.of(context);
+    final dark = theme.brightness == Brightness.dark;
+    final colors = switch (variant) {
+      AppAlertVariant.info =>
+        dark
+            ? const (
+                background: Color(0xff172554),
+                border: Color(0xff1d4ed8),
+                foreground: Color(0xffbfdbfe),
+              )
+            : const (
+                background: Color(0xffeff6ff),
+                border: Color(0xff93c5fd),
+                foreground: Color(0xff1e40af),
+              ),
+      AppAlertVariant.success =>
+        dark
+            ? const (
+                background: Color(0xff052e16),
+                border: Color(0xff15803d),
+                foreground: Color(0xffbbf7d0),
+              )
+            : const (
+                background: Color(0xfff0fdf4),
+                border: Color(0xff86efac),
+                foreground: Color(0xff166534),
+              ),
+      AppAlertVariant.warning =>
+        dark
+            ? const (
+                background: Color(0xff451a03),
+                border: Color(0xffb45309),
+                foreground: Color(0xfffde68a),
+              )
+            : const (
+                background: Color(0xfffffbeb),
+                border: Color(0xfffcd34d),
+                foreground: Color(0xff92400e),
+              ),
+      AppAlertVariant.destructive =>
+        dark
+            ? const (
+                background: Color(0xff450a0a),
+                border: Color(0xffb91c1c),
+                foreground: Color(0xfffecaca),
+              )
+            : const (
+                background: Color(0xfffef2f2),
+                border: Color(0xfffca5a5),
+                foreground: Color(0xff991b1b),
+              ),
+      AppAlertVariant.custom => (
+        background: backgroundColor!,
+        border: borderColor!,
+        foreground: foregroundColor!,
+      ),
+      AppAlertVariant.standard => throw StateError('Handled above'),
+    };
+    return shad.ComponentTheme<shad.AlertTheme>(
+      data: shad.AlertTheme(
+        backgroundColor: colors.background,
+        borderColor: colors.border,
+      ),
+      child: DefaultTextStyle.merge(
+        style: TextStyle(color: colors.foreground),
+        child: IconTheme.merge(
+          data: IconThemeData(color: colors.foreground),
+          child: shad.Alert(
+            leading: leading,
+            title: title,
+            content: content,
+            trailing: trailing,
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 class AppTreeItem extends StatefulWidget {
   const AppTreeItem({
@@ -283,9 +450,9 @@ class _AppCarouselState extends State<AppCarousel> {
   int? _dragStartPage;
 
   double get _viewportFraction => switch (widget.sizeConstraint) {
-        shad.CarouselFractionalConstraint(:final fraction) => fraction,
-        _ => 1,
-      };
+    shad.CarouselFractionalConstraint(:final fraction) => fraction,
+    _ => 1,
+  };
 
   @override
   void initState() {
@@ -300,7 +467,7 @@ class _AppCarouselState extends State<AppCarousel> {
     if (_viewportFraction !=
         (oldWidget.sizeConstraint is shad.CarouselFractionalConstraint
             ? (oldWidget.sizeConstraint as shad.CarouselFractionalConstraint)
-                .fraction
+                  .fraction
             : 1)) {
       final page = _pageController.hasClients
           ? (_pageController.page ?? 0).round()
@@ -331,7 +498,11 @@ class _AppCarouselState extends State<AppCarousel> {
     if (!widget.wrap && widget.itemCount != null) {
       target = target.clamp(0, widget.itemCount! - 1);
     }
-    _pageController.animateToPage(target, duration: widget.speed, curve: widget.curve);
+    _pageController.animateToPage(
+      target,
+      duration: widget.speed,
+      curve: widget.curve,
+    );
   }
 
   void _queueWheelMove(int direction) {
@@ -427,12 +598,12 @@ class _AppCarouselScrollBehavior extends ScrollBehavior {
 
   @override
   Set<PointerDeviceKind> get dragDevices => const {
-        PointerDeviceKind.touch,
-        PointerDeviceKind.mouse,
-        PointerDeviceKind.trackpad,
-        PointerDeviceKind.stylus,
-        PointerDeviceKind.invertedStylus,
-      };
+    PointerDeviceKind.touch,
+    PointerDeviceKind.mouse,
+    PointerDeviceKind.trackpad,
+    PointerDeviceKind.stylus,
+    PointerDeviceKind.invertedStylus,
+  };
 }
 
 class AppCollapsible extends StatelessWidget {
@@ -458,7 +629,8 @@ class AppCollapsible extends StatelessWidget {
     );
     return LayoutBuilder(
       builder: (context, constraints) {
-        final resolvedWidth = width ??
+        final resolvedWidth =
+            width ??
             (constraints.hasBoundedWidth ? constraints.maxWidth : null);
         if (resolvedWidth == null) return collapsible;
         return SizedBox(width: resolvedWidth, child: collapsible);
@@ -475,10 +647,10 @@ class AppSteps extends StatelessWidget {
   });
 
   const AppSteps.vertical({super.key, required this.children})
-      : axis = Axis.vertical;
+    : axis = Axis.vertical;
 
   const AppSteps.horizontal({super.key, required this.children})
-      : axis = Axis.horizontal;
+    : axis = Axis.horizontal;
 
   final List<Widget> children;
   final Axis axis;
@@ -618,67 +790,95 @@ class _AppStepTrack extends StatelessWidget {
     final thickness = config?.connectorThickness ?? 2 * theme.scaling;
     final idle = config?.indicatorColor ?? theme.colorScheme.muted;
     if (axis == Axis.horizontal) {
-      return LayoutBuilder(builder: (context, constraints) {
-        final inset = labels.isEmpty ? 0.0 : constraints.maxWidth / labels.length / 2;
-        return Stack(children: [
-          if (labels.length > 1)
-            Positioned(left: inset, right: inset, top: (size - thickness) / 2,
-              child: Row(children: [
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          final inset = labels.isEmpty
+              ? 0.0
+              : constraints.maxWidth / labels.length / 2;
+          return Stack(
+            children: [
+              if (labels.length > 1)
+                Positioned(
+                  left: inset,
+                  right: inset,
+                  top: (size - thickness) / 2,
+                  child: Row(
+                    children: [
+                      for (var i = 0; i < labels.length - 1; i++)
+                        Expanded(
+                          child: Container(
+                            height: thickness,
+                            color: _connectorColor(context, i, idle),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              Row(
+                children: [
+                  for (var i = 0; i < labels.length; i++)
+                    Expanded(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _indicator(context, i, size, idle),
+                          SizedBox(height: gap),
+                          Center(child: labels[i]),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          );
+        },
+      );
+    }
+    return Stack(
+      children: [
+        if (labels.length > 1)
+          Positioned(
+            left: (size - thickness) / 2,
+            top: size / 2,
+            bottom: size / 2,
+            width: thickness,
+            child: Column(
+              children: [
                 for (var i = 0; i < labels.length - 1; i++)
                   Expanded(
                     child: Container(
-                      height: thickness,
+                      width: thickness,
                       color: _connectorColor(context, i, idle),
                     ),
                   ),
-              ])),
-          Row(children: [
-            for (var i = 0; i < labels.length; i++)
-              Expanded(child: Column(mainAxisSize: MainAxisSize.min, children: [
-                _indicator(context, i, size, idle),
-                SizedBox(height: gap),
-                Center(child: labels[i]),
-              ])),
-          ]),
-        ]);
-      });
-    }
-    return Stack(children: [
-      if (labels.length > 1)
-        Positioned(
-          left: (size - thickness) / 2,
-          top: size / 2,
-          bottom: size / 2,
-          width: thickness,
-          child: Column(children: [
-            for (var i = 0; i < labels.length - 1; i++)
-              Expanded(
-                child: Container(
-                  width: thickness,
-                  color: _connectorColor(context, i, idle),
-                ),
-              ),
-          ]),
-        ),
-      Column(mainAxisSize: MainAxisSize.min, children: [
-        for (var i = 0; i < labels.length; i++) ...[
-          Row(children: [
-            _indicator(context, i, size, idle),
-            SizedBox(width: gap),
-            Expanded(
-              child: SizedBox(
-                height: size,
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: labels[i],
-                ),
-              ),
+              ],
             ),
-          ]),
-          if (i < labels.length - 1) SizedBox(height: gap),
-        ],
-      ]),
-    ]);
+          ),
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (var i = 0; i < labels.length; i++) ...[
+              Row(
+                children: [
+                  _indicator(context, i, size, idle),
+                  SizedBox(width: gap),
+                  Expanded(
+                    child: SizedBox(
+                      height: size,
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: labels[i],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              if (i < labels.length - 1) SizedBox(height: gap),
+            ],
+          ],
+        ),
+      ],
+    );
   }
 
   Widget _indicator(BuildContext context, int index, double size, Color idle) {
@@ -688,7 +888,9 @@ class _AppStepTrack extends StatelessWidget {
     final selected = active != null && index <= active;
     final background = failed
         ? theme.colorScheme.destructive
-        : selected ? theme.colorScheme.primary : idle;
+        : selected
+        ? theme.colorScheme.primary
+        : idle;
     final foreground = selected || failed
         ? theme.colorScheme.primaryForeground
         : theme.colorScheme.foreground;
@@ -747,14 +949,15 @@ class AppTimeline extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = shad.Theme.of(context);
-    final timelineTheme =
-        shad.ComponentTheme.maybeOf<shad.TimelineTheme>(context);
+    final timelineTheme = shad.ComponentTheme.maybeOf<shad.TimelineTheme>(
+      context,
+    );
     final scaling = theme.scaling;
-    final resolvedTimeConstraints = timeConstraints ?? timelineTheme?.timeConstraints;
+    final resolvedTimeConstraints =
+        timeConstraints ?? timelineTheme?.timeConstraints;
     final spacing = timelineTheme?.spacing ?? 16 * scaling;
     final dotSize = timelineTheme?.dotSize ?? 12 * scaling;
-    final connectorThickness =
-        timelineTheme?.connectorThickness ?? 2 * scaling;
+    final connectorThickness = timelineTheme?.connectorThickness ?? 2 * scaling;
     final defaultColor = timelineTheme?.color ?? theme.colorScheme.primary;
     final rowGap = timelineTheme?.rowGap ?? 16 * scaling;
     final headerHeight = dotSize > 28 * scaling ? dotSize : 28 * scaling;

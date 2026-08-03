@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:lemon_shadcn/lemon_shadcn.dart';
 import 'package:lemon_shadcn/shadcn.dart';
 
@@ -55,6 +57,9 @@ class FormsPage extends StatefulWidget {
 }
 
 class _FormsPageState extends State<FormsPage> {
+  List<AppFileSelection> _singleFiles = const [];
+  List<AppFileSelection> _files = const [];
+  final Map<AppFileSelection, double> _uploadProgress = {};
   final _formController = AppFormController(
     crossValidators: [
       (values) => values['password'] == values['confirmation']
@@ -78,6 +83,63 @@ class _FormsPageState extends State<FormsPage> {
     super.dispose();
   }
 
+  void _updateUploadFiles(
+    List<AppFileSelection> files, {
+    required bool single,
+  }) {
+    final retained = <AppFileSelection>{
+      ...(single ? files : _singleFiles),
+      ...(single ? _files : files),
+    };
+    final added = retained
+        .where((file) => !_uploadProgress.containsKey(file))
+        .toList();
+    setState(() {
+      if (single) {
+        _singleFiles = files;
+      } else {
+        _files = files;
+      }
+      _uploadProgress.removeWhere((file, _) => !retained.contains(file));
+      for (final file in added) {
+        _uploadProgress[file] = 0;
+      }
+    });
+    for (final file in added) {
+      unawaited(_simulateUpload(file));
+    }
+  }
+
+  Future<void> _simulateUpload(AppFileSelection file) async {
+    for (var step = 1; step <= 20; step++) {
+      await Future<void>.delayed(const Duration(milliseconds: 120));
+      if (!mounted || !_uploadProgress.containsKey(file)) return;
+      setState(() => _uploadProgress[file] = step / 20);
+    }
+  }
+
+  Widget _buildUploadProgress(AppFileSelection file, {bool compact = false}) {
+    final progress = _uploadProgress[file] ?? 0;
+    if (progress >= 1) {
+      return compact
+          ? const Icon(LucideIcons.circleCheck)
+          : const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [Icon(LucideIcons.circleCheck), Gap(4), Text('完成')],
+            );
+    }
+    return SizedBox(
+      width: compact ? 90 : 110,
+      child: Row(
+        children: [
+          Expanded(child: AppLinearProgressIndicator(value: progress)),
+          const Gap(6),
+          Text('${(progress * 100).round()}%'),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return ComponentPage(
@@ -85,6 +147,66 @@ class _FormsPageState extends State<FormsPage> {
       description: widget.description,
       sections:
           <ComponentSection>[
+            ComponentSection(
+              title: '表单布局与输入组',
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  AppFieldScope.horizontal(
+                    labelWidth: 80,
+                    child: const AppTextFormField(
+                      label: '横向字段',
+                      hintText: '输入内容',
+                    ),
+                  ),
+                  const Gap(12),
+                  const AppTextFormField(hintText: '无标题字段'),
+                  const Gap(12),
+                  const AppTextFormField(
+                    hintText: '搜索内容',
+                    leading: Icon(LucideIcons.search),
+                    trailing: Text('Ctrl K'),
+                  ),
+                ],
+              ),
+            ),
+            ComponentSection(
+              title: '文件选择',
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  AppFilePickerFormField(
+                    label: '单文件图片',
+                    description: '仅选择一张图片，也可以直接拖入替换。',
+                    variant: AppFilePickerVariant.simple,
+                    multiple: false,
+                    allowedExtensions: const ['png', 'jpg', 'jpeg', 'webp'],
+                    maxFileSize: 10 * 1024 * 1024,
+                    dialogTitle: '选择图片',
+                    trailingBuilder: (context, file, index) =>
+                        _buildUploadProgress(file, compact: true),
+                    onChanged: (files) =>
+                        _updateUploadFiles(files, single: true),
+                  ),
+                  const Gap(16),
+                  AppField(
+                    label: '模拟异步上传',
+                    description: '选择文件后通过 Future 模拟上传，并在右侧显示实时进度。',
+                    child: AppFilePicker(
+                      files: _files,
+                      allowedExtensions: const ['pdf', 'png', 'jpg', 'jpeg'],
+                      maxFileSize: 10 * 1024 * 1024,
+                      maxFiles: 5,
+                      dialogTitle: '选择文件',
+                      trailingBuilder: (context, file, index) =>
+                          _buildUploadProgress(file),
+                      onChanged: (files) =>
+                          _updateUploadFiles(files, single: false),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             ComponentSection(
               title: '文本输入',
               child: AppTextFormField.email(
@@ -177,6 +299,13 @@ class _FormsPageState extends State<FormsPage> {
                   ),
                   const Gap(12),
                   AppStarRatingFormField(label: '体验评分', initialValue: 4),
+                  const Gap(12),
+                  AppNumberInputFormField(
+                    label: '数量',
+                    initialValue: 10,
+                    min: 0,
+                    max: 100,
+                  ),
                 ],
               ),
             ),
@@ -241,17 +370,10 @@ class _FormsPageState extends State<FormsPage> {
               ),
             ),
             ComponentSection(
-              title: '媒体、排序与对象输入',
+              title: '排序与对象输入',
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  AppImageInputFormField<String>(
-                    label: '封面图片',
-                    pick: () async => 'asset://workspace-cover',
-                    previewBuilder: (context, value) =>
-                        Center(child: Text(value)),
-                  ),
-                  const Gap(12),
                   AppSortableInputFormField<String>(
                     label: '章节顺序',
                     initialValue: const ['概览', '动态', '设置'],

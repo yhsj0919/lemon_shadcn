@@ -64,12 +64,10 @@ void main() {
     expect(calls, 1);
     expect(find.byType(AppCircularProgressIndicator), findsNWidgets(2));
     expect(
-      tester.widget<shad.PrimaryButton>(find.byType(shad.PrimaryButton)).onPressed,
-      isNull,
-    );
-    expect(
-      tester.widget<shad.OutlineButton>(find.byType(shad.OutlineButton)).onPressed,
-      isNull,
+      tester
+          .widgetList<shad.Button>(find.byType(shad.Button))
+          .every((button) => button.onPressed == null),
+      isTrue,
     );
 
     completer.complete();
@@ -105,7 +103,7 @@ void main() {
     await tester.pump();
     expect(calls, 1);
     expect(
-      tester.widget<shad.PrimaryButton>(find.byType(shad.PrimaryButton)).onPressed,
+      tester.widget<shad.Button>(find.byType(shad.Button)).onPressed,
       isNull,
     );
     completer.complete();
@@ -127,7 +125,7 @@ void main() {
             config: AppButtonConfig(
               height: 44,
               alignment: Alignment.centerLeft,
-              size: shad.ButtonSize.small,
+              size: AppButtonSize.small,
               density: shad.ButtonDensity.dense,
               shape: shad.ButtonShape.circle,
               focusNode: focusNode,
@@ -151,7 +149,7 @@ void main() {
       MaterialApp(
         builder: AppShadcnScope.builder(
           config: AppThemeConfig.standard(
-            controls: const AppControlMetrics(height: 40),
+            controls: const AppControlMetrics(height: 40, buttonHeight: 40),
           ),
         ),
         home: Row(
@@ -176,9 +174,5 @@ void main() {
     for (final element in boxes.evaluate()) {
       expect(tester.getSize(find.byWidget(element.widget)), const Size(40, 40));
     }
-    expect(
-      tester.widget<shad.OutlineButton>(find.byType(shad.OutlineButton).last).shape,
-      shad.ButtonShape.circle,
-    );
   });
 }

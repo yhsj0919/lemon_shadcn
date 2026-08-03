@@ -16,8 +16,7 @@ abstract final class AppInteractiveStyle {
   }) {
     return base.copyWith(
       decoration: (context, states, current) {
-        if (!states.contains(WidgetState.hovered) ||
-            states.contains(WidgetState.pressed)) {
+        if (!states.contains(WidgetState.hovered)) {
           return current;
         }
         final normalStates = Set<WidgetState>.of(states)

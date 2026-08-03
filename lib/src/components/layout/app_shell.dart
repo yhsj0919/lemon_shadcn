@@ -10,7 +10,7 @@ import '../overlay/app_overlay_components.dart';
 class AppShell extends StatelessWidget {
   const AppShell({
     super.key,
-    required this.destinations,
+    required this.sidebarContent,
     required this.selectedId,
     required this.onDestinationSelected,
     required this.child,
@@ -28,7 +28,7 @@ class AppShell extends StatelessWidget {
     this.onSidebarModeChanged,
   });
 
-  final List<AppNavDestination> destinations;
+  final AppSidebarContent sidebarContent;
   final String selectedId;
   final ValueChanged<String> onDestinationSelected;
   final Widget child;
@@ -58,11 +58,11 @@ class AppShell extends StatelessWidget {
   }
 
   AppSidebarType _nextType(AppSidebarType type) => switch (type) {
-        AppSidebarType.auto => AppSidebarType.expanded,
-        AppSidebarType.expanded => AppSidebarType.compact,
-        AppSidebarType.compact => AppSidebarType.drawer,
-        AppSidebarType.drawer => AppSidebarType.auto,
-      };
+    AppSidebarType.auto => AppSidebarType.expanded,
+    AppSidebarType.expanded => AppSidebarType.compact,
+    AppSidebarType.compact => AppSidebarType.drawer,
+    AppSidebarType.drawer => AppSidebarType.auto,
+  };
 
   Widget _modeButton(AppSidebarType type) {
     return AppIconButton(
@@ -106,14 +106,16 @@ class AppShell extends StatelessWidget {
       builder: (overlayContext) => Padding(
         padding: const EdgeInsets.all(12),
         child: AppSidebar(
-          destinations: destinations,
+          content: sidebarContent,
           selectedId: selectedId,
           onDestinationSelected: (id) {
             onDestinationSelected(id);
             AppOverlay.close<void>(overlayContext);
           },
-          header: _brand(),
-          footer: sidebarFooter,
+          header: AppSidebarHeader(child: _brand()),
+          footer: sidebarFooter == null
+              ? null
+              : AppSidebarFooter(child: sidebarFooter!),
           expandedWidth: sidebarWidth,
         ),
       ),
@@ -137,13 +139,17 @@ class AppShell extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(12, 12, 0, 12),
                   child: AppSidebar(
-                    destinations: destinations,
+                    content: sidebarContent,
                     selectedId: selectedId,
                     onDestinationSelected: onDestinationSelected,
                     mode: mode,
-                    header: _brand(compact: mode == AppSidebarMode.compact),
+                    header: AppSidebarHeader(
+                      child: _brand(compact: mode == AppSidebarMode.compact),
+                    ),
                     footer: mode == AppSidebarMode.expanded
-                        ? sidebarFooter
+                        ? sidebarFooter == null
+                              ? null
+                              : AppSidebarFooter(child: sidebarFooter!)
                         : null,
                     expandedWidth: sidebarWidth,
                     compactWidth: compactSidebarWidth,

@@ -129,14 +129,14 @@ class _StructuredLayoutPageState extends State<StructuredLayoutPage> {
                 onExpand: item.leaf
                     ? null
                     : (expanded) => setState(() {
-                          final selected = Tree.setSelectedItems<String>(
-                            _treeNodes,
-                            [item.data],
-                          );
-                          _treeNodes = expanded
-                              ? Tree.expandItem<String>(selected, item.data)
-                              : Tree.collapseItem<String>(selected, item.data);
-                        }),
+                        final selected = Tree.setSelectedItems<String>(
+                          _treeNodes,
+                          [item.data],
+                        );
+                        _treeNodes = expanded
+                            ? Tree.expandItem<String>(selected, item.data)
+                            : Tree.collapseItem<String>(selected, item.data);
+                      }),
                 child: Text(item.data),
               ),
             ),

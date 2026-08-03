@@ -89,8 +89,8 @@ class AppChatBubble extends StatelessWidget {
     final foreground = color == null && inheritedColor == null
         ? theme.colorScheme.primaryForeground
         : background.computeLuminance() < 0.45
-            ? const Color(0xFFFFFFFF)
-            : const Color(0xFF111111);
+        ? const Color(0xFFFFFFFF)
+        : const Color(0xFF111111);
 
     return shad.ChatBubble(
       type: type,

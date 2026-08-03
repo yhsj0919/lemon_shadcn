@@ -49,180 +49,173 @@ class _DeviceList extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = ShadcnTheme.of(context).colorScheme;
 
-    return AppButtonMotionScope.disable(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(_kListInset, 16, _kListInset, 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Builder(
-                  builder: (context) {
-                    final formFiltered = controller.hasFormFilter;
-                    final theme = ShadcnTheme.of(context);
-                    return Row(
-                      spacing: 8,
-                      children: [
-                        Expanded(
-                          child: AppControlBox(
-                            child: shad.TextField(
-                              controller: controller.searchController,
-                              onChanged: controller.setKeyword,
-                              placeholder: const Text('搜索设备'),
-                              border: Border.all(
-                                color: theme.colorScheme.border,
-                                width: 1,
-                                strokeAlign: BorderSide.strokeAlignInside,
-                              ),
-                              features: [
-                                shad.InputFeature.leading(
-                                  Icon(
-                                    AppLucideIcons.search,
-                                    size: 15,
-                                    color: theme.colorScheme.mutedForeground,
-                                  ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(_kListInset, 16, _kListInset, 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Builder(
+                builder: (context) {
+                  final formFiltered = controller.hasFormFilter;
+                  final theme = ShadcnTheme.of(context);
+                  return Row(
+                    spacing: 8,
+                    children: [
+                      Expanded(
+                        child: AppControlBox(
+                          child: shad.TextField(
+                            controller: controller.searchController,
+                            onChanged: controller.setKeyword,
+                            placeholder: const Text('搜索设备'),
+                            border: Border.all(
+                              color: theme.colorScheme.border,
+                              width: 1,
+                              strokeAlign: BorderSide.strokeAlignInside,
+                            ),
+                            features: [
+                              shad.InputFeature.leading(
+                                Icon(
+                                  AppLucideIcons.search,
+                                  size: 15,
+                                  color: theme.colorScheme.mutedForeground,
                                 ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        Builder(
-                          builder: (anchorContext) => AppIconButton(
-                            icon: Icon(
-                              AppLucideIcons.listFilter,
-                              size: 15,
-                              color: formFiltered
-                                  ? null
-                                  : colors.mutedForeground,
-                            ),
-                            tooltip: '筛选条件',
-                            variant: formFiltered
-                                ? AppButtonVariant.secondary
-                                : AppButtonVariant.outline,
-                            onPressed: () => AppPopover.show<void>(
-                              context: anchorContext,
-                              alignment: Alignment.topRight,
-                              anchorAlignment: Alignment.bottomRight,
-                              builder: (popoverContext) => _DeviceFilterPanel(
-                                controller: controller,
-                                onClose: () =>
-                                    AppOverlay.close(popoverContext),
                               ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      Builder(
+                        builder: (anchorContext) => AppIconButton(
+                          icon: Icon(
+                            AppLucideIcons.listFilter,
+                            size: 15,
+                            color: formFiltered ? null : colors.mutedForeground,
+                          ),
+                          tooltip: '筛选条件',
+                          variant: formFiltered
+                              ? AppButtonVariant.secondary
+                              : AppButtonVariant.outline,
+                          onPressed: () => AppPopover.show<void>(
+                            context: anchorContext,
+                            alignment: Alignment.topRight,
+                            anchorAlignment: Alignment.bottomRight,
+                            builder: (popoverContext) => _DeviceFilterPanel(
+                              controller: controller,
+                              onClose: () => AppOverlay.close(popoverContext),
                             ),
                           ),
                         ),
-                        AppIconButton(
-                          icon: const Icon(AppLucideIcons.plus, size: 16),
-                          tooltip: '添加设备',
-                          variant: AppButtonVariant.primary,
-                          onPressed: () =>
-                              showAddDeviceDialog(context, controller),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-                const SizedBox(height: 12),
-                AppTabs(
-                  index: controller.statusFilter.index,
-                  expand: true,
-                  onChanged: (index) {
-                    controller.setStatusFilter(
-                      DeviceStatusFilter.values[index],
-                    );
-                  },
-                  children: [
-                    AppTabItem(
-                      child: Text(
-                        '全部 ${controller.countFor(DeviceStatusFilter.all)}',
                       ),
-                    ),
-                    AppTabItem(
-                      child: Text(
-                        '在线 ${controller.countFor(DeviceStatusFilter.online)}',
+                      AppIconButton(
+                        icon: const Icon(AppLucideIcons.plus, size: 16),
+                        tooltip: '添加设备',
+                        variant: AppButtonVariant.primary,
+                        onPressed: () =>
+                            showAddDeviceDialog(context, controller),
                       ),
-                    ),
-                    AppTabItem(
-                      child: Text(
-                        '离线 ${controller.countFor(DeviceStatusFilter.offline)}',
-                      ),
-                    ),
-                  ],
-                ),
-                if (controller.hasActiveFilter)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 10),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: AppText.caption(
-                            '已筛选 ${controller.filteredDevices.length} 台设备',
-                          ),
-                        ),
-                        AppButton.link(
-                          onPressed: controller.clearFilters,
-                          child: const Text('清除'),
-                        ),
-                      ],
+                    ],
+                  );
+                },
+              ),
+              const SizedBox(height: 12),
+              AppTabs(
+                index: controller.statusFilter.index,
+                expand: true,
+                onChanged: (index) {
+                  controller.setStatusFilter(DeviceStatusFilter.values[index]);
+                },
+                children: [
+                  AppTabItem(
+                    child: Text(
+                      '全部 ${controller.countFor(DeviceStatusFilter.all)}',
                     ),
                   ),
-              ],
-            ),
-          ),
-          AppDivider(color: colors.border, height: 1, thickness: 1),
-          Expanded(
-            child: Builder(
-              builder: (context) {
-                final items = controller.filteredDevices;
-
-                if (items.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          AppLucideIcons.searchX,
-                          size: 28,
-                          color: colors.mutedForeground,
-                        ),
-                        const SizedBox(height: 10),
-                        const AppText.muted('没有匹配的设备'),
-                        const SizedBox(height: 8),
-                        AppButton.link(
-                          onPressed: controller.clearFilters,
-                          child: const Text('清除筛选'),
-                        ),
-                      ],
+                  AppTabItem(
+                    child: Text(
+                      '在线 ${controller.countFor(DeviceStatusFilter.online)}',
                     ),
-                  );
-                }
-
-                return ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(8, 8, 8, 16),
-                  itemCount: items.length + 1,
-                  itemBuilder: (context, index) {
-                    if (index == items.length) {
-                      return const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 16),
-                        child: Center(child: AppText.caption('没有更多数据')),
-                      );
-                    }
-                    final device = items[index];
-                    return _DeviceListItem(
-                      key: ValueKey(device.id),
-                      device: device,
-                      selected: device.id == controller.selectedId,
-                      onTap: () => controller.selectDevice(device.id),
-                    );
-                  },
-                );
-              },
-            ),
+                  ),
+                  AppTabItem(
+                    child: Text(
+                      '离线 ${controller.countFor(DeviceStatusFilter.offline)}',
+                    ),
+                  ),
+                ],
+              ),
+              if (controller.hasActiveFilter)
+                Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: AppText.caption(
+                          '已筛选 ${controller.filteredDevices.length} 台设备',
+                        ),
+                      ),
+                      AppButton.link(
+                        onPressed: controller.clearFilters,
+                        child: const Text('清除'),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
           ),
-        ],
-      ),
+        ),
+        AppDivider(color: colors.border, height: 1, thickness: 1),
+        Expanded(
+          child: Builder(
+            builder: (context) {
+              final items = controller.filteredDevices;
+
+              if (items.isEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        AppLucideIcons.searchX,
+                        size: 28,
+                        color: colors.mutedForeground,
+                      ),
+                      const SizedBox(height: 10),
+                      const AppText.muted('没有匹配的设备'),
+                      const SizedBox(height: 8),
+                      AppButton.link(
+                        onPressed: controller.clearFilters,
+                        child: const Text('清除筛选'),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              return ListView.builder(
+                padding: const EdgeInsets.fromLTRB(8, 8, 8, 16),
+                itemCount: items.length + 1,
+                itemBuilder: (context, index) {
+                  if (index == items.length) {
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      child: Center(child: AppText.caption('没有更多数据')),
+                    );
+                  }
+                  final device = items[index];
+                  return _DeviceListItem(
+                    key: ValueKey(device.id),
+                    device: device,
+                    selected: device.id == controller.selectedId,
+                    onTap: () => controller.selectDevice(device.id),
+                  );
+                },
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }

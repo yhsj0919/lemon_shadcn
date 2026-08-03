@@ -3,6 +3,7 @@ import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
 import '../../foundation/app_control_box.dart';
 import '../../foundation/app_shadcn_scope.dart';
+import '../../foundation/app_theme_config.dart';
 import 'app_field.dart';
 import 'app_form.dart';
 
@@ -82,15 +83,18 @@ class _AppInputOtpState extends State<AppInputOtp> {
 
   @override
   Widget build(BuildContext context) {
-    final metrics = AppTheme.maybeOf(context)?.controls;
+    final metrics =
+        AppTheme.maybeOf(context)?.controls ?? const AppControlMetrics();
+    final contentHeight = metrics.borderedContentHeight;
     final ancestor = shad.ComponentTheme.maybeOf<shad.InputOTPTheme>(context);
     final theme = (ancestor ?? const shad.InputOTPTheme()).copyWith(
-      height: () => metrics?.height,
-      spacing: () => metrics?.contentGap,
+      height: () => contentHeight,
+      spacing: () => metrics.contentGap,
     );
     return shad.ComponentTheme<shad.InputOTPTheme>(
       data: theme,
       child: AppControlBox(
+        contentHeight: contentHeight,
         child: shad.InputOTP(
           key: ValueKey(_generation),
           children: _buildChildren(),

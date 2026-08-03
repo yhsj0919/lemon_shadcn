@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart'
     show
         Colors,
@@ -12,159 +10,11 @@ import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
 import '../../foundation/app_control_box.dart';
 import '../../foundation/app_shadcn_scope.dart';
-import '../actions/app_button.dart';
 import 'app_field.dart';
 import 'app_form.dart';
 
 typedef AppObjectInput<T> = shad.FormattedObjectInput<T>;
 typedef AppObjectConverter<A, B> = shad.BiDirectionalConvert<A, B>;
-
-/// Image selection remains platform-agnostic: callers provide a picker that
-/// returns an already formatted domain value (path, URL, bytes model, etc.).
-class AppImageInput<T> extends StatelessWidget {
-  const AppImageInput({
-    super.key,
-    required this.value,
-    required this.pick,
-    required this.previewBuilder,
-    required this.onChanged,
-    this.placeholder,
-    this.enabled = true,
-    this.allowRemove = true,
-    this.height = 120,
-  });
-
-  final T? value;
-  final FutureOr<T?> Function() pick;
-  final Widget Function(BuildContext context, T value) previewBuilder;
-  final ValueChanged<T?> onChanged;
-  final Widget? placeholder;
-  final bool enabled;
-  final bool allowRemove;
-  final double height;
-
-  @override
-  Widget build(BuildContext context) {
-    final current = value;
-    final theme = shad.Theme.of(context);
-    final radius = BorderRadius.circular(theme.radiusMd);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        DecoratedBox(
-          decoration: BoxDecoration(
-            borderRadius: radius,
-            border: Border.all(
-              color: theme.colorScheme.border,
-              width: 1,
-              strokeAlign: BorderSide.strokeAlignInside,
-            ),
-          ),
-          child: ClipRRect(
-            borderRadius: radius,
-            child: SizedBox(
-              height: height,
-              child: current == null
-                  ? Center(
-                      child: placeholder ?? const Text('No image selected'),
-                    )
-                  : previewBuilder(context, current),
-            ),
-          ),
-        ),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            AppButton.outline(
-              onPressed: enabled
-                  ? () async {
-                      final picked = await pick();
-                      if (picked != null) onChanged(picked);
-                    }
-                  : null,
-              config: AppButtonConfig.plain,
-              child: Text(current == null ? 'Choose image' : 'Replace image'),
-            ),
-            if (current != null && allowRemove)
-              AppButton.ghost(
-                onPressed: enabled ? () => onChanged(null) : null,
-                config: AppButtonConfig.plain,
-                child: const Text('Remove'),
-              ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class AppImageInputFormField<T> extends FormField<T> {
-  AppImageInputFormField({
-    super.key,
-    required this.pick,
-    required this.previewBuilder,
-    this.name,
-    this.label,
-    this.description,
-    this.required = false,
-    this.width,
-    this.placeholder,
-    this.allowRemove = true,
-    this.previewHeight = 120,
-    this.onChanged,
-    super.initialValue,
-    super.onSaved,
-    super.validator,
-    this.asyncValidator,
-    super.enabled = true,
-    super.autovalidateMode = AutovalidateMode.onUserInteraction,
-    super.restorationId,
-  }) : super(
-         builder: (state) {
-           final field = state.widget as AppImageInputFormField<T>;
-           return AppFormFieldBinding<T>(
-             name: field.name,
-             value: state.value,
-             asyncValidator: field.asyncValidator,
-             builder: (context, asyncError) => AppField(
-               label: field.label,
-               description: field.description,
-               errorText: state.errorText ?? asyncError,
-               required: field.required,
-               width: field.width,
-               child: AppImageInput<T>(
-                 value: state.value,
-                 pick: field.pick,
-                 previewBuilder: field.previewBuilder,
-                 placeholder: field.placeholder,
-                 enabled: field.enabled,
-                 allowRemove: field.allowRemove,
-                 height: field.previewHeight,
-                 onChanged: (value) {
-                   state.didChange(value);
-                   field.onChanged?.call(value);
-                 },
-               ),
-             ),
-           );
-         },
-       );
-
-  final FutureOr<T?> Function() pick;
-  final Widget Function(BuildContext context, T value) previewBuilder;
-  final String? name;
-  final String? label;
-  final String? description;
-  final bool required;
-  final double? width;
-  final Widget? placeholder;
-  final bool allowRemove;
-  final double previewHeight;
-  final ValueChanged<T?>? onChanged;
-  final AppAsyncFieldValidator<T>? asyncValidator;
-}
 
 class AppSortableInput<T> extends StatelessWidget {
   const AppSortableInput({
@@ -433,7 +283,7 @@ class _AppObjectInputControlState<T> extends State<_AppObjectInputControl<T>> {
 
   @override
   Widget build(BuildContext context) {
-    final height = AppTheme.maybeOf(context)?.controls.height ?? 36;
+    final height = AppTheme.maybeOf(context)?.controls.height ?? 32;
     final scaling = shad.Theme.of(context).scaling;
     return AppControlBox(
       child: shad.ComponentTheme<shad.FormattedInputTheme>(

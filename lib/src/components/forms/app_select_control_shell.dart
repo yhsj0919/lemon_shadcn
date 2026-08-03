@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
 import '../../foundation/app_control_box.dart';
+import '../../foundation/app_outline_style.dart';
 import '../../foundation/app_overlay_style.dart';
 
 typedef AppSelectControlBuilder =
@@ -42,13 +43,11 @@ class _AppSelectControlShellState extends State<AppSelectControlShell> {
       Set<WidgetState> states,
       Decoration current,
     ) {
-      if (current is! BoxDecoration) return current;
-      return current.copyWith(
-        border: Border.all(
-          color: _open ? theme.colorScheme.ring : theme.colorScheme.border,
-          width: 1,
-          strokeAlign: BorderSide.strokeAlignInside,
-        ),
+      return AppOutlineStyle.resolve(
+        context,
+        states,
+        current,
+        borderColor: _open ? theme.colorScheme.ring : theme.colorScheme.border,
       );
     }
 

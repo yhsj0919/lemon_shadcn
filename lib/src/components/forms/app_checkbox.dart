@@ -47,7 +47,9 @@ class AppCheckbox extends StatelessWidget {
     Widget? label(Widget? child) => child == null
         ? null
         : DefaultTextStyle.merge(
-            style: theme.typography.base.copyWith(fontWeight: FontWeight.normal),
+            style: theme.typography.base.copyWith(
+              fontWeight: FontWeight.normal,
+            ),
             child: child,
           );
     return AppControlBox(
@@ -62,9 +64,14 @@ class AppCheckbox extends StatelessWidget {
           enabled: enabled,
           size: size ?? 18 * theme.scaling,
           gap: gap,
-          backgroundColor: backgroundColor ?? colors?.background,
-          activeColor: activeColor ?? colors?.background ?? colors?.accent,
-          borderColor: borderColor ?? colors?.border,
+          backgroundColor:
+              backgroundColor ??
+              colors?.background ??
+              theme.colorScheme.background,
+          activeColor:
+              activeColor ?? colors?.accent ?? theme.colorScheme.primary,
+          borderColor:
+              borderColor ?? colors?.border ?? theme.colorScheme.border,
           borderRadius: borderRadius,
         ),
       ),

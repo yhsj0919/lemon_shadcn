@@ -40,11 +40,13 @@ class AppRadioGroup<V> extends StatelessWidget {
             });
             final radioTheme = (ancestor ?? const shad.RadioTheme()).copyWith(
               size: ancestor?.size == null ? () => 18 * theme.scaling : null,
-              activeColor: colors == null
-                  ? null
-                  : () => colors.foreground ?? colors.accent,
-              borderColor: colors == null ? null : () => colors.border,
-              backgroundColor: colors == null ? null : () => colors.background,
+              activeColor: () =>
+                  colors?.accent ??
+                  colors?.foreground ??
+                  theme.colorScheme.primary,
+              borderColor: () => colors?.border ?? theme.colorScheme.border,
+              backgroundColor: () =>
+                  colors?.background ?? theme.colorScheme.background,
             );
             final optionLabel = DefaultTextStyle.merge(
               style: theme.typography.base.copyWith(

@@ -21,22 +21,33 @@ enum AppThemePreset { standard, apple, fluent, material }
 @immutable
 class AppControlMetrics {
   const AppControlMetrics({
-    this.height = 34,
+    this.height = 32,
+    this.buttonHeight = 31,
     this.horizontalPadding = 12,
     this.iconSize = 16,
     this.contentGap = 8,
     this.textAreaHeight = 100,
   }) : assert(height > 0),
+       assert(buttonHeight > 0),
        assert(horizontalPadding >= 0),
        assert(iconSize > 0),
        assert(contentGap >= 0),
        assert(textAreaHeight > 0);
 
   final double height;
+
+  /// Default (`normal`) button height in logical pixels. At the standard
+  /// desktop scale, 31 logical pixels keeps the 60px content height separate
+  /// from the surrounding border.
+  /// Other button sizes preserve the 44 / 52 / 60 / 68 ratio.
+  final double buttonHeight;
   final double horizontalPadding;
   final double iconSize;
   final double contentGap;
   final double textAreaHeight;
+
+  /// Content box used by bordered controls that sit inside the shared slot.
+  double get borderedContentHeight => height - 1;
 }
 
 /// Shared interactive motion tokens for [AppButton], [AppIconButton], and
@@ -199,7 +210,7 @@ class AppThemeConfig {
   /// AppThemeConfig.standard(primary: Color(0xFF2563EB));
   /// ```
   ///
-  /// Default [controls] height is 34 — override only when the product needs a
+  /// Default [controls] height is 32 — override only when the product needs a
   /// different control size, not as a required setup step.
   factory AppThemeConfig.standard({
     Color? primary,
@@ -215,12 +226,14 @@ class AppThemeConfig {
   }) {
     AppColorScheme scheme(AppThemeMode mode) {
       final base = AppColorSchemes.zinc(mode);
-      if (primary == null) return base;
-      return base.copyWith(
-        primary: () => primary,
-        primaryForeground: () => primaryForeground,
-        ring: () => primary,
-      );
+      final branded = primary == null
+          ? base
+          : base.copyWith(
+              primary: () => primary,
+              primaryForeground: () => primaryForeground,
+              ring: () => primary,
+            );
+      return _flatInputScheme(branded);
     }
 
     return AppThemeConfig(
@@ -271,7 +284,7 @@ class AppThemeConfig {
         ),
         themeMode: themeMode,
         controls: const AppControlMetrics(
-          height: 34,
+          height: 32,
           horizontalPadding: 14,
           iconSize: 16,
           contentGap: 8,
@@ -295,18 +308,22 @@ class AppThemeConfig {
       ),
       AppThemePreset.fluent => AppThemeConfig(
         lightTheme: AppThemeData(
-          colorScheme: AppColorSchemes.slate(AppThemeMode.light),
+          colorScheme: _flatInputScheme(
+            AppColorSchemes.slate(AppThemeMode.light),
+          ),
           radius: 0.25,
           typography: _appTypography,
         ),
         darkTheme: AppThemeData.dark(
-          colorScheme: AppColorSchemes.slate(AppThemeMode.dark),
+          colorScheme: _flatInputScheme(
+            AppColorSchemes.slate(AppThemeMode.dark),
+          ),
           radius: 0.25,
           typography: _appTypography,
         ),
         themeMode: themeMode,
         controls: const AppControlMetrics(
-          height: 34,
+          height: 32,
           horizontalPadding: 10,
           iconSize: 16,
           contentGap: 6,
@@ -349,7 +366,7 @@ class AppThemeConfig {
         ),
         themeMode: themeMode,
         controls: const AppControlMetrics(
-          height: 36,
+          height: 32,
           horizontalPadding: 16,
           iconSize: 18,
           contentGap: 8,
@@ -429,22 +446,27 @@ AppColorScheme _accentScheme(
   Color primary, {
   Color foreground = const Color(0xffffffff),
 }) {
-  return AppColorSchemes.slate(mode).copyWith(
-    primary: () => primary,
-    primaryForeground: () => foreground,
-    ring: () => primary,
+  return _flatInputScheme(
+    AppColorSchemes.slate(mode).copyWith(
+      primary: () => primary,
+      primaryForeground: () => foreground,
+      ring: () => primary,
+    ),
   );
 }
 
+AppColorScheme _flatInputScheme(AppColorScheme scheme) =>
+    scheme.copyWith(input: () => scheme.background);
+
 abstract final class LemonThemes {
   static final AppThemeData light = AppThemeData(
-    colorScheme: AppColorSchemes.zinc(AppThemeMode.light),
+    colorScheme: _flatInputScheme(AppColorSchemes.zinc(AppThemeMode.light)),
     radius: 0.5,
     typography: _appTypography,
   );
 
   static final AppThemeData dark = AppThemeData.dark(
-    colorScheme: AppColorSchemes.zinc(AppThemeMode.dark),
+    colorScheme: _flatInputScheme(AppColorSchemes.zinc(AppThemeMode.dark)),
     radius: 0.5,
     typography: _appTypography,
   );

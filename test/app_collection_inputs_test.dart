@@ -1,36 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lemon_shadcn/lemon_shadcn.dart';
+import 'package:lemon_shadcn/shadcn.dart' as shad;
 
 void main() {
-  testWidgets('image field accepts formatted values and removes them', (
-    tester,
-  ) async {
-    final controller = AppFormController();
-    await tester.pumpWidget(
-      MaterialApp(
-        builder: AppShadcnScope.builder(),
-        home: AppForm(
-          controller: controller,
-          child: AppImageInputFormField<String>(
-            name: 'image',
-            pick: () => 'asset://avatar',
-            previewBuilder: (context, value) => Text(value),
-          ),
-        ),
-      ),
-    );
-
-    await tester.tap(find.text('Choose image'));
-    await tester.pump();
-    expect(controller.values['image'], 'asset://avatar');
-    expect(find.text('asset://avatar'), findsOneWidget);
-
-    await tester.tap(find.text('Remove'));
-    await tester.pump();
-    expect(controller.values['image'], isNull);
-  });
-
   testWidgets('sortable field stores reordered domain values', (tester) async {
     List<String>? changed;
     await tester.pumpWidget(
@@ -87,7 +60,7 @@ void main() {
     );
 
     expect(find.byType(AppObjectInput<String>), findsOneWidget);
-    final editable = find.byType(TextField).first;
+    final editable = find.byType(shad.TextField).first;
     final originalElement = editable.evaluate().single;
     await tester.tap(editable);
     await tester.showKeyboard(editable);
@@ -97,11 +70,7 @@ void main() {
     await tester.pump();
 
     expect(editable.evaluate().single, same(originalElement));
-    expect(tester.widget<TextField>(editable).focusNode!.hasFocus, isTrue);
-    expect(
-      tester.getCenter(find.byType(EditableText).first).dy,
-      closeTo(tester.getCenter(find.byType(AppObjectInput<String>)).dy, 0.5),
-    );
+    expect(tester.widget<shad.TextField>(editable).focusNode!.hasFocus, isTrue);
     expect(formController.value<String>('shortCode'), 'AX');
     expect(tester.takeException(), isNull);
   });

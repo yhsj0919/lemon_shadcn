@@ -120,7 +120,10 @@ void main() {
               onChanged: (_) {},
               options: const [AppOption(value: 'selected', label: 'Selected')],
             ),
-            AppSlider(value: const shad.SliderValue.single(0.5), onChanged: (_) {}),
+            AppSlider(
+              value: const shad.SliderValue.single(0.5),
+              onChanged: (_) {},
+            ),
           ],
         ),
       ),
@@ -131,7 +134,7 @@ void main() {
       explicit,
     );
     final appSwitch = tester.widget<Switch>(find.byType(Switch));
-    expect(appSwitch.activeColor, selected);
+    expect(appSwitch.activeTrackColor, selected);
     expect(appSwitch.activeThumbColor, foreground);
 
     final radioTheme = tester

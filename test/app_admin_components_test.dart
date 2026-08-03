@@ -47,10 +47,7 @@ void main() {
     await tester.pumpWidget(
       _host(
         const Column(
-          children: [
-            AppText.listItem('Row'),
-            AppText.listSecondary('Meta'),
-          ],
+          children: [AppText.listItem('Row'), AppText.listSecondary('Meta')],
         ),
       ),
     );
@@ -122,25 +119,27 @@ void main() {
     await tester.pumpWidget(
       _host(
         AppShell(
-          destinations: const [
-            AppNavDestination(
-              id: 'components',
-              label: 'Components',
-              icon: AppLucideIcons.component,
-              children: [
-                AppNavDestination(
-                  id: 'actions',
-                  label: 'Actions',
-                  icon: AppLucideIcons.mousePointerClick,
-                ),
-                AppNavDestination(
-                  id: 'forms',
-                  label: 'Forms',
-                  icon: AppLucideIcons.textCursorInput,
-                ),
-              ],
-            ),
-          ],
+          sidebarContent: const AppSidebarContent(
+            items: [
+              AppSidebarMenuItem(
+                id: 'components',
+                label: 'Components',
+                icon: AppLucideIcons.component,
+                children: [
+                  AppSidebarMenuItem(
+                    id: 'actions',
+                    label: 'Actions',
+                    icon: AppLucideIcons.mousePointerClick,
+                  ),
+                  AppSidebarMenuItem(
+                    id: 'forms',
+                    label: 'Forms',
+                    icon: AppLucideIcons.textCursorInput,
+                  ),
+                ],
+              ),
+            ],
+          ),
           selectedId: selected,
           onDestinationSelected: (value) => selected = value,
           pageTitle: 'Actions',
@@ -164,18 +163,20 @@ void main() {
     await tester.pumpWidget(
       _host(
         AppShell(
-          destinations: const [
-            AppNavDestination(
-              id: 'actions',
-              label: 'Actions',
-              icon: AppLucideIcons.mousePointerClick,
-            ),
-            AppNavDestination(
-              id: 'forms',
-              label: 'Forms',
-              icon: AppLucideIcons.textCursorInput,
-            ),
-          ],
+          sidebarContent: const AppSidebarContent(
+            items: [
+              AppSidebarMenuItem(
+                id: 'actions',
+                label: 'Actions',
+                icon: AppLucideIcons.mousePointerClick,
+              ),
+              AppSidebarMenuItem(
+                id: 'forms',
+                label: 'Forms',
+                icon: AppLucideIcons.textCursorInput,
+              ),
+            ],
+          ),
           selectedId: 'actions',
           onDestinationSelected: (_) {},
           pageTitle: 'Actions',

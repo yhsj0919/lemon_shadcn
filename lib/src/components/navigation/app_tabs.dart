@@ -193,10 +193,7 @@ class _AppTabsState extends State<AppTabs> {
                       : MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: widget.expand
-                      ? [
-                          for (final child in children)
-                            Expanded(child: child),
-                        ]
+                      ? [for (final child in children) Expanded(child: child)]
                       : children,
                 ),
               ],

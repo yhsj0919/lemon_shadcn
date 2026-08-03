@@ -127,8 +127,9 @@ class AppWindowNavigator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final inheritedCardTheme =
-        shad.ComponentTheme.maybeOf<shad.CardTheme>(context);
+    final inheritedCardTheme = shad.ComponentTheme.maybeOf<shad.CardTheme>(
+      context,
+    );
     return LayoutBuilder(
       builder: (context, constraints) {
         final viewport = constraints.biggest;

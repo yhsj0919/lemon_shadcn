@@ -13,8 +13,8 @@ enum AppSidebarMode { expanded, compact }
 enum AppSidebarType { auto, expanded, compact, drawer }
 
 @immutable
-class AppNavDestination {
-  const AppNavDestination({
+class AppSidebarMenuItem {
+  const AppSidebarMenuItem({
     required this.id,
     required this.label,
     required this.icon,
@@ -24,18 +24,54 @@ class AppNavDestination {
   final String id;
   final String label;
   final IconData icon;
-  final List<AppNavDestination> children;
+  final List<AppSidebarMenuItem> children;
 
   bool contains(String destinationId) =>
       id == destinationId ||
       children.any((child) => child.contains(destinationId));
 }
 
+/// A titled top-level section in sidebar navigation.
+@immutable
+class AppSidebarGroup {
+  const AppSidebarGroup({this.label, required this.items});
+
+  final String? label;
+  final List<AppSidebarMenuItem> items;
+}
+
+/// Navigation content slot for [AppSidebar].
+@immutable
+class AppSidebarContent {
+  const AppSidebarContent({this.groups = const [], this.items = const []});
+
+  final List<AppSidebarGroup> groups;
+  final List<AppSidebarMenuItem> items;
+}
+
+class AppSidebarHeader extends StatelessWidget {
+  const AppSidebarHeader({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => child;
+}
+
+class AppSidebarFooter extends StatelessWidget {
+  const AppSidebarFooter({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => child;
+}
+
 /// Sidebar navigation with shared expanded and icon-only presentations.
 class AppSidebar extends StatefulWidget {
   const AppSidebar({
     super.key,
-    required this.destinations,
+    required this.content,
     required this.selectedId,
     required this.onDestinationSelected,
     this.mode = AppSidebarMode.expanded,
@@ -45,7 +81,7 @@ class AppSidebar extends StatefulWidget {
     this.compactWidth = 64,
   });
 
-  final List<AppNavDestination> destinations;
+  final AppSidebarContent content;
   final String selectedId;
   final ValueChanged<String> onDestinationSelected;
   final AppSidebarMode mode;
@@ -61,6 +97,10 @@ class AppSidebar extends StatefulWidget {
 class _AppSidebarState extends State<AppSidebar> {
   final Set<String> _expanded = {};
 
+  List<AppSidebarGroup> get _groups => widget.content.groups.isEmpty
+      ? [AppSidebarGroup(items: widget.content.items)]
+      : widget.content.groups;
+
   @override
   void initState() {
     super.initState();
@@ -71,18 +111,20 @@ class _AppSidebarState extends State<AppSidebar> {
   void didUpdateWidget(covariant AppSidebar oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.selectedId != widget.selectedId ||
-        oldWidget.destinations != widget.destinations) {
+        oldWidget.content != widget.content) {
       _expandSelectedBranch();
     }
   }
 
   void _expandSelectedBranch() {
-    for (final destination in widget.destinations) {
-      _expandAncestors(destination);
+    for (final group in _groups) {
+      for (final destination in group.items) {
+        _expandAncestors(destination);
+      }
     }
   }
 
-  bool _expandAncestors(AppNavDestination destination) {
+  bool _expandAncestors(AppSidebarMenuItem destination) {
     if (destination.id == widget.selectedId) return true;
     final containsSelection = destination.children.any(_expandAncestors);
     if (containsSelection) _expanded.add(destination.id);
@@ -92,27 +134,37 @@ class _AppSidebarState extends State<AppSidebar> {
   @override
   Widget build(BuildContext context) {
     final compact = widget.mode == AppSidebarMode.compact;
-    return AppButtonMotionScope.disable(
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        curve: Curves.easeOutCubic,
-        width: compact ? widget.compactWidth : widget.expandedWidth,
-        child: AppCard(
-          padding: EdgeInsets.zero,
-          clipBehavior: Clip.antiAlias,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (widget.header != null)
-                Padding(
-                  padding: EdgeInsets.all(compact ? 8 : 16),
-                  child: widget.header,
-                ),
-              Expanded(
-                child: ListView(
-                  padding: EdgeInsets.symmetric(horizontal: compact ? 8 : 10),
-                  children: [
-                    for (final destination in widget.destinations)
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOutCubic,
+      width: compact ? widget.compactWidth : widget.expandedWidth,
+      child: AppCard(
+        padding: EdgeInsets.zero,
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (widget.header != null)
+              Padding(
+                padding: EdgeInsets.all(compact ? 8 : 16),
+                child: widget.header,
+              ),
+            Expanded(
+              child: ListView(
+                padding: EdgeInsets.symmetric(horizontal: compact ? 8 : 10),
+                children: [
+                  for (final (groupIndex, group) in _groups.indexed) ...[
+                    if (compact && groupIndex > 0)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 6),
+                        child: AppDivider(),
+                      ),
+                    if (!compact && group.label != null)
+                      _SidebarGroupTitle(
+                        label: group.label!,
+                        first: groupIndex == 0,
+                      ),
+                    for (final destination in group.items)
                       compact
                           ? _CompactDestination(
                               destination: destination,
@@ -129,17 +181,32 @@ class _AppSidebarState extends State<AppSidebar> {
                               onSelected: widget.onDestinationSelected,
                             ),
                   ],
-                ),
+                ],
               ),
-              if (widget.footer != null)
-                Padding(
-                  padding: EdgeInsets.all(compact ? 8 : 12),
-                  child: widget.footer,
-                ),
-            ],
-          ),
+            ),
+            if (widget.footer != null)
+              Padding(
+                padding: EdgeInsets.all(compact ? 8 : 12),
+                child: widget.footer,
+              ),
+          ],
         ),
       ),
+    );
+  }
+}
+
+class _SidebarGroupTitle extends StatelessWidget {
+  const _SidebarGroupTitle({required this.label, required this.first});
+
+  final String label;
+  final bool first;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(10, first ? 4 : 16, 10, 8),
+      child: AppText.listSecondary(label),
     );
   }
 }
@@ -154,7 +221,7 @@ class _ExpandedDestination extends StatelessWidget {
     this.depth = 0,
   });
 
-  final AppNavDestination destination;
+  final AppSidebarMenuItem destination;
   final String selectedId;
   final Set<String> expandedIds;
   final ValueChanged<String> onToggle;
@@ -222,7 +289,7 @@ class _CompactDestination extends StatelessWidget {
     required this.onSelected,
   });
 
-  final AppNavDestination destination;
+  final AppSidebarMenuItem destination;
   final String selectedId;
   final ValueChanged<String> onSelected;
 
@@ -298,7 +365,7 @@ class _PopoverDestination extends StatelessWidget {
     this.depth = 0,
   });
 
-  final AppNavDestination destination;
+  final AppSidebarMenuItem destination;
   final String selectedId;
   final ValueChanged<String> onSelected;
   final int depth;
@@ -348,7 +415,7 @@ class _SidebarButton extends StatelessWidget {
     this.trailing,
   });
 
-  final AppNavDestination destination;
+  final AppSidebarMenuItem destination;
   final bool selected;
   final VoidCallback? onPressed;
   final Widget? trailing;
@@ -363,6 +430,7 @@ class _SidebarButton extends StatelessWidget {
             trailing: trailing,
             config: const AppButtonConfig(
               alignment: Alignment.centerLeft,
+              pressEffect: AppButtonPressEffect.none,
             ),
 
             child: label,
@@ -373,6 +441,7 @@ class _SidebarButton extends StatelessWidget {
             trailing: trailing,
             config: const AppButtonConfig(
               alignment: Alignment.centerLeft,
+              pressEffect: AppButtonPressEffect.none,
             ),
 
             child: label,

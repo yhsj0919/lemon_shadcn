@@ -25,29 +25,92 @@ class ActionsPage extends StatelessWidget {
                 loadingLabel: '保存中',
                 child: const Text('异步主按钮'),
               ),
-              AppButton.secondary(
-                onPressed: () {},
-                child: const Text('次要按钮'),
-              ),
-              AppButton.outline(
-                onPressed: () {},
-                child: const Text('描边按钮'),
-              ),
-              AppButton.ghost(
-                onPressed: () {},
-                child: const Text('幽灵按钮'),
-              ),
+              AppButton.secondary(onPressed: () {}, child: const Text('次要按钮')),
+              AppButton.outline(onPressed: () {}, child: const Text('描边按钮')),
+              AppButton.ghost(onPressed: () {}, child: const Text('幽灵按钮')),
               AppButton.destructive(
                 onPressed: () {},
                 child: const Text('危险按钮'),
               ),
-              AppButton.link(
-                onPressed: () {},
-                child: const Text('链接按钮'),
+              AppButton.link(onPressed: () {}, child: const Text('链接按钮')),
+              AppButton.text(onPressed: () {}, child: const Text('文本按钮')),
+            ],
+          ),
+        ),
+        ComponentSection(
+          title: '按钮尺寸',
+          child: Wrap(
+            spacing: 28,
+            runSpacing: 16,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AppButton.outline(
+                    size: AppButtonSize.xSmall,
+                    onPressed: () {},
+                    child: const Text('超小号'),
+                  ),
+                  const SizedBox(width: 8),
+                  AppIconButton(
+                    size: AppButtonSize.xSmall,
+                    tooltip: '超小号图标按钮',
+                    onPressed: () {},
+                    icon: const Icon(LucideIcons.arrowUpRight),
+                  ),
+                ],
               ),
-              AppButton.text(
-                onPressed: () {},
-                child: const Text('文本按钮'),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AppButton.outline(
+                    size: AppButtonSize.small,
+                    onPressed: () {},
+                    child: const Text('小'),
+                  ),
+                  const SizedBox(width: 8),
+                  AppIconButton(
+                    size: AppButtonSize.small,
+                    tooltip: '小号图标按钮',
+                    onPressed: () {},
+                    icon: const Icon(LucideIcons.arrowUpRight),
+                  ),
+                ],
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AppButton.outline(
+                    size: AppButtonSize.normal,
+                    onPressed: () {},
+                    child: const Text('默认'),
+                  ),
+                  const SizedBox(width: 8),
+                  AppIconButton(
+                    size: AppButtonSize.normal,
+                    tooltip: '默认图标按钮',
+                    onPressed: () {},
+                    icon: const Icon(LucideIcons.arrowUpRight),
+                  ),
+                ],
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AppButton.outline(
+                    size: AppButtonSize.large,
+                    onPressed: () {},
+                    child: const Text('大型'),
+                  ),
+                  const SizedBox(width: 8),
+                  AppIconButton(
+                    size: AppButtonSize.large,
+                    tooltip: '大型图标按钮',
+                    onPressed: () {},
+                    icon: const Icon(LucideIcons.arrowUpRight),
+                  ),
+                ],
               ),
             ],
           ),
@@ -61,7 +124,7 @@ class ActionsPage extends StatelessWidget {
             children: [
               AppButton.primary(
                 onPressed: () {},
-                child: const Text('默认：悬浮上浮 · 按下回落'),
+                child: const Text('默认：悬停不动 · 按下下沉'),
               ),
               AppButton.primary(
                 onPressed: () {},
@@ -86,6 +149,43 @@ class ActionsPage extends StatelessWidget {
                 config: AppButtonConfig.plain,
                 onPressed: () {},
                 icon: const Icon(LucideIcons.settings),
+              ),
+            ],
+          ),
+        ),
+        ComponentSection(
+          title: '按钮组',
+          child: Wrap(
+            spacing: 20,
+            runSpacing: 20,
+            crossAxisAlignment: WrapCrossAlignment.start,
+            children: [
+              AppButtonGroup.horizontal(
+                children: [
+                  AppButton.outline(onPressed: () {}, child: const Text('上一页')),
+                  AppButton.outline(onPressed: () {}, child: const Text('当前页')),
+                  AppButton.outline(onPressed: () {}, child: const Text('下一页')),
+                ],
+              ),
+              AppButtonGroup.horizontal(
+                children: [
+                  AppButton.secondary(
+                    onPressed: () {},
+                    child: const Text('列表'),
+                  ),
+                  AppButton.outline(onPressed: () {}, child: const Text('网格')),
+                  AppButton.outline(onPressed: () {}, child: const Text('详情')),
+                ],
+              ),
+              AppButtonGroup.vertical(
+                children: [
+                  AppButton.outline(onPressed: () {}, child: const Text('复制')),
+                  AppButton.outline(onPressed: () {}, child: const Text('移动')),
+                  AppButton.destructive(
+                    onPressed: () {},
+                    child: const Text('删除'),
+                  ),
+                ],
               ),
             ],
           ),
@@ -251,13 +351,29 @@ class _ToggleDemo extends StatefulWidget {
 
 class _ToggleDemoState extends State<_ToggleDemo> {
   bool _selected = false;
+  String? _alignment = 'left';
 
   @override
   Widget build(BuildContext context) {
-    return AppToggle(
-      value: _selected,
-      onChanged: (value) => setState(() => _selected = value),
-      child: const Text('固定工具栏'),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        AppToggle(
+          value: _selected,
+          onChanged: (value) => setState(() => _selected = value),
+          child: const Text('固定工具栏'),
+        ),
+        const Gap(12),
+        AppToggleGroup<String>.single(
+          value: _alignment,
+          onChanged: (value) => setState(() => _alignment = value),
+          items: const [
+            AppToggleGroupItem(value: 'left', child: Text('左对齐')),
+            AppToggleGroupItem(value: 'center', child: Text('居中')),
+            AppToggleGroupItem(value: 'right', child: Text('右对齐')),
+          ],
+        ),
+      ],
     );
   }
 }

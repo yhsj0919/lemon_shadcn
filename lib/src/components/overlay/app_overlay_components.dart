@@ -1,7 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
-import '../actions/app_button.dart';
 import '../../foundation/app_overlay_style.dart';
 
 typedef AppTooltip = shad.Tooltip;
@@ -75,9 +74,7 @@ abstract final class AppDialog {
     AlignmentGeometry? alignment,
   }) {
     return shad.DialogConfiguration<T>(
-      builder: (dialogContext) => AppButtonMotionScope.disable(
-        child: builder(dialogContext),
-      ),
+      builder: builder,
       barrierDismissible: barrierDismissible,
       barrierColor: barrierColor,
       useRootNavigator: useRootNavigator,
@@ -117,20 +114,16 @@ class AppAlertDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Dialog actions stay still by default; pass AppButtonConfig.interactive
-    // (or interactive: true) on a specific button to opt back into lift.
-    return AppButtonMotionScope.disable(
-      child: shad.AlertDialog(
-        leading: leading,
-        title: title,
-        content: content,
-        actions: actions,
-        trailing: trailing,
-        surfaceBlur: surfaceBlur,
-        surfaceOpacity: surfaceOpacity,
-        barrierColor: barrierColor ?? AppOverlayStyle.modalBarrier(context),
-        padding: padding,
-      ),
+    return shad.AlertDialog(
+      leading: leading,
+      title: title,
+      content: content,
+      actions: actions,
+      trailing: trailing,
+      surfaceBlur: surfaceBlur,
+      surfaceOpacity: surfaceOpacity,
+      barrierColor: barrierColor ?? AppOverlayStyle.modalBarrier(context),
+      padding: padding,
     );
   }
 }
@@ -236,15 +229,13 @@ class AppFormDialog extends StatelessWidget {
       surface = ConstrainedBox(constraints: constraints!, child: surface);
     }
 
-    return AppButtonMotionScope.disable(
-      child: shad.ModalBackdrop(
-        borderRadius: theme.borderRadiusXxl,
-        barrierColor: barrierColor ?? AppOverlayStyle.modalBarrier(context),
-        surfaceClip: shad.ModalBackdrop.shouldClipSurface(
-          surfaceOpacity ?? theme.surfaceOpacity,
-        ),
-        child: surface,
+    return shad.ModalBackdrop(
+      borderRadius: theme.borderRadiusXxl,
+      barrierColor: barrierColor ?? AppOverlayStyle.modalBarrier(context),
+      surfaceClip: shad.ModalBackdrop.shouldClipSurface(
+        surfaceOpacity ?? theme.surfaceOpacity,
       ),
+      child: surface,
     );
   }
 }
@@ -298,8 +289,7 @@ abstract final class AppPopover {
     required BuildContext context,
     required WidgetBuilder builder,
     AlignmentGeometry alignment = AppOverlayStyle.popoverAlignment,
-    AlignmentGeometry anchorAlignment =
-        AppOverlayStyle.popoverAnchorAlignment,
+    AlignmentGeometry anchorAlignment = AppOverlayStyle.popoverAnchorAlignment,
     Offset offset = AppOverlayStyle.popoverOffset,
     bool modal = true,
     bool barrierDismissible = true,

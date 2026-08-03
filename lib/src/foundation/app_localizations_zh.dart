@@ -296,8 +296,7 @@ class AppLocalizationsZh extends ShadcnLocalizations {
   String get commandActivate => '选择';
 
   @override
-  String dataTableSelectedRows(int count, int total) =>
-      '已选择 $count / $total 行';
+  String dataTableSelectedRows(int count, int total) => '已选择 $count / $total 行';
 
   @override
   String get dataTableNext => '下一页';
@@ -351,5 +350,3 @@ class _AppLocalizationsZhDelegate
   @override
   bool shouldReload(_AppLocalizationsZhDelegate old) => false;
 }
-
-

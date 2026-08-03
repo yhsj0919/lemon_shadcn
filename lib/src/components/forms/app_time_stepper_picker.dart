@@ -230,14 +230,6 @@ class _AppTimeStepperEditorState extends State<_AppTimeStepperEditor> {
   late shad.TimeOfDay _value =
       widget.initialValue ?? const shad.TimeOfDay(hour: 0, minute: 0);
 
-  void _change({int hours = 0, int minutes = 0}) {
-    const dayMinutes = 24 * 60;
-    final current = _value.hour * 60 + _value.minute;
-    final raw = (current + hours * 60 + minutes) % dayMinutes;
-    final normalized = raw < 0 ? raw + dayMinutes : raw;
-    _setValue(shad.TimeOfDay(hour: normalized ~/ 60, minute: normalized % 60));
-  }
-
   void _setHour(int value) {
     if (value >= 0 && value <= 23) {
       _setValue(shad.TimeOfDay(hour: value, minute: _value.minute));
@@ -294,10 +286,6 @@ class _AppTimeStepperEditorState extends State<_AppTimeStepperEditor> {
                       value: _value.hour,
                       maxValue: 23,
                       coarseStep: 5,
-                      onDecrease: () => _change(hours: -5),
-                      onIncrease: () => _change(hours: 5),
-                      onFineDecrease: () => _change(hours: -1),
-                      onFineIncrease: () => _change(hours: 1),
                       onInput: _setHour,
                       onConfirm: _confirm,
                       onCancel: _cancel,
@@ -314,10 +302,6 @@ class _AppTimeStepperEditorState extends State<_AppTimeStepperEditor> {
                       value: _value.minute,
                       maxValue: 59,
                       coarseStep: widget.minuteStep,
-                      onDecrease: () => _change(minutes: -widget.minuteStep),
-                      onIncrease: () => _change(minutes: widget.minuteStep),
-                      onFineDecrease: () => _change(minutes: -1),
-                      onFineIncrease: () => _change(minutes: 1),
                       onInput: _setMinute,
                       onConfirm: _confirm,
                       onCancel: _cancel,
@@ -376,23 +360,15 @@ class _TimeUnitControl extends StatelessWidget {
     required this.value,
     required this.maxValue,
     required this.coarseStep,
-    required this.onFineDecrease,
-    required this.onFineIncrease,
     required this.onInput,
     required this.onConfirm,
     required this.onCancel,
-    required this.onDecrease,
-    required this.onIncrease,
   });
 
   final String label;
   final int value;
   final int maxValue;
   final int coarseStep;
-  final VoidCallback onDecrease;
-  final VoidCallback onIncrease;
-  final VoidCallback onFineDecrease;
-  final VoidCallback onFineIncrease;
   final ValueChanged<int> onInput;
   final VoidCallback onConfirm;
   final VoidCallback onCancel;
@@ -404,16 +380,17 @@ class _TimeUnitControl extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _TimeValueBox(
+          AppNumberInput(
             value: value,
-            maxValue: maxValue,
-            coarseStep: coarseStep,
-            onIncrease: onFineIncrease,
-            onDecrease: onFineDecrease,
-            onCoarseIncrease: onIncrease,
-            onCoarseDecrease: onDecrease,
-            onInput: onInput,
-            onConfirm: onConfirm,
+            min: 0,
+            max: maxValue,
+            shiftStep: coarseStep,
+            wrap: true,
+            digits: 2,
+            width: 72,
+            variant: AppNumberInputVariant.compact,
+            onChanged: onInput,
+            onSubmitted: (_) => onConfirm(),
             onCancel: onCancel,
           ),
           const SizedBox(height: 6),
@@ -424,11 +401,87 @@ class _TimeUnitControl extends StatelessWidget {
   }
 }
 
+/// Controlled integer input with mouse and keyboard step controls.
+enum AppNumberInputVariant { form, compact }
+
+class AppNumberInput extends StatelessWidget {
+  const AppNumberInput({
+    super.key,
+    required this.value,
+    required this.onChanged,
+    this.min = 0,
+    this.max = 999999,
+    this.step = 1,
+    this.shiftStep = 5,
+    this.wrap = false,
+    this.digits,
+    this.width = 120,
+    this.variant = AppNumberInputVariant.form,
+    this.enabled = true,
+    this.onSubmitted,
+    this.onCancel,
+  }) : assert(min <= max),
+       assert(step > 0),
+       assert(shiftStep > 0);
+
+  final int value;
+  final ValueChanged<int> onChanged;
+  final int min;
+  final int max;
+  final int step;
+  final int shiftStep;
+  final bool wrap;
+  final int? digits;
+  final double width;
+  final AppNumberInputVariant variant;
+  final bool enabled;
+  final ValueChanged<int>? onSubmitted;
+  final VoidCallback? onCancel;
+
+  int _normalize(int value) {
+    if (!wrap) return value.clamp(min, max);
+    final range = max - min + 1;
+    return min + ((value - min) % range + range) % range;
+  }
+
+  void _change(int delta) => onChanged(_normalize(value + delta));
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: width,
+      child: _TimeValueBox(
+        value: value,
+        minValue: min,
+        maxValue: max,
+        step: step,
+        coarseStep: shiftStep,
+        wrap: wrap,
+        digits: digits,
+        variant: variant,
+        enabled: enabled,
+        onIncrease: () => _change(step),
+        onDecrease: () => _change(-step),
+        onCoarseIncrease: () => _change(shiftStep),
+        onCoarseDecrease: () => _change(-shiftStep),
+        onInput: (value) => onChanged(_normalize(value)),
+        onConfirm: () => onSubmitted?.call(value),
+        onCancel: onCancel ?? () {},
+      ),
+    );
+  }
+}
+
 class _TimeValueBox extends StatefulWidget {
   const _TimeValueBox({
     required this.value,
+    required this.minValue,
     required this.maxValue,
+    required this.step,
     required this.coarseStep,
+    required this.wrap,
+    required this.enabled,
+    required this.variant,
     required this.onIncrease,
     required this.onDecrease,
     required this.onCoarseIncrease,
@@ -436,11 +489,18 @@ class _TimeValueBox extends StatefulWidget {
     required this.onInput,
     required this.onConfirm,
     required this.onCancel,
+    this.digits,
   });
 
   final int value;
+  final int minValue;
   final int maxValue;
+  final int step;
   final int coarseStep;
+  final bool wrap;
+  final bool enabled;
+  final AppNumberInputVariant variant;
+  final int? digits;
   final VoidCallback onIncrease;
   final VoidCallback onDecrease;
   final VoidCallback onCoarseIncrease;
@@ -471,8 +531,12 @@ class _TimeValueBoxState extends State<_TimeValueBox> {
   }
 
   void _sync() {
-    _controller.text = widget.value.toString().padLeft(2, '0');
+    _controller.text = _format(widget.value);
   }
+
+  String _format(int value) => widget.digits == null
+      ? value.toString()
+      : value.toString().padLeft(widget.digits!, '0');
 
   void _handleFocus() {
     if (_focusNode.hasFocus) {
@@ -489,9 +553,9 @@ class _TimeValueBoxState extends State<_TimeValueBox> {
   void _submit(String text) {
     final parsed = int.tryParse(text);
     if (parsed == null) return;
-    final normalized = parsed.clamp(0, widget.maxValue);
+    final normalized = parsed.clamp(widget.minValue, widget.maxValue);
     widget.onInput(normalized);
-    _controller.text = normalized.toString().padLeft(2, '0');
+    _controller.text = _format(normalized);
     _controller.selection = TextSelection.collapsed(
       offset: _controller.text.length,
     );
@@ -505,14 +569,14 @@ class _TimeValueBoxState extends State<_TimeValueBox> {
     if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
       _runStep(
         coarse ? widget.onCoarseIncrease : widget.onIncrease,
-        coarse ? widget.coarseStep : 1,
+        coarse ? widget.coarseStep : widget.step,
       );
       return KeyEventResult.handled;
     }
     if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
       _runStep(
         coarse ? widget.onCoarseDecrease : widget.onDecrease,
-        coarse ? -widget.coarseStep : -1,
+        coarse ? -widget.coarseStep : -widget.step,
       );
       return KeyEventResult.handled;
     }
@@ -530,11 +594,17 @@ class _TimeValueBoxState extends State<_TimeValueBox> {
   }
 
   void _runStep(VoidCallback callback, int delta) {
+    if (!widget.enabled) return;
     callback();
-    final range = widget.maxValue + 1;
-    final raw = (widget.value + delta) % range;
-    final next = raw < 0 ? raw + range : raw;
-    _controller.text = next.toString().padLeft(2, '0');
+    final raw = widget.value + delta;
+    final next = widget.wrap
+        ? widget.minValue +
+              ((raw - widget.minValue) %
+                          (widget.maxValue - widget.minValue + 1) +
+                      (widget.maxValue - widget.minValue + 1)) %
+                  (widget.maxValue - widget.minValue + 1)
+        : raw.clamp(widget.minValue, widget.maxValue);
+    _controller.text = _format(next);
     _controller.selection = TextSelection(
       baseOffset: 0,
       extentOffset: _controller.text.length,
@@ -546,7 +616,7 @@ class _TimeValueBoxState extends State<_TimeValueBox> {
     final callback = increase
         ? (coarse ? widget.onCoarseIncrease : widget.onIncrease)
         : (coarse ? widget.onCoarseDecrease : widget.onDecrease);
-    final amount = coarse ? widget.coarseStep : 1;
+    final amount = coarse ? widget.coarseStep : widget.step;
     _runStep(callback, increase ? amount : -amount);
   }
 
@@ -562,64 +632,153 @@ class _TimeValueBoxState extends State<_TimeValueBox> {
   @override
   Widget build(BuildContext context) {
     final theme = shad.Theme.of(context);
-    return SizedBox(
-      height: 44,
-      child: Stack(
-        children: [
-          Positioned.fill(
-            child: shad.TextField(
-              controller: _controller,
-              focusNode: _focusNode,
-              maxLength: 2,
-              maxLines: 1,
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              textAlign: TextAlign.center,
-              textAlignVertical: TextAlignVertical.center,
-              padding: const EdgeInsets.only(right: 18),
-              style: theme.typography.x2Large,
-              onChanged: (text) {
-                if (text.length == 2) _submit(text);
-              },
-              onSubmitted: _submit,
+    final compact = widget.variant == AppNumberInputVariant.compact;
+    final content = Stack(
+      children: [
+        Positioned.fill(
+          child: shad.TextField(
+            border: Border.all(
+              color: theme.colorScheme.border,
+              width: 1,
+              strokeAlign: BorderSide.strokeAlignInside,
             ),
+            controller: _controller,
+            focusNode: _focusNode,
+            enabled: widget.enabled,
+            maxLength: widget.digits,
+            maxLines: 1,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            textAlign: compact ? TextAlign.center : TextAlign.left,
+            textAlignVertical: TextAlignVertical.center,
+            padding: EdgeInsets.only(
+              left: compact ? 0 : 12,
+              right: compact ? 18 : 34,
+            ),
+            style: compact ? theme.typography.x2Large : theme.typography.base,
+            onChanged: (text) {
+              if (compact) {
+                if (text.length == widget.digits) _submit(text);
+              } else if (int.tryParse(text) != null) {
+                _submit(text);
+              }
+            },
+            onSubmitted: _submit,
           ),
-          Positioned(
-            top: 1,
-            right: 1,
-            bottom: 1,
-            width: 24,
-            child: Column(
-              children: [
-                Expanded(
-                  child: AppInkWell(
-                    onPressed: () => _runPointerStep(increase: true),
-                    borderRadius: BorderRadius.zero,
-                    child: const Center(
-                      child: Icon(shad.LucideIcons.chevronUp, size: 12),
-                    ),
+        ),
+        Positioned(
+          top: 1,
+          right: 1,
+          bottom: 1,
+          width: compact ? 24 : 30,
+          child: Column(
+            children: [
+              Expanded(
+                child: AppInkWell(
+                  enabled: widget.enabled,
+                  onPressed: () => _runPointerStep(increase: true),
+                  borderRadius: BorderRadius.zero,
+                  child: const Center(
+                    child: Icon(shad.LucideIcons.chevronUp, size: 12),
                   ),
                 ),
-                SizedBox(
-                  height: 1,
-                  child: ColoredBox(color: theme.colorScheme.border),
-                ),
-                Expanded(
-                  child: AppInkWell(
-                    onPressed: () => _runPointerStep(increase: false),
-                    borderRadius: BorderRadius.zero,
-                    child: const Center(
-                      child: Icon(shad.LucideIcons.chevronDown, size: 12),
-                    ),
+              ),
+              SizedBox(
+                height: 1,
+                child: ColoredBox(color: theme.colorScheme.border),
+              ),
+              Expanded(
+                child: AppInkWell(
+                  enabled: widget.enabled,
+                  onPressed: () => _runPointerStep(increase: false),
+                  borderRadius: BorderRadius.zero,
+                  child: const Center(
+                    child: Icon(shad.LucideIcons.chevronDown, size: 12),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
+    return compact
+        ? SizedBox(height: 44, child: content)
+        : AppControlBox(child: content);
   }
+}
+
+class AppNumberInputFormField extends FormField<int> {
+  AppNumberInputFormField({
+    super.key,
+    this.name,
+    this.label,
+    this.description,
+    this.required = false,
+    this.width,
+    this.min = 0,
+    this.max = 999999,
+    this.step = 1,
+    this.shiftStep = 5,
+    this.wrap = false,
+    this.digits,
+    this.inputWidth = 120,
+    this.onChanged,
+    super.initialValue = 0,
+    super.onSaved,
+    super.validator,
+    this.asyncValidator,
+    super.enabled = true,
+    super.autovalidateMode = AutovalidateMode.onUserInteraction,
+    super.restorationId,
+  }) : assert(min <= max),
+       super(
+         builder: (state) {
+           final field = state.widget as AppNumberInputFormField;
+           return AppFormFieldBinding<int>(
+             name: field.name,
+             value: state.value,
+             asyncValidator: field.asyncValidator,
+             builder: (context, asyncError) => AppField(
+               label: field.label,
+               description: field.description,
+               errorText: state.errorText ?? asyncError,
+               required: field.required,
+               width: field.width,
+               child: AppNumberInput(
+                 value: state.value ?? field.min,
+                 min: field.min,
+                 max: field.max,
+                 step: field.step,
+                 shiftStep: field.shiftStep,
+                 wrap: field.wrap,
+                 digits: field.digits,
+                 width: field.inputWidth,
+                 enabled: field.enabled,
+                 onChanged: (value) {
+                   state.didChange(value);
+                   field.onChanged?.call(value);
+                 },
+               ),
+             ),
+           );
+         },
+       );
+
+  final String? name;
+  final String? label;
+  final String? description;
+  final bool required;
+  final double? width;
+  final int min;
+  final int max;
+  final int step;
+  final int shiftStep;
+  final bool wrap;
+  final int? digits;
+  final double inputWidth;
+  final ValueChanged<int>? onChanged;
+  final AppAsyncFieldValidator<int>? asyncValidator;
 }
 
 class AppDateTimePickerFormField extends FormField<DateTime> {

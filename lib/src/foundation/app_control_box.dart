@@ -9,18 +9,20 @@ class AppControlBox extends StatelessWidget {
     super.key,
     required this.child,
     this.height,
+    this.contentHeight,
     this.square = false,
   });
 
   final Widget child;
   final double? height;
+  final double? contentHeight;
   final bool square;
 
   @override
   Widget build(BuildContext context) {
     final theme = shad.Theme.of(context);
     final resolvedHeight =
-        height ?? AppTheme.maybeOf(context)?.controls.height ?? 36;
+        height ?? AppTheme.maybeOf(context)?.controls.height ?? 32;
     return shad.ComponentTheme(
       data: shad.FocusOutlineTheme(
         align: 0,
@@ -33,7 +35,11 @@ class AppControlBox extends StatelessWidget {
       child: SizedBox(
         height: resolvedHeight,
         width: square ? resolvedHeight : null,
-        child: child,
+        child: contentHeight == null
+            ? child
+            : Center(
+                child: SizedBox(height: contentHeight, child: child),
+              ),
       ),
     );
   }

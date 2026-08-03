@@ -85,8 +85,6 @@ class _AppDropdownButtonState extends State<AppDropdownButton> {
         child: widget.child,
       ),
     };
-    return AppButtonMotionScope.disable(
-      child: SizedBox(key: _buttonKey, child: button),
-    );
+    return SizedBox(key: _buttonKey, child: button);
   }
 }

@@ -57,35 +57,34 @@ class _AppSelectState<V> extends State<AppSelect<V>> {
     return AppSelectControlShell(
       enabled: widget.enabled && widget.onChanged != null,
       builder: (context, popup) => shad.Select<V>(
-              value: widget.value,
-              enabled: widget.enabled,
-              canUnselect: widget.clearable,
-              onChanged: widget.enabled ? widget.onChanged : null,
-              placeholder: Text(widget.placeholder).muted(),
-              valueSelectionPredicate: (selected, candidate) {
-                return selected != null &&
-                    candidate is V &&
-                    _equals(selected, candidate);
-              },
-              itemBuilder: (context, selected) {
-                final option = _optionFor(selected);
-                return option?.child ??
-                    Text(option?.label ?? selected.toString());
-              },
-              popup: (context) => popup(
-                shad.SelectPopup<V>(
-                    items: shad.SelectItemList(
-                      children: [
-                        for (final option in widget.options)
-                          shad.SelectItemButton<V>(
-                            value: option.value,
-                            enabled: !option.disabled,
-                            child: option.child ?? Text(option.label),
-                          ),
-                      ],
-                    ),
-                ),
-              ),
+        value: widget.value,
+        enabled: widget.enabled,
+        canUnselect: widget.clearable,
+        onChanged: widget.enabled ? widget.onChanged : null,
+        placeholder: Text(widget.placeholder).muted(),
+        valueSelectionPredicate: (selected, candidate) {
+          return selected != null &&
+              candidate is V &&
+              _equals(selected, candidate);
+        },
+        itemBuilder: (context, selected) {
+          final option = _optionFor(selected);
+          return option?.child ?? Text(option?.label ?? selected.toString());
+        },
+        popup: (context) => popup(
+          shad.SelectPopup<V>(
+            items: shad.SelectItemList(
+              children: [
+                for (final option in widget.options)
+                  shad.SelectItemButton<V>(
+                    value: option.value,
+                    enabled: !option.disabled,
+                    child: option.child ?? Text(option.label),
+                  ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

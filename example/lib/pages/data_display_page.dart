@@ -9,7 +9,17 @@ void _noop() {}
 class DataDisplayPage extends StatelessWidget {
   const DataDisplayPage({
     super.key,
-    this.visibleSections,
+    this.visibleSections = const {
+      '空状态与条目',
+      '进度',
+      '代码片段',
+      '日历',
+      '加载与位置状态',
+      '状态轨迹',
+      '溢出与可选文本',
+      '异步视图',
+      '聊天',
+    },
     this.title = '数据展示',
     this.description = '用于身份、状态和值展示的紧凑组件。',
   });
@@ -25,6 +35,33 @@ class DataDisplayPage extends StatelessWidget {
       description: description,
       sections:
           <ComponentSection>[
+            const ComponentSection(
+              title: '空状态与条目',
+              child: Column(
+                children: [
+                  AppEmpty(
+                    icon: Icon(LucideIcons.inbox),
+                    title: Text('暂无数据'),
+                    description: Text('创建第一条记录后会显示在这里。'),
+                  ),
+                  AppItemGroup(
+                    children: [
+                      AppItem(
+                        leading: Icon(LucideIcons.file),
+                        title: Text('项目说明.pdf'),
+                        description: Text('240 KB'),
+                        trailing: Icon(LucideIcons.chevronRight),
+                      ),
+                      AppItem(
+                        leading: Icon(LucideIcons.settings),
+                        title: Text('项目设置'),
+                        trailing: Icon(LucideIcons.chevronRight),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
             ComponentSection(
               title: '头像与徽章',
               child: Wrap(

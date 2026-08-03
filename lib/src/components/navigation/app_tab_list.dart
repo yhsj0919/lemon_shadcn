@@ -94,10 +94,7 @@ class _AppTabListState extends State<AppTabList> {
       onPressed: () => data.onSelect?.call(data.index),
       child: selected ? child.foreground() : child.muted(),
     );
-    return KeyedSubtree(
-      key: _tabKeys[data.index],
-      child: button,
-    );
+    return KeyedSubtree(key: _tabKeys[data.index], child: button);
   }
 
   @override

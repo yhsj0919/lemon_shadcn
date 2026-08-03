@@ -11,6 +11,130 @@ import '../../foundation/app_theme_config.dart';
 import '../../motion/app_hover_press_ticker.dart';
 
 typedef AppButtonCallback = FutureOr<void> Function();
+typedef AppButtonGroupItem = shad.ButtonGroupItem;
+typedef AppButtonGroupFlexible = shad.ButtonGroupFlexible;
+
+class AppButtonGroup extends StatelessWidget {
+  const AppButtonGroup({
+    super.key,
+    this.direction = Axis.horizontal,
+    this.expands = false,
+    required this.children,
+  });
+
+  const AppButtonGroup.horizontal({
+    super.key,
+    this.expands = false,
+    required this.children,
+  }) : direction = Axis.horizontal;
+
+  const AppButtonGroup.vertical({
+    super.key,
+    this.expands = false,
+    required this.children,
+  }) : direction = Axis.vertical;
+
+  final Axis direction;
+  final bool expands;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = shad.Theme.of(context);
+    final side = BorderSide(color: theme.colorScheme.border, width: 1);
+    final lastIndex = children.length - 1;
+    final items = <Widget>[
+      for (var index = 0; index < children.length; index++)
+        Builder(
+          builder: (context) {
+            final first = index == 0;
+            final last = index == lastIndex;
+            final radius = switch (direction) {
+              Axis.horizontal => BorderRadius.horizontal(
+                left: first ? Radius.circular(theme.radiusMd) : Radius.zero,
+                right: last ? Radius.circular(theme.radiusMd) : Radius.zero,
+              ),
+              Axis.vertical => BorderRadius.vertical(
+                top: first ? Radius.circular(theme.radiusMd) : Radius.zero,
+                bottom: last ? Radius.circular(theme.radiusMd) : Radius.zero,
+              ),
+            };
+            final border = switch (direction) {
+              Axis.horizontal => Border(
+                left: first ? side : BorderSide.none,
+                top: side,
+                right: side,
+                bottom: side,
+              ),
+              Axis.vertical => Border(
+                left: side,
+                top: first ? side : BorderSide.none,
+                right: side,
+                bottom: side,
+              ),
+            };
+            return ClipRRect(
+              borderRadius: radius,
+              child: DecoratedBox(
+                position: DecorationPosition.foreground,
+                decoration: BoxDecoration(border: border, borderRadius: radius),
+                child: _AppButtonGroupItemScope(
+                  direction: direction,
+                  index: index,
+                  child: children[index],
+                ),
+              ),
+            );
+          },
+        ),
+    ];
+    Widget group = Flex(
+      direction: direction,
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: items,
+    );
+    if (!expands) {
+      group = direction == Axis.horizontal
+          ? IntrinsicHeight(child: group)
+          : IntrinsicWidth(child: group);
+    }
+    return group;
+  }
+}
+
+class _AppButtonGroupItemScope extends InheritedWidget {
+  const _AppButtonGroupItemScope({
+    required this.direction,
+    required this.index,
+    required super.child,
+  });
+
+  final Axis direction;
+  final int index;
+
+  static _AppButtonGroupItemScope? maybeOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<_AppButtonGroupItemScope>();
+
+  @override
+  bool updateShouldNotify(_AppButtonGroupItemScope oldWidget) =>
+      direction != oldWidget.direction || index != oldWidget.index;
+}
+
+/// Application button size presets.
+///
+/// A size scales the button's height, horizontal/vertical padding, label text
+/// and icons together. The presets use the official 44 / 52 / 60 / 68 ratio,
+/// with the globally configured control height representing the 60px default.
+/// A custom proportional size remains available through the constructor.
+class AppButtonSize extends shad.ButtonSize {
+  const AppButtonSize(super.scale);
+
+  static const xSmall = AppButtonSize(44 / 60);
+  static const small = AppButtonSize(52 / 60);
+  static const normal = AppButtonSize(1);
+  static const large = AppButtonSize(68 / 60);
+}
 
 enum AppButtonVariant {
   primary,
@@ -22,11 +146,10 @@ enum AppButtonVariant {
   text,
 }
 
-enum AppButtonPressEffect { none, returnToBase, lift }
+enum AppButtonPressEffect { none, sink }
 
-/// Disables default [AppButton] hover-lift inside chrome subtrees (menus,
-/// sidebar, toolbars, dialogs). Standalone AppButtons outside this scope keep
-/// motion.
+/// Disables default [AppButton] press motion inside chrome subtrees (menus,
+/// sidebar, toolbars, dialogs).
 class AppButtonMotionScope extends InheritedWidget {
   const AppButtonMotionScope({
     super.key,
@@ -40,7 +163,7 @@ class AppButtonMotionScope extends InheritedWidget {
 
   final bool enabled;
 
-  /// Whether null-config AppButtons may use interactive motion here.
+  /// Whether null-config AppButtons may use press motion here.
   static bool allowsMotion(BuildContext context) {
     final scope = context
         .dependOnInheritedWidgetOfExactType<AppButtonMotionScope>();
@@ -58,7 +181,7 @@ class AppButtonConfig {
     this.height,
     this.enabled = true,
     this.alignment,
-    this.size = shad.ButtonSize.normal,
+    this.size = AppButtonSize.normal,
     this.density = shad.ButtonDensity.normal,
     this.shape = shad.ButtonShape.rectangle,
     this.focusNode,
@@ -66,33 +189,25 @@ class AppButtonConfig {
     this.onHover,
     this.onFocus,
     this.enableFeedback,
-    this.pressEffect = AppButtonPressEffect.none,
+    this.pressEffect = AppButtonPressEffect.sink,
     this.pressDuration,
     this.hoverLift = false,
     this.hoverDuration,
   });
 
-  /// Hover lift + press returns to rest. Magnitudes come from
-  /// [AppMotionTheme.tokens] (shared by text and icon buttons).
+  /// Standard button feedback: hover stays in place and press sinks by 1 px.
   static const interactive = AppButtonConfig(
-    hoverLift: true,
-    pressEffect: AppButtonPressEffect.returnToBase,
-  );
-
-  /// Hover lift + press lifts slightly further.
-  static const interactiveLift = AppButtonConfig(
-    hoverLift: true,
-    pressEffect: AppButtonPressEffect.lift,
+    pressEffect: AppButtonPressEffect.sink,
   );
 
   /// Explicit no-motion config. Pass this from chrome (nav, toolbars) when a
   /// global interactive default must stay still for this embed.
-  static const plain = AppButtonConfig();
+  static const plain = AppButtonConfig(pressEffect: AppButtonPressEffect.none);
 
   final double? height;
   final bool enabled;
   final AlignmentGeometry? alignment;
-  final shad.ButtonSize size;
+  final AppButtonSize size;
   final shad.ButtonDensity density;
   final shad.ButtonShape shape;
   final FocusNode? focusNode;
@@ -113,7 +228,7 @@ class AppButtonConfig {
     double? height,
     bool? enabled,
     AlignmentGeometry? alignment,
-    shad.ButtonSize? size,
+    AppButtonSize? size,
     shad.ButtonDensity? density,
     shad.ButtonShape? shape,
     FocusNode? focusNode,
@@ -150,7 +265,7 @@ class AppButtonConfig {
   /// - `config == null` → [interactive] by default (standalone CTAs)
   /// - inside [AppButtonMotionScope.disable] → [plain] when config omitted
   /// - `config != null` → call site wins fully
-  /// - `interactive: true` → forces hover lift + return-to-base on top
+  /// - `interactive: true` → forces the standard press-sink feedback
   static AppButtonConfig resolve(
     BuildContext context,
     AppButtonConfig? config, {
@@ -160,13 +275,12 @@ class AppButtonConfig {
         AppTheme.maybeOf(context)?.motion.interactive ?? true;
     final motionInteractive =
         themeInteractive && AppButtonMotionScope.allowsMotion(context);
-    var resolved = config ??
-        (motionInteractive ? AppButtonConfig.interactive : plain);
+    var resolved =
+        config ?? (motionInteractive ? AppButtonConfig.interactive : plain);
     if (!interactive) return resolved;
     return resolved.copyWith(
-      hoverLift: true,
       pressEffect: resolved.pressEffect == AppButtonPressEffect.none
-          ? AppButtonPressEffect.returnToBase
+          ? AppButtonPressEffect.sink
           : resolved.pressEffect,
     );
   }
@@ -182,6 +296,7 @@ abstract final class AppButton {
     Widget? leading,
     Widget? trailing,
     String? loadingLabel,
+    AppButtonSize? size,
     bool interactive = false,
     AppButtonConfig? config,
   }) => _AppAsyncButton(
@@ -193,6 +308,7 @@ abstract final class AppButton {
     leading: leading,
     trailing: trailing,
     loadingLabel: loadingLabel,
+    size: size,
     interactive: interactive,
     config: config,
     child: child,
@@ -207,6 +323,7 @@ abstract final class AppButton {
     Widget? leading,
     Widget? trailing,
     String? loadingLabel,
+    AppButtonSize? size,
     bool interactive = false,
     AppButtonConfig? config,
   }) => _AppAsyncButton(
@@ -218,6 +335,7 @@ abstract final class AppButton {
     leading: leading,
     trailing: trailing,
     loadingLabel: loadingLabel,
+    size: size,
     interactive: interactive,
     config: config,
     child: child,
@@ -232,6 +350,7 @@ abstract final class AppButton {
     Widget? leading,
     Widget? trailing,
     String? loadingLabel,
+    AppButtonSize? size,
     bool interactive = false,
     AppButtonConfig? config,
   }) => _AppAsyncButton(
@@ -243,6 +362,7 @@ abstract final class AppButton {
     leading: leading,
     trailing: trailing,
     loadingLabel: loadingLabel,
+    size: size,
     interactive: interactive,
     config: config,
     child: child,
@@ -257,6 +377,7 @@ abstract final class AppButton {
     Widget? leading,
     Widget? trailing,
     String? loadingLabel,
+    AppButtonSize? size,
     bool interactive = false,
     AppButtonConfig? config,
   }) => _AppAsyncButton(
@@ -268,6 +389,7 @@ abstract final class AppButton {
     leading: leading,
     trailing: trailing,
     loadingLabel: loadingLabel,
+    size: size,
     interactive: interactive,
     config: config,
     child: child,
@@ -282,6 +404,7 @@ abstract final class AppButton {
     Widget? leading,
     Widget? trailing,
     String? loadingLabel,
+    AppButtonSize? size,
     bool interactive = false,
     AppButtonConfig? config,
   }) => _AppAsyncButton(
@@ -293,6 +416,7 @@ abstract final class AppButton {
     leading: leading,
     trailing: trailing,
     loadingLabel: loadingLabel,
+    size: size,
     interactive: interactive,
     config: config,
     child: child,
@@ -307,6 +431,7 @@ abstract final class AppButton {
     Widget? leading,
     Widget? trailing,
     String? loadingLabel,
+    AppButtonSize? size,
     bool interactive = false,
     AppButtonConfig? config,
   }) => _AppAsyncButton(
@@ -318,6 +443,7 @@ abstract final class AppButton {
     leading: leading,
     trailing: trailing,
     loadingLabel: loadingLabel,
+    size: size,
     interactive: interactive,
     config: config,
     child: child,
@@ -332,6 +458,7 @@ abstract final class AppButton {
     Widget? leading,
     Widget? trailing,
     String? loadingLabel,
+    AppButtonSize? size,
     bool interactive = false,
     AppButtonConfig? config,
   }) => _AppAsyncButton(
@@ -343,6 +470,7 @@ abstract final class AppButton {
     leading: leading,
     trailing: trailing,
     loadingLabel: loadingLabel,
+    size: size,
     interactive: interactive,
     config: config,
     child: child,
@@ -365,6 +493,7 @@ class AppIconButton extends StatelessWidget {
     this.action,
     this.loading,
     this.variant = AppButtonVariant.outline,
+    this.size,
     this.config,
     this.interactive = false,
   }) : _circle = false,
@@ -378,6 +507,7 @@ class AppIconButton extends StatelessWidget {
     this.action,
     this.loading,
     this.variant = AppButtonVariant.outline,
+    this.size,
     this.config,
     this.interactive = false,
   }) : _circle = true,
@@ -389,6 +519,7 @@ class AppIconButton extends StatelessWidget {
   final AppAsyncAction<void>? action;
   final bool? loading;
   final AppButtonVariant variant;
+  final AppButtonSize? size;
   final AppButtonConfig? config;
   final bool interactive;
   final bool _circle;
@@ -405,6 +536,7 @@ class AppIconButton extends StatelessWidget {
           onPressed: onPressed,
           action: action,
           loading: loading,
+          size: size,
           config: config,
           interactive: interactive,
           iconOnly: true,
@@ -429,6 +561,7 @@ class _AppAsyncButton extends StatefulWidget {
     this.leading,
     this.trailing,
     this.loadingLabel,
+    this.size,
     this.config,
     this.interactive = false,
     this.iconOnly = false,
@@ -443,6 +576,7 @@ class _AppAsyncButton extends StatefulWidget {
   final Widget? leading;
   final Widget? trailing;
   final String? loadingLabel;
+  final AppButtonSize? size;
   final AppButtonConfig? config;
   final bool interactive;
   final bool iconOnly;
@@ -576,9 +710,13 @@ class _AppAsyncButtonState extends State<_AppAsyncButton>
       widget.config,
       interactive: widget.interactive,
     );
+    if (widget.size case final size?) {
+      _config = _config.copyWith(size: size);
+    }
     _motion =
         AppTheme.maybeOf(context)?.motion.tokens ?? AppMotionTokens.standard;
     _ticker.sync(_motion);
+    final theme = shad.Theme.of(context);
 
     final loading = _effectiveLoading;
     final child = _AppButtonContent(
@@ -588,49 +726,121 @@ class _AppAsyncButtonState extends State<_AppAsyncButton>
     );
     final enabled = widget.action != null || widget.onPressed != null;
     final onPressed = !enabled || _effectiveRunning ? null : _press;
-    final destructiveStyle = shad.ButtonStyle.destructive(
-      size: _config.size,
-      density: widget.iconOnly
-          ? shad.ButtonDensity.icon
-          : _config.density,
-      shape: widget.shapeOverride ?? _config.shape,
+    final metrics = AppTheme.maybeOf(context)?.controls;
+    final baseHeight = metrics?.buttonHeight ?? 31;
+    final sizeScale = _config.size.scale;
+    final groupItem = _AppButtonGroupItemScope.maybeOf(context);
+
+    shad.AbstractButtonStyle sized(shad.ButtonStyle style) => style.copyWith(
+      decoration: groupItem == null
+          ? null
+          : (context, states, value) {
+              if (value is! BoxDecoration) return value;
+              return value.copyWith(
+                border: Border.all(color: const Color(0x00000000), width: 0),
+                borderRadius: BorderRadius.zero,
+              );
+            },
+      padding: (context, states, value) => widget.iconOnly
+          ? EdgeInsets.zero
+          : EdgeInsets.symmetric(
+              horizontal:
+                  ((metrics?.horizontalPadding ?? 12) +
+                      (groupItem == null ? 0 : -2)) *
+                  sizeScale,
+              vertical: 2 * sizeScale,
+            ),
+      textStyle: (context, states, value) =>
+          value.copyWith(fontSize: 14 * sizeScale, height: 1.2),
+      iconTheme: (context, states, value) =>
+          value.copyWith(size: (metrics?.iconSize ?? 16) * sizeScale),
     );
-    final secondaryStyle = shad.ButtonStyle.secondary(
-      size: _config.size,
-      density: widget.iconOnly
-          ? shad.ButtonDensity.icon
-          : _config.density,
-      shape: widget.shapeOverride ?? _config.shape,
+
+    final primaryStyle = sized(
+      shad.ButtonStyle.primary(
+        size: _config.size,
+        density: widget.iconOnly ? shad.ButtonDensity.icon : _config.density,
+        shape: widget.shapeOverride ?? _config.shape,
+      ),
     );
-    final linkStyle = shad.ButtonStyle.link(
-      size: _config.size,
-      density: widget.iconOnly
-          ? shad.ButtonDensity.icon
-          : _config.density,
-      shape: widget.shapeOverride ?? _config.shape,
+    final destructiveStyle = sized(
+      shad.ButtonStyle.destructive(
+        size: _config.size,
+        density: widget.iconOnly ? shad.ButtonDensity.icon : _config.density,
+        shape: widget.shapeOverride ?? _config.shape,
+      ),
     );
-    final textStyle = shad.ButtonStyle.text(
-      size: _config.size,
-      density: widget.iconOnly
-          ? shad.ButtonDensity.icon
-          : _config.density,
-      shape: widget.shapeOverride ?? _config.shape,
+    final softDestructiveStyle = destructiveStyle.copyWith(
+      decoration: (context, states, value) {
+        if (value is! BoxDecoration) return value;
+        final opacity = states.contains(WidgetState.disabled)
+            ? 0.06
+            : states.contains(WidgetState.pressed)
+            ? 0.20
+            : states.contains(WidgetState.hovered)
+            ? 0.16
+            : 0.12;
+        return value.copyWith(
+          color: theme.colorScheme.destructive.withValues(alpha: opacity),
+        );
+      },
+      textStyle: (context, states, value) => value.copyWith(
+        color: theme.colorScheme.destructive.withValues(
+          alpha: states.contains(WidgetState.disabled) ? 0.45 : 1,
+        ),
+      ),
+      iconTheme: (context, states, value) => value.copyWith(
+        color: theme.colorScheme.destructive.withValues(
+          alpha: states.contains(WidgetState.disabled) ? 0.45 : 1,
+        ),
+      ),
+    );
+    final secondaryStyle = sized(
+      shad.ButtonStyle.secondary(
+        size: _config.size,
+        density: widget.iconOnly ? shad.ButtonDensity.icon : _config.density,
+        shape: widget.shapeOverride ?? _config.shape,
+      ),
+    );
+    final outlineStyle = sized(
+      shad.ButtonStyle.outline(
+        size: _config.size,
+        density: widget.iconOnly ? shad.ButtonDensity.icon : _config.density,
+        shape: widget.shapeOverride ?? _config.shape,
+      ),
+    );
+    final ghostStyle = sized(
+      shad.ButtonStyle.ghost(
+        size: _config.size,
+        density: widget.iconOnly ? shad.ButtonDensity.icon : _config.density,
+        shape: widget.shapeOverride ?? _config.shape,
+      ),
+    );
+    final linkStyle = sized(
+      shad.ButtonStyle.link(
+        size: _config.size,
+        density: widget.iconOnly ? shad.ButtonDensity.icon : _config.density,
+        shape: widget.shapeOverride ?? _config.shape,
+      ),
+    );
+    final textStyle = sized(
+      shad.ButtonStyle.text(
+        size: _config.size,
+        density: widget.iconOnly ? shad.ButtonDensity.icon : _config.density,
+        shape: widget.shapeOverride ?? _config.shape,
+      ),
     );
 
     // Motion hover is owned by the outer MouseRegion. Keep Button.onHover only
     // for style state; avoid wiring _handleHover twice.
     final button = switch (widget.variant) {
-      AppButtonVariant.primary => shad.PrimaryButton(
+      AppButtonVariant.primary => shad.Button(
         onPressed: onPressed,
         enabled: _config.enabled,
         leading: widget.leading,
         trailing: widget.trailing,
         alignment: _config.alignment,
-        size: _config.size,
-        density: widget.iconOnly
-            ? shad.ButtonDensity.icon
-            : _config.density,
-        shape: widget.shapeOverride ?? _config.shape,
+        style: primaryStyle,
         focusNode: _config.focusNode,
         disableTransition: _config.disableTransition,
         onFocus: _config.onFocus,
@@ -650,34 +860,26 @@ class _AppAsyncButtonState extends State<_AppAsyncButton>
         enableFeedback: _config.enableFeedback,
         child: child,
       ),
-      AppButtonVariant.outline => shad.OutlineButton(
+      AppButtonVariant.outline => shad.Button(
         onPressed: onPressed,
         enabled: _config.enabled,
         leading: widget.leading,
         trailing: widget.trailing,
         alignment: _config.alignment,
-        size: _config.size,
-        density: widget.iconOnly
-            ? shad.ButtonDensity.icon
-            : _config.density,
-        shape: widget.shapeOverride ?? _config.shape,
+        style: outlineStyle,
         focusNode: _config.focusNode,
         disableTransition: _config.disableTransition,
         onFocus: _config.onFocus,
         enableFeedback: _config.enableFeedback,
         child: child,
       ),
-      AppButtonVariant.ghost => shad.GhostButton(
+      AppButtonVariant.ghost => shad.Button(
         onPressed: onPressed,
         enabled: _config.enabled,
         leading: widget.leading,
         trailing: widget.trailing,
         alignment: _config.alignment,
-        size: _config.size,
-        density: widget.iconOnly
-            ? shad.ButtonDensity.icon
-            : _config.density,
-        shape: widget.shapeOverride ?? _config.shape,
+        style: ghostStyle,
         focusNode: _config.focusNode,
         disableTransition: _config.disableTransition,
         onFocus: _config.onFocus,
@@ -690,17 +892,7 @@ class _AppAsyncButtonState extends State<_AppAsyncButton>
         leading: widget.leading,
         trailing: widget.trailing,
         alignment: _config.alignment,
-        style: destructiveStyle.copyWith(
-          decoration: (context, states, value) {
-            if (states.contains(WidgetState.hovered) &&
-                !states.contains(WidgetState.pressed)) {
-              final normalStates = Set<WidgetState>.of(states)
-                ..remove(WidgetState.hovered);
-              return destructiveStyle.decoration(context, normalStates);
-            }
-            return value;
-          },
-        ),
+        style: softDestructiveStyle,
         focusNode: _config.focusNode,
         disableTransition: _config.disableTransition,
         onFocus: _config.onFocus,
@@ -740,8 +932,11 @@ class _AppAsyncButtonState extends State<_AppAsyncButton>
         child: child,
       ),
     };
+    // ButtonSize also scales the upstream padding, text and icon theme. Keep
+    // the outer control box on the same scale so content is never clipped.
+    final sizeHeight = baseHeight * sizeScale;
     final control = AppControlBox(
-      height: _config.height,
+      height: _config.height ?? sizeHeight,
       square: widget.iconOnly,
       child: button,
     );
@@ -751,10 +946,8 @@ class _AppAsyncButtonState extends State<_AppAsyncButton>
     // Chrome / plain buttons: no transform wrapper, no hover jump.
     if (!wantsMotion) return control;
 
-    final enabledForPress =
-        enabled && config.enabled && !_effectiveRunning;
+    final enabledForPress = enabled && config.enabled && !_effectiveRunning;
     final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
-    final theme = shad.Theme.of(context);
     final backgroundless =
         widget.variant == AppButtonVariant.outline ||
         widget.variant == AppButtonVariant.ghost ||
@@ -783,8 +976,7 @@ class _AppAsyncButtonState extends State<_AppAsyncButton>
       child: Listener(
         behavior: HitTestBehavior.translucent,
         onPointerDown:
-            enabledForPress &&
-                config.pressEffect != AppButtonPressEffect.none
+            enabledForPress && config.pressEffect != AppButtonPressEffect.none
             ? (_) => _setPressed(true)
             : null,
         onPointerUp: (_) => _setPressed(false),
@@ -806,18 +998,9 @@ class _AppAsyncButtonState extends State<_AppAsyncButton>
                 : _ticker.press.value;
 
             final hoverY = _motion.hoverOffset.dy * hoverT;
-            final settle = -_motion.hoverOffset.dy;
             final (pressY, scale) = switch (config.pressEffect) {
               AppButtonPressEffect.none => (0.0, 1.0),
-              AppButtonPressEffect.returnToBase => (
-                settle * pressT * hoverT +
-                    _motion.unhoveredPressNudge * pressT * (1.0 - hoverT),
-                1.0 + (_motion.pressedScale - 1.0) * pressT,
-              ),
-              AppButtonPressEffect.lift => (
-                -_motion.pressExtraLift * pressT,
-                1.0 + (1.0 - _motion.pressedScale) * 0.4 * pressT,
-              ),
+              AppButtonPressEffect.sink => (1.0 * pressT, 1.0),
             };
             final shadowT = (hoverT * (1.0 - pressT * 0.85)).clamp(0.0, 1.0);
 
@@ -843,7 +1026,6 @@ class _AppAsyncButtonState extends State<_AppAsyncButton>
         ),
       ),
     );
-
   }
 }
 

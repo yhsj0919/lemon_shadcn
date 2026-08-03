@@ -1,11 +1,11 @@
-import 'package:flutter/material.dart'
-    show Material, MaterialType, Theme;
+import 'package:flutter/material.dart' show Material, MaterialType, Theme;
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
 import '../components/display/app_text.dart';
 import 'app_theme_config.dart';
 import 'app_localizations_zh.dart';
+import 'app_outline_style.dart';
 import 'app_overlay_style.dart';
 
 class AppShadcnScope extends StatelessWidget {
@@ -32,13 +32,12 @@ class AppShadcnScope extends StatelessWidget {
     Locale? locale,
     bool syncMaterialTheme = true,
   }) {
-    return (context, child) =>
-        AppShadcnScope(
-          config: config,
-          locale: locale,
-          syncMaterialTheme: syncMaterialTheme,
-          child: child ?? const SizedBox.shrink(),
-        );
+    return (context, child) => AppShadcnScope(
+      config: config,
+      locale: locale,
+      syncMaterialTheme: syncMaterialTheme,
+      child: child ?? const SizedBox.shrink(),
+    );
   }
 
   @override
@@ -107,14 +106,9 @@ class _MaterialThemeBridge extends StatelessWidget {
     // Platform stacks often leave fontFamily null and rely on fallbacks
     // (e.g. Android). Prefer an explicit family so Material TextTheme.apply
     // actually replaces Roboto / the host default.
-    final fontFamily =
-        sans.fontFamily ?? sans.fontFamilyFallback?.firstOrNull;
+    final fontFamily = sans.fontFamily ?? sans.fontFamilyFallback?.firstOrNull;
     final fontPackage = _fontPackageFor(fontFamily);
-    final listItem = AppTextTheme.resolve(
-      context,
-      AppTextRole.listItem,
-      null,
-    );
+    final listItem = AppTextTheme.resolve(context, AppTextRole.listItem, null);
     final listSecondary = AppTextTheme.resolve(
       context,
       AppTextRole.listSecondary,
@@ -207,6 +201,14 @@ class _AppControlComponentThemes extends StatelessWidget {
       IconThemeData current,
     ) => current.copyWith(size: metrics.iconSize);
 
+    Decoration outlineDecoration(
+      BuildContext context,
+      Set<WidgetState> states,
+      Decoration current,
+    ) {
+      return AppOutlineStyle.resolve(context, states, current);
+    }
+
     return shad.ComponentTheme<shad.ModalBackdropTheme>(
       data: shad.ModalBackdropTheme(
         barrierColor: AppOverlayStyle.modalBarrier(context),
@@ -214,32 +216,42 @@ class _AppControlComponentThemes extends StatelessWidget {
       child: shad.ComponentTheme<shad.PrimaryButtonTheme>(
         data: shad.PrimaryButtonTheme(padding: padding, iconTheme: iconTheme),
         child: shad.ComponentTheme<shad.SecondaryButtonTheme>(
-        data: shad.SecondaryButtonTheme(padding: padding, iconTheme: iconTheme),
-        child: shad.ComponentTheme<shad.OutlineButtonTheme>(
-          data: shad.OutlineButtonTheme(padding: padding, iconTheme: iconTheme),
-          child: shad.ComponentTheme<shad.GhostButtonTheme>(
-            data: shad.GhostButtonTheme(padding: padding, iconTheme: iconTheme),
-            child: shad.ComponentTheme<shad.DestructiveButtonTheme>(
-              data: shad.DestructiveButtonTheme(
+          data: shad.SecondaryButtonTheme(
+            padding: padding,
+            iconTheme: iconTheme,
+          ),
+          child: shad.ComponentTheme<shad.OutlineButtonTheme>(
+            data: shad.OutlineButtonTheme(
+              padding: padding,
+              iconTheme: iconTheme,
+              decoration: outlineDecoration,
+            ),
+            child: shad.ComponentTheme<shad.GhostButtonTheme>(
+              data: shad.GhostButtonTheme(
                 padding: padding,
                 iconTheme: iconTheme,
               ),
-              child: shad.ComponentTheme<shad.LinkButtonTheme>(
-                data: shad.LinkButtonTheme(
+              child: shad.ComponentTheme<shad.DestructiveButtonTheme>(
+                data: shad.DestructiveButtonTheme(
                   padding: padding,
                   iconTheme: iconTheme,
                 ),
-                child: shad.ComponentTheme<shad.TextButtonTheme>(
-                  data: shad.TextButtonTheme(
+                child: shad.ComponentTheme<shad.LinkButtonTheme>(
+                  data: shad.LinkButtonTheme(
                     padding: padding,
                     iconTheme: iconTheme,
                   ),
-                  child: child,
+                  child: shad.ComponentTheme<shad.TextButtonTheme>(
+                    data: shad.TextButtonTheme(
+                      padding: padding,
+                      iconTheme: iconTheme,
+                    ),
+                    child: child,
+                  ),
                 ),
               ),
             ),
           ),
-        ),
         ),
       ),
     );
@@ -262,7 +274,9 @@ class _AppLocalizationsHost extends StatelessWidget {
     return Localizations.override(
       context: context,
       locale:
-          locale ?? Localizations.maybeLocaleOf(context) ?? const Locale('zh', 'CN'),
+          locale ??
+          Localizations.maybeLocaleOf(context) ??
+          const Locale('zh', 'CN'),
       delegates: const [
         AppLocalizationsZh.delegate,
         shad.ShadcnLocalizations.delegate,

@@ -21,12 +21,10 @@ class AppMenubar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppButtonMotionScope.disable(
-      child: shad.Menubar(
-        popoverOffset: popoverOffset,
-        border: border,
-        children: children,
-      ),
+    return shad.Menubar(
+      popoverOffset: popoverOffset,
+      border: border,
+      children: children,
     );
   }
 }
@@ -165,14 +163,12 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
 
   @override
   Widget build(BuildContext context) {
-    return AppButtonMotionScope.disable(
-      child: MouseRegion(
-        onEnter: (_) => _hoverVersion++,
-        onExit: (_) => _scheduleClose(),
-        child: shad.Data<_AppNavigationMenuState>.inherit(
-          data: this,
-          child: Row(mainAxisSize: MainAxisSize.min, children: widget.children),
-        ),
+    return MouseRegion(
+      onEnter: (_) => _hoverVersion++,
+      onExit: (_) => _scheduleClose(),
+      child: shad.Data<_AppNavigationMenuState>.inherit(
+        data: this,
+        child: Row(mainAxisSize: MainAxisSize.min, children: widget.children),
       ),
     );
   }

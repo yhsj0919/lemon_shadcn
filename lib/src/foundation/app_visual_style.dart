@@ -113,7 +113,9 @@ class AppAnimatedVisualStyle extends StatelessWidget {
         AppTheme.maybeOf(context)?.motion.tokens ?? AppMotionTokens.standard;
     return TweenAnimationBuilder<AppVisualColors>(
       tween: _AppVisualColorsTween(end: target),
-      duration: reduceMotion ? Duration.zero : (duration ?? motion.hoverDuration),
+      duration: reduceMotion
+          ? Duration.zero
+          : (duration ?? motion.hoverDuration),
       curve: curve,
       builder: (context, colors, child) {
         return AppVisualStyle(colors: colors, child: child!);

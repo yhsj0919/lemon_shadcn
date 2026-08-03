@@ -71,9 +71,17 @@ class AppSwitch extends StatelessWidget {
                   onChanged: onChanged,
                   enabled: enabled,
                   activeColor:
-                      activeColor ?? colors?.background ?? colors?.accent,
-                  inactiveColor: inactiveColor ?? colors?.background,
-                  activeThumbColor: activeThumbColor ?? colors?.foreground,
+                      activeColor ??
+                      colors?.accent ??
+                      theme.colorScheme.primary,
+                  inactiveColor:
+                      inactiveColor ??
+                      colors?.background ??
+                      theme.colorScheme.muted,
+                  activeThumbColor:
+                      activeThumbColor ??
+                      colors?.foreground ??
+                      theme.colorScheme.primaryForeground,
                   inactiveThumbColor:
                       inactiveThumbColor ?? theme.colorScheme.mutedForeground,
                   borderRadius: borderRadius,

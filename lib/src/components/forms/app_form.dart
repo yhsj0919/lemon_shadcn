@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 
 import '../../foundation/app_async_action.dart';
 import '../../foundation/app_shadcn_scope.dart';
+import 'app_field.dart';
 
 typedef AppAsyncFieldValidator<T> = Future<String?> Function(T? value);
 typedef AppCrossFieldValidator =
@@ -242,6 +243,7 @@ class AppForm extends StatelessWidget {
     required this.child,
     this.autovalidateMode,
     this.onChanged,
+    this.fieldConfig,
     this.canPop,
     this.onPopInvokedWithResult,
   });
@@ -250,6 +252,7 @@ class AppForm extends StatelessWidget {
   final Widget child;
   final AutovalidateMode? autovalidateMode;
   final VoidCallback? onChanged;
+  final AppFieldConfig? fieldConfig;
   final bool? canPop;
   final PopInvokedWithResultCallback<Object?>? onPopInvokedWithResult;
 
@@ -261,6 +264,7 @@ class AppForm extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final formChild = _AppFormScope(controller: controller, child: child);
     return Form(
       key: controller.formKey,
       autovalidateMode: autovalidateMode,
@@ -271,7 +275,9 @@ class AppForm extends StatelessWidget {
       },
       canPop: canPop,
       onPopInvokedWithResult: onPopInvokedWithResult,
-      child: _AppFormScope(controller: controller, child: child),
+      child: fieldConfig == null
+          ? formChild
+          : AppFieldScope(config: fieldConfig!, child: formChild),
     );
   }
 }

@@ -18,8 +18,10 @@ enum AppTextRole {
   body,
   bodyStrong,
   label,
+
   /// Primary line in nav / select / Material list rows.
   listItem,
+
   /// Secondary line or group header under a list item.
   listSecondary,
   caption,
@@ -219,8 +221,9 @@ class AppTextTheme extends shad.ComponentThemeData {
       AppTextRole.h1 => sized(24, weight: FontWeight.w600),
       AppTextRole.h2 => sized(20, weight: FontWeight.w600),
       AppTextRole.h3 => sized(18, weight: FontWeight.w600),
-      AppTextRole.h4 || AppTextRole.section || AppTextRole.title =>
-        sized(16, weight: FontWeight.w600),
+      AppTextRole.h4 ||
+      AppTextRole.section ||
+      AppTextRole.title => sized(16, weight: FontWeight.w600),
       AppTextRole.subtitle => sized(14, color: muted),
       AppTextRole.lead => sized(16),
       AppTextRole.body || AppTextRole.listItem => sized(14),

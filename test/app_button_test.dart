@@ -26,11 +26,8 @@ void main() {
   });
 
   test('AppButtonConfig.resolve honors interactive and theme flag', () {
-    expect(AppButtonConfig.interactive.hoverLift, isTrue);
-    expect(
-      AppButtonConfig.interactive.pressEffect,
-      AppButtonPressEffect.returnToBase,
-    );
+    expect(AppButtonConfig.interactive.hoverLift, isFalse);
+    expect(AppButtonConfig.interactive.pressEffect, AppButtonPressEffect.sink);
   });
 
   testWidgets('AppButton defaults to interactive motion', (tester) async {
@@ -51,7 +48,7 @@ void main() {
     );
 
     expect(resolved.hoverLift, isTrue);
-    expect(resolved.pressEffect, AppButtonPressEffect.returnToBase);
+    expect(resolved.pressEffect, AppButtonPressEffect.sink);
     expect(find.text('Lift'), findsOneWidget);
   });
 
@@ -74,7 +71,9 @@ void main() {
                 AppButton.primary(onPressed: () {}, child: const Text('CTA')),
                 AppButton.ghost(
                   onPressed: () {},
-                  config: const AppButtonConfig(alignment: Alignment.centerLeft),
+                  config: const AppButtonConfig(
+                    alignment: Alignment.centerLeft,
+                  ),
                   child: const Text('Nav'),
                 ),
               ],
@@ -184,15 +183,14 @@ void main() {
     expect(find.text('Text'), findsOneWidget);
   });
 
-  testWidgets('default AppButton hover lifts and press scales', (tester) async {
+  testWidgets('default AppButton stays on hover and sinks on press', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         builder: AppShadcnScope.builder(),
         home: Center(
-          child: AppButton.primary(
-            onPressed: () {},
-            child: const Text('Lift'),
-          ),
+          child: AppButton.primary(onPressed: () {}, child: const Text('Sink')),
         ),
       ),
     );
@@ -202,27 +200,25 @@ void main() {
     addTearDown(gesture.removePointer);
     await tester.pump();
 
-    final center = tester.getCenter(find.text('Lift'));
+    final center = tester.getCenter(find.text('Sink'));
     await gesture.moveTo(center);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
 
-    expect(
-      tester.widgetList<Transform>(find.byType(Transform)).any(
-        (t) => t.transform.getTranslation().y < -1.0,
-      ),
-      isTrue,
-    );
+    for (final transform in tester.widgetList<Transform>(
+      find.byType(Transform),
+    )) {
+      expect(transform.transform.getTranslation().y, 0);
+    }
 
     await gesture.down(center);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 200));
 
     expect(
-      tester.widgetList<Transform>(find.byType(Transform)).any((t) {
-        final sx = t.transform.storage[0];
-        return sx > 0.9 && sx < 0.99;
-      }),
+      tester
+          .widgetList<Transform>(find.byType(Transform))
+          .any((transform) => transform.transform.getTranslation().y > 0.5),
       isTrue,
     );
 
@@ -280,9 +276,9 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
 
     expect(
-      tester.widgetList<Transform>(find.byType(Transform)).any(
-        (t) => t.transform.getTranslation().y < -1.0,
-      ),
+      tester
+          .widgetList<Transform>(find.byType(Transform))
+          .any((t) => t.transform.getTranslation().y < -1.0),
       isTrue,
     );
   });

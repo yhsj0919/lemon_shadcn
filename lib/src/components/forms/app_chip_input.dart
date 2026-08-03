@@ -2,7 +2,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
+import '../../foundation/app_control_box.dart';
 import '../../foundation/app_shadcn_scope.dart';
+import '../../foundation/app_theme_config.dart';
 import 'app_field.dart';
 import 'app_form.dart';
 
@@ -93,7 +95,9 @@ class _AppChipInputState<T> extends State<AppChipInput<T>> {
   @override
   Widget build(BuildContext context) {
     final theme = shad.Theme.of(context);
-    final height = AppTheme.maybeOf(context)?.controls.height ?? 36;
+    final metrics =
+        AppTheme.maybeOf(context)?.controls ?? const AppControlMetrics();
+    final contentHeight = metrics.borderedContentHeight;
     final secondaryTheme =
         shad.ComponentTheme.maybeOf<shad.SecondaryButtonTheme>(context) ??
         const shad.SecondaryButtonTheme();
@@ -119,13 +123,17 @@ class _AppChipInputState<T> extends State<AppChipInput<T>> {
       ),
       child: shad.ComponentTheme(
         data: secondaryTheme.copyWith(decoration: () => chipDecoration),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(minHeight: height),
+        child: AppControlBox(
+          contentHeight: contentHeight,
           child: shad.ChipInput<T>(
             controller: _controller,
             focusNode: widget.focusNode,
             autofocus: widget.autofocus,
             enabled: widget.enabled && widget.onChanged != null,
+            padding: EdgeInsets.symmetric(
+              horizontal: metrics.horizontalPadding,
+            ),
+            textAlignVertical: TextAlignVertical.center,
             placeholder: widget.placeholder,
             chipBuilder: (context, chip) => Text(_label(chip)),
             onChipSubmitted: _parse,

@@ -851,7 +851,7 @@ class _AppFormattedInputControlState extends State<_AppFormattedInputControl> {
 
   @override
   Widget build(BuildContext context) {
-    final height = AppTheme.maybeOf(context)?.controls.height ?? 36;
+    final height = AppTheme.maybeOf(context)?.controls.height ?? 32;
     final scaling = shad.Theme.of(context).scaling;
     return AppControlBox(
       child: shad.ComponentTheme<shad.FormattedInputTheme>(

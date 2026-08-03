@@ -3,8 +3,10 @@ import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
 import '../../foundation/app_control_box.dart';
+import '../../foundation/app_shadcn_scope.dart';
 import 'app_field.dart';
 import 'app_form.dart';
+import 'app_input_group.dart';
 
 typedef AppFieldValidator<T> = String? Function(T? value);
 
@@ -28,6 +30,8 @@ class AppTextFormField extends FormField<String> {
     this.autocorrect = true,
     this.enableSuggestions = true,
     this.maxLength,
+    this.leading,
+    this.trailing,
     this.features,
     this.onChanged,
     this.onSubmitted,
@@ -58,6 +62,8 @@ class AppTextFormField extends FormField<String> {
     this.required = false,
     this.width,
     this.autofocus = false,
+    this.leading,
+    this.trailing,
     this.features,
     this.onChanged,
     this.onSubmitted,
@@ -108,6 +114,8 @@ class AppTextFormField extends FormField<String> {
     this.autofocus = false,
     this.showObscureToggle = true,
     bool newPassword = false,
+    this.leading,
+    this.trailing,
     this.features,
     this.onChanged,
     this.onSubmitted,
@@ -156,6 +164,8 @@ class AppTextFormField extends FormField<String> {
   final bool autocorrect;
   final bool enableSuggestions;
   final int? maxLength;
+  final Widget? leading;
+  final Widget? trailing;
   final List<shad.InputFeature>? features;
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onSubmitted;
@@ -189,6 +199,8 @@ class AppTextFormField extends FormField<String> {
           autocorrect: field.autocorrect,
           enableSuggestions: field.enableSuggestions,
           maxLength: field.maxLength,
+          leading: field.leading,
+          trailing: field.trailing,
           features: field.features,
           enabled: field.enabled,
           readOnly: field.readOnly,
@@ -220,6 +232,8 @@ class _AppTextFieldControl extends StatefulWidget {
     this.autocorrect = true,
     this.enableSuggestions = true,
     this.maxLength,
+    this.leading,
+    this.trailing,
     this.features,
     this.enabled = true,
     this.readOnly = false,
@@ -240,6 +254,8 @@ class _AppTextFieldControl extends StatefulWidget {
   final bool autocorrect;
   final bool enableSuggestions;
   final int? maxLength;
+  final Widget? leading;
+  final Widget? trailing;
   final List<shad.InputFeature>? features;
   final bool enabled;
   final bool readOnly;
@@ -296,7 +312,11 @@ class _AppTextFieldControlState extends State<_AppTextFieldControl> {
   Widget build(BuildContext context) {
     final theme = shad.Theme.of(context);
     final features = <shad.InputFeature>[
+      if (widget.leading != null)
+        shad.InputFeature.leading(AppInputGroupAddon(child: widget.leading!)),
       ...?widget.features,
+      if (widget.trailing != null)
+        shad.InputFeature.trailing(AppInputGroupAddon(child: widget.trailing!)),
       if (widget.showObscureToggle)
         shad.InputFeature.trailing(
           Semantics(
@@ -324,6 +344,11 @@ class _AppTextFieldControlState extends State<_AppTextFieldControl> {
         ),
         controller: _controller,
         focusNode: widget.focusNode,
+        padding: EdgeInsets.symmetric(
+          horizontal:
+              AppTheme.maybeOf(context)?.controls.horizontalPadding ?? 12,
+        ),
+        textAlignVertical: TextAlignVertical.center,
         hintText: widget.hintText,
         obscureText: _obscureText,
         keyboardType: widget.keyboardType,

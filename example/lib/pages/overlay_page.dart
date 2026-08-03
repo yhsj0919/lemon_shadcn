@@ -69,10 +69,7 @@ class OverlayPage extends StatelessWidget {
                       children: [
                         const Text('表单弹窗保持正文色，不对 content 强制 muted。'),
                         const Gap(12),
-                        const AppTextFormField(
-                          label: '名称',
-                          hintText: '请输入名称',
-                        ),
+                        const AppTextFormField(label: '名称', hintText: '请输入名称'),
                       ],
                     ),
                     actions: [

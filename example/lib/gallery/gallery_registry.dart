@@ -81,7 +81,7 @@ abstract final class GalleryRegistry {
       builder: (_) => const FormsPage(
         title: '表单基础',
         description: '常用输入与选择控件。',
-        visibleSections: {'文本输入', '选择框', '布尔与单选控件'},
+        visibleSections: {'表单布局与输入组', '文本输入', '选择框', '布尔与单选控件'},
       ),
     ),
     GalleryEntry(
@@ -96,6 +96,17 @@ abstract final class GalleryRegistry {
       ),
     ),
     GalleryEntry(
+      id: 'file-picker',
+      label: '文件选择',
+      subtitle: '系统文件选择、拖放、多选与文件校验',
+      group: 'App 组件',
+      builder: (_) => const FormsPage(
+        title: '文件选择',
+        description: '支持点击选择与拖放文件，并统一处理格式、大小和数量限制。',
+        visibleSections: {'文件选择'},
+      ),
+    ),
+    GalleryEntry(
       id: 'pickers',
       label: '选择器',
       subtitle: '颜色、多选、条目与可排序输入',
@@ -103,7 +114,7 @@ abstract final class GalleryRegistry {
       builder: (_) => const FormsPage(
         title: '选择器',
         description: '格式化、可视化、媒体和排序选择。',
-        visibleSections: {'格式化与可视化选择', '媒体、排序与对象输入'},
+        visibleSections: {'格式化与可视化选择', '排序与对象输入'},
       ),
     ),
     GalleryEntry(
@@ -150,7 +161,7 @@ abstract final class GalleryRegistry {
       builder: (_) => const LayoutPage(
         title: '布局',
         description: '卡片、提示、步骤与时间线。',
-        visibleSections: {'卡片', '提示变体', '步骤', '时间线'},
+        visibleSections: {'宽高比', '卡片', '提示变体', '步骤', '时间线'},
       ),
     ),
     GalleryEntry(

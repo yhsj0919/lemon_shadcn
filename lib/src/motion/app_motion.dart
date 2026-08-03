@@ -280,8 +280,12 @@ class _AppMotionState extends State<AppMotion> with TickerProviderStateMixin {
         : AnimatedBuilder(
             animation: _ticker.listenable,
             builder: (context, child) {
-              final hoverT = animate ? _ticker.hover.value : (_hovered ? 1.0 : 0.0);
-              final pressT = animate ? _ticker.press.value : (_pressed ? 1.0 : 0.0);
+              final hoverT = animate
+                  ? _ticker.hover.value
+                  : (_hovered ? 1.0 : 0.0);
+              final pressT = animate
+                  ? _ticker.press.value
+                  : (_pressed ? 1.0 : 0.0);
               final settled = hoverT * (1.0 - pressT * 0.72);
               final hoverScaleEffect =
                   widget.effect == AppMotionEffect.scale ||
@@ -308,9 +312,10 @@ class _AppMotionState extends State<AppMotion> with TickerProviderStateMixin {
                       ? 2.4
                       : 1.0);
               final tint = widget.effect == AppMotionEffect.tint
-                  ? _resolveShadowColor(context, config).withValues(
-                      alpha: 0.08 * settled.clamp(0.0, 1.0),
-                    )
+                  ? _resolveShadowColor(
+                      context,
+                      config,
+                    ).withValues(alpha: 0.08 * settled.clamp(0.0, 1.0))
                   : null;
 
               return Transform(
