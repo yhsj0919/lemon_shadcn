@@ -624,7 +624,11 @@ class AppCollapsible extends StatelessWidget {
   Widget build(BuildContext context) {
     final collapsible = shad.Collapsible(
       isExpanded: isExpanded,
-      onExpansionChanged: onExpansionChanged,
+      // shadcn_flutter 0.0.53 reports the current state in controlled mode.
+      // Keep AppCollapsible's callback semantic as the requested next state.
+      onExpansionChanged: onExpansionChanged == null
+          ? null
+          : (current) => onExpansionChanged!(!current),
       children: children,
     );
     return LayoutBuilder(
@@ -1132,31 +1136,40 @@ class AppCollapsibleTrigger extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = shad.Data.of<shad.CollapsibleStateData>(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: [
-          Expanded(
-            child: DefaultTextStyle.merge(
-              style: const TextStyle(fontWeight: FontWeight.w600),
-              child: child,
-            ),
-          ),
-          const SizedBox(width: 12),
-          SizedBox.square(
-            dimension: 40,
-            child: shad.GhostButton(
-              density: shad.ButtonDensity.icon,
-              onPressed: state.handleTap,
-              child: AnimatedRotation(
-                turns: state.isExpanded ? 0.5 : 0,
-                duration: const Duration(milliseconds: 160),
-                curve: Curves.easeOutCubic,
-                child: const Icon(shad.LucideIcons.chevronDown, size: 20),
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: state.handleTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              Expanded(
+                child: DefaultTextStyle.merge(
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                  child: child,
+                ),
               ),
-            ),
+              const SizedBox(width: 12),
+              IgnorePointer(
+                child: SizedBox.square(
+                  dimension: 40,
+                  child: shad.GhostButton(
+                    density: shad.ButtonDensity.icon,
+                    onPressed: state.handleTap,
+                    child: AnimatedRotation(
+                      turns: state.isExpanded ? 0.5 : 0,
+                      duration: const Duration(milliseconds: 160),
+                      curve: Curves.easeOutCubic,
+                      child: const Icon(shad.LucideIcons.chevronDown, size: 20),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

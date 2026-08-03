@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:lemon_shadcn/lemon_shadcn.dart';
 import 'package:lemon_shadcn/shadcn.dart';
 
+import '../gallery/component_example_code.dart';
+
 class ActionsPage extends StatelessWidget {
   const ActionsPage({super.key});
 
@@ -350,7 +352,7 @@ class _ToggleDemo extends StatefulWidget {
 }
 
 class _ToggleDemoState extends State<_ToggleDemo> {
-  bool _selected = false;
+  bool _selected = true;
   String? _alignment = 'left';
 
   @override
@@ -414,11 +416,24 @@ class ComponentPage extends StatelessWidget {
   }
 }
 
-class ComponentSection extends StatelessWidget {
-  const ComponentSection({super.key, required this.title, required this.child});
+class ComponentSection extends StatefulWidget {
+  const ComponentSection({
+    super.key,
+    required this.title,
+    required this.child,
+    this.code,
+  });
 
   final String title;
   final Widget child;
+  final String? code;
+
+  @override
+  State<ComponentSection> createState() => _ComponentSectionState();
+}
+
+class _ComponentSectionState extends State<ComponentSection> {
+  bool _showCode = false;
 
   @override
   Widget build(BuildContext context) {
@@ -427,7 +442,30 @@ class ComponentSection extends StatelessWidget {
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [Text(title).h3(), const Gap(20), child],
+        children: [
+          Text(widget.title).h3(),
+          const Gap(20),
+          widget.child,
+          const Gap(20),
+          const AppDivider(),
+          AppCollapsible(
+            isExpanded: _showCode,
+            onExpansionChanged: (value) => setState(() => _showCode = value),
+            children: [
+              const AppCollapsibleTrigger(child: Text('使用代码')),
+              AppCollapsibleContent(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                  child: AppCodeSnippet(
+                    code: Text(
+                      widget.code ?? ComponentExampleCode.resolve(widget.title),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

@@ -139,6 +139,7 @@ class AppButtonSize extends shad.ButtonSize {
 enum AppButtonVariant {
   primary,
   secondary,
+  selected,
   outline,
   ghost,
   destructive,
@@ -337,6 +338,22 @@ abstract final class AppButton {
     loadingLabel: loadingLabel,
     size: size,
     interactive: interactive,
+    config: config,
+    child: child,
+  );
+
+  /// A quiet but explicit selected state for toggles and segmented controls.
+  static Widget selected({
+    Key? key,
+    required Widget child,
+    AppButtonCallback? onPressed,
+    AppButtonSize? size,
+    AppButtonConfig? config,
+  }) => _AppAsyncButton(
+    key: key,
+    variant: AppButtonVariant.selected,
+    onPressed: onPressed,
+    size: size,
     config: config,
     child: child,
   );
@@ -802,6 +819,31 @@ class _AppAsyncButtonState extends State<_AppAsyncButton>
         shape: widget.shapeOverride ?? _config.shape,
       ),
     );
+    final selectedStyle = secondaryStyle.copyWith(
+      decoration: (context, states, value) {
+        if (value is! BoxDecoration) return value;
+        final opacity = states.contains(WidgetState.disabled)
+            ? 0.07
+            : states.contains(WidgetState.pressed)
+            ? 0.20
+            : states.contains(WidgetState.hovered)
+            ? 0.17
+            : 0.14;
+        return value.copyWith(
+          color: theme.colorScheme.primary.withValues(alpha: opacity),
+        );
+      },
+      textStyle: (context, states, value) => value.copyWith(
+        color: theme.colorScheme.primary.withValues(
+          alpha: states.contains(WidgetState.disabled) ? 0.45 : 1,
+        ),
+      ),
+      iconTheme: (context, states, value) => value.copyWith(
+        color: theme.colorScheme.primary.withValues(
+          alpha: states.contains(WidgetState.disabled) ? 0.45 : 1,
+        ),
+      ),
+    );
     final outlineStyle = sized(
       shad.ButtonStyle.outline(
         size: _config.size,
@@ -854,6 +896,19 @@ class _AppAsyncButtonState extends State<_AppAsyncButton>
         trailing: widget.trailing,
         alignment: _config.alignment,
         style: AppInteractiveStyle.hover(secondaryStyle),
+        focusNode: _config.focusNode,
+        disableTransition: _config.disableTransition,
+        onFocus: _config.onFocus,
+        enableFeedback: _config.enableFeedback,
+        child: child,
+      ),
+      AppButtonVariant.selected => shad.Button(
+        onPressed: onPressed,
+        enabled: _config.enabled,
+        leading: widget.leading,
+        trailing: widget.trailing,
+        alignment: _config.alignment,
+        style: selectedStyle,
         focusNode: _config.focusNode,
         disableTransition: _config.disableTransition,
         onFocus: _config.onFocus,
@@ -956,6 +1011,7 @@ class _AppAsyncButtonState extends State<_AppAsyncButton>
     final shadowColor = switch (widget.variant) {
       AppButtonVariant.primary => theme.colorScheme.primary,
       AppButtonVariant.secondary => theme.colorScheme.secondaryForeground,
+      AppButtonVariant.selected => theme.colorScheme.primary,
       AppButtonVariant.destructive => theme.colorScheme.destructive,
       AppButtonVariant.outline ||
       AppButtonVariant.ghost ||

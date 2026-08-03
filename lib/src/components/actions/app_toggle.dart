@@ -1,10 +1,8 @@
 import 'package:flutter/widgets.dart';
-import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
-import '../../foundation/app_control_box.dart';
-import '../../foundation/app_visual_style.dart';
 import '../forms/app_field.dart';
 import '../forms/app_form.dart';
+import 'app_button.dart';
 
 /// A theme-compatible two-state action with the standard control height.
 class AppToggle extends StatelessWidget {
@@ -14,48 +12,31 @@ class AppToggle extends StatelessWidget {
     required this.onChanged,
     required this.child,
     this.enabled = true,
-    this.style,
   });
 
   final bool value;
   final ValueChanged<bool>? onChanged;
   final Widget child;
   final bool enabled;
-  final shad.ButtonStyle? style;
 
   @override
   Widget build(BuildContext context) {
-    final colors = resolveAppControlVisuals(context, {
-      if (value) WidgetState.selected,
-      if (!enabled || onChanged == null) WidgetState.disabled,
-    });
-    Widget toggle = AppControlBox(
-      child: shad.Toggle(
-        value: value,
-        onChanged: onChanged,
-        enabled: enabled,
-        style: style ?? const shad.ButtonStyle.ghost(),
-        child: child,
-      ),
+    final interactive = enabled && onChanged != null;
+    final onPressed = interactive ? () => onChanged!(!value) : null;
+    return Semantics(
+      toggled: value,
+      child: value
+          ? AppButton.selected(
+              onPressed: onPressed,
+              config: AppButtonConfig.plain,
+              child: child,
+            )
+          : AppButton.text(
+              onPressed: onPressed,
+              config: AppButtonConfig.plain,
+              child: child,
+            ),
     );
-    if (value && colors != null) {
-      toggle = shad.ComponentTheme<shad.SecondaryButtonTheme>(
-        data: shad.SecondaryButtonTheme(
-          decoration: (context, states, decoration) {
-            if (decoration is ShapeDecoration) {
-              return decoration.copyWith(color: colors.background);
-            }
-            return decoration;
-          },
-          textStyle: (context, states, textStyle) =>
-              textStyle.copyWith(color: colors.foreground),
-          iconTheme: (context, states, iconTheme) =>
-              iconTheme.copyWith(color: colors.foreground),
-        ),
-        child: toggle,
-      );
-    }
-    return toggle;
   }
 }
 
@@ -69,7 +50,6 @@ class AppToggleFormField extends FormField<bool> {
     this.required = false,
     this.width,
     this.onChanged,
-    this.style,
     super.initialValue = false,
     super.onSaved,
     super.validator,
@@ -93,7 +73,6 @@ class AppToggleFormField extends FormField<bool> {
                child: AppToggle(
                  value: state.value ?? false,
                  enabled: field.enabled,
-                 style: field.style,
                  onChanged: (value) {
                    state.didChange(value);
                    field.onChanged?.call(value);
@@ -112,6 +91,5 @@ class AppToggleFormField extends FormField<bool> {
   final bool required;
   final double? width;
   final ValueChanged<bool>? onChanged;
-  final shad.ButtonStyle? style;
   final AppAsyncFieldValidator<bool>? asyncValidator;
 }

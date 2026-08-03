@@ -6,11 +6,16 @@ import '../../foundation/app_interactive_style.dart';
 
 /// Semantic badge variants exposed through one App-prefixed facade.
 abstract final class AppBadge {
+  static Widget _content(Widget child) => SizedBox(
+    height: AppCompactLabelStyle.badgeHeight,
+    child: Center(widthFactor: 1, child: child),
+  );
+
   static shad.AbstractButtonStyle _style(
     shad.AbstractButtonStyle base,
     bool interactive,
   ) {
-    final compact = AppCompactLabelStyle.apply(base);
+    final compact = AppCompactLabelStyle.applyBadge(base);
     return interactive ? AppInteractiveStyle.hover(compact) : compact;
   }
 
@@ -27,7 +32,7 @@ abstract final class AppBadge {
     leading: leading,
     trailing: trailing,
     style: _style(style ?? shad.ButtonVariance.primary, onPressed != null),
-    child: child,
+    child: _content(child),
   );
 
   static Widget secondary({
@@ -43,7 +48,7 @@ abstract final class AppBadge {
     leading: leading,
     trailing: trailing,
     style: _style(style ?? shad.ButtonVariance.secondary, onPressed != null),
-    child: child,
+    child: _content(child),
   );
 
   static Widget outline({
@@ -59,7 +64,7 @@ abstract final class AppBadge {
     leading: leading,
     trailing: trailing,
     style: _style(style ?? shad.ButtonVariance.outline, onPressed != null),
-    child: child,
+    child: _content(child),
   );
 
   static Widget destructive({
@@ -75,6 +80,6 @@ abstract final class AppBadge {
     leading: leading,
     trailing: trailing,
     style: _style(style ?? shad.ButtonVariance.destructive, onPressed != null),
-    child: child,
+    child: _content(child),
   );
 }

@@ -94,7 +94,7 @@ class AppToggleGroup<T> extends StatelessWidget {
     children: [
       for (final item in items)
         values.contains(item.value)
-            ? AppButton.secondary(
+            ? AppButton.selected(
                 size: size,
                 onPressed: item.enabled ? () => _toggle(item) : null,
                 config: AppButtonConfig.plain,
