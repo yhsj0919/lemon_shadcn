@@ -7,7 +7,6 @@ import 'app_async_option_source.dart';
 import 'app_field.dart';
 import 'app_form.dart';
 import 'app_option.dart';
-import 'app_select.dart';
 import 'app_select_control_shell.dart';
 
 typedef AppOptionSearcher<V> =
@@ -34,7 +33,7 @@ class AppAutoCompleteFormField<V> extends FormField<V> {
     this.clearable = false,
     this.debounce = const Duration(milliseconds: 300),
     this.cacheDuration = const Duration(minutes: 5),
-    this.equals,
+    this.optionConfig = const AppOptionConfig(),
     this.loadingBuilder,
     this.emptyBuilder,
     this.loadErrorBuilder,
@@ -63,7 +62,7 @@ class AppAutoCompleteFormField<V> extends FormField<V> {
     this.width,
     this.clearable = false,
     this.debounce = const Duration(milliseconds: 300),
-    this.equals,
+    this.optionConfig = const AppOptionConfig(),
     this.loadingBuilder,
     this.emptyBuilder,
     this.loadErrorBuilder,
@@ -93,7 +92,7 @@ class AppAutoCompleteFormField<V> extends FormField<V> {
     this.width,
     this.clearable = false,
     this.debounce = const Duration(milliseconds: 300),
-    this.equals,
+    this.optionConfig = const AppOptionConfig(),
     this.loadingBuilder,
     this.emptyBuilder,
     this.loadErrorBuilder,
@@ -124,7 +123,7 @@ class AppAutoCompleteFormField<V> extends FormField<V> {
   final bool clearable;
   final Duration debounce;
   final Duration cacheDuration;
-  final AppOptionEquals<V>? equals;
+  final AppOptionConfig<V> optionConfig;
   final WidgetBuilder? loadingBuilder;
   final WidgetBuilder? emptyBuilder;
   final AppAutoCompleteErrorBuilder<V>? loadErrorBuilder;
@@ -155,7 +154,7 @@ class AppAutoCompleteFormField<V> extends FormField<V> {
           searchPlaceholder: field.searchPlaceholder,
           clearable: field.clearable,
           debounce: field.debounce,
-          equals: field.equals,
+          optionConfig: field.optionConfig,
           loadingBuilder: field.loadingBuilder,
           emptyBuilder: field.emptyBuilder,
           loadErrorBuilder: field.loadErrorBuilder,
@@ -183,7 +182,7 @@ class _AppAutoCompleteControl<V> extends StatefulWidget {
     required this.clearable,
     required this.debounce,
     this.initialOption,
-    this.equals,
+    required this.optionConfig,
     this.loadingBuilder,
     this.emptyBuilder,
     this.loadErrorBuilder,
@@ -201,7 +200,7 @@ class _AppAutoCompleteControl<V> extends StatefulWidget {
   final String searchPlaceholder;
   final bool clearable;
   final Duration debounce;
-  final AppOptionEquals<V>? equals;
+  final AppOptionConfig<V> optionConfig;
   final WidgetBuilder? loadingBuilder;
   final WidgetBuilder? emptyBuilder;
   final AppAutoCompleteErrorBuilder<V>? loadErrorBuilder;
@@ -247,8 +246,7 @@ class _AppAutoCompleteControlState<V>
               );
   }
 
-  bool _equals(V left, V right) =>
-      widget.equals?.call(left, right) ?? left == right;
+  bool _equals(V left, V right) => widget.optionConfig.isEqual(left, right);
 
   AppOption<V>? _findOption(V value) {
     for (final option in _knownOptions) {
@@ -276,7 +274,9 @@ class _AppAutoCompleteControlState<V>
   ) async {
     final generation = ++_searchGeneration;
     await Future<void>.delayed(widget.debounce);
-    if (generation != _searchGeneration) return shad.SelectItemDelegate.empty;
+    if (!mounted || !context.mounted || generation != _searchGeneration) {
+      return shad.SelectItemDelegate.empty;
+    }
 
     final normalizedQuery = query ?? '';
     _lastQuery = normalizedQuery;
@@ -284,7 +284,9 @@ class _AppAutoCompleteControlState<V>
         ? null
         : await widget.pagedOptionSource!.load(normalizedQuery);
     final options = firstPage?.options ?? await _source!.load(normalizedQuery);
-    if (generation != _searchGeneration) return shad.SelectItemDelegate.empty;
+    if (!mounted || !context.mounted || generation != _searchGeneration) {
+      return shad.SelectItemDelegate.empty;
+    }
     _remember(options);
     return shad.SelectItemList(
       children: [
@@ -292,7 +294,18 @@ class _AppAutoCompleteControlState<V>
           shad.SelectItemButton<V>(
             value: option.value,
             enabled: !option.disabled,
-            child: option.child ?? Text(option.label),
+            child: widget.optionConfig.buildOption(
+              context,
+              option,
+              AppOptionViewState(
+                selected:
+                    widget.value != null &&
+                    _equals(widget.value as V, option.value),
+                highlighted: false,
+                disabled: option.disabled,
+                query: normalizedQuery,
+              ),
+            ),
           ),
         if (firstPage?.nextCursor != null)
           _AppLoadMoreOptions<V>(
@@ -324,7 +337,9 @@ class _AppAutoCompleteControlState<V>
         },
         itemBuilder: (context, value) {
           final option = _findOption(value);
-          return option?.child ?? Text(option?.label ?? value.toString());
+          return option == null
+              ? Text(value.toString())
+              : widget.optionConfig.buildSelected(context, option);
         },
         popup: (context) => popup(
           shad.SelectPopup<V>.builder(

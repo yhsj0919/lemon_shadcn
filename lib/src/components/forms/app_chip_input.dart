@@ -11,6 +11,36 @@ import 'app_form.dart';
 typedef AppChipParser<T> = T? Function(String text);
 typedef AppChipLabelBuilder<T> = String Function(T value);
 
+/// Applies the shared visual treatment used by chips embedded in form inputs.
+class AppInputChipTheme extends StatelessWidget {
+  const AppInputChipTheme({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = shad.Theme.of(context);
+    final secondaryTheme =
+        shad.ComponentTheme.maybeOf<shad.SecondaryButtonTheme>(context) ??
+        const shad.SecondaryButtonTheme();
+    Decoration chipDecoration(
+      BuildContext context,
+      Set<WidgetState> states,
+      Decoration current,
+    ) {
+      if (current is! BoxDecoration) return current;
+      return current.copyWith(
+        color: theme.colorScheme.mutedForeground.withValues(alpha: 0.16),
+      );
+    }
+
+    return shad.ComponentTheme(
+      data: secondaryTheme.copyWith(decoration: () => chipDecoration),
+      child: child,
+    );
+  }
+}
+
 /// Controlled chip input. String chips work without a parser; domain objects
 /// can provide [parseChip] while Form values remain formatted `List<T>` data.
 class AppChipInput<T> extends StatefulWidget {
@@ -98,20 +128,6 @@ class _AppChipInputState<T> extends State<AppChipInput<T>> {
     final metrics =
         AppTheme.maybeOf(context)?.controls ?? const AppControlMetrics();
     final contentHeight = metrics.borderedContentHeight;
-    final secondaryTheme =
-        shad.ComponentTheme.maybeOf<shad.SecondaryButtonTheme>(context) ??
-        const shad.SecondaryButtonTheme();
-    Decoration chipDecoration(
-      BuildContext context,
-      Set<WidgetState> states,
-      Decoration current,
-    ) {
-      if (current is! BoxDecoration) return current;
-      return current.copyWith(
-        color: theme.colorScheme.mutedForeground.withValues(alpha: 0.16),
-      );
-    }
-
     return shad.ComponentTheme(
       data: shad.FocusOutlineTheme(
         align: 0,
@@ -121,8 +137,7 @@ class _AppChipInputState<T> extends State<AppChipInput<T>> {
           strokeAlign: BorderSide.strokeAlignInside,
         ),
       ),
-      child: shad.ComponentTheme(
-        data: secondaryTheme.copyWith(decoration: () => chipDecoration),
+      child: AppInputChipTheme(
         child: AppControlBox(
           contentHeight: contentHeight,
           child: shad.ChipInput<T>(

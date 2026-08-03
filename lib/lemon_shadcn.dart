@@ -24,6 +24,7 @@ export 'src/components/forms/app_input_group.dart';
 export 'src/components/forms/app_form.dart';
 export 'src/components/forms/app_input_otp.dart';
 export 'src/components/forms/app_auto_complete.dart';
+export 'src/components/forms/app_combobox.dart';
 export 'src/components/forms/app_async_option_source.dart';
 export 'src/components/forms/app_advanced_inputs.dart';
 export 'src/components/forms/app_checkbox.dart';

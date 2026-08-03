@@ -95,6 +95,7 @@ class _AppInputOtpState extends State<AppInputOtp> {
       data: theme,
       child: AppControlBox(
         contentHeight: contentHeight,
+        alignment: AlignmentDirectional.centerStart,
         child: shad.InputOTP(
           key: ValueKey(_generation),
           children: _buildChildren(),

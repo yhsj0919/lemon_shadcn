@@ -158,6 +158,20 @@ abstract final class AppComponentRegistry {
       status: AppComponentStatus.implemented,
     ),
     AppComponentRegistration(
+      appName: 'AppCombobox',
+      upstreamName: 'TextField + OverlayPortal',
+      category: AppComponentCategory.forms,
+      adapter: AppComponentAdapter.independent,
+      status: AppComponentStatus.implemented,
+    ),
+    AppComponentRegistration(
+      appName: 'AppComboboxFormField',
+      upstreamName: 'TextField + OverlayPortal',
+      category: AppComponentCategory.forms,
+      adapter: AppComponentAdapter.independent,
+      status: AppComponentStatus.implemented,
+    ),
+    AppComponentRegistration(
       appName: 'AppCheckbox',
       upstreamName: 'Checkbox',
       category: AppComponentCategory.forms,

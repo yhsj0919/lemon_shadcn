@@ -5,6 +5,15 @@ import 'package:lemon_shadcn/shadcn.dart';
 
 import 'actions_page.dart';
 
+@immutable
+class _Assignee {
+  const _Assignee(this.id, this.name, this.department);
+
+  final String id;
+  final String name;
+  final String department;
+}
+
 class FormsPage extends StatefulWidget {
   const FormsPage({
     super.key,
@@ -33,6 +42,11 @@ class FormsPage extends StatefulWidget {
     },
   );
 
+  static Future<List<AppOption<String>>> _loadRoles() async {
+    await Future<void>.delayed(const Duration(milliseconds: 350));
+    return _roles;
+  }
+
   static final _pagedRoleSource = AppAsyncPagedOptionSource<String>(
     loader: (query, cursor) async {
       await Future<void>.delayed(const Duration(milliseconds: 250));
@@ -50,6 +64,35 @@ class FormsPage extends StatefulWidget {
         nextCursor: next < filtered.length ? next : null,
       );
     },
+  );
+
+  static const _assignees = [
+    AppOption(
+      value: _Assignee('u1', '张明', '设计部'),
+      label: '张明',
+      keywords: ['zhangming', '设计部'],
+    ),
+    AppOption(
+      value: _Assignee('u2', '李华', '研发部'),
+      label: '李华',
+      keywords: ['lihua', '研发部'],
+    ),
+    AppOption(
+      value: _Assignee('u3', '王芳', '产品部'),
+      label: '王芳',
+      keywords: ['wangfang', '产品部'],
+    ),
+  ];
+
+  static final _assigneeConfig = AppOptionConfig<_Assignee>(
+    equals: (left, right) => left.id == right.id,
+    optionBuilder: (context, option, state) => Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(option.value.name),
+        Text(option.value.department).small().muted(),
+      ],
+    ),
   );
 
   @override
@@ -216,12 +259,23 @@ class _FormsPageState extends State<FormsPage> {
                 hintText: 'name@example.com',
               ),
             ),
-            const ComponentSection(
+            ComponentSection(
               title: '选择框',
-              child: AppSelectFormField<String>(
-                label: '角色',
-                options: FormsPage._roles,
-                required: true,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const AppSelectFormField<String>(
+                    label: '静态角色',
+                    options: FormsPage._roles,
+                    required: true,
+                  ),
+                  const Gap(12),
+                  AppSelectFormField<String>.async(
+                    label: '异步角色',
+                    loadOptions: FormsPage._loadRoles,
+                    clearable: true,
+                  ),
+                ],
               ),
             ),
             ComponentSection(
@@ -237,6 +291,41 @@ class _FormsPageState extends State<FormsPage> {
                   AppAutoCompleteFormField<String>.paged(
                     label: '分页选择负责人',
                     pagedOptionSource: FormsPage._pagedRoleSource,
+                  ),
+                ],
+              ),
+            ),
+            ComponentSection(
+              title: '组合框',
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  AppComboboxFormField<_Assignee>(
+                    label: '静态对象检索',
+                    options: FormsPage._assignees,
+                    optionConfig: FormsPage._assigneeConfig,
+                    clearable: true,
+                  ),
+                  const Gap(12),
+                  AppComboboxFormField<_Assignee>.async(
+                    label: '异步标签检索',
+                    displayMode: AppComboboxDisplayMode.token,
+                    optionConfig: FormsPage._assigneeConfig,
+                    clearable: true,
+                    searchOptions: (query) async {
+                      await Future<void>.delayed(
+                        const Duration(milliseconds: 350),
+                      );
+                      final normalized = query.trim().toLowerCase();
+                      return FormsPage._assignees
+                          .where(
+                            (option) => FormsPage._assigneeConfig
+                                .searchableText(option)
+                                .toLowerCase()
+                                .contains(normalized),
+                          )
+                          .toList();
+                    },
                   ),
                 ],
               ),

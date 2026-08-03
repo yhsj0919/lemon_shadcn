@@ -117,14 +117,21 @@ class _GalleryShellState extends State<GalleryShell> {
           ),
         ),
       ],
-      sidebarFooter: const AppCard(
-        padding: EdgeInsets.all(12),
-        child: Row(
-          children: [
-            Icon(AppLucideIcons.sparkles),
-            SizedBox(width: 10),
-            Expanded(child: AppText.muted('基于 shadcn_flutter 0.0.53 构建')),
-          ],
+      sidebarFooter: AppCard(
+        padding: const EdgeInsets.all(12),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            if (constraints.maxWidth < 96) {
+              return const Center(child: Icon(AppLucideIcons.sparkles));
+            }
+            return const Row(
+              children: [
+                Icon(AppLucideIcons.sparkles),
+                SizedBox(width: 10),
+                Expanded(child: AppText.muted('基于 shadcn_flutter 0.0.53 构建')),
+              ],
+            );
+          },
         ),
       ),
       child: AppScaffold(child: selected.builder(context)),

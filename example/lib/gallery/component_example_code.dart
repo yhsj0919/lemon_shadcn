@@ -68,14 +68,29 @@ AppButton.primary(action: action, child: const Text('保存'));''',
   validator: AppValidators.required(),
 );''',
     '选择框': '''AppSelectFormField<String>(
-  label: '角色',
+  label: '静态角色',
   options: const [AppOption(value: 'admin', label: '管理员')],
+);
+
+AppSelectFormField<String>.async(
+  label: '异步角色',
+  loadOptions: repository.loadRoles,
+  sourceKey: tenantId,
 );''',
     '布尔与单选控件': '''AppCheckboxFormField(controlLabel: const Text('接受条款'));
 AppSwitchFormField(controlLabel: const Text('启用通知'));''',
     '异步自动完成': '''AppAutoCompleteFormField<String>.source(
   label: '负责人',
   optionSource: roleSource,
+);''',
+    '组合框': '''AppComboboxFormField<User>.async(
+  label: '负责人',
+  searchOptions: repository.searchUsers,
+  optionConfig: AppOptionConfig(
+    equals: (a, b) => a.id == b.id,
+    optionBuilder: (context, option, state) => UserListItem(option.value),
+  ),
+  displayMode: AppComboboxDisplayMode.token,
 );''',
     '文件选择': '''AppFilePickerFormField(
   label: '附件',

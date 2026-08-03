@@ -12,9 +12,10 @@ import 'app_option.dart';
 import 'app_select_control_shell.dart';
 
 typedef AppOptionLoader<V> = Future<List<AppOption<V>>> Function();
-typedef AppOptionEquals<V> = bool Function(V left, V right);
 typedef AppSelectErrorBuilder =
     Widget Function(BuildContext context, Object error, VoidCallback retry);
+
+enum AppDependentValuePolicy { clearImmediately, keepIfValid, preserve }
 
 class AppSelect<V> extends StatefulWidget {
   const AppSelect({
@@ -25,8 +26,82 @@ class AppSelect<V> extends StatefulWidget {
     this.placeholder = 'Select an option',
     this.enabled = true,
     this.clearable = false,
-    this.equals,
+    this.sourceKey,
+    this.dependentValuePolicy = AppDependentValuePolicy.clearImmediately,
+    this.optionConfig = const AppOptionConfig(),
+    this.initialOption,
   });
+
+  factory AppSelect.async({
+    Key? key,
+    required AppOptionLoader<V> loadOptions,
+    V? value,
+    ValueChanged<V?>? onChanged,
+    String placeholder = 'Select an option',
+    bool enabled = true,
+    bool clearable = false,
+    Duration cacheDuration = const Duration(minutes: 5),
+    Object? sourceKey,
+    AppDependentValuePolicy dependentValuePolicy =
+        AppDependentValuePolicy.clearImmediately,
+    AppOptionConfig<V> optionConfig = const AppOptionConfig(),
+    AppOption<V>? initialOption,
+    WidgetBuilder? loadingBuilder,
+    AppSelectErrorBuilder? errorBuilder,
+    WidgetBuilder? emptyBuilder,
+  }) => _AppAsyncSelect<V>(
+    key: key,
+    loadOptions: loadOptions,
+    optionSource: null,
+    cacheDuration: cacheDuration,
+    sourceKey: sourceKey,
+    dependentValuePolicy: dependentValuePolicy,
+    value: value,
+    onChanged: onChanged,
+    enabled: enabled,
+    placeholder: placeholder,
+    clearable: clearable,
+    optionConfig: optionConfig,
+    initialOption: initialOption,
+    loadingBuilder: loadingBuilder,
+    errorBuilder: errorBuilder,
+    emptyBuilder: emptyBuilder,
+  );
+
+  factory AppSelect.source({
+    Key? key,
+    required AppAsyncOptionSource<V> optionSource,
+    V? value,
+    ValueChanged<V?>? onChanged,
+    String placeholder = 'Select an option',
+    bool enabled = true,
+    bool clearable = false,
+    Object? sourceKey,
+    AppDependentValuePolicy dependentValuePolicy =
+        AppDependentValuePolicy.clearImmediately,
+    AppOptionConfig<V> optionConfig = const AppOptionConfig(),
+    AppOption<V>? initialOption,
+    WidgetBuilder? loadingBuilder,
+    AppSelectErrorBuilder? errorBuilder,
+    WidgetBuilder? emptyBuilder,
+  }) => _AppAsyncSelect<V>(
+    key: key,
+    loadOptions: null,
+    optionSource: optionSource,
+    cacheDuration: Duration.zero,
+    sourceKey: sourceKey,
+    dependentValuePolicy: dependentValuePolicy,
+    value: value,
+    onChanged: onChanged,
+    enabled: enabled,
+    placeholder: placeholder,
+    clearable: clearable,
+    optionConfig: optionConfig,
+    initialOption: initialOption,
+    loadingBuilder: loadingBuilder,
+    errorBuilder: errorBuilder,
+    emptyBuilder: emptyBuilder,
+  );
 
   final List<AppOption<V>> options;
   final V? value;
@@ -34,21 +109,42 @@ class AppSelect<V> extends StatefulWidget {
   final String placeholder;
   final bool enabled;
   final bool clearable;
-  final AppOptionEquals<V>? equals;
+  final Object? sourceKey;
+  final AppDependentValuePolicy dependentValuePolicy;
+  final AppOptionConfig<V> optionConfig;
+  final AppOption<V>? initialOption;
 
   @override
   State<AppSelect<V>> createState() => _AppSelectState<V>();
 }
 
 class _AppSelectState<V> extends State<AppSelect<V>> {
-  bool _equals(V left, V right) =>
-      widget.equals?.call(left, right) ?? left == right;
+  bool _equals(V left, V right) => widget.optionConfig.isEqual(left, right);
 
   AppOption<V>? _optionFor(V value) {
     for (final option in widget.options) {
       if (_equals(option.value, value)) return option;
     }
-    return null;
+    final initial = widget.initialOption;
+    return initial != null && _equals(initial.value, value) ? initial : null;
+  }
+
+  @override
+  void didUpdateWidget(AppSelect<V> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.sourceKey == oldWidget.sourceKey || widget.value == null) return;
+    final shouldClear = switch (widget.dependentValuePolicy) {
+      AppDependentValuePolicy.clearImmediately => true,
+      AppDependentValuePolicy.keepIfValid => !widget.options.any(
+        (option) => _equals(option.value, widget.value as V),
+      ),
+      AppDependentValuePolicy.preserve => false,
+    };
+    if (shouldClear) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) widget.onChanged?.call(null);
+      });
+    }
   }
 
   @override
@@ -69,7 +165,9 @@ class _AppSelectState<V> extends State<AppSelect<V>> {
         },
         itemBuilder: (context, selected) {
           final option = _optionFor(selected);
-          return option?.child ?? Text(option?.label ?? selected.toString());
+          return option == null
+              ? Text(selected.toString())
+              : widget.optionConfig.buildSelected(context, option);
         },
         popup: (context) => popup(
           shad.SelectPopup<V>(
@@ -79,7 +177,17 @@ class _AppSelectState<V> extends State<AppSelect<V>> {
                   shad.SelectItemButton<V>(
                     value: option.value,
                     enabled: !option.disabled,
-                    child: option.child ?? Text(option.label),
+                    child: widget.optionConfig.buildOption(
+                      context,
+                      option,
+                      AppOptionViewState(
+                        selected:
+                            widget.value != null &&
+                            _equals(widget.value as V, option.value),
+                        highlighted: false,
+                        disabled: option.disabled,
+                      ),
+                    ),
                   ),
               ],
             ),
@@ -101,7 +209,10 @@ class AppSelectFormField<V> extends FormField<V> {
     this.required = false,
     this.width,
     this.clearable = false,
-    this.equals,
+    this.sourceKey,
+    this.dependentValuePolicy = AppDependentValuePolicy.clearImmediately,
+    this.optionConfig = const AppOptionConfig(),
+    this.initialOption,
     this.onChanged,
     super.initialValue,
     super.onSaved,
@@ -129,7 +240,10 @@ class AppSelectFormField<V> extends FormField<V> {
     this.width,
     this.clearable = false,
     this.cacheDuration = const Duration(minutes: 5),
-    this.equals,
+    this.sourceKey,
+    this.dependentValuePolicy = AppDependentValuePolicy.clearImmediately,
+    this.optionConfig = const AppOptionConfig(),
+    this.initialOption,
     this.onChanged,
     this.loadingStateBuilder,
     this.loadErrorBuilder,
@@ -155,7 +269,10 @@ class AppSelectFormField<V> extends FormField<V> {
     this.required = false,
     this.width,
     this.clearable = false,
-    this.equals,
+    this.sourceKey,
+    this.dependentValuePolicy = AppDependentValuePolicy.clearImmediately,
+    this.optionConfig = const AppOptionConfig(),
+    this.initialOption,
     this.onChanged,
     this.loadingStateBuilder,
     this.loadErrorBuilder,
@@ -176,6 +293,8 @@ class AppSelectFormField<V> extends FormField<V> {
   final AppOptionLoader<V>? loadOptions;
   final AppAsyncOptionSource<V>? optionSource;
   final Duration cacheDuration;
+  final Object? sourceKey;
+  final AppDependentValuePolicy dependentValuePolicy;
   final String? label;
   final String? name;
   final String? description;
@@ -183,7 +302,8 @@ class AppSelectFormField<V> extends FormField<V> {
   final bool required;
   final double? width;
   final bool clearable;
-  final AppOptionEquals<V>? equals;
+  final AppOptionConfig<V> optionConfig;
+  final AppOption<V>? initialOption;
   final ValueChanged<V?>? onChanged;
   final WidgetBuilder? loadingStateBuilder;
   final AppSelectErrorBuilder? loadErrorBuilder;
@@ -199,7 +319,10 @@ class AppSelectFormField<V> extends FormField<V> {
             enabled: field.enabled,
             placeholder: field.placeholder,
             clearable: field.clearable,
-            equals: field.equals,
+            sourceKey: field.sourceKey,
+            dependentValuePolicy: field.dependentValuePolicy,
+            optionConfig: field.optionConfig,
+            initialOption: field.initialOption,
             onChanged: (value) {
               state.didChange(value);
               field.onChanged?.call(value);
@@ -209,11 +332,14 @@ class AppSelectFormField<V> extends FormField<V> {
             loadOptions: field.loadOptions,
             optionSource: field.optionSource,
             cacheDuration: field.cacheDuration,
+            sourceKey: field.sourceKey,
+            dependentValuePolicy: field.dependentValuePolicy,
             value: state.value,
             enabled: field.enabled,
             placeholder: field.placeholder,
             clearable: field.clearable,
-            equals: field.equals,
+            optionConfig: field.optionConfig,
+            initialOption: field.initialOption,
             loadingBuilder: field.loadingStateBuilder,
             errorBuilder: field.loadErrorBuilder,
             emptyBuilder: field.emptyStateBuilder,
@@ -239,31 +365,29 @@ class AppSelectFormField<V> extends FormField<V> {
   }
 }
 
-class _AppAsyncSelect<V> extends StatefulWidget {
+class _AppAsyncSelect<V> extends AppSelect<V> {
   const _AppAsyncSelect({
+    super.key,
     required this.loadOptions,
     required this.optionSource,
     required this.cacheDuration,
-    required this.value,
-    required this.onChanged,
-    required this.enabled,
-    required this.placeholder,
-    required this.clearable,
-    this.equals,
+    super.sourceKey,
+    super.dependentValuePolicy = AppDependentValuePolicy.clearImmediately,
+    required super.value,
+    required super.onChanged,
+    required super.enabled,
+    required super.placeholder,
+    required super.clearable,
+    super.optionConfig = const AppOptionConfig(),
+    super.initialOption,
     this.loadingBuilder,
     this.errorBuilder,
     this.emptyBuilder,
-  });
+  }) : super(options: const []);
 
   final AppOptionLoader<V>? loadOptions;
   final AppAsyncOptionSource<V>? optionSource;
   final Duration cacheDuration;
-  final V? value;
-  final ValueChanged<V?> onChanged;
-  final bool enabled;
-  final String placeholder;
-  final bool clearable;
-  final AppOptionEquals<V>? equals;
   final WidgetBuilder? loadingBuilder;
   final AppSelectErrorBuilder? errorBuilder;
   final WidgetBuilder? emptyBuilder;
@@ -275,12 +399,13 @@ class _AppAsyncSelect<V> extends StatefulWidget {
 class _AppAsyncSelectState<V> extends State<_AppAsyncSelect<V>> {
   late Future<List<AppOption<V>>> _future;
   late AppAsyncOptionSource<V> _source;
+  bool _validateValueAfterLoad = false;
 
   @override
   void initState() {
     super.initState();
     _configureSource();
-    _future = _source.load('');
+    _future = _load();
   }
 
   @override
@@ -288,9 +413,21 @@ class _AppAsyncSelectState<V> extends State<_AppAsyncSelect<V>> {
     super.didUpdateWidget(oldWidget);
     if (widget.loadOptions != oldWidget.loadOptions ||
         widget.optionSource != oldWidget.optionSource ||
-        widget.cacheDuration != oldWidget.cacheDuration) {
+        widget.cacheDuration != oldWidget.cacheDuration ||
+        widget.sourceKey != oldWidget.sourceKey) {
       _configureSource();
-      _future = _source.load('');
+      _validateValueAfterLoad =
+          widget.sourceKey != oldWidget.sourceKey &&
+          widget.dependentValuePolicy == AppDependentValuePolicy.keepIfValid;
+      _future = _load();
+      if (widget.sourceKey != oldWidget.sourceKey &&
+          widget.value != null &&
+          widget.dependentValuePolicy ==
+              AppDependentValuePolicy.clearImmediately) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) widget.onChanged?.call(null);
+        });
+      }
     }
   }
 
@@ -303,10 +440,34 @@ class _AppAsyncSelectState<V> extends State<_AppAsyncSelect<V>> {
         );
   }
 
+  Future<List<AppOption<V>>> _load({bool force = false}) async {
+    final options = force ? await _source.retry('') : await _source.load('');
+    if (_validateValueAfterLoad && widget.value != null) {
+      _validateValueAfterLoad = false;
+      final valid = options.any(
+        (option) =>
+            widget.optionConfig.isEqual(option.value, widget.value as V),
+      );
+      if (!valid) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) widget.onChanged?.call(null);
+        });
+      }
+    }
+    return options;
+  }
+
   void _retry() {
-    final future = _source.retry('');
+    final completer = Completer<List<AppOption<V>>>();
     setState(() {
-      _future = future;
+      _future = completer.future;
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        completer.complete(await _load(force: true));
+      } catch (error, stackTrace) {
+        completer.completeError(error, stackTrace);
+      }
     });
   }
 
@@ -357,7 +518,8 @@ class _AppAsyncSelectState<V> extends State<_AppAsyncSelect<V>> {
           enabled: widget.enabled,
           placeholder: widget.placeholder,
           clearable: widget.clearable,
-          equals: widget.equals,
+          optionConfig: widget.optionConfig,
+          initialOption: widget.initialOption,
         );
       },
     );

@@ -11,12 +11,14 @@ class AppControlBox extends StatelessWidget {
     this.height,
     this.contentHeight,
     this.square = false,
+    this.alignment = Alignment.center,
   });
 
   final Widget child;
   final double? height;
   final double? contentHeight;
   final bool square;
+  final AlignmentGeometry alignment;
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +39,8 @@ class AppControlBox extends StatelessWidget {
         width: square ? resolvedHeight : null,
         child: contentHeight == null
             ? child
-            : Center(
+            : Align(
+                alignment: alignment,
                 child: SizedBox(height: contentHeight, child: child),
               ),
       ),

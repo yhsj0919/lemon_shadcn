@@ -33,7 +33,7 @@ abstract final class GalleryRegistry {
   /// The demo is deliberately registered by component family rather than by
   /// broad UI category. This mirrors how consumers look components up in the
   /// package API and keeps the sidebar aligned with admin_ui's example app.
-  static final entries = <GalleryEntry>[
+  static List<GalleryEntry> get entries => <GalleryEntry>[
     GalleryEntry(
       id: 'dashboard',
       label: '仪表盘',
@@ -87,12 +87,12 @@ abstract final class GalleryRegistry {
     GalleryEntry(
       id: 'form-advanced',
       label: '表单进阶',
-      subtitle: '自动完成、OTP、电话、评分与异步校验',
+      subtitle: '自动完成、组合框、OTP、电话、评分与异步校验',
       group: 'App 组件',
       builder: (_) => const FormsPage(
         title: '表单进阶',
         description: '异步数据、专用输入与托管校验。',
-        visibleSections: {'异步自动完成', '专用输入', '托管异步校验'},
+        visibleSections: {'异步自动完成', '组合框', '专用输入', '托管异步校验'},
       ),
     ),
     GalleryEntry(
@@ -104,6 +104,17 @@ abstract final class GalleryRegistry {
         title: '文件选择',
         description: '支持点击选择与拖放文件，并统一处理格式、大小和数量限制。',
         visibleSections: {'文件选择'},
+      ),
+    ),
+    GalleryEntry(
+      id: 'combobox',
+      label: '组合框',
+      subtitle: '静态搜索、异步搜索、对象选择与标签显示',
+      group: 'App 组件',
+      builder: (_) => const FormsPage(
+        title: '组合框',
+        description: '支持本地或异步检索、自定义条目和对象值选择。',
+        visibleSections: {'组合框'},
       ),
     ),
     GalleryEntry(
