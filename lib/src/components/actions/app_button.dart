@@ -50,6 +50,7 @@ class AppWidgetGroup extends StatelessWidget {
 
   final Axis direction;
   final bool expands;
+
   /// Per-child flex factors used when [expands] is true. Defaults to `1`.
   final List<int>? flexes;
   final List<Widget> children;
@@ -110,9 +111,7 @@ class AppWidgetGroup extends StatelessWidget {
           );
         },
       );
-      return expands && direction == Axis.horizontal
-          ? Expanded(flex: flexes?[index] ?? 1, child: item)
-          : item;
+      return expands ? Expanded(flex: flexes?[index] ?? 1, child: item) : item;
     }
 
     final items = <Widget>[

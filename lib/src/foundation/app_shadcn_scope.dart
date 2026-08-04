@@ -181,6 +181,7 @@ class _AppControlComponentThemes extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final inheritedTheme = shad.Theme.of(context);
     EdgeInsetsGeometry padding(
       BuildContext context,
       Set<WidgetState> states,
@@ -209,44 +210,51 @@ class _AppControlComponentThemes extends StatelessWidget {
       return AppOutlineStyle.resolve(context, states, current);
     }
 
-    return shad.ComponentTheme<shad.ModalBackdropTheme>(
-      data: shad.ModalBackdropTheme(
-        barrierColor: AppOverlayStyle.modalBarrier(context),
+    return shad.Theme(
+      data: inheritedTheme.copyWith(
+        iconTheme: () => inheritedTheme.iconTheme.copyWith(
+          xSmall: () => IconThemeData(size: metrics.iconSize),
+        ),
       ),
-      child: shad.ComponentTheme<shad.PrimaryButtonTheme>(
-        data: shad.PrimaryButtonTheme(padding: padding, iconTheme: iconTheme),
-        child: shad.ComponentTheme<shad.SecondaryButtonTheme>(
-          data: shad.SecondaryButtonTheme(
-            padding: padding,
-            iconTheme: iconTheme,
-          ),
-          child: shad.ComponentTheme<shad.OutlineButtonTheme>(
-            data: shad.OutlineButtonTheme(
+      child: shad.ComponentTheme<shad.ModalBackdropTheme>(
+        data: shad.ModalBackdropTheme(
+          barrierColor: AppOverlayStyle.modalBarrier(context),
+        ),
+        child: shad.ComponentTheme<shad.PrimaryButtonTheme>(
+          data: shad.PrimaryButtonTheme(padding: padding, iconTheme: iconTheme),
+          child: shad.ComponentTheme<shad.SecondaryButtonTheme>(
+            data: shad.SecondaryButtonTheme(
               padding: padding,
               iconTheme: iconTheme,
-              decoration: outlineDecoration,
             ),
-            child: shad.ComponentTheme<shad.GhostButtonTheme>(
-              data: shad.GhostButtonTheme(
+            child: shad.ComponentTheme<shad.OutlineButtonTheme>(
+              data: shad.OutlineButtonTheme(
                 padding: padding,
                 iconTheme: iconTheme,
+                decoration: outlineDecoration,
               ),
-              child: shad.ComponentTheme<shad.DestructiveButtonTheme>(
-                data: shad.DestructiveButtonTheme(
+              child: shad.ComponentTheme<shad.GhostButtonTheme>(
+                data: shad.GhostButtonTheme(
                   padding: padding,
                   iconTheme: iconTheme,
                 ),
-                child: shad.ComponentTheme<shad.LinkButtonTheme>(
-                  data: shad.LinkButtonTheme(
+                child: shad.ComponentTheme<shad.DestructiveButtonTheme>(
+                  data: shad.DestructiveButtonTheme(
                     padding: padding,
                     iconTheme: iconTheme,
                   ),
-                  child: shad.ComponentTheme<shad.TextButtonTheme>(
-                    data: shad.TextButtonTheme(
+                  child: shad.ComponentTheme<shad.LinkButtonTheme>(
+                    data: shad.LinkButtonTheme(
                       padding: padding,
                       iconTheme: iconTheme,
                     ),
-                    child: child,
+                    child: shad.ComponentTheme<shad.TextButtonTheme>(
+                      data: shad.TextButtonTheme(
+                        padding: padding,
+                        iconTheme: iconTheme,
+                      ),
+                      child: child,
+                    ),
                   ),
                 ),
               ),

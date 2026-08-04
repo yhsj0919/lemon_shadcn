@@ -254,10 +254,10 @@ class AppLocalizationsZh extends ShadcnLocalizations {
   String get placeholderColorPicker => '请选择颜色';
 
   @override
-  String get buttonPrevious => '上一页';
+  String get buttonPrevious => '上一步';
 
   @override
-  String get buttonNext => '下一页';
+  String get buttonNext => '下一步';
 
   @override
   String get refreshTriggerPull => '下拉刷新';

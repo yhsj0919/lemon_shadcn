@@ -206,6 +206,11 @@
 
 ## 进行中
 
+- [x] 审查提交 `3dd2e3a`：Pagination 恢复上游别名，图标尺寸移入全局 theme token；
+  DataGrid 的行高、表头、筛选区、分页栏、padding、字号集中到 `AppDataGridMetrics`，
+  默认值保持提交前外观；拖拽浮层改用主题 popover 色，暗色模式不再固定白底。
+- [x] `AppWidgetGroup.vertical(expands: true)` 已支持 `flexes`；全局上一项/下一项文案不再
+  被 Pagination 擅自改成“上一页/下一页”，避免污染 Stepper 等组件语义。
 - [x] 84 项入口已完成 API 与 Demo 覆盖审计；自动门槛验证每一行至少有一个分类示例。
 - [x] 主要单行控件统一高度，Button 的 padding/icon、OTP 的 contentGap、全局主题 radius
   已接入；Hover/Focus/Pressed/Disabled/Loading/Selected 关键状态有回归测试。

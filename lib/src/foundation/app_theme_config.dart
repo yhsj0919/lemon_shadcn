@@ -50,6 +50,32 @@ class AppControlMetrics {
   double get borderedContentHeight => height - 1;
 }
 
+/// Shared DataGrid dimensions. Defaults preserve the standard grid appearance
+/// while keeping every grid surface on one configurable token set.
+@immutable
+class AppDataGridMetrics {
+  const AppDataGridMetrics({
+    this.rowHeight = 40,
+    this.columnHeight = 40,
+    this.filterHeight = 48,
+    this.footerHeight = 40,
+    this.horizontalPadding = 12,
+    this.fontSize = 14,
+  }) : assert(rowHeight > 0),
+       assert(columnHeight > 0),
+       assert(filterHeight > 0),
+       assert(footerHeight > 0),
+       assert(horizontalPadding >= 0),
+       assert(fontSize > 0);
+
+  final double rowHeight;
+  final double columnHeight;
+  final double filterHeight;
+  final double footerHeight;
+  final double horizontalPadding;
+  final double fontSize;
+}
+
 /// Shared interactive motion tokens for [AppButton], [AppIconButton], and
 /// [AppMotion].
 ///
@@ -193,6 +219,7 @@ class AppThemeConfig {
     this.motion = const AppMotionTheme(),
     this.shadows = const AppShadowTheme(),
     this.controls = const AppControlMetrics(),
+    this.dataGrid = const AppDataGridMetrics(),
     this.controlPalette,
     this.textTheme,
     this.errorPresenter,
@@ -220,6 +247,7 @@ class AppThemeConfig {
     AppMotionTheme motion = const AppMotionTheme(),
     AppShadowTheme shadows = const AppShadowTheme(),
     AppControlMetrics controls = const AppControlMetrics(),
+    AppDataGridMetrics dataGrid = const AppDataGridMetrics(),
     AppVisualPalette? controlPalette,
     AppTextTheme? textTheme,
     AppErrorPresenter? errorPresenter,
@@ -251,6 +279,7 @@ class AppThemeConfig {
       motion: motion,
       shadows: shadows,
       controls: controls,
+      dataGrid: dataGrid,
       controlPalette: controlPalette,
       textTheme: textTheme,
       errorPresenter: errorPresenter,
@@ -401,6 +430,7 @@ class AppThemeConfig {
   final AppMotionTheme motion;
   final AppShadowTheme shadows;
   final AppControlMetrics controls;
+  final AppDataGridMetrics dataGrid;
   final AppVisualPalette? controlPalette;
   final AppTextTheme? textTheme;
   final AppErrorPresenter? errorPresenter;
@@ -414,6 +444,7 @@ class AppThemeConfig {
     AppMotionTheme? motion,
     AppShadowTheme? shadows,
     AppControlMetrics? controls,
+    AppDataGridMetrics? dataGrid,
     AppVisualPalette? controlPalette,
     AppTextTheme? textTheme,
     bool clearTextTheme = false,
@@ -429,6 +460,7 @@ class AppThemeConfig {
       motion: motion ?? this.motion,
       shadows: shadows ?? this.shadows,
       controls: controls ?? this.controls,
+      dataGrid: dataGrid ?? this.dataGrid,
       controlPalette: controlPalette ?? this.controlPalette,
       textTheme: clearTextTheme ? null : (textTheme ?? this.textTheme),
       errorPresenter: errorPresenter ?? this.errorPresenter,

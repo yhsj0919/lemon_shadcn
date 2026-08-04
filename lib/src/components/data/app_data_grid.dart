@@ -7,6 +7,7 @@ import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 import 'package:trina_grid/trina_grid.dart';
 
 import '../../foundation/app_shadcn_scope.dart';
+import '../../foundation/app_theme_config.dart';
 import '../actions/app_button.dart';
 import '../display/app_empty.dart';
 import '../forms/app_checkbox.dart';
@@ -880,7 +881,11 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
   TrinaGridConfiguration _configuration(BuildContext context) {
     final theme = shad.Theme.of(context);
     final colors = theme.colorScheme;
-    final textStyle = DefaultTextStyle.of(context).style.copyWith(fontSize: 14);
+    final metrics =
+        AppTheme.maybeOf(context)?.dataGrid ?? const AppDataGridMetrics();
+    final textStyle = DefaultTextStyle.of(
+      context,
+    ).style.copyWith(fontSize: metrics.fontSize);
     final style = TrinaGridStyleConfig(
       enableGridBorderShadow: false,
       enableRowHoverColor: true,
@@ -910,11 +915,15 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
       unfocusedSelectionColor: Colors.transparent,
       iconColor: colors.mutedForeground,
       disabledIconColor: colors.mutedForeground.withValues(alpha: .35),
-      rowHeight: 40,
-      columnHeight: 40,
-      columnFilterHeight: widget.showFilters ? 48 : 0,
-      defaultCellPadding: const EdgeInsets.symmetric(horizontal: 12),
-      defaultColumnTitlePadding: const EdgeInsets.symmetric(horizontal: 12),
+      rowHeight: metrics.rowHeight,
+      columnHeight: metrics.columnHeight,
+      columnFilterHeight: widget.showFilters ? metrics.filterHeight : 0,
+      defaultCellPadding: EdgeInsets.symmetric(
+        horizontal: metrics.horizontalPadding,
+      ),
+      defaultColumnTitlePadding: EdgeInsets.symmetric(
+        horizontal: metrics.horizontalPadding,
+      ),
       cellTextStyle: textStyle.copyWith(color: colors.foreground),
       columnTextStyle: textStyle.copyWith(
         color: colors.foreground,
@@ -1561,12 +1570,14 @@ class _AppDataGridPagerState extends State<_AppDataGridPager> {
   @override
   Widget build(BuildContext context) {
     final theme = shad.Theme.of(context);
+    final metrics =
+        AppTheme.maybeOf(context)?.dataGrid ?? const AppDataGridMetrics();
     final muted = TextStyle(color: theme.colorScheme.mutedForeground);
     final totalPages = math.max(1, _state.totalPage);
     final page = _page.clamp(1, totalPages);
     return Container(
-      height: 40,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+      height: metrics.footerHeight,
+      padding: EdgeInsets.symmetric(horizontal: metrics.horizontalPadding),
       decoration: BoxDecoration(
         border: Border(top: BorderSide(color: theme.colorScheme.border)),
       ),

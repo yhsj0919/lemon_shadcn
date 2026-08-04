@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart'
     show
-        Colors,
         Material,
         ReorderableDragStartListener,
         ReorderableListView,
@@ -26,7 +25,7 @@ class AppSortableDragFeedback extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = shad.Theme.of(context);
     return Material(
-      color: Colors.white,
+      color: theme.colorScheme.popover,
       elevation: 4,
       shadowColor: theme.colorScheme.foreground.withValues(alpha: 0.18),
       shape: RoundedRectangleBorder(
@@ -47,11 +46,13 @@ class AppSortableDragHandle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = shad.Theme.of(context);
+    final iconSize = AppTheme.maybeOf(context)?.controls.iconSize ?? 16;
+    final contentGap = AppTheme.maybeOf(context)?.controls.contentGap ?? 8;
     return Padding(
-      padding: const EdgeInsets.all(8),
+      padding: EdgeInsets.all(contentGap),
       child: Icon(
         shad.LucideIcons.gripVertical,
-        size: 18 * theme.scaling,
+        size: iconSize,
         color: enabled
             ? theme.colorScheme.mutedForeground
             : theme.colorScheme.muted,
@@ -114,9 +115,9 @@ class AppSortableInput<T> extends StatelessWidget {
               Flexible(
                 fit: FlexFit.loose,
                 child: DefaultTextStyle.merge(
-                  style: shad.Theme.of(context).typography.base.copyWith(
-                    fontWeight: FontWeight.normal,
-                  ),
+                  style: shad.Theme.of(
+                    context,
+                  ).typography.base.copyWith(fontWeight: FontWeight.normal),
                   child: itemBuilder(context, index, item),
                 ),
               ),
