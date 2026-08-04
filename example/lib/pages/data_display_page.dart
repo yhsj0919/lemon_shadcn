@@ -11,6 +11,8 @@ class DataDisplayPage extends StatelessWidget {
     super.key,
     this.visibleSections = const {
       '空状态与条目',
+      '详情描述',
+      '结果状态',
       '进度',
       '代码片段',
       '日历',
@@ -61,6 +63,127 @@ class DataDisplayPage extends StatelessWidget {
                   ),
                 ],
               ),
+            ),
+            ComponentSection(
+              title: '详情描述',
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  AppDescriptions(
+                    title: const Text('纵向标签'),
+                    bordered: true,
+                    columns: 3,
+                    items: [
+                      const AppDescriptionItem(
+                        label: Text('项目名称'),
+                        value: Text('Lemon Admin'),
+                      ),
+                      const AppDescriptionItem(
+                        label: Text('负责人'),
+                        value: Text('张明'),
+                      ),
+                      AppDescriptionItem(
+                        label: const Text('状态'),
+                        value: AppBadge.primary(child: const Text('进行中')),
+                      ),
+                    ],
+                  ),
+                  const Gap(16),
+                  const AppDescriptions(
+                    title: Text('横向标签'),
+                    bordered: true,
+                    columns: 3,
+                    minColumnWidth: 200,
+                    layout: AppDescriptionLayout.horizontal,
+                    labelWidth: 64,
+                    items: [
+                      AppDescriptionItem(
+                        label: Text('项目名称'),
+                        value: Text('Lemon Admin'),
+                      ),
+                      AppDescriptionItem(label: Text('负责人'), value: Text('张明')),
+                      AppDescriptionItem(
+                        label: Text('创建时间'),
+                        value: Text('2026-08-04 10:30'),
+                      ),
+                      AppDescriptionItem(
+                        label: Text('项目说明'),
+                        value: Text('管理端组件库与示例应用。'),
+                      ),
+                      AppDescriptionItem(
+                        label: Text('所属部门'),
+                        value: Text('研发中心'),
+                      ),
+                      AppDescriptionItem(
+                        label: Text('更新时间'),
+                        value: Text('2026-08-04'),
+                      ),
+                    ],
+                  ),
+                  const Gap(16),
+                  const Text('运行概览').h4(),
+                  const Gap(8),
+                  const AppDescriptions(
+                    type: AppDescriptionsType.table,
+                    columns: 3,
+                    minColumnWidth: 150,
+                    layout: AppDescriptionLayout.vertical,
+                    items: [
+                      AppDescriptionItem(
+                        icon: Icon(LucideIcons.thermometer),
+                        label: Text('温度'),
+                        value: Text('41°C'),
+                      ),
+                      AppDescriptionItem(
+                        icon: Icon(LucideIcons.sun),
+                        label: Text('亮度'),
+                        value: Text('78%'),
+                      ),
+                      AppDescriptionItem(
+                        icon: Icon(LucideIcons.droplet),
+                        label: Text('湿度'),
+                        value: Text('48%'),
+                      ),
+                    ],
+                  ),
+                  const Gap(16),
+                  const Text('基本信息').h4(),
+                  const Gap(8),
+                  const AppDescriptions(
+                    type: AppDescriptionsType.table,
+                    columns: 2,
+                    minColumnWidth: 260,
+                    layout: AppDescriptionLayout.horizontal,
+                    labelWidth: 88,
+                    items: [
+                      AppDescriptionItem(
+                        icon: Icon(LucideIcons.building2),
+                        label: Text('所属区域'),
+                        value: Text('广州天河'),
+                      ),
+                      AppDescriptionItem(
+                        icon: Icon(LucideIcons.users),
+                        label: Text('客户'),
+                        value: Text('世贸物业'),
+                      ),
+                      AppDescriptionItem(
+                        icon: Icon(LucideIcons.mapPin),
+                        label: Text('详细地址'),
+                        value: Text('广州市天河区林和西路 9 号'),
+                      ),
+                      AppDescriptionItem(
+                        icon: Icon(LucideIcons.monitor),
+                        label: Text('分辨率'),
+                        value: Text('1920 × 1080'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            ComponentSection(
+              title: '结果状态',
+              child: const _ResultStatusShowcase(),
             ),
             ComponentSection(
               title: '头像与徽章',
@@ -228,6 +351,80 @@ class DataDisplayPage extends StatelessWidget {
           ].where((section) {
             return visibleSections?.contains(section.title) ?? true;
           }).toList(),
+    );
+  }
+}
+
+class _ResultStatusShowcase extends StatelessWidget {
+  const _ResultStatusShowcase();
+
+  static const _items =
+      <({AppResultStatus status, String title, String description})>[
+        (
+          status: AppResultStatus.success,
+          title: '操作成功',
+          description: '新的配置已经生效。',
+        ),
+        (
+          status: AppResultStatus.info,
+          title: '提交信息',
+          description: '申请已提交，正在等待处理。',
+        ),
+        (
+          status: AppResultStatus.warning,
+          title: '需要确认',
+          description: '该操作可能影响现有数据。',
+        ),
+        (
+          status: AppResultStatus.error,
+          title: '操作失败',
+          description: '服务暂时不可用，请稍后重试。',
+        ),
+        (
+          status: AppResultStatus.forbidden,
+          title: '无权访问',
+          description: '当前账号没有查看该内容的权限。',
+        ),
+        (
+          status: AppResultStatus.notFound,
+          title: '内容不存在',
+          description: '请检查地址，或返回上一页。',
+        ),
+      ];
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const spacing = 12.0;
+        final columns = constraints.maxWidth >= 900
+            ? 3
+            : constraints.maxWidth >= 560
+            ? 2
+            : 1;
+        final itemWidth =
+            (constraints.maxWidth - spacing * (columns - 1)) / columns;
+
+        return Wrap(
+          spacing: spacing,
+          runSpacing: spacing,
+          children: [
+            for (final item in _items)
+              SizedBox(
+                width: itemWidth,
+                child: AppCard(
+                  padding: EdgeInsets.zero,
+                  child: AppResult(
+                    status: item.status,
+                    title: Text(item.title),
+                    description: Text(item.description),
+                    padding: const EdgeInsets.all(20),
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 }

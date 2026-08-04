@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 
 import '../pages/actions_page.dart';
 import '../pages/data_display_page.dart';
+import '../pages/data_grid_page.dart';
 import '../pages/dashboard_page.dart';
 import '../pages/devices/devices_page.dart';
 import '../pages/forms_page.dart';
@@ -87,12 +88,12 @@ abstract final class GalleryRegistry {
     GalleryEntry(
       id: 'form-advanced',
       label: '表单进阶',
-      subtitle: '自动完成、组合框、OTP、电话、评分与异步校验',
+      subtitle: '自动完成、组合框、级联选择、OTP、电话与异步校验',
       group: 'App 组件',
       builder: (_) => const FormsPage(
         title: '表单进阶',
         description: '异步数据、专用输入与托管校验。',
-        visibleSections: {'异步自动完成', '组合框', '专用输入', '托管异步校验'},
+        visibleSections: {'异步自动完成', '组合框', '省市县联动', '专用输入', '托管异步校验'},
       ),
     ),
     GalleryEntry(
@@ -115,6 +116,39 @@ abstract final class GalleryRegistry {
         title: '组合框',
         description: '支持本地或异步检索、自定义条目和对象值选择。',
         visibleSections: {'组合框'},
+      ),
+    ),
+    GalleryEntry(
+      id: 'region-picker',
+      label: '省市县联动',
+      subtitle: '静态或动态加载省市县、省市和市县数据',
+      group: 'App 组件',
+      builder: (_) => const FormsPage(
+        title: '省市县联动',
+        description: '支持任意二至三级区域路径，并在父级变化时自动清理下级。',
+        visibleSections: {'省市县联动'},
+      ),
+    ),
+    GalleryEntry(
+      id: 'transfer',
+      label: '穿梭框',
+      subtitle: '双列表搜索、选择和批量移动，支持响应式纵向布局',
+      group: 'App 组件',
+      builder: (_) => const FormsPage(
+        title: '穿梭框',
+        description: '适用于权限、成员和资源分配。',
+        visibleSections: {'穿梭框'},
+      ),
+    ),
+    GalleryEntry(
+      id: 'descriptions-result',
+      label: '详情与结果',
+      subtitle: '响应式键值详情和操作结果状态',
+      group: 'App 组件',
+      builder: (_) => const DataDisplayPage(
+        title: '详情与结果',
+        description: '展示记录详情、操作成功、失败或无权限状态。',
+        visibleSections: {'详情描述', '结果状态'},
       ),
     ),
     GalleryEntry(
@@ -181,6 +215,13 @@ abstract final class GalleryRegistry {
       subtitle: 'Carousel、Resizable、Stepper、Tree 与 Table',
       group: 'App 组件',
       builder: (_) => const StructuredLayoutPage(),
+    ),
+    GalleryEntry(
+      id: 'data-grid',
+      label: '高级表格',
+      subtitle: '固定列、拖动排序、分页器与无限滚动',
+      group: 'App 组件',
+      builder: (_) => const DataGridPage(),
     ),
     GalleryEntry(
       id: 'navigation',

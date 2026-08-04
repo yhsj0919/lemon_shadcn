@@ -11,24 +11,24 @@ import '../../foundation/app_theme_config.dart';
 import '../../motion/app_hover_press_ticker.dart';
 
 typedef AppButtonCallback = FutureOr<void> Function();
-typedef AppButtonGroupItem = shad.ButtonGroupItem;
-typedef AppButtonGroupFlexible = shad.ButtonGroupFlexible;
+typedef AppWidgetGroupItem = shad.ButtonGroupItem;
+typedef AppWidgetGroupFlexible = shad.ButtonGroupFlexible;
 
-class AppButtonGroup extends StatelessWidget {
-  const AppButtonGroup({
+class AppWidgetGroup extends StatelessWidget {
+  const AppWidgetGroup({
     super.key,
     this.direction = Axis.horizontal,
     this.expands = false,
     required this.children,
   });
 
-  const AppButtonGroup.horizontal({
+  const AppWidgetGroup.horizontal({
     super.key,
     this.expands = false,
     required this.children,
   }) : direction = Axis.horizontal;
 
-  const AppButtonGroup.vertical({
+  const AppWidgetGroup.vertical({
     super.key,
     this.expands = false,
     required this.children,
@@ -38,73 +38,82 @@ class AppButtonGroup extends StatelessWidget {
   final bool expands;
   final List<Widget> children;
 
+  /// Whether [context] belongs to a child currently managed by a widget group.
+  static bool isItemContext(BuildContext context) =>
+      _AppWidgetGroupItemScope.maybeOf(context) != null;
+
   @override
   Widget build(BuildContext context) {
     final theme = shad.Theme.of(context);
     final side = BorderSide(color: theme.colorScheme.border, width: 1);
     final lastIndex = children.length - 1;
+    Widget buildItem(int index) {
+      final item = Builder(
+        builder: (context) {
+          final first = index == 0;
+          final last = index == lastIndex;
+          final radius = switch (direction) {
+            Axis.horizontal => BorderRadius.horizontal(
+              left: first ? Radius.circular(theme.radiusMd) : Radius.zero,
+              right: last ? Radius.circular(theme.radiusMd) : Radius.zero,
+            ),
+            Axis.vertical => BorderRadius.vertical(
+              top: first ? Radius.circular(theme.radiusMd) : Radius.zero,
+              bottom: last ? Radius.circular(theme.radiusMd) : Radius.zero,
+            ),
+          };
+          final border = switch (direction) {
+            Axis.horizontal => Border(
+              left: first ? side : BorderSide.none,
+              top: side,
+              right: side,
+              bottom: side,
+            ),
+            Axis.vertical => Border(
+              left: side,
+              top: first ? side : BorderSide.none,
+              right: side,
+              bottom: side,
+            ),
+          };
+          return ClipRRect(
+            borderRadius: radius,
+            child: DecoratedBox(
+              position: DecorationPosition.foreground,
+              decoration: BoxDecoration(border: border, borderRadius: radius),
+              child: _AppWidgetGroupItemScope(
+                direction: direction,
+                index: index,
+                child: children[index],
+              ),
+            ),
+          );
+        },
+      );
+      return expands && direction == Axis.horizontal
+          ? Expanded(child: item)
+          : item;
+    }
+
     final items = <Widget>[
-      for (var index = 0; index < children.length; index++)
-        Builder(
-          builder: (context) {
-            final first = index == 0;
-            final last = index == lastIndex;
-            final radius = switch (direction) {
-              Axis.horizontal => BorderRadius.horizontal(
-                left: first ? Radius.circular(theme.radiusMd) : Radius.zero,
-                right: last ? Radius.circular(theme.radiusMd) : Radius.zero,
-              ),
-              Axis.vertical => BorderRadius.vertical(
-                top: first ? Radius.circular(theme.radiusMd) : Radius.zero,
-                bottom: last ? Radius.circular(theme.radiusMd) : Radius.zero,
-              ),
-            };
-            final border = switch (direction) {
-              Axis.horizontal => Border(
-                left: first ? side : BorderSide.none,
-                top: side,
-                right: side,
-                bottom: side,
-              ),
-              Axis.vertical => Border(
-                left: side,
-                top: first ? side : BorderSide.none,
-                right: side,
-                bottom: side,
-              ),
-            };
-            return ClipRRect(
-              borderRadius: radius,
-              child: DecoratedBox(
-                position: DecorationPosition.foreground,
-                decoration: BoxDecoration(border: border, borderRadius: radius),
-                child: _AppButtonGroupItemScope(
-                  direction: direction,
-                  index: index,
-                  child: children[index],
-                ),
-              ),
-            );
-          },
-        ),
+      for (var index = 0; index < children.length; index++) buildItem(index),
     ];
     Widget group = Flex(
       direction: direction,
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: expands && direction == Axis.horizontal
+          ? MainAxisSize.max
+          : MainAxisSize.min,
+      crossAxisAlignment: direction == Axis.horizontal
+          ? CrossAxisAlignment.center
+          : CrossAxisAlignment.stretch,
       children: items,
     );
-    if (!expands) {
-      group = direction == Axis.horizontal
-          ? IntrinsicHeight(child: group)
-          : IntrinsicWidth(child: group);
-    }
-    return group;
+    return direction == Axis.horizontal ? group : IntrinsicWidth(child: group);
   }
 }
 
-class _AppButtonGroupItemScope extends InheritedWidget {
-  const _AppButtonGroupItemScope({
+class _AppWidgetGroupItemScope extends InheritedWidget {
+  const _AppWidgetGroupItemScope({
     required this.direction,
     required this.index,
     required super.child,
@@ -113,11 +122,11 @@ class _AppButtonGroupItemScope extends InheritedWidget {
   final Axis direction;
   final int index;
 
-  static _AppButtonGroupItemScope? maybeOf(BuildContext context) =>
-      context.dependOnInheritedWidgetOfExactType<_AppButtonGroupItemScope>();
+  static _AppWidgetGroupItemScope? maybeOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<_AppWidgetGroupItemScope>();
 
   @override
-  bool updateShouldNotify(_AppButtonGroupItemScope oldWidget) =>
+  bool updateShouldNotify(_AppWidgetGroupItemScope oldWidget) =>
       direction != oldWidget.direction || index != oldWidget.index;
 }
 
@@ -746,7 +755,7 @@ class _AppAsyncButtonState extends State<_AppAsyncButton>
     final metrics = AppTheme.maybeOf(context)?.controls;
     final baseHeight = metrics?.buttonHeight ?? 31;
     final sizeScale = _config.size.scale;
-    final groupItem = _AppButtonGroupItemScope.maybeOf(context);
+    final groupItem = _AppWidgetGroupItemScope.maybeOf(context);
 
     shad.AbstractButtonStyle sized(shad.ButtonStyle style) => style.copyWith(
       decoration: groupItem == null

@@ -6,6 +6,54 @@ import '../../foundation/app_visual_style.dart';
 import 'app_field.dart';
 import 'app_form.dart';
 
+/// Compact checkbox control for use inside lists and composite controls.
+class AppCheckboxIndicator extends StatelessWidget {
+  const AppCheckboxIndicator({
+    super.key,
+    required this.state,
+    required this.onChanged,
+    this.tristate = false,
+    this.enabled,
+    this.size,
+    this.backgroundColor,
+    this.activeColor,
+    this.borderColor,
+    this.borderRadius,
+  });
+
+  final shad.CheckboxState state;
+  final ValueChanged<shad.CheckboxState>? onChanged;
+  final bool tristate;
+  final bool? enabled;
+  final double? size;
+  final Color? backgroundColor;
+  final Color? activeColor;
+  final Color? borderColor;
+  final BorderRadiusGeometry? borderRadius;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = shad.Theme.of(context);
+    final states = <WidgetState>{
+      if (state != shad.CheckboxState.unchecked) WidgetState.selected,
+      if (enabled == false || onChanged == null) WidgetState.disabled,
+    };
+    final colors = resolveAppControlVisuals(context, states);
+    return shad.Checkbox(
+      state: state,
+      onChanged: onChanged,
+      tristate: tristate,
+      enabled: enabled,
+      size: size ?? 18 * theme.scaling,
+      backgroundColor:
+          backgroundColor ?? colors?.background ?? theme.colorScheme.background,
+      activeColor: activeColor ?? colors?.accent ?? theme.colorScheme.primary,
+      borderColor: borderColor ?? colors?.border ?? theme.colorScheme.border,
+      borderRadius: borderRadius,
+    );
+  }
+}
+
 class AppCheckbox extends StatelessWidget {
   const AppCheckbox({
     super.key,

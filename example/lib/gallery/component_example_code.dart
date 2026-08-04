@@ -32,7 +32,7 @@ AppButton.primary(
   onPressed: () {},
   child: const Text('关闭动效'),
 );''',
-    '按钮组': '''AppButtonGroup.horizontal(children: [
+    '组件组': '''AppWidgetGroup.horizontal(children: [
   AppButton.outline(onPressed: () {}, child: const Text('上一页')),
   AppButton.outline(onPressed: () {}, child: const Text('下一页')),
 ]);''',
@@ -92,6 +92,34 @@ AppSwitchFormField(controlLabel: const Text('启用通知'));''',
   ),
   displayMode: AppComboboxDisplayMode.token,
 );''',
+    '省市县联动': '''AppRegionPickerFormField<String>(
+  label: '省市县',
+  options: regionTree,
+);
+
+AppRegionPickerFormField<String>.async(
+  label: '省市',
+  variant: AppRegionPickerVariant.provinceCity,
+  loadOptions: (level, selectedPath) => repository.loadRegions(
+    level: level,
+    parents: selectedPath,
+  ),
+);
+
+AppRegionPickerFormField<String>(
+  label: '市县',
+  variant: AppRegionPickerVariant.cityCounty,
+  options: cityTree,
+);''',
+    '穿梭框': '''AppTransferFormField<String>(
+  label: '角色权限',
+  options: const [
+    AppOption(value: 'member', label: '管理成员'),
+    AppOption(value: 'report', label: '导出报表'),
+  ],
+  initialValue: const ['report'],
+  onChanged: (value) {},
+);''',
     '文件选择': '''AppFilePickerFormField(
   label: '附件',
   allowedExtensions: const ['png', 'jpg'],
@@ -119,6 +147,67 @@ AppDateTimePickerFormField(label: '日期时间');''',
   title: const Text('暂无数据'),
 );
 AppItem(title: const Text('项目说明.pdf'));''',
+    '详情描述': '''AppDescriptions(
+      title: const Text('项目资料'),
+      bordered: true,
+      columns: 3,
+  items: const [
+    AppDescriptionItem(label: Text('项目名称'), value: Text('Lemon Admin')),
+    AppDescriptionItem(label: Text('负责人'), value: Text('张明')),
+      ],
+);
+
+AppDescriptions(
+  layout: AppDescriptionLayout.horizontal,
+  labelWidth: 72,
+  columns: 3,
+  minColumnWidth: 200,
+  items: const [
+    AppDescriptionItem(label: Text('项目名称'), value: Text('Lemon Admin')),
+  ],
+);
+
+AppDescriptions(
+  type: AppDescriptionsType.table,
+  columns: 2,
+  layout: AppDescriptionLayout.horizontal,
+  items: const [
+    AppDescriptionItem(
+      icon: Icon(AppLucideIcons.mapPin),
+      label: Text('详细地址'),
+      value: Text('广州市天河区林和西路 9 号'),
+    ),
+  ],
+);''',
+    '结果状态': '''AppResult(
+  status: AppResultStatus.success,
+  title: const Text('操作成功'),
+  description: const Text('新的配置已经生效。'),
+);
+
+// 其他内置状态
+// AppResultStatus.info
+// AppResultStatus.warning
+// AppResultStatus.error
+// AppResultStatus.forbidden
+// AppResultStatus.notFound''',
+    '本地数据与拖动排序': '''AppDataGrid<User>.local(
+  columns: columns,
+  rows: users,
+  rowKey: (user) => user.id,
+  reorderableRows: true,
+  onRowsReordered: (orderedKeys, orderedRows) {},
+);''',
+    '服务端分页': '''AppDataGrid<User>.paginated(
+  columns: columns,
+  rowKey: (user) => user.id,
+  loader: (query) => repository.loadUsers(query),
+);''',
+    '无限滚动': '''AppDataGrid<User>.infinite(
+  columns: columns,
+  rowKey: (user) => user.id,
+  loader: (query) => repository.loadMoreUsers(query),
+);''',
     '头像与徽章': '''const AppAvatar(initials: 'LS');
 AppBadge.primary(child: const Text('主要'));''',
     '进度': '''const AppProgress(progress: 0.64);

@@ -95,11 +95,76 @@ class FormsPage extends StatefulWidget {
     ),
   );
 
+  static const _regions = [
+    AppCascadeOption(
+      value: '浙江省',
+      label: '浙江省',
+      children: [
+        AppCascadeOption(
+          value: '杭州市',
+          label: '杭州市',
+          children: [
+            AppCascadeOption(value: '西湖区', label: '西湖区'),
+            AppCascadeOption(value: '滨江区', label: '滨江区'),
+          ],
+        ),
+        AppCascadeOption(
+          value: '宁波市',
+          label: '宁波市',
+          children: [
+            AppCascadeOption(value: '海曙区', label: '海曙区'),
+            AppCascadeOption(value: '鄞州区', label: '鄞州区'),
+          ],
+        ),
+      ],
+    ),
+    AppCascadeOption(
+      value: '江苏省',
+      label: '江苏省',
+      children: [
+        AppCascadeOption(
+          value: '南京市',
+          label: '南京市',
+          children: [
+            AppCascadeOption(value: '玄武区', label: '玄武区'),
+            AppCascadeOption(value: '建邺区', label: '建邺区'),
+          ],
+        ),
+        AppCascadeOption(
+          value: '苏州市',
+          label: '苏州市',
+          children: [
+            AppCascadeOption(value: '姑苏区', label: '姑苏区'),
+            AppCascadeOption(value: '吴中区', label: '吴中区'),
+          ],
+        ),
+      ],
+    ),
+  ];
+
+  static Future<List<AppCascadeOption<String>>> _loadRegions(
+    AppRegionLevel level,
+    List<String> path,
+  ) async {
+    await Future<void>.delayed(const Duration(milliseconds: 450));
+    if (level == AppRegionLevel.province) return _regions;
+    var options = _regions;
+    for (final selected in path) {
+      final parent = options
+          .where((item) => item.value == selected)
+          .firstOrNull;
+      if (parent == null) return const [];
+      options = parent.children;
+    }
+    return options;
+  }
+
   @override
   State<FormsPage> createState() => _FormsPageState();
 }
 
 class _FormsPageState extends State<FormsPage> {
+  List<String> _assignedPermissions = const ['report'];
   List<AppFileSelection> _singleFiles = const [];
   List<AppFileSelection> _files = const [];
   final Map<AppFileSelection, double> _uploadProgress = {};
@@ -328,6 +393,57 @@ class _FormsPageState extends State<FormsPage> {
                     },
                   ),
                 ],
+              ),
+            ),
+            ComponentSection(
+              title: '省市县联动',
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  AppRegionPickerFormField<String>(
+                    label: '静态省市县',
+                    options: FormsPage._regions,
+                  ),
+                  const Gap(16),
+                  AppRegionPickerFormField<String>.async(
+                    label: '动态省市',
+                    variant: AppRegionPickerVariant.provinceCity,
+                    loadOptions: FormsPage._loadRegions,
+                  ),
+                  const Gap(16),
+                  AppRegionPickerFormField<String>(
+                    label: '静态市县',
+                    variant: AppRegionPickerVariant.cityCounty,
+                    options: [
+                      AppCascadeOption(
+                        value: '杭州市',
+                        label: '杭州市',
+                        children: [
+                          AppCascadeOption(value: '西湖区', label: '西湖区'),
+                          AppCascadeOption(value: '滨江区', label: '滨江区'),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            ComponentSection(
+              title: '穿梭框',
+              child: AppTransferFormField<String>(
+                label: '角色权限',
+                description: '选择条目后通过中间按钮在两侧移动。窄屏会自动切换为纵向布局。',
+                options: const [
+                  AppOption(value: 'dashboard', label: '查看仪表盘'),
+                  AppOption(value: 'member', label: '管理成员'),
+                  AppOption(value: 'report', label: '导出报表'),
+                  AppOption(value: 'settings', label: '修改设置'),
+                  AppOption(value: 'audit', label: '查看审计日志'),
+                ],
+                initialValue: _assignedPermissions,
+                height: 260,
+                onChanged: (value) =>
+                    setState(() => _assignedPermissions = value),
               ),
             ),
             ComponentSection(

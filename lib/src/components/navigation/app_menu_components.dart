@@ -583,6 +583,56 @@ class AppDropdownMenu extends StatelessWidget {
   }
 }
 
+/// Anchors an [AppDropdownMenu] to an arbitrary widget.
+///
+/// Use this for compact triggers such as table header icons. It keeps popup
+/// positioning and the menu surface in the same implementation used by the
+/// rest of the component library.
+class AppMenuAnchor extends StatelessWidget {
+  const AppMenuAnchor({
+    super.key,
+    required this.child,
+    required this.items,
+    this.enabled = true,
+    this.alignment = Alignment.topRight,
+    this.anchorAlignment = Alignment.bottomRight,
+    this.offset,
+    this.allowInvertVertical = false,
+  });
+
+  final Widget child;
+  final List<shad.MenuItem> items;
+  final bool enabled;
+  final AlignmentGeometry alignment;
+  final AlignmentGeometry anchorAlignment;
+  final Offset? offset;
+  final bool allowInvertVertical;
+
+  @override
+  Widget build(BuildContext context) {
+    void open() {
+      if (!enabled || items.isEmpty) return;
+      shad.PopoverConfiguration<void>(
+        alignment: alignment,
+        anchorAlignment: anchorAlignment,
+        offset: offset,
+        allowInvertVertical: allowInvertVertical,
+        builder: (context) => AppDropdownMenu(children: items),
+      ).show(context);
+    }
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: enabled ? open : null,
+      // Keep header drag/sort gestures outside a compact menu trigger.
+      onHorizontalDragStart: enabled ? (_) {} : null,
+      onHorizontalDragUpdate: enabled ? (_) {} : null,
+      onHorizontalDragEnd: enabled ? (_) {} : null,
+      child: IgnorePointer(child: child),
+    );
+  }
+}
+
 class AppContextMenu extends StatefulWidget {
   const AppContextMenu({
     super.key,

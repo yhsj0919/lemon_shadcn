@@ -30,6 +30,7 @@ class AppSelect<V> extends StatefulWidget {
     this.dependentValuePolicy = AppDependentValuePolicy.clearImmediately,
     this.optionConfig = const AppOptionConfig(),
     this.initialOption,
+    this.popupMinWidth,
   });
 
   factory AppSelect.async({
@@ -46,6 +47,7 @@ class AppSelect<V> extends StatefulWidget {
         AppDependentValuePolicy.clearImmediately,
     AppOptionConfig<V> optionConfig = const AppOptionConfig(),
     AppOption<V>? initialOption,
+    double? popupMinWidth,
     WidgetBuilder? loadingBuilder,
     AppSelectErrorBuilder? errorBuilder,
     WidgetBuilder? emptyBuilder,
@@ -63,6 +65,7 @@ class AppSelect<V> extends StatefulWidget {
     clearable: clearable,
     optionConfig: optionConfig,
     initialOption: initialOption,
+    popupMinWidth: popupMinWidth,
     loadingBuilder: loadingBuilder,
     errorBuilder: errorBuilder,
     emptyBuilder: emptyBuilder,
@@ -81,6 +84,7 @@ class AppSelect<V> extends StatefulWidget {
         AppDependentValuePolicy.clearImmediately,
     AppOptionConfig<V> optionConfig = const AppOptionConfig(),
     AppOption<V>? initialOption,
+    double? popupMinWidth,
     WidgetBuilder? loadingBuilder,
     AppSelectErrorBuilder? errorBuilder,
     WidgetBuilder? emptyBuilder,
@@ -98,6 +102,7 @@ class AppSelect<V> extends StatefulWidget {
     clearable: clearable,
     optionConfig: optionConfig,
     initialOption: initialOption,
+    popupMinWidth: popupMinWidth,
     loadingBuilder: loadingBuilder,
     errorBuilder: errorBuilder,
     emptyBuilder: emptyBuilder,
@@ -113,12 +118,15 @@ class AppSelect<V> extends StatefulWidget {
   final AppDependentValuePolicy dependentValuePolicy;
   final AppOptionConfig<V> optionConfig;
   final AppOption<V>? initialOption;
+  final double? popupMinWidth;
 
   @override
   State<AppSelect<V>> createState() => _AppSelectState<V>();
 }
 
 class _AppSelectState<V> extends State<AppSelect<V>> {
+  static const double _expandIconBreakpoint = 120;
+
   bool _equals(V left, V right) => widget.optionConfig.isEqual(left, right);
 
   AppOption<V>? _optionFor(V value) {
@@ -150,50 +158,80 @@ class _AppSelectState<V> extends State<AppSelect<V>> {
   @override
   Widget build(BuildContext context) {
     assert(_debugCheckUniqueOptions(widget.options, _equals));
-    return AppSelectControlShell(
-      enabled: widget.enabled && widget.onChanged != null,
-      builder: (context, popup) => shad.Select<V>(
-        value: widget.value,
-        enabled: widget.enabled,
-        canUnselect: widget.clearable,
-        onChanged: widget.enabled ? widget.onChanged : null,
-        placeholder: Text(widget.placeholder).muted(),
-        valueSelectionPredicate: (selected, candidate) {
-          return selected != null &&
-              candidate is V &&
-              _equals(selected, candidate);
-        },
-        itemBuilder: (context, selected) {
-          final option = _optionFor(selected);
-          return option == null
-              ? Text(selected.toString())
-              : widget.optionConfig.buildSelected(context, option);
-        },
-        popup: (context) => popup(
-          shad.SelectPopup<V>(
-            items: shad.SelectItemList(
-              children: [
-                for (final option in widget.options)
-                  shad.SelectItemButton<V>(
-                    value: option.value,
-                    enabled: !option.disabled,
-                    child: widget.optionConfig.buildOption(
-                      context,
-                      option,
-                      AppOptionViewState(
-                        selected:
-                            widget.value != null &&
-                            _equals(widget.value as V, option.value),
-                        highlighted: false,
-                        disabled: option.disabled,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final anchorWidth = constraints.hasBoundedWidth
+            ? constraints.maxWidth
+            : null;
+        final minimumPopupWidth = widget.popupMinWidth;
+        final showExpandIcon =
+            anchorWidth == null || anchorWidth >= _expandIconBreakpoint;
+        final popupWidth = minimumPopupWidth == null
+            ? null
+            : anchorWidth == null
+            ? minimumPopupWidth
+            : anchorWidth < minimumPopupWidth
+            ? minimumPopupWidth
+            : anchorWidth;
+        return AppSelectControlShell(
+          enabled: widget.enabled && widget.onChanged != null,
+          builder: (context, popup) => shad.Select<V>(
+            value: widget.value,
+            enabled: widget.enabled,
+            canUnselect: widget.clearable,
+            expandIcon: showExpandIcon ? const shad.SelectExpandIcon() : null,
+            popupWidthConstraint: popupWidth == null
+                ? shad.PopoverConstraint.anchorFixedSize
+                : shad.PopoverConstraint.flexible,
+            popupConstraints: popupWidth == null
+                ? null
+                : BoxConstraints.tightFor(
+                    width: popupWidth,
+                  ).copyWith(maxHeight: 320),
+            onChanged: widget.enabled ? widget.onChanged : null,
+            placeholder: Text(
+              widget.placeholder,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ).muted(),
+            valueSelectionPredicate: (selected, candidate) {
+              return selected != null &&
+                  candidate is V &&
+                  _equals(selected, candidate);
+            },
+            itemBuilder: (context, selected) {
+              final option = _optionFor(selected);
+              return option == null
+                  ? Text(selected.toString())
+                  : widget.optionConfig.buildSelected(context, option);
+            },
+            popup: (context) => popup(
+              shad.SelectPopup<V>(
+                items: shad.SelectItemList(
+                  children: [
+                    for (final option in widget.options)
+                      shad.SelectItemButton<V>(
+                        value: option.value,
+                        enabled: !option.disabled,
+                        child: widget.optionConfig.buildOption(
+                          context,
+                          option,
+                          AppOptionViewState(
+                            selected:
+                                widget.value != null &&
+                                _equals(widget.value as V, option.value),
+                            highlighted: false,
+                            disabled: option.disabled,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-              ],
+                  ],
+                ),
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -213,6 +251,7 @@ class AppSelectFormField<V> extends FormField<V> {
     this.dependentValuePolicy = AppDependentValuePolicy.clearImmediately,
     this.optionConfig = const AppOptionConfig(),
     this.initialOption,
+    this.popupMinWidth,
     this.onChanged,
     super.initialValue,
     super.onSaved,
@@ -244,6 +283,7 @@ class AppSelectFormField<V> extends FormField<V> {
     this.dependentValuePolicy = AppDependentValuePolicy.clearImmediately,
     this.optionConfig = const AppOptionConfig(),
     this.initialOption,
+    this.popupMinWidth,
     this.onChanged,
     this.loadingStateBuilder,
     this.loadErrorBuilder,
@@ -273,6 +313,7 @@ class AppSelectFormField<V> extends FormField<V> {
     this.dependentValuePolicy = AppDependentValuePolicy.clearImmediately,
     this.optionConfig = const AppOptionConfig(),
     this.initialOption,
+    this.popupMinWidth,
     this.onChanged,
     this.loadingStateBuilder,
     this.loadErrorBuilder,
@@ -304,6 +345,7 @@ class AppSelectFormField<V> extends FormField<V> {
   final bool clearable;
   final AppOptionConfig<V> optionConfig;
   final AppOption<V>? initialOption;
+  final double? popupMinWidth;
   final ValueChanged<V?>? onChanged;
   final WidgetBuilder? loadingStateBuilder;
   final AppSelectErrorBuilder? loadErrorBuilder;
@@ -323,6 +365,7 @@ class AppSelectFormField<V> extends FormField<V> {
             dependentValuePolicy: field.dependentValuePolicy,
             optionConfig: field.optionConfig,
             initialOption: field.initialOption,
+            popupMinWidth: field.popupMinWidth,
             onChanged: (value) {
               state.didChange(value);
               field.onChanged?.call(value);
@@ -340,6 +383,7 @@ class AppSelectFormField<V> extends FormField<V> {
             clearable: field.clearable,
             optionConfig: field.optionConfig,
             initialOption: field.initialOption,
+            popupMinWidth: field.popupMinWidth,
             loadingBuilder: field.loadingStateBuilder,
             errorBuilder: field.loadErrorBuilder,
             emptyBuilder: field.emptyStateBuilder,
@@ -380,6 +424,7 @@ class _AppAsyncSelect<V> extends AppSelect<V> {
     required super.clearable,
     super.optionConfig = const AppOptionConfig(),
     super.initialOption,
+    super.popupMinWidth,
     this.loadingBuilder,
     this.errorBuilder,
     this.emptyBuilder,

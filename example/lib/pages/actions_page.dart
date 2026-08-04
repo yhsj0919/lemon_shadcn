@@ -156,20 +156,20 @@ class ActionsPage extends StatelessWidget {
           ),
         ),
         ComponentSection(
-          title: '按钮组',
+          title: '组件组',
           child: Wrap(
             spacing: 20,
             runSpacing: 20,
             crossAxisAlignment: WrapCrossAlignment.start,
             children: [
-              AppButtonGroup.horizontal(
+              AppWidgetGroup.horizontal(
                 children: [
                   AppButton.outline(onPressed: () {}, child: const Text('上一页')),
                   AppButton.outline(onPressed: () {}, child: const Text('当前页')),
                   AppButton.outline(onPressed: () {}, child: const Text('下一页')),
                 ],
               ),
-              AppButtonGroup.horizontal(
+              AppWidgetGroup.horizontal(
                 children: [
                   AppButton.secondary(
                     onPressed: () {},
@@ -179,7 +179,7 @@ class ActionsPage extends StatelessWidget {
                   AppButton.outline(onPressed: () {}, child: const Text('详情')),
                 ],
               ),
-              AppButtonGroup.vertical(
+              AppWidgetGroup.vertical(
                 children: [
                   AppButton.outline(onPressed: () {}, child: const Text('复制')),
                   AppButton.outline(onPressed: () {}, child: const Text('移动')),

@@ -329,28 +329,47 @@ class _CompactDestination extends StatelessWidget {
         popoverAlignment: Alignment.topLeft,
         anchorAlignment: Alignment.topRight,
         popoverOffset: const Offset(8, 0),
-        hoverBuilder: (context) => shad.Card(
-          padding: const EdgeInsets.all(8),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minWidth: 180, maxWidth: 240),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 4, 10, 8),
-                  child: AppText.listSecondary(destination.label),
-                ),
-                for (final child in destination.children)
-                  _PopoverDestination(
-                    destination: child,
-                    selectedId: selectedId,
-                    onSelected: onSelected,
+        hoverBuilder: (context) {
+          final maxHeight = MediaQuery.sizeOf(context).height - 32;
+          return shad.Card(
+            padding: const EdgeInsets.all(8),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minWidth: 180,
+                maxWidth: 240,
+                maxHeight: maxHeight,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(10, 4, 10, 8),
+                    child: AppText.listSecondary(destination.label),
                   ),
-              ],
+                  Flexible(
+                    fit: FlexFit.loose,
+                    child: shad.Scrollbar(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            for (final child in destination.children)
+                              _PopoverDestination(
+                                destination: child,
+                                selectedId: selectedId,
+                                onSelected: onSelected,
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ),
+          );
+        },
         child: trigger,
       ),
     );

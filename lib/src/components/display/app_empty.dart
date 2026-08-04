@@ -9,6 +9,8 @@ class AppEmpty extends StatelessWidget {
     this.description,
     this.action,
     this.padding = const EdgeInsets.all(24),
+    this.iconColor,
+    this.iconSize = 32,
   });
 
   final Widget title;
@@ -16,6 +18,8 @@ class AppEmpty extends StatelessWidget {
   final Widget? description;
   final Widget? action;
   final EdgeInsetsGeometry padding;
+  final Color? iconColor;
+  final double iconSize;
 
   @override
   Widget build(BuildContext context) {
@@ -30,8 +34,8 @@ class AppEmpty extends StatelessWidget {
             if (icon != null) ...[
               IconTheme.merge(
                 data: IconThemeData(
-                  size: 32,
-                  color: theme.colorScheme.mutedForeground,
+                  size: iconSize,
+                  color: iconColor ?? theme.colorScheme.mutedForeground,
                 ),
                 child: icon!,
               ),

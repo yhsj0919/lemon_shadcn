@@ -15,6 +15,7 @@ dependencies:
   flutter:
     sdk: flutter
   shadcn_flutter: ^0.0.53
+  trina_grid: ^2.3.0
 
 dev_dependencies:
   flutter_test:

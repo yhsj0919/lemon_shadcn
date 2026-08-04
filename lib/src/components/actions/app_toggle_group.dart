@@ -89,7 +89,7 @@ class AppToggleGroup<T> extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) => AppButtonGroup(
+  Widget build(BuildContext context) => AppWidgetGroup(
     direction: direction,
     children: [
       for (final item in items)

@@ -86,14 +86,16 @@ class AppOptionConfig<V> {
   ) {
     final builder = optionBuilder;
     return builder == null
-        ? option.child ?? Text(option.label)
+        ? option.child ??
+              Text(option.label, maxLines: 1, overflow: TextOverflow.ellipsis)
         : (builder as AppOptionItemBuilder<T>)(context, option, state);
   }
 
   Widget buildSelected<T>(BuildContext context, AppOption<T> option) {
     final builder = selectedBuilder;
     return builder == null
-        ? option.child ?? Text(option.label)
+        ? option.child ??
+              Text(option.label, maxLines: 1, overflow: TextOverflow.ellipsis)
         : (builder as AppSelectedOptionBuilder<T>)(context, option);
   }
 }

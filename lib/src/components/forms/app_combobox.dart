@@ -259,6 +259,20 @@ class _AppComboboxState<V> extends State<AppCombobox<V>> {
     _anchorHeight = box.size.height;
   }
 
+  void _handleAnchorSizeChanged() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final box = _anchorKey.currentContext?.findRenderObject() as RenderBox?;
+      if (box == null || !box.hasSize) return;
+      final size = box.size;
+      if (_anchorWidth == size.width && _anchorHeight == size.height) return;
+      setState(() {
+        _anchorWidth = size.width;
+        _anchorHeight = size.height;
+      });
+    });
+  }
+
   void _showOverlay() {
     if (!_interactive) return;
     _measureAnchor();
@@ -605,7 +619,15 @@ class _AppComboboxState<V> extends State<AppCombobox<V>> {
           controller: _overlay,
           overlayChildBuilder: (context) =>
               TapRegion(groupId: this, child: _buildPopup(context)),
-          child: KeyedSubtree(key: _anchorKey, child: _buildField(context)),
+          child: NotificationListener<SizeChangedLayoutNotification>(
+            onNotification: (_) {
+              _handleAnchorSizeChanged();
+              return true;
+            },
+            child: SizeChangedLayoutNotifier(
+              child: KeyedSubtree(key: _anchorKey, child: _buildField(context)),
+            ),
+          ),
         ),
       ),
     );

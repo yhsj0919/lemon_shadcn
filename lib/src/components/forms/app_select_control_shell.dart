@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
+import '../actions/app_button.dart';
 import '../../foundation/app_control_box.dart';
 import '../../foundation/app_outline_style.dart';
 import '../../foundation/app_overlay_style.dart';
@@ -34,6 +35,7 @@ class _AppSelectControlShellState extends State<AppSelectControlShell> {
   @override
   Widget build(BuildContext context) {
     final theme = shad.Theme.of(context);
+    final grouped = AppWidgetGroup.isItemContext(context);
     final ancestor = shad.ComponentTheme.maybeOf<shad.OutlineButtonTheme>(
       context,
     );
@@ -43,11 +45,18 @@ class _AppSelectControlShellState extends State<AppSelectControlShell> {
       Set<WidgetState> states,
       Decoration current,
     ) {
-      return AppOutlineStyle.resolve(
+      final resolved = AppOutlineStyle.resolve(
         context,
         states,
         current,
         borderColor: _open ? theme.colorScheme.ring : theme.colorScheme.border,
+      );
+      if (!grouped || resolved is! BoxDecoration) {
+        return resolved;
+      }
+      return resolved.copyWith(
+        border: Border.all(color: const Color(0x00000000), width: 0),
+        borderRadius: BorderRadius.zero,
       );
     }
 
@@ -63,6 +72,7 @@ class _AppSelectControlShellState extends State<AppSelectControlShell> {
     );
 
     return AppControlBox(
+      showFocusOutline: !grouped,
       child: shad.ComponentTheme(
         data: (ancestor ?? const shad.OutlineButtonTheme()).copyWith(
           decoration: () => decoration,

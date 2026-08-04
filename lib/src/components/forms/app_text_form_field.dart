@@ -185,7 +185,7 @@ class AppTextFormField extends FormField<String> {
         errorText: state.errorText ?? asyncError,
         required: field.required,
         width: field.width,
-        child: _AppTextFieldControl(
+        child: AppTextField(
           value: state.value ?? field.controller?.text ?? '',
           controller: field.controller,
           focusNode: field.focusNode,
@@ -216,8 +216,9 @@ class AppTextFormField extends FormField<String> {
   }
 }
 
-class _AppTextFieldControl extends StatefulWidget {
-  const _AppTextFieldControl({
+class AppTextField extends StatefulWidget {
+  const AppTextField({
+    super.key,
     required this.value,
     required this.onChanged,
     this.controller,
@@ -264,10 +265,10 @@ class _AppTextFieldControl extends StatefulWidget {
   final ValueChanged<String>? onSubmitted;
 
   @override
-  State<_AppTextFieldControl> createState() => _AppTextFieldControlState();
+  State<AppTextField> createState() => _AppTextFieldState();
 }
 
-class _AppTextFieldControlState extends State<_AppTextFieldControl> {
+class _AppTextFieldState extends State<AppTextField> {
   late TextEditingController _internalController;
   late bool _obscureText;
   bool _syncingValue = false;
@@ -286,7 +287,7 @@ class _AppTextFieldControlState extends State<_AppTextFieldControl> {
   }
 
   @override
-  void didUpdateWidget(_AppTextFieldControl oldWidget) {
+  void didUpdateWidget(AppTextField oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.obscureText != widget.obscureText) {
       _obscureText = widget.obscureText;
