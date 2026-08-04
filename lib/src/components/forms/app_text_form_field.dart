@@ -4,6 +4,7 @@ import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
 import '../../foundation/app_control_box.dart';
 import '../../foundation/app_shadcn_scope.dart';
+import '../actions/app_button.dart';
 import 'app_field.dart';
 import 'app_form.dart';
 import 'app_input_group.dart';
@@ -312,6 +313,7 @@ class _AppTextFieldState extends State<AppTextField> {
   @override
   Widget build(BuildContext context) {
     final theme = shad.Theme.of(context);
+    final grouped = AppWidgetGroup.isItemContext(context);
     final features = <shad.InputFeature>[
       if (widget.leading != null)
         shad.InputFeature.leading(AppInputGroupAddon(child: widget.leading!)),
@@ -337,12 +339,15 @@ class _AppTextFieldState extends State<AppTextField> {
         ),
     ];
     return AppControlBox(
+      showFocusOutline: !grouped,
       child: shad.TextField(
-        border: Border.all(
-          color: theme.colorScheme.border,
-          width: 1,
-          strokeAlign: BorderSide.strokeAlignInside,
-        ),
+        border: grouped
+            ? AppWidgetGroup.clearItemBorder
+            : Border.all(
+                color: theme.colorScheme.border,
+                width: 1,
+                strokeAlign: BorderSide.strokeAlignInside,
+              ),
         controller: _controller,
         focusNode: widget.focusNode,
         padding: EdgeInsets.symmetric(

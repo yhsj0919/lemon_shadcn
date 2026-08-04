@@ -55,7 +55,7 @@ class _AppSelectControlShellState extends State<AppSelectControlShell> {
         return resolved;
       }
       return resolved.copyWith(
-        border: Border.all(color: const Color(0x00000000), width: 0),
+        border: AppWidgetGroup.clearItemBorder,
         borderRadius: BorderRadius.zero,
       );
     }

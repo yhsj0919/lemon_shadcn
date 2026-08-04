@@ -490,7 +490,7 @@ abstract final class AppComponentRegistry {
       appName: 'AppPagination',
       upstreamName: 'Pagination',
       category: AppComponentCategory.navigation,
-      adapter: AppComponentAdapter.alias,
+      adapter: AppComponentAdapter.wrapper,
       status: AppComponentStatus.implemented,
     ),
     AppComponentRegistration(

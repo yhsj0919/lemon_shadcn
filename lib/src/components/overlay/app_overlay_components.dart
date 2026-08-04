@@ -133,6 +133,9 @@ class AppAlertDialog extends StatelessWidget {
 /// Upstream [shad.AlertDialog] forces `content` through `.small().muted()`
 /// (confirmation copy). This shell keeps the same chrome and title treatment
 /// but leaves [content] at normal body typography for forms and denser copy.
+///
+/// Omit [actions] (or pass an empty list) for a button-less dialog; dismiss via
+/// barrier tap when shown with [AppDialog.show].
 class AppFormDialog extends StatelessWidget {
   const AppFormDialog({
     super.key,

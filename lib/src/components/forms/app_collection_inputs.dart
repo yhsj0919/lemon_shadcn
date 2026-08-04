@@ -16,6 +16,50 @@ import 'app_form.dart';
 typedef AppObjectInput<T> = shad.FormattedObjectInput<T>;
 typedef AppObjectConverter<A, B> = shad.BiDirectionalConvert<A, B>;
 
+/// Floating chrome shared by sortable drag previews.
+class AppSortableDragFeedback extends StatelessWidget {
+  const AppSortableDragFeedback({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = shad.Theme.of(context);
+    return Material(
+      color: Colors.white,
+      elevation: 4,
+      shadowColor: theme.colorScheme.foreground.withValues(alpha: 0.18),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(theme.radiusMd),
+        side: BorderSide(color: theme.colorScheme.border, width: 1),
+      ),
+      child: child,
+    );
+  }
+}
+
+/// Grip control used by [AppSortableInput] and table drag handles.
+class AppSortableDragHandle extends StatelessWidget {
+  const AppSortableDragHandle({super.key, this.enabled = true});
+
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = shad.Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.all(8),
+      child: Icon(
+        shad.LucideIcons.gripVertical,
+        size: 18 * theme.scaling,
+        color: enabled
+            ? theme.colorScheme.mutedForeground
+            : theme.colorScheme.muted,
+      ),
+    );
+  }
+}
+
 class AppSortableInput<T> extends StatelessWidget {
   const AppSortableInput({
     super.key,
@@ -38,22 +82,13 @@ class AppSortableInput<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = shad.Theme.of(context);
     return ReorderableListView.builder(
       shrinkWrap: shrinkWrap,
       physics: shrinkWrap ? const NeverScrollableScrollPhysics() : null,
       padding: padding,
       buildDefaultDragHandles: false,
-      proxyDecorator: (child, index, animation) => Material(
-        color: Colors.white,
-        elevation: 4,
-        shadowColor: theme.colorScheme.foreground.withValues(alpha: 0.18),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(theme.radiusMd),
-          side: BorderSide(color: theme.colorScheme.border, width: 1),
-        ),
-        child: child,
-      ),
+      proxyDecorator: (child, index, animation) =>
+          AppSortableDragFeedback(child: child),
       itemCount: items.length,
       onReorderItem: enabled
           ? (oldIndex, newIndex) {
@@ -73,22 +108,13 @@ class AppSortableInput<T> extends StatelessWidget {
               ReorderableDragStartListener(
                 index: index,
                 enabled: enabled,
-                child: Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: Icon(
-                    shad.LucideIcons.gripVertical,
-                    size: 18 * theme.scaling,
-                    color: enabled
-                        ? theme.colorScheme.mutedForeground
-                        : theme.colorScheme.muted,
-                  ),
-                ),
+                child: AppSortableDragHandle(enabled: enabled),
               ),
-              SizedBox(width: 4 * theme.scaling),
+              SizedBox(width: 4 * shad.Theme.of(context).scaling),
               Flexible(
                 fit: FlexFit.loose,
                 child: DefaultTextStyle.merge(
-                  style: theme.typography.base.copyWith(
+                  style: shad.Theme.of(context).typography.base.copyWith(
                     fontWeight: FontWeight.normal,
                   ),
                   child: itemBuilder(context, index, item),

@@ -6,6 +6,24 @@ import '../../foundation/app_visual_style.dart';
 import 'app_field.dart';
 import 'app_form.dart';
 
+/// Select-all style tristate clicks: checked ↔ unchecked, indeterminate → checked.
+/// Indeterminate is display-only and never emitted from user interaction.
+ValueChanged<shad.CheckboxState>? _appCheckboxOnChanged({
+  required shad.CheckboxState state,
+  required bool tristate,
+  required ValueChanged<shad.CheckboxState>? onChanged,
+}) {
+  if (onChanged == null) return null;
+  if (!tristate) return onChanged;
+  return (_) {
+    onChanged(
+      state == shad.CheckboxState.checked
+          ? shad.CheckboxState.unchecked
+          : shad.CheckboxState.checked,
+    );
+  };
+}
+
 /// Compact checkbox control for use inside lists and composite controls.
 class AppCheckboxIndicator extends StatelessWidget {
   const AppCheckboxIndicator({
@@ -41,7 +59,11 @@ class AppCheckboxIndicator extends StatelessWidget {
     final colors = resolveAppControlVisuals(context, states);
     return shad.Checkbox(
       state: state,
-      onChanged: onChanged,
+      onChanged: _appCheckboxOnChanged(
+        state: state,
+        tristate: tristate,
+        onChanged: onChanged,
+      ),
       tristate: tristate,
       enabled: enabled,
       size: size ?? 18 * theme.scaling,
@@ -105,7 +127,11 @@ class AppCheckbox extends StatelessWidget {
         alignment: AlignmentDirectional.centerStart,
         child: shad.Checkbox(
           state: state,
-          onChanged: onChanged,
+          onChanged: _appCheckboxOnChanged(
+            state: state,
+            tristate: tristate,
+            onChanged: onChanged,
+          ),
           leading: label(leading),
           trailing: label(trailing),
           tristate: tristate,

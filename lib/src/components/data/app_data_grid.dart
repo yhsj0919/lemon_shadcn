@@ -1,14 +1,22 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 import 'package:trina_grid/trina_grid.dart';
 
+import '../../foundation/app_shadcn_scope.dart';
 import '../actions/app_button.dart';
 import '../display/app_empty.dart';
 import '../forms/app_checkbox.dart';
+import '../forms/app_collection_inputs.dart';
+import '../forms/app_option.dart';
+import '../forms/app_select.dart';
+import '../forms/app_text_form_field.dart';
 import '../navigation/app_menu_components.dart';
+import '../navigation/app_navigation_components.dart';
+import '../overlay/app_overlay_components.dart';
 
 enum AppDataGridColumnType { text, number, boolean, date, time, dateTime }
 
@@ -48,7 +56,7 @@ class AppDataGridColumn<T> {
     this.reorderable = true,
     this.editable = false,
     this.hidden = false,
-    this.alignment = Alignment.centerLeft,
+    this.alignment = Alignment.center,
     this.titleAlignment,
   });
 
@@ -162,11 +170,13 @@ class AppDataGrid<T> extends StatefulWidget {
     this.height = 420,
     this.selectionMode = AppDataGridSelectionMode.none,
     this.selectedKeys = const {},
+    this.autoSelectFirstRow = false,
     this.onSelectionChanged,
     this.onCellChanged,
+    this.sortable = false,
     this.reorderableRows = false,
     this.onRowsReordered,
-    this.reorderableColumns = true,
+    this.reorderableColumns = false,
     this.columnMenuMode = AppDataGridColumnMenuMode.contextMenu,
     this.showFilters = false,
     this.empty,
@@ -186,11 +196,13 @@ class AppDataGrid<T> extends StatefulWidget {
     this.pageSizeOptions = const [10, 20, 50, 100],
     this.selectionMode = AppDataGridSelectionMode.none,
     this.selectedKeys = const {},
+    this.autoSelectFirstRow = false,
     this.onSelectionChanged,
     this.onCellChanged,
+    this.sortable = false,
     this.reorderableRows = false,
     this.onRowsReordered,
-    this.reorderableColumns = true,
+    this.reorderableColumns = false,
     this.columnMenuMode = AppDataGridColumnMenuMode.contextMenu,
     this.showFilters = false,
     this.empty,
@@ -207,11 +219,13 @@ class AppDataGrid<T> extends StatefulWidget {
     this.pageSize = 30,
     this.selectionMode = AppDataGridSelectionMode.none,
     this.selectedKeys = const {},
+    this.autoSelectFirstRow = false,
     this.onSelectionChanged,
     this.onCellChanged,
+    this.sortable = false,
     this.reorderableRows = false,
     this.onRowsReordered,
-    this.reorderableColumns = true,
+    this.reorderableColumns = false,
     this.columnMenuMode = AppDataGridColumnMenuMode.contextMenu,
     this.showFilters = false,
     this.empty,
@@ -229,8 +243,17 @@ class AppDataGrid<T> extends StatefulWidget {
   final List<int> pageSizeOptions;
   final AppDataGridSelectionMode selectionMode;
   final Set<Object> selectedKeys;
+
+  /// When true and [selectionMode] is [AppDataGridSelectionMode.single],
+  /// select the first row on load and notify [onSelectionChanged].
+  /// Ignored when [selectedKeys] is non-empty.
+  final bool autoSelectFirstRow;
   final ValueChanged<List<T>>? onSelectionChanged;
   final AppDataGridCellChanged<T>? onCellChanged;
+
+  /// Enables column sorting. Per-column [AppDataGridColumn.sortable] still
+  /// applies when this is true.
+  final bool sortable;
   final bool reorderableRows;
   final AppDataGridReorderCallback<T>? onRowsReordered;
   final bool reorderableColumns;
@@ -250,6 +273,8 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
   String? _nextCursor;
   int _infinitePage = 0;
   int _generation = 0;
+  var _wasEditing = false;
+  var _allDataColumnsHidden = false;
 
   @override
   void initState() {
@@ -276,11 +301,14 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
     if (widget._mode == _AppDataGridMode.local &&
         oldWidget.rows != widget.rows) {
       _replaceRows(widget.rows);
+    } else if (!setEquals(oldWidget.selectedKeys, widget.selectedKeys)) {
+      _syncSelectedKeys();
     }
   }
 
   @override
   void dispose() {
+    _stateManager?.removeListener(_onGridStateChanged);
     widget.controller?._detach();
     super.dispose();
   }
@@ -328,6 +356,45 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
     if (manager == null) return;
     manager.removeAllRows(notify: false);
     manager.appendRows(_toTrinaRows(rows));
+  }
+
+  void _syncSelectedKeys() {
+    final manager = _stateManager;
+    if (manager == null ||
+        widget.selectionMode == AppDataGridSelectionMode.none) {
+      return;
+    }
+
+    var changed = false;
+    for (final row in manager.refRows) {
+      final data = row.data;
+      if (data is! T) continue;
+      final shouldCheck = widget.selectedKeys.contains(widget.rowKey(data));
+      if (row.checked == shouldCheck) continue;
+      manager.setRowChecked(row, shouldCheck, notify: false);
+      changed = true;
+    }
+
+    if (widget.selectionMode == AppDataGridSelectionMode.single) {
+      manager.clearCurrentSelecting(notify: false);
+      if (widget.selectedKeys.isNotEmpty) {
+        final key = widget.selectedKeys.first;
+        final idx = manager.refRows.indexWhere((row) {
+          final data = row.data;
+          return data is T && widget.rowKey(data) == key;
+        });
+        if (idx >= 0) {
+          manager.setCurrentSelectingRowsByRange(idx, idx, notify: false);
+          final cell = manager.refRows[idx].cells.values.firstOrNull;
+          if (cell != null) {
+            manager.setCurrentCell(cell, idx, notify: false);
+          }
+          changed = true;
+        }
+      }
+    }
+
+    if (changed) manager.notifyListeners();
   }
 
   List<TrinaColumn> _toTrinaColumns() {
@@ -416,6 +483,8 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
       width: column.width,
       minWidth: column.minWidth,
       readOnly: !column.editable,
+      // Keep tap-to-edit off; editable columns enter edit on double-tap only.
+      enableEditingMode: false,
       hide: column.hidden,
       frozen: switch (column.pin) {
         AppDataGridColumnPin.none => TrinaColumnFrozen.none,
@@ -424,7 +493,7 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
       },
       textAlign: _textAlign(column.alignment),
       titleTextAlign: _textAlign(column.titleAlignment ?? column.alignment),
-      enableSorting: column.sortable,
+      enableSorting: widget.sortable && column.sortable,
       enableFilterMenuItem: column.filterable,
       enableContextMenu: true,
       enableDropToResize: column.resizable,
@@ -494,20 +563,18 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
       ),
       if (column.enableHideColumnMenuItem)
         AppMenuButton(
-          enabled: manager.refColumns.length > 1,
           onPressed: (_) => manager.hideColumn(column, true),
           child: Text(locale.hideColumn),
         ),
       if (column.enableSetColumnsMenuItem)
         AppMenuButton(
-          onPressed: (_) => manager.showSetColumnsPopup(context),
+          onPressed: (_) => _showSetColumns(),
           child: Text(locale.setColumns),
         ),
       if (column.enableFilterMenuItem) ...[
         const AppMenuDivider(),
         AppMenuButton(
-          onPressed: (_) =>
-              manager.showFilterPopup(context, calledColumn: column),
+          onPressed: (_) => _showSetFilters(calledColumn: column),
           child: Text(locale.setFilter),
         ),
         AppMenuButton(
@@ -646,10 +713,131 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
   }
 
   void _onLoaded(TrinaGridOnLoadedEvent event) {
+    _stateManager?.removeListener(_onGridStateChanged);
     _stateManager = event.stateManager;
+    _wasEditing = event.stateManager.isEditing;
+    _stateManager!.addListener(_onGridStateChanged);
+    // Wait until Trina's select-mode auto-select post-frame callback finishes.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _applyInitialSelection();
+      });
+    });
+  }
+
+  void _applyInitialSelection() {
+    if (widget.selectedKeys.isNotEmpty) {
+      _syncSelectedKeys();
+      return;
+    }
+    if (!widget.autoSelectFirstRow ||
+        widget.selectionMode != AppDataGridSelectionMode.single) {
+      return;
+    }
+    final manager = _stateManager;
+    if (manager == null) return;
+
+    var current = manager.currentRow;
+    if (current == null && manager.refRows.isNotEmpty) {
+      final cell = manager.refRows.first.cells.values.firstOrNull;
+      if (cell != null) {
+        manager.setCurrentCell(cell, 0, notify: false);
+        current = manager.currentRow;
+      }
+    }
+    final row = current?.data;
+    if (current == null || row is! T) return;
+
+    manager.setRowChecked(current, true, notify: false, checkedViaSelect: true);
+    manager.notifyListeners();
+    widget.onSelectionChanged?.call([row]);
+  }
+
+  void _onGridStateChanged() {
+    final manager = _stateManager;
+    if (manager == null) return;
+    final editing = manager.isEditing;
+    if (_wasEditing && !editing) {
+      for (final column in manager.refColumns) {
+        column.enableEditingMode = false;
+      }
+    }
+    _wasEditing = editing;
+
+    final allHidden = _areAllDataColumnsHidden();
+    if (allHidden != _allDataColumnsHidden && mounted) {
+      setState(() => _allDataColumnsHidden = allHidden);
+    }
+  }
+
+  bool _isControlField(String field) =>
+      field == _appDataGridSelectionField || field == _appDataGridDragField;
+
+  bool _areAllDataColumnsHidden() {
+    final manager = _stateManager;
+    if (manager == null) return false;
+    final dataColumns = manager.refColumns.originalList.where(
+      (column) => !_isControlField(column.field),
+    );
+    if (dataColumns.isEmpty) return false;
+    return dataColumns.every((column) => column.hide);
+  }
+
+  void _restoreAllDataColumns() {
+    final manager = _stateManager;
+    if (manager == null) return;
+    final hidden = manager.refColumns.originalList
+        .where((column) => column.hide)
+        .toList(growable: false);
+    if (hidden.isEmpty) return;
+    manager.hideColumns(hidden, false);
+  }
+
+  void _showSetColumns() {
+    final manager = _stateManager;
+    if (manager == null || !mounted) return;
+    AppDialog.show<void>(
+      context: context,
+      builder: (dialogContext) => _AppDataGridColumnsDialog(
+        manager: manager,
+        isControlField: _isControlField,
+      ),
+    );
+  }
+
+  void _showSetFilters({TrinaColumn? calledColumn}) {
+    final manager = _stateManager;
+    if (manager == null || !mounted) return;
+    AppDialog.show<void>(
+      context: context,
+      builder: (_) => _AppDataGridFiltersDialog(
+        manager: manager,
+        calledColumn: calledColumn,
+        isControlField: _isControlField,
+      ),
+    );
+  }
+
+  bool _isFieldEditable(String field) {
+    for (final column in widget.columns) {
+      if (column.id == field) return column.editable;
+    }
+    return false;
+  }
+
+  void _onRowDoubleTap(TrinaGridOnRowDoubleTapEvent event) {
+    if (!_isFieldEditable(event.cell.column.field)) return;
+    final manager = _stateManager;
+    if (manager == null || !manager.mode.isEditableMode) return;
+
+    event.cell.column.enableEditingMode = true;
+    manager.setCurrentCell(event.cell, event.rowIdx, notify: false);
+    manager.setEditing(true);
   }
 
   void _onSelected(TrinaGridOnSelectedEvent event) {
+    if (widget.selectionMode != AppDataGridSelectionMode.single) return;
     final row = event.row?.data;
     if (row is T) widget.onSelectionChanged?.call([row]);
   }
@@ -699,7 +887,7 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
       gridBackgroundColor: colors.background,
       rowColor: colors.background,
       rowHoveredColor: colors.accent,
-      activatedColor: Colors.transparent,
+      activatedColor: colors.accent,
       rowCheckedColor: colors.accent,
       columnUnselectedColor: colors.mutedForeground,
       columnActiveColor: colors.primary,
@@ -711,7 +899,9 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
       cellCheckedSide: BorderSide(color: colors.border, width: 1),
       cellColorInEditState: colors.background,
       cellColorInReadOnlyState: colors.background,
-      cellReadonlyColor: colors.background,
+      // Keep cell fills transparent so row selection/hover colors show through.
+      cellReadonlyColor: null,
+      cellDefaultColor: null,
       menuBackgroundColor: colors.popover,
       gridBorderColor: colors.border,
       borderColor: colors.border,
@@ -738,8 +928,14 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
     );
     return TrinaGridConfiguration(
       selectingMode: TrinaGridSelectingMode.row,
-      rowSelectionCheckBoxBehavior:
-          TrinaGridRowSelectionCheckBoxBehavior.toggleCheckRow,
+      enableAutoSelectFirstRow: widget.autoSelectFirstRow,
+      rowSelectionCheckBoxBehavior: switch (widget.selectionMode) {
+        AppDataGridSelectionMode.single =>
+          TrinaGridRowSelectionCheckBoxBehavior.singleRowCheck,
+        AppDataGridSelectionMode.multiple ||
+        AppDataGridSelectionMode.none =>
+          TrinaGridRowSelectionCheckBoxBehavior.none,
+      },
       style: style,
       localeText: const TrinaGridLocaleText.china(),
       paginationShowTotalRows: true,
@@ -758,7 +954,11 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
         enableGotoPage: false,
         stateManager: manager,
         fetch: _fetchPage,
-        builder: (context, state) => _AppDataGridPager(state: state),
+        builder: (context, state) => _AppDataGridPager(
+          state: state,
+          pageSizeOptions: widget.pageSizeOptions,
+          loadFailed: _loadError != null,
+        ),
       );
     }
     if (widget._mode == _AppDataGridMode.infinite) {
@@ -815,7 +1015,10 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
                     : TrinaGridMode.normal,
                 onLoaded: _onLoaded,
                 onChanged: _onChanged,
-                onSelected: _onSelected,
+                onSelected: widget.selectionMode == AppDataGridSelectionMode.single
+                    ? _onSelected
+                    : null,
+                onRowDoubleTap: _onRowDoubleTap,
                 onRowChecked: _onRowChecked,
                 onRowsMoved: _onRowsMoved,
                 createFooter: widget._mode == _AppDataGridMode.local
@@ -824,6 +1027,31 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
               ),
             ),
           ),
+          if (_allDataColumnsHidden)
+            Positioned.fill(
+              child: ColoredBox(
+                color: shad.Theme.of(context).colorScheme.background,
+                child: Center(
+                  child: AppEmpty(
+                    icon: const Icon(shad.LucideIcons.columns3),
+                    title: const Text('列已全部隐藏'),
+                    description: const Text('请选择要显示的列，或一键恢复全部列。'),
+                    action: AppWidgetGroup(
+                      children: [
+                        AppButton.outline(
+                          onPressed: _showSetColumns,
+                          child: const Text('选择列'),
+                        ),
+                        AppButton.primary(
+                          onPressed: _restoreAllDataColumns,
+                          child: const Text('恢复全部列'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
           if (_loadError != null)
             Positioned(
               left: 12,
@@ -855,13 +1083,18 @@ class _AppDataGridColumnTitle extends StatelessWidget {
     final column = context.column;
     final manager = context.stateManager;
     final style = manager.configuration.style;
+    final sorted =
+        column.sort == TrinaColumnSort.ascending ||
+        column.sort == TrinaColumnSort.descending;
     final sortIcon = switch (column.sort) {
       TrinaColumnSort.ascending => shad.LucideIcons.arrowUp,
       TrinaColumnSort.descending => shad.LucideIcons.arrowDown,
-      _ when column.enableSorting => shad.LucideIcons.arrowUpDown,
+      _ when column.enableSorting => shad.LucideIcons.chevronsUpDown,
       _ => null,
     };
     final titleAlignment = column.titleTextAlign.alignmentValue;
+    final mutedIcon = style.iconColor.withValues(alpha: .38);
+    final activeIcon = style.iconColor.withValues(alpha: .82);
     Widget title = DecoratedBox(
       decoration: _appDataGridHeaderDecoration(manager),
       child: Padding(
@@ -883,15 +1116,19 @@ class _AppDataGridColumnTitle extends StatelessWidget {
                       ),
                     ),
                     if (sortIcon != null) ...[
-                      const SizedBox(width: 6),
-                      Icon(sortIcon, size: 18, color: style.iconColor),
+                      const SizedBox(width: 4),
+                      Icon(
+                        sortIcon,
+                        size: 13,
+                        color: sorted ? activeIcon : mutedIcon,
+                      ),
                     ],
                     if (context.isFiltered) ...[
                       const SizedBox(width: 4),
                       Icon(
                         Icons.filter_alt_rounded,
-                        size: 16,
-                        color: style.iconColor,
+                        size: 13,
+                        color: activeIcon,
                       ),
                     ],
                   ],
@@ -908,7 +1145,7 @@ class _AppDataGridColumnTitle extends StatelessWidget {
                   child: Icon(
                     Icons.more_vert_rounded,
                     size: 14,
-                    color: style.iconColor.withValues(alpha: .72),
+                    color: mutedIcon,
                   ),
                 ),
               ),
@@ -967,6 +1204,12 @@ BoxDecoration _appDataGridHeaderDecoration(TrinaGridStateManager manager) =>
       border: BorderDirectional(
         end: BorderSide(color: manager.style.borderColor, width: .5),
       ),
+    );
+
+BoxDecoration _appDataGridDialogPanelDecoration(shad.ThemeData theme) =>
+    BoxDecoration(
+      border: Border.all(color: theme.colorScheme.border),
+      borderRadius: BorderRadius.circular(theme.radiusMd),
     );
 
 class _AppDataGridSelectAll extends StatelessWidget {
@@ -1134,22 +1377,21 @@ class _AppDataGridColumnDrag extends StatelessWidget {
         data: column,
         axis: Axis.horizontal,
         dragAnchorStrategy: childDragAnchorStrategy,
-        feedback: Material(
-          color: Colors.transparent,
-          child: Container(
+        feedback: AppSortableDragFeedback(
+          child: SizedBox(
             width: column.width,
             height: height,
-            alignment: column.titleTextAlign.alignmentValue,
-            padding: column.titlePadding ?? style.defaultColumnTitlePadding,
-            decoration: BoxDecoration(
-              color: style.gridBackgroundColor,
-              border: Border.all(color: style.gridBorderColor),
-            ),
-            child: Text(
-              column.title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: style.columnTextStyle,
+            child: Align(
+              alignment: column.titleTextAlign.alignmentValue,
+              child: Padding(
+                padding: column.titlePadding ?? style.defaultColumnTitlePadding,
+                child: Text(
+                  column.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: style.columnTextStyle,
+                ),
+              ),
             ),
           ),
         ),
@@ -1204,67 +1446,55 @@ class _AppDataGridRowDragHandle extends StatelessWidget {
       manager.columnsWidth,
       manager.maxWidth ?? manager.columnsWidth,
     );
-    final feedback = Material(
-      color: Colors.transparent,
-      child: Container(
+    final feedback = AppSortableDragFeedback(
+      child: SizedBox(
         width: feedbackWidth,
         height: manager.rowHeight,
-        clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(
-          color: style.gridBackgroundColor,
-          border: Border.all(color: style.activatedBorderColor),
-          borderRadius: style.gridBorderRadius,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: .12),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(
+            shad.Theme.of(context).radiusMd,
+          ),
+          child: OverflowBox(
+            alignment: AlignmentDirectional.centerStart,
+            minWidth: manager.columnsWidth,
+            maxWidth: manager.columnsWidth,
+            child: Row(
+              children: [
+                for (final column in visibleColumns)
+                  SizedBox(
+                    width: column.width,
+                    child: switch (column.field) {
+                      _appDataGridDragField => const Center(
+                        child: AppSortableDragHandle(),
+                      ),
+                      _appDataGridSelectionField => Center(
+                        child: IgnorePointer(
+                          child: AppCheckboxIndicator(
+                            state: row.checked == true
+                                ? shad.CheckboxState.checked
+                                : shad.CheckboxState.unchecked,
+                            size: 16 * shad.Theme.of(context).scaling,
+                            onChanged: (_) {},
+                          ),
+                        ),
+                      ),
+                      _ => Padding(
+                        padding:
+                            column.cellPadding ?? style.defaultCellPadding,
+                        child: Align(
+                          alignment: column.textAlign.alignmentValue,
+                          child: Text(
+                            row.cells[column.field]?.value?.toString() ?? '',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: style.cellTextStyle,
+                          ),
+                        ),
+                      ),
+                    },
+                  ),
+              ],
             ),
-          ],
-        ),
-        child: OverflowBox(
-          alignment: AlignmentDirectional.centerStart,
-          minWidth: manager.columnsWidth,
-          maxWidth: manager.columnsWidth,
-          child: Row(
-            children: [
-              for (final column in visibleColumns)
-                SizedBox(
-                  width: column.width,
-                  child: switch (column.field) {
-                    _appDataGridDragField => Center(
-                      child: Icon(
-                        shad.LucideIcons.gripVertical,
-                        size: 16,
-                        color: style.iconColor,
-                      ),
-                    ),
-                    _appDataGridSelectionField => Center(
-                      child: IgnorePointer(
-                        child: AppCheckboxIndicator(
-                          state: row.checked == true
-                              ? shad.CheckboxState.checked
-                              : shad.CheckboxState.unchecked,
-                          size: 16 * shad.Theme.of(context).scaling,
-                          onChanged: (_) {},
-                        ),
-                      ),
-                    ),
-                    _ => Padding(
-                      padding: column.cellPadding ?? style.defaultCellPadding,
-                      child: Align(
-                        alignment: column.textAlign.alignmentValue,
-                        child: Text(
-                          row.cells[column.field]?.value?.toString() ?? '',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: style.cellTextStyle,
-                        ),
-                      ),
-                    ),
-                  },
-                ),
-            ],
           ),
         ),
       ),
@@ -1278,52 +1508,100 @@ class _AppDataGridRowDragHandle extends StatelessWidget {
         axis: Axis.vertical,
         dragAnchorStrategy: childDragAnchorStrategy,
         feedback: feedback,
-        child: MouseRegion(
+        child: const MouseRegion(
           cursor: SystemMouseCursors.grab,
-          child: Icon(
-            shad.LucideIcons.gripVertical,
-            size: 16,
-            color: style.iconColor,
-          ),
+          child: AppSortableDragHandle(),
         ),
       ),
     );
   }
 }
 
-class _AppDataGridPager extends StatelessWidget {
-  const _AppDataGridPager({required this.state});
+class _AppDataGridPager extends StatefulWidget {
+  const _AppDataGridPager({
+    required this.state,
+    required this.pageSizeOptions,
+    required this.loadFailed,
+  });
 
   final TrinaLazyPaginationState state;
+  final List<int> pageSizeOptions;
+  final bool loadFailed;
+
+  @override
+  State<_AppDataGridPager> createState() => _AppDataGridPagerState();
+}
+
+class _AppDataGridPagerState extends State<_AppDataGridPager> {
+  late int _page;
+
+  TrinaLazyPaginationState get _state => widget.state;
+
+  @override
+  void initState() {
+    super.initState();
+    _page = _state.page;
+  }
+
+  @override
+  void didUpdateWidget(covariant _AppDataGridPager oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.state.page != oldWidget.state.page ||
+        (widget.loadFailed && !oldWidget.loadFailed)) {
+      _page = widget.state.page;
+    }
+  }
+
+  void _changePage(int page) {
+    if (page == _page) return;
+    setState(() => _page = page);
+    _state.setPage(page);
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = shad.Theme.of(context);
+    final muted = TextStyle(color: theme.colorScheme.mutedForeground);
+    final totalPages = math.max(1, _state.totalPage);
+    final page = _page.clamp(1, totalPages);
     return Container(
-      height: 52,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      height: 40,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
         border: Border(top: BorderSide(color: theme.colorScheme.border)),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
-            state.totalRecords == null ? '' : '共 ${state.totalRecords} 条',
-            style: TextStyle(color: theme.colorScheme.mutedForeground),
+            _state.totalRecords == null ? '' : '共 ${_state.totalRecords} 条',
+            style: muted,
           ),
+          if (widget.pageSizeOptions.isNotEmpty) ...[
+            const SizedBox(width: 12),
+            SizedBox(
+              width: 128,
+              child: AppSelect<int>(
+                value: _state.pageSize,
+                placeholder: '条/页',
+                options: [
+                  for (final size in widget.pageSizeOptions)
+                    AppOption(value: size, label: '$size 条/页'),
+                ],
+                onChanged: (size) {
+                  if (size != null && size != _state.pageSize) {
+                    setState(() => _page = 1);
+                    _state.setPageSize(size);
+                  }
+                },
+              ),
+            ),
+          ],
           const Spacer(),
-          AppButton.ghost(
-            size: AppButtonSize.xSmall,
-            onPressed: state.isFirstPage ? null : state.previousPage,
-            child: const Text('上一页'),
-          ),
-          const SizedBox(width: 8),
-          Text('${state.page} / ${math.max(1, state.totalPage)}'),
-          const SizedBox(width: 8),
-          AppButton.ghost(
-            size: AppButtonSize.xSmall,
-            onPressed: state.isLastPage ? null : state.nextPage,
-            child: const Text('下一页'),
+          AppPagination(
+            page: page,
+            totalPages: totalPages,
+            onPageChanged: _changePage,
           ),
         ],
       ),
@@ -1360,6 +1638,491 @@ class _AppDataGridError extends StatelessWidget {
               size: AppButtonSize.xSmall,
               onPressed: onRetry,
               child: const Text('重试'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+enum _AppDataGridColumnOrderMode { defaults, ascending, descending }
+
+class _AppDataGridColumnsDialog extends StatefulWidget {
+  const _AppDataGridColumnsDialog({
+    required this.manager,
+    required this.isControlField,
+  });
+
+  final TrinaGridStateManager manager;
+  final bool Function(String field) isControlField;
+
+  @override
+  State<_AppDataGridColumnsDialog> createState() =>
+      _AppDataGridColumnsDialogState();
+}
+
+class _AppDataGridColumnsDialogState extends State<_AppDataGridColumnsDialog> {
+  late final List<String> _defaultFields;
+  _AppDataGridColumnOrderMode _orderMode = _AppDataGridColumnOrderMode.defaults;
+
+  @override
+  void initState() {
+    super.initState();
+    _defaultFields = _dataColumns.map((column) => column.field).toList();
+  }
+
+  List<TrinaColumn> get _dataColumns => widget.manager.refColumns.originalList
+      .where((column) => !widget.isControlField(column.field))
+      .toList(growable: false);
+
+  int get _visibleCount =>
+      _dataColumns.where((column) => !column.hide).length;
+
+  shad.CheckboxState get _selectAllState {
+    final visible = _visibleCount;
+    if (visible == 0) return shad.CheckboxState.unchecked;
+    if (visible == _dataColumns.length) return shad.CheckboxState.checked;
+    return shad.CheckboxState.indeterminate;
+  }
+
+  String _columnLabel(TrinaColumn column) =>
+      column.title.isEmpty ? column.field : column.title;
+
+  (IconData, String) get _orderModeVisual => switch (_orderMode) {
+    _AppDataGridColumnOrderMode.defaults => (
+      shad.LucideIcons.arrowUpDown,
+      '默认',
+    ),
+    _AppDataGridColumnOrderMode.ascending => (
+      shad.LucideIcons.arrowUpAZ,
+      '正序',
+    ),
+    _AppDataGridColumnOrderMode.descending => (
+      shad.LucideIcons.arrowDownAZ,
+      '倒序',
+    ),
+  };
+
+  void _toggleAll(shad.CheckboxState next) {
+    final columns = _dataColumns;
+    if (columns.isEmpty) return;
+    widget.manager.hideColumns(columns, next != shad.CheckboxState.checked);
+    setState(() {});
+  }
+
+  void _toggleColumn(TrinaColumn column, bool visible) {
+    widget.manager.hideColumn(column, !visible);
+    setState(() {});
+  }
+
+  void _cycleOrderMode() {
+    final next = switch (_orderMode) {
+      _AppDataGridColumnOrderMode.defaults =>
+        _AppDataGridColumnOrderMode.ascending,
+      _AppDataGridColumnOrderMode.ascending =>
+        _AppDataGridColumnOrderMode.descending,
+      _AppDataGridColumnOrderMode.descending =>
+        _AppDataGridColumnOrderMode.defaults,
+    };
+    final current = _dataColumns;
+    final byField = {for (final column in current) column.field: column};
+    final ordered = switch (next) {
+      _AppDataGridColumnOrderMode.defaults => _defaultFields
+          .map((field) => byField[field])
+          .whereType<TrinaColumn>()
+          .toList(growable: false),
+      _AppDataGridColumnOrderMode.ascending => (List<TrinaColumn>.of(current)
+        ..sort((a, b) => _columnLabel(a).compareTo(_columnLabel(b)))),
+      _AppDataGridColumnOrderMode.descending => (List<TrinaColumn>.of(current)
+        ..sort((a, b) => _columnLabel(b).compareTo(_columnLabel(a)))),
+    };
+    _orderMode = next;
+    _applyOrder(ordered);
+  }
+
+  void _onManualReorder(List<TrinaColumn> data) {
+    _orderMode = _AppDataGridColumnOrderMode.defaults;
+    _applyOrder(data);
+  }
+
+  void _applyOrder(List<TrinaColumn> data) {
+    final manager = widget.manager;
+    final controls = manager.refColumns.originalList
+        .where((column) => widget.isControlField(column.field))
+        .toList(growable: false);
+
+    manager.refColumns.clearFromOriginal();
+    manager.refColumns.addAll([...controls, ...data]);
+    manager.refColumns.update();
+    manager.resetShowFrozenColumn();
+    manager.updateVisibilityLayout();
+    manager.notifyListeners();
+    setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = shad.Theme.of(context);
+    final columns = _dataColumns;
+    final (orderIcon, orderLabel) = _orderModeVisual;
+    return AppFormDialog(
+      title: const Text('列设置'),
+      constraints: const BoxConstraints(maxWidth: 360, maxHeight: 480),
+      content: SizedBox(
+        width: 320,
+        height: 320,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                AppCheckboxIndicator(
+                  state: _selectAllState,
+                  tristate: true,
+                  onChanged: _toggleAll,
+                ),
+                const SizedBox(width: 10),
+                const Expanded(child: Text('显示全部列')),
+                AppButton.ghost(
+                  size: AppButtonSize.xSmall,
+                  leading: Icon(orderIcon, size: 14),
+                  onPressed: columns.isEmpty ? null : _cycleOrderMode,
+                  child: Text(orderLabel),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Expanded(
+              child: DecoratedBox(
+                decoration: _appDataGridDialogPanelDecoration(theme),
+                child: AppSortableInput<TrinaColumn>(
+                  items: columns,
+                  itemKey: (column) => ValueKey(column.field),
+                  shrinkWrap: false,
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  onChanged: _onManualReorder,
+                  itemBuilder: (context, index, column) {
+                    final visible = !column.hide;
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 4,
+                        vertical: 4,
+                      ),
+                      child: Row(
+                        children: [
+                          AppCheckboxIndicator(
+                            state: visible
+                                ? shad.CheckboxState.checked
+                                : shad.CheckboxState.unchecked,
+                            onChanged: (state) => _toggleColumn(
+                              column,
+                              state == shad.CheckboxState.checked,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              _columnLabel(column),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AppDataGridFilterRule {
+  _AppDataGridFilterRule({
+    required this.columnField,
+    required this.filterType,
+    this.value = '',
+  });
+
+  String columnField;
+  TrinaFilterType filterType;
+  String value;
+
+  bool get needsValue =>
+      filterType is! TrinaFilterTypeIsEmpty &&
+      filterType is! TrinaFilterTypeIsNotEmpty;
+}
+
+class _AppDataGridFiltersDialog extends StatefulWidget {
+  const _AppDataGridFiltersDialog({
+    required this.manager,
+    required this.isControlField,
+    this.calledColumn,
+  });
+
+  final TrinaGridStateManager manager;
+  final bool Function(String field) isControlField;
+  final TrinaColumn? calledColumn;
+
+  @override
+  State<_AppDataGridFiltersDialog> createState() =>
+      _AppDataGridFiltersDialogState();
+}
+
+class _AppDataGridFiltersDialogState extends State<_AppDataGridFiltersDialog> {
+  static const _ruleFlexes = [3, 3, 4];
+
+  late final List<_AppDataGridFilterRule> _rules;
+  late final List<TrinaFilterType> _filterTypes;
+  late final List<TrinaColumn> _filterColumns;
+  late final String _allColumnsField;
+  late final String _allColumnsLabel;
+
+  @override
+  void initState() {
+    super.initState();
+    final manager = widget.manager;
+    final locale = manager.configuration.localeText;
+    _allColumnsField = FilterHelper.filterFieldAllColumns;
+    _allColumnsLabel = locale.filterAllColumns;
+    _filterTypes = List<TrinaFilterType>.of(
+      manager.configuration.columnFilter.filters,
+    );
+    _filterColumns = manager.refColumns.originalList
+        .where(
+          (column) =>
+              column.enableFilterMenuItem &&
+              !widget.isControlField(column.field),
+        )
+        .toList(growable: false);
+
+    if (manager.filterRows.isNotEmpty) {
+      _rules = [
+        for (final row in manager.filterRows)
+          _AppDataGridFilterRule(
+            columnField:
+                row.cells[FilterHelper.filterFieldColumn]?.value as String? ??
+                _allColumnsField,
+            filterType: _matchFilterType(
+              row.cells[FilterHelper.filterFieldType]?.value as TrinaFilterType?,
+            ),
+            value:
+                row.cells[FilterHelper.filterFieldValue]?.value?.toString() ??
+                '',
+          ),
+      ];
+    } else if (widget.calledColumn != null &&
+        widget.calledColumn!.enableFilterMenuItem) {
+      _rules = [
+        _AppDataGridFilterRule(
+          columnField: widget.calledColumn!.field,
+          filterType: _defaultFilterType(widget.calledColumn),
+        ),
+      ];
+    } else {
+      _rules = [];
+    }
+  }
+
+  bool _sameFilterType(TrinaFilterType left, TrinaFilterType right) =>
+      left.runtimeType == right.runtimeType;
+
+  TrinaFilterType _matchFilterType(
+    TrinaFilterType? preferred, {
+    TrinaFilterType? fallback,
+  }) {
+    final resolvedFallback =
+        fallback ??
+        (_filterTypes.isNotEmpty
+            ? _filterTypes.first
+            : const TrinaFilterTypeContains());
+    if (preferred == null) return resolvedFallback;
+    for (final type in _filterTypes) {
+      if (_sameFilterType(type, preferred)) return type;
+    }
+    return fallback ?? preferred;
+  }
+
+  TrinaFilterType _defaultFilterType(TrinaColumn? column) => _matchFilterType(
+    column?.defaultFilter,
+    fallback: _filterTypes.isNotEmpty
+        ? _filterTypes.first
+        : const TrinaFilterTypeContains(),
+  );
+
+  String _filterTypeLabel(TrinaFilterType type) {
+    if (type is TrinaFilterTypeRegex) return '正则';
+    if (type is TrinaFilterTypeIsEmpty) return '为空';
+    if (type is TrinaFilterTypeIsNotEmpty) return '非空';
+    if (type is TrinaFilterTypeMultiItems) return '多项';
+    return type.title;
+  }
+
+  void _apply() {
+    widget.manager.setFilterWithFilterRows([
+      for (final rule in _rules)
+        FilterHelper.createFilterRow(
+          columnField: rule.columnField,
+          filterType: rule.filterType,
+          filterValue: rule.needsValue ? rule.value : '',
+        ),
+    ]);
+  }
+
+  void _commit(VoidCallback change) {
+    setState(change);
+    _apply();
+  }
+
+  void _addRule() {
+    _commit(() {
+      _rules.add(
+        _AppDataGridFilterRule(
+          columnField: widget.calledColumn?.enableFilterMenuItem == true
+              ? widget.calledColumn!.field
+              : _filterColumns.isNotEmpty
+              ? _filterColumns.first.field
+              : _allColumnsField,
+          filterType: _defaultFilterType(widget.calledColumn),
+        ),
+      );
+    });
+  }
+
+  void _removeRule(int index) => _commit(() => _rules.removeAt(index));
+
+  void _clearRules() {
+    if (_rules.isEmpty) return;
+    _commit(_rules.clear);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = shad.Theme.of(context);
+    final locale = widget.manager.configuration.localeText;
+    final controlHeight = AppTheme.maybeOf(context)?.controls.height;
+    final columnOptions = <AppOption<String>>[
+      AppOption(value: _allColumnsField, label: _allColumnsLabel),
+      for (final column in _filterColumns)
+        AppOption(
+          value: column.field,
+          label: column.title.isEmpty ? column.field : column.title,
+        ),
+    ];
+    final typeOptions = [
+      for (final type in _filterTypes)
+        AppOption(value: type, label: _filterTypeLabel(type)),
+    ];
+
+    return AppFormDialog(
+      title: Text(locale.setFilter),
+      constraints: const BoxConstraints(maxWidth: 560, maxHeight: 480),
+      content: SizedBox(
+        width: 520,
+        height: 320,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                AppButton.primary(
+                  size: AppButtonSize.xSmall,
+                  leading: const Icon(shad.LucideIcons.plus, size: 14),
+                  onPressed: _addRule,
+                  child: const Text('添加条件'),
+                ),
+                const SizedBox(width: 8),
+                AppButton.destructive(
+                  size: AppButtonSize.xSmall,
+                  leading: const Icon(shad.LucideIcons.trash2, size: 14),
+                  onPressed: _rules.isEmpty ? null : _clearRules,
+                  child: const Text('清空'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Expanded(
+              child: _rules.isEmpty
+                  ? DecoratedBox(
+                      decoration: _appDataGridDialogPanelDecoration(theme),
+                      child: const Center(
+                        child: AppEmpty(
+                          icon: Icon(shad.LucideIcons.listFilter),
+                          title: Text('暂无筛选条件'),
+                          description: Text('点击「添加条件」开始设置过滤器。'),
+                        ),
+                      ),
+                    )
+                  : ListView.separated(
+                      itemCount: _rules.length,
+                      separatorBuilder: (_, _) => const SizedBox(height: 6),
+                      itemBuilder: (context, index) {
+                        final rule = _rules[index];
+                        final needsValue = rule.needsValue;
+                        return Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Expanded(
+                              child: AppWidgetGroup(
+                                expands: true,
+                                flexes: _ruleFlexes,
+                                children: [
+                                  AppSelect<String>(
+                                    value: rule.columnField,
+                                    placeholder: locale.filterColumn,
+                                    options: columnOptions,
+                                    onChanged: (value) {
+                                      if (value == null) return;
+                                      _commit(
+                                        () => rule.columnField = value,
+                                      );
+                                    },
+                                  ),
+                                  AppSelect<TrinaFilterType>(
+                                    value: _matchFilterType(rule.filterType),
+                                    placeholder: locale.filterType,
+                                    options: typeOptions,
+                                    optionConfig: AppOptionConfig(
+                                      equals: _sameFilterType,
+                                    ),
+                                    onChanged: (value) {
+                                      if (value == null) return;
+                                      _commit(() => rule.filterType = value);
+                                    },
+                                  ),
+                                  AppTextField(
+                                    value: rule.value,
+                                    enabled: needsValue,
+                                    hintText: needsValue
+                                        ? locale.filterValue
+                                        : '无需填写',
+                                    onChanged: (value) =>
+                                        _commit(() => rule.value = value),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            AppIconButton(
+                              tooltip: '删除条件',
+                              variant: AppButtonVariant.ghost,
+                              onPressed: () => _removeRule(index),
+                              config: AppButtonConfig(height: controlHeight),
+                              icon: Icon(
+                                shad.LucideIcons.x,
+                                size: 14,
+                                color: theme.colorScheme.destructive,
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
             ),
           ],
         ),

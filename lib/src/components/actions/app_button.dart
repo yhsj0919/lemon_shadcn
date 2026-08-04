@@ -19,28 +19,48 @@ class AppWidgetGroup extends StatelessWidget {
     super.key,
     this.direction = Axis.horizontal,
     this.expands = false,
+    this.flexes,
     required this.children,
-  });
+  }) : assert(
+         flexes == null || flexes.length == children.length,
+         'flexes length must match children length',
+       );
 
   const AppWidgetGroup.horizontal({
     super.key,
     this.expands = false,
+    this.flexes,
     required this.children,
-  }) : direction = Axis.horizontal;
+  }) : direction = Axis.horizontal,
+       assert(
+         flexes == null || flexes.length == children.length,
+         'flexes length must match children length',
+       );
 
   const AppWidgetGroup.vertical({
     super.key,
     this.expands = false,
+    this.flexes,
     required this.children,
-  }) : direction = Axis.vertical;
+  }) : direction = Axis.vertical,
+       assert(
+         flexes == null || flexes.length == children.length,
+         'flexes length must match children length',
+       );
 
   final Axis direction;
   final bool expands;
+  /// Per-child flex factors used when [expands] is true. Defaults to `1`.
+  final List<int>? flexes;
   final List<Widget> children;
 
   /// Whether [context] belongs to a child currently managed by a widget group.
   static bool isItemContext(BuildContext context) =>
       _AppWidgetGroupItemScope.maybeOf(context) != null;
+
+  /// Transparent border for nested controls; the group frame owns the outline.
+  static Border get clearItemBorder =>
+      Border.all(color: const Color(0x00000000), width: 0);
 
   @override
   Widget build(BuildContext context) {
@@ -91,7 +111,7 @@ class AppWidgetGroup extends StatelessWidget {
         },
       );
       return expands && direction == Axis.horizontal
-          ? Expanded(child: item)
+          ? Expanded(flex: flexes?[index] ?? 1, child: item)
           : item;
     }
 
@@ -763,7 +783,7 @@ class _AppAsyncButtonState extends State<_AppAsyncButton>
           : (context, states, value) {
               if (value is! BoxDecoration) return value;
               return value.copyWith(
-                border: Border.all(color: const Color(0x00000000), width: 0),
+                border: AppWidgetGroup.clearItemBorder,
                 borderRadius: BorderRadius.zero,
               );
             },

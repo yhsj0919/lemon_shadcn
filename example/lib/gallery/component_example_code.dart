@@ -192,11 +192,24 @@ AppDescriptions(
 // AppResultStatus.forbidden
 // AppResultStatus.notFound''',
     '本地数据与拖动排序': '''AppDataGrid<User>.local(
+  columns: columns, // name 列 editable: true
+  rows: users,
+  rowKey: (user) => user.id,
+  sortable: true,
+  selectionMode: AppDataGridSelectionMode.multiple,
+  onCellChanged: (row, field, value, oldValue) {},
+  reorderableRows: true,
+  reorderableColumns: true,
+  onRowsReordered: (orderedKeys, orderedRows) {},
+);''',
+    '单选': '''AppDataGrid<User>.local(
   columns: columns,
   rows: users,
   rowKey: (user) => user.id,
-  reorderableRows: true,
-  onRowsReordered: (orderedKeys, orderedRows) {},
+  selectionMode: AppDataGridSelectionMode.single,
+  // autoSelectFirstRow: true, // 默认 false；开启后会回调 onSelectionChanged
+  selectedKeys: selected == null ? {} : {selected.id},
+  onSelectionChanged: (rows) {},
 );''',
     '服务端分页': '''AppDataGrid<User>.paginated(
   columns: columns,
