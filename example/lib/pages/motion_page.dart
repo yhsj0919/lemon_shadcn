@@ -137,6 +137,23 @@ class _AnimationBuildersDemoState extends State<_AnimationBuildersDemo> {
             const Text('循环动画').small().muted(),
           ],
         ),
+        const Gap(24),
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppRepeatedAnimationBuilder(
+              start: 0,
+              end: 1,
+              duration: const Duration(milliseconds: 900),
+              mode: LoopingMode.pingPong,
+              builder: (context, value, child) =>
+                  Opacity(opacity: 0.35 + value * 0.65, child: child),
+              child: const Icon(LucideIcons.activity),
+            ),
+            const Gap(8),
+            const Text('重复动画构建器').small().muted(),
+          ],
+        ),
       ],
     );
   }

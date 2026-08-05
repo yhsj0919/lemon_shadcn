@@ -503,6 +503,65 @@ class AppFilePickerFormField extends FormField<List<AppFileSelection>> {
   final ValueChanged<List<AppFileSelection>>? onChanged;
 }
 
+/// Image-focused preset of [AppFilePicker]. The picker remains injectable so
+/// the component does not own platform permissions, uploads, or request data.
+class AppImageInput extends AppFilePicker {
+  const AppImageInput({
+    super.key,
+    required super.files,
+    required super.onChanged,
+    super.pick,
+    super.variant,
+    super.multiple = true,
+    super.enabled,
+    super.enableDrop,
+    super.allowRemove,
+    super.allowedExtensions = const <String>['png', 'jpg', 'jpeg', 'webp'],
+    super.maxFileSize,
+    super.maxFiles,
+    super.dialogTitle = '选择图片',
+    super.onRejected,
+    super.trailingBuilder,
+    super.emptyTitle = '点击选择或拖放图片到这里',
+    super.dropTitle = '拖放图片到这里',
+    super.pickLabel = '选择图片',
+    super.hintText = '未选择图片',
+  });
+}
+
+/// Form-compatible image preset sharing validation and layout with file input.
+class AppImageInputFormField extends AppFilePickerFormField {
+  AppImageInputFormField({
+    super.key,
+    super.pick,
+    super.variant,
+    super.name,
+    super.label,
+    super.description,
+    super.required,
+    super.width,
+    super.multiple = true,
+    super.allowRemove,
+    super.enableDrop,
+    super.allowedExtensions = const <String>['png', 'jpg', 'jpeg', 'webp'],
+    super.maxFileSize,
+    super.maxFiles,
+    super.dialogTitle = '选择图片',
+    super.onRejected,
+    super.trailingBuilder,
+    super.emptyTitle = '点击选择或拖放图片到这里',
+    super.dropTitle = '拖放图片到这里',
+    super.pickLabel = '选择图片',
+    super.hintText = '未选择图片',
+    super.onChanged,
+    super.initialValue,
+    super.onSaved,
+    super.validator,
+    super.enabled,
+    super.autovalidateMode,
+  });
+}
+
 AppFileSelection _fromPlatformFile(PlatformFile file) => AppFileSelection(
   name: file.name,
   path: file.path,

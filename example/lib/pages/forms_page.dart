@@ -283,14 +283,12 @@ class _FormsPageState extends State<FormsPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  AppFilePickerFormField(
+                  AppImageInputFormField(
                     label: '单文件图片',
                     description: '仅选择一张图片，也可以直接拖入替换。',
                     variant: AppFilePickerVariant.simple,
                     multiple: false,
-                    allowedExtensions: const ['png', 'jpg', 'jpeg', 'webp'],
                     maxFileSize: 10 * 1024 * 1024,
-                    dialogTitle: '选择图片',
                     trailingBuilder: (context, file, index) =>
                         _buildUploadProgress(file, compact: true),
                     onChanged: (files) =>

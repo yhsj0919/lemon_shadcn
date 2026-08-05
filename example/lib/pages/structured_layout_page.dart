@@ -142,6 +142,43 @@ class _StructuredLayoutPageState extends State<StructuredLayoutPage> {
             ),
           ),
         ),
+        ComponentSection(
+          title: '异步树与懒加载',
+          code: '''AppAsyncTree<String>.future(
+  loadRoots: loadRootNodes,
+  loadChildren: (parent) => loadChildren(parent.id),
+  builder: (_, node) => Text(node.data),
+  // 完全接管整行时使用：
+  // itemBuilder: (_, details) => MyTreeRow(details: details),
+)''',
+          child: SizedBox(
+            height: 220,
+            child: AppAsyncTree<String>.future(
+              loadRoots: () async => const <AppAsyncTreeNode<String>>[
+                AppAsyncTreeNode(id: 'services', data: '服务', hasChildren: true),
+                AppAsyncTreeNode(
+                  id: 'documents',
+                  data: '文档',
+                  hasChildren: true,
+                ),
+              ],
+              loadChildren: (parent) async {
+                await Future<void>.delayed(const Duration(milliseconds: 450));
+                return <AppAsyncTreeNode<String>>[
+                  AppAsyncTreeNode(
+                    id: '${parent.id}-1',
+                    data: parent.id == 'services' ? '用户服务' : '快速开始.md',
+                  ),
+                  AppAsyncTreeNode(
+                    id: '${parent.id}-2',
+                    data: parent.id == 'services' ? '订单服务' : '主题配置.md',
+                  ),
+                ];
+              },
+              builder: (context, node) => Text(node.data),
+            ),
+          ),
+        ),
         const ComponentSection(
           title: '表格',
           child: AppTable(

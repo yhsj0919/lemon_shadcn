@@ -206,6 +206,15 @@
 
 ## 进行中
 
+- [x] 树组件新增非侵入式 `AppAsyncTree`：保留上游 `AppTree` 别名和原有 API，支持同步根节点、
+  `.future` 异步根节点、展开时按节点懒加载、加载缓存、根/子节点错误与重试、初始展开、受控选中和
+  自定义数据/空状态/错误 builder；缩进、分支线、键盘和展开图标继续由上游 Tree 负责。
+- [x] 修复异步树展开按钮选择联动，展开/折叠与节点点击共享一次选择通知；补齐
+  `AppRepeatedAnimationBuilder` 分类示例，并将原先仅登记的 `AppImageInput` / `AppImageInputFormField`
+  落实为注入式图片选择预设及 Form 入口。84 项升级门槛现无 Demo 缺口。
+- [x] 异步树行支持两级定制：简单 `builder` 只提供内容并保留标准 App Tree 行；`itemBuilder` 接收
+  `AppAsyncTreeItemDetails`，可读取展开、选中、加载和错误状态，调用选择/展开/重试操作，并可复用
+  `defaultItem` 或完全替换整行。父节点加载指示器显式约束为 16×16，避免被 Tree 行拉伸变形。
 - [x] 图表基础设施第一阶段：接入 `fl_chart 1.2.0` 作为纯绘制引擎，新增独立 `AppChartTheme`；
   `AppBarChart` 已使用 App 主题生成色板、字体、网格、圆角、Tooltip、图例和桌面 Hover 外观，
   未采用 fl_chart 原生默认风格，且与 DataGrid 主题完全隔离。
@@ -269,7 +278,7 @@
 
 - [ ] 全包测试基线仍需单独清理：当前 `flutter test --concurrency=1` 为 102 通过、38 失败，主要集中在
   Advanced Inputs 查找不到上游输入节点，以及旧主题测试仍断言调整前的 input 色和控件高度；图表专项
-  34 项全部通过，静态分析通过。本轮不把既有测试失败误记为图表完成状态。
+  34 项全部通过，静态分析通过。本轮不把既有测试失败误记为图表或异步树完成状态。
 - [x] 落地 `AppFormDialog`：布局对齐 `AppAlertDialog`，不对 content 强制 small+muted；
   Overlay Demo 与回归测试已覆盖。详见 `docs/component-inventory.md`「表单弹窗」。
 - [x] 状态 Palette 已接入主要 Form 选中控件及 `AppNavigationItem`。

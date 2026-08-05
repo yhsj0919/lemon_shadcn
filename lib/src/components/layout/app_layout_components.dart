@@ -33,6 +33,391 @@ typedef AppAppBar = shad.AppBar;
 typedef AppDashedLine = shad.DashedLine;
 typedef AppDashedContainer = shad.DashedContainer;
 
+typedef AppAsyncTreeLoader<T> =
+    Future<List<AppAsyncTreeNode<T>>> Function(AppAsyncTreeNode<T> parent);
+typedef AppAsyncTreeRootLoader<T> =
+    Future<List<AppAsyncTreeNode<T>>> Function();
+typedef AppAsyncTreeItemBuilder<T> =
+    Widget Function(BuildContext context, AppAsyncTreeItemDetails<T> details);
+
+@immutable
+class AppAsyncTreeNode<T> {
+  const AppAsyncTreeNode({
+    required this.id,
+    required this.data,
+    this.hasChildren = false,
+    this.children = const [],
+  });
+
+  final Object id;
+  final T data;
+  final bool hasChildren;
+  final List<AppAsyncTreeNode<T>> children;
+
+  bool get expandable => hasChildren || children.isNotEmpty;
+}
+
+@immutable
+class AppAsyncTreeItemDetails<T> {
+  const AppAsyncTreeItemDetails({
+    required this.node,
+    required this.expanded,
+    required this.selected,
+    required this.loading,
+    required this.error,
+    required this.select,
+    required this.setExpanded,
+    required this.retry,
+    required this.defaultItem,
+  });
+
+  final AppAsyncTreeNode<T> node;
+  final bool expanded;
+  final bool selected;
+  final bool loading;
+  final Object? error;
+  final VoidCallback select;
+  final ValueChanged<bool> setExpanded;
+  final VoidCallback retry;
+
+  /// The standard App-styled row. Return it directly, wrap it, or replace it
+  /// entirely when the node needs a custom layout.
+  final Widget defaultItem;
+}
+
+/// A low-boilerplate asynchronous tree that leaves the upstream [AppTree]
+/// primitive untouched. Root nodes may be supplied immediately or loaded with
+/// [AppAsyncTree.future], while descendants are fetched only when expanded.
+class AppAsyncTree<T> extends StatefulWidget {
+  const AppAsyncTree({
+    super.key,
+    required this.nodes,
+    this.builder,
+    this.itemBuilder,
+    this.loadChildren,
+    this.onSelected,
+    this.onSelectionChanged,
+    this.selectedId,
+    this.initialExpandedIds = const <Object>{},
+    this.shrinkWrap = false,
+    this.controller,
+    this.padding = const EdgeInsets.all(8),
+    this.branchLine = shad.BranchLine.line,
+    this.emptyBuilder,
+    this.errorBuilder,
+  }) : loadRoots = null,
+       assert(builder != null || itemBuilder != null);
+
+  const AppAsyncTree.future({
+    super.key,
+    required this.loadRoots,
+    this.builder,
+    this.itemBuilder,
+    this.loadChildren,
+    this.onSelected,
+    this.onSelectionChanged,
+    this.selectedId,
+    this.initialExpandedIds = const <Object>{},
+    this.shrinkWrap = false,
+    this.controller,
+    this.padding = const EdgeInsets.all(8),
+    this.branchLine = shad.BranchLine.line,
+    this.emptyBuilder,
+    this.errorBuilder,
+  }) : nodes = null,
+       assert(builder != null || itemBuilder != null);
+
+  final List<AppAsyncTreeNode<T>>? nodes;
+  final AppAsyncTreeRootLoader<T>? loadRoots;
+  final AppAsyncTreeLoader<T>? loadChildren;
+  final Widget Function(BuildContext context, AppAsyncTreeNode<T> node)?
+  builder;
+  final AppAsyncTreeItemBuilder<T>? itemBuilder;
+  final ValueChanged<AppAsyncTreeNode<T>>? onSelected;
+  final ValueChanged<Object?>? onSelectionChanged;
+  final Object? selectedId;
+  final Set<Object> initialExpandedIds;
+  final bool shrinkWrap;
+  final ScrollController? controller;
+  final EdgeInsetsGeometry padding;
+  final shad.BranchLine branchLine;
+  final WidgetBuilder? emptyBuilder;
+  final Widget Function(BuildContext context, Object error, VoidCallback retry)?
+  errorBuilder;
+
+  @override
+  State<AppAsyncTree<T>> createState() => _AppAsyncTreeState<T>();
+}
+
+class _AppAsyncTreeState<T> extends State<AppAsyncTree<T>> {
+  List<AppAsyncTreeNode<T>> _roots = List<AppAsyncTreeNode<T>>.empty();
+  final Map<Object, List<AppAsyncTreeNode<T>>> _children =
+      <Object, List<AppAsyncTreeNode<T>>>{};
+  final Set<Object> _expanded = <Object>{};
+  final Set<Object> _loading = <Object>{};
+  final Map<Object, Object> _errors = <Object, Object>{};
+  Object? _internalSelectedId;
+  Object? _lastNotifiedSelectedId;
+  Object? _rootError;
+  bool _rootLoading = false;
+
+  bool get _selectionControlled => widget.onSelectionChanged != null;
+  Object? get _selectedId =>
+      _selectionControlled ? widget.selectedId : _internalSelectedId;
+
+  @override
+  void initState() {
+    super.initState();
+    _expanded.addAll(widget.initialExpandedIds);
+    _internalSelectedId = widget.selectedId;
+    _lastNotifiedSelectedId = widget.selectedId;
+    if (widget.nodes case final nodes?) {
+      _setRoots(nodes);
+      _loadInitiallyExpanded(nodes);
+    } else {
+      _loadRoots();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant AppAsyncTree<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.nodes != null && oldWidget.nodes != widget.nodes) {
+      _setRoots(widget.nodes!);
+      _loadInitiallyExpanded(widget.nodes!);
+    } else if (widget.nodes == null && oldWidget.nodes != null) {
+      _roots = List<AppAsyncTreeNode<T>>.empty();
+      _children.clear();
+      _loadRoots();
+    }
+    if (!_selectionControlled && oldWidget.selectedId != widget.selectedId) {
+      _internalSelectedId = widget.selectedId;
+    }
+    if (_selectionControlled && oldWidget.selectedId != widget.selectedId) {
+      _lastNotifiedSelectedId = widget.selectedId;
+    }
+  }
+
+  void _setRoots(List<AppAsyncTreeNode<T>> nodes) {
+    _roots = List<AppAsyncTreeNode<T>>.unmodifiable(nodes);
+    _seedChildren(nodes);
+  }
+
+  void _seedChildren(List<AppAsyncTreeNode<T>> nodes) {
+    for (final node in nodes) {
+      if (node.children.isNotEmpty || !node.hasChildren) {
+        _children[node.id] = List<AppAsyncTreeNode<T>>.unmodifiable(
+          node.children,
+        );
+      }
+      _seedChildren(node.children);
+    }
+  }
+
+  void _loadInitiallyExpanded(List<AppAsyncTreeNode<T>> nodes) {
+    for (final node in nodes) {
+      if (_expanded.contains(node.id) && !_children.containsKey(node.id)) {
+        _loadNode(node);
+      }
+      _loadInitiallyExpanded(node.children);
+    }
+  }
+
+  Future<void> _loadRoots() async {
+    final loader = widget.loadRoots;
+    if (loader == null || _rootLoading) return;
+    setState(() {
+      _rootLoading = true;
+      _rootError = null;
+    });
+    try {
+      final nodes = await loader();
+      if (!mounted || widget.nodes != null) return;
+      setState(() {
+        _setRoots(nodes);
+        _rootLoading = false;
+      });
+      _loadInitiallyExpanded(nodes);
+    } catch (error) {
+      if (!mounted || widget.nodes != null) return;
+      setState(() {
+        _rootLoading = false;
+        _rootError = error;
+      });
+    }
+  }
+
+  Future<void> _loadNode(AppAsyncTreeNode<T> node) async {
+    final loader = widget.loadChildren;
+    if (loader == null ||
+        _loading.contains(node.id) ||
+        _children.containsKey(node.id)) {
+      return;
+    }
+    setState(() {
+      _loading.add(node.id);
+      _errors.remove(node.id);
+    });
+    try {
+      final nodes = await loader(node);
+      if (!mounted) return;
+      setState(() {
+        _loading.remove(node.id);
+        _children[node.id] = List<AppAsyncTreeNode<T>>.unmodifiable(nodes);
+        _seedChildren(nodes);
+      });
+      _loadInitiallyExpanded(nodes);
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _loading.remove(node.id);
+        _errors[node.id] = error;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_rootLoading) {
+      return const Center(child: shad.CircularProgressIndicator());
+    }
+    if (_rootError case final error?) {
+      return _error(context, error, _loadRoots);
+    }
+    if (_roots.isEmpty) {
+      return widget.emptyBuilder?.call(context) ??
+          Center(
+            child: Text(
+              '暂无数据',
+              style: shad.Theme.of(context).typography.small.copyWith(
+                color: shad.Theme.of(context).colorScheme.mutedForeground,
+              ),
+            ),
+          );
+    }
+    return AppTree<_AppAsyncTreeEntry<T>>(
+      nodes: <AppTreeNode<_AppAsyncTreeEntry<T>>>[
+        for (final node in _roots) _treeNode(node),
+      ],
+      controller: widget.controller,
+      shrinkWrap: widget.shrinkWrap,
+      padding: widget.padding,
+      branchLine: widget.branchLine,
+      allowMultiSelect: false,
+      recursiveSelection: false,
+      builder: (context, item) => _buildItem(context, item.data.node),
+    );
+  }
+
+  AppTreeItemNode<_AppAsyncTreeEntry<T>> _treeNode(AppAsyncTreeNode<T> node) =>
+      AppTreeItemNode<_AppAsyncTreeEntry<T>>(
+        data: _AppAsyncTreeEntry<T>(node),
+        expanded: _expanded.contains(node.id),
+        selected: _selectedId == node.id,
+        children: <AppTreeNode<_AppAsyncTreeEntry<T>>>[
+          for (final child
+              in _children[node.id] ?? List<AppAsyncTreeNode<T>>.empty())
+            _treeNode(child),
+        ],
+      );
+
+  Widget _buildItem(BuildContext context, AppAsyncTreeNode<T> node) {
+    final loading = _loading.contains(node.id);
+    final error = _errors[node.id];
+    final theme = shad.Theme.of(context);
+    void select() => _select(node);
+    void setExpanded(bool value) {
+      _select(node);
+      setState(() {
+        value ? _expanded.add(node.id) : _expanded.remove(node.id);
+      });
+      if (value) _loadNode(node);
+    }
+
+    final defaultItem = AppTreeItem(
+      expandable: node.expandable,
+      trailing: loading
+          ? const Center(
+              child: SizedBox.square(
+                dimension: 16,
+                child: shad.CircularProgressIndicator(
+                  size: 16,
+                  strokeWidth: 1.5,
+                ),
+              ),
+            )
+          : error == null
+          ? null
+          : GestureDetector(
+              onTap: () => _loadNode(node),
+              child:
+                  widget.errorBuilder?.call(
+                    context,
+                    error,
+                    () => _loadNode(node),
+                  ) ??
+                  Text(
+                    '重试',
+                    style: theme.typography.xSmall.copyWith(
+                      color: theme.colorScheme.destructive,
+                    ),
+                  ),
+            ),
+      onPressed: select,
+      onExpand: node.expandable ? setExpanded : null,
+      child: widget.builder?.call(context, node) ?? const SizedBox.shrink(),
+    );
+    return widget.itemBuilder?.call(
+          context,
+          AppAsyncTreeItemDetails<T>(
+            node: node,
+            expanded: _expanded.contains(node.id),
+            selected: _selectedId == node.id,
+            loading: loading,
+            error: error,
+            select: select,
+            setExpanded: setExpanded,
+            retry: () => _loadNode(node),
+            defaultItem: defaultItem,
+          ),
+        ) ??
+        defaultItem;
+  }
+
+  void _select(AppAsyncTreeNode<T> node) {
+    if (_lastNotifiedSelectedId == node.id) return;
+    _lastNotifiedSelectedId = node.id;
+    if (!_selectionControlled) {
+      setState(() => _internalSelectedId = node.id);
+    }
+    widget.onSelectionChanged?.call(node.id);
+    widget.onSelected?.call(node);
+  }
+
+  Widget _error(BuildContext context, Object error, VoidCallback retry) =>
+      widget.errorBuilder?.call(context, error, retry) ??
+      Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Expanded(
+            child: Text(
+              '加载失败',
+              style: shad.Theme.of(context).typography.small.copyWith(
+                color: shad.Theme.of(context).colorScheme.destructive,
+              ),
+            ),
+          ),
+          GestureDetector(onTap: retry, child: const Text('重试')),
+        ],
+      );
+}
+
+class _AppAsyncTreeEntry<T> {
+  const _AppAsyncTreeEntry(this.node);
+
+  final AppAsyncTreeNode<T> node;
+}
+
 enum AppAlertVariant { standard, info, success, warning, destructive, custom }
 
 /// Semantic alert variants built on the upstream [shad.Alert] layout.
