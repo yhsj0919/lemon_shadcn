@@ -212,8 +212,8 @@ abstract final class GalleryRegistry {
     ),
     GalleryEntry(
       id: 'data-panel',
-      label: '数据面板',
-      subtitle: 'Carousel、Resizable、Stepper、Tree 与 Table',
+      label: '结构化布局',
+      subtitle: '悬浮展开、Carousel、Resizable、Stepper、Tree 与 Table',
       group: 'App 组件',
       builder: (_) => const StructuredLayoutPage(),
     ),

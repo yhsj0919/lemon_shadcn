@@ -991,38 +991,124 @@ class _AppCarouselScrollBehavior extends ScrollBehavior {
   };
 }
 
-class AppCollapsible extends StatelessWidget {
+@immutable
+class AppCollapsibleLayoutData {
+  const AppCollapsibleLayoutData(this.axis);
+
+  final Axis axis;
+}
+
+class AppCollapsible extends StatefulWidget {
   const AppCollapsible({
     super.key,
     required this.children,
     this.isExpanded,
     this.onExpansionChanged,
     this.width,
-  });
+  }) : axis = Axis.vertical,
+       triggerExtent = null;
+
+  const AppCollapsible.horizontal({
+    super.key,
+    required this.children,
+    this.isExpanded,
+    this.onExpansionChanged,
+    this.width,
+    this.triggerExtent = 180,
+  }) : axis = Axis.horizontal;
 
   final List<Widget> children;
   final bool? isExpanded;
   final ValueChanged<bool>? onExpansionChanged;
   final double? width;
+  final Axis axis;
+  final double? triggerExtent;
+
+  @override
+  State<AppCollapsible> createState() => _AppCollapsibleState();
+}
+
+class _AppCollapsibleState extends State<AppCollapsible> {
+  late bool _expanded;
+
+  @override
+  void initState() {
+    super.initState();
+    _expanded = widget.isExpanded ?? false;
+  }
+
+  @override
+  void didUpdateWidget(covariant AppCollapsible oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.onExpansionChanged != null &&
+        oldWidget.isExpanded != widget.isExpanded) {
+      _expanded = widget.isExpanded ?? false;
+    }
+  }
+
+  bool get _effectiveExpanded => widget.onExpansionChanged == null
+      ? _expanded
+      : (widget.isExpanded ?? false);
+
+  void _toggleHorizontal() {
+    final next = !_effectiveExpanded;
+    if (widget.onExpansionChanged == null) {
+      setState(() => _expanded = next);
+    }
+    widget.onExpansionChanged?.call(next);
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (widget.axis == Axis.horizontal) {
+      final children = widget.children;
+      final trigger = children.isEmpty
+          ? const SizedBox.shrink()
+          : SizedBox(width: widget.triggerExtent, child: children.first);
+      final content = children.length <= 1
+          ? const SizedBox.shrink()
+          : Row(children: children.skip(1).toList());
+      return shad.Data.inherit(
+        data: const AppCollapsibleLayoutData(Axis.horizontal),
+        child: shad.Data.inherit(
+          data: shad.CollapsibleStateData(
+            isExpanded: _effectiveExpanded,
+            handleTap: _toggleHorizontal,
+          ),
+          child: SizedBox(
+            width: widget.width,
+            child: Row(
+              mainAxisSize: widget.width == null
+                  ? MainAxisSize.min
+                  : MainAxisSize.max,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[trigger, content],
+            ),
+          ),
+        ),
+      );
+    }
     final collapsible = shad.Collapsible(
-      isExpanded: isExpanded,
+      isExpanded: widget.isExpanded,
       // shadcn_flutter 0.0.53 reports the current state in controlled mode.
       // Keep AppCollapsible's callback semantic as the requested next state.
-      onExpansionChanged: onExpansionChanged == null
+      onExpansionChanged: widget.onExpansionChanged == null
           ? null
-          : (current) => onExpansionChanged!(!current),
-      children: children,
+          : (current) => widget.onExpansionChanged!(!current),
+      children: widget.children,
     );
     return LayoutBuilder(
       builder: (context, constraints) {
         final resolvedWidth =
-            width ??
+            widget.width ??
             (constraints.hasBoundedWidth ? constraints.maxWidth : null);
-        if (resolvedWidth == null) return collapsible;
-        return SizedBox(width: resolvedWidth, child: collapsible);
+        final child = resolvedWidth == null
+            ? collapsible
+            : SizedBox(width: resolvedWidth, child: collapsible);
+        return shad.Data.inherit(
+          data: const AppCollapsibleLayoutData(Axis.vertical),
+          child: child,
+        );
       },
     );
   }
@@ -1521,6 +1607,9 @@ class AppCollapsibleTrigger extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = shad.Data.of<shad.CollapsibleStateData>(context);
+    final axis =
+        shad.Data.maybeOf<AppCollapsibleLayoutData>(context)?.axis ??
+        Axis.vertical;
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
@@ -1547,7 +1636,12 @@ class AppCollapsibleTrigger extends StatelessWidget {
                       turns: state.isExpanded ? 0.5 : 0,
                       duration: const Duration(milliseconds: 160),
                       curve: Curves.easeOutCubic,
-                      child: const Icon(shad.LucideIcons.chevronDown, size: 20),
+                      child: Icon(
+                        axis == Axis.vertical
+                            ? shad.LucideIcons.chevronDown
+                            : shad.LucideIcons.chevronRight,
+                        size: 20,
+                      ),
                     ),
                   ),
                 ),
@@ -1566,11 +1660,19 @@ class AppCollapsibleContent extends StatelessWidget {
     required this.child,
     this.collapsible = true,
     this.duration = const Duration(milliseconds: 180),
-  });
+  }) : axis = Axis.vertical;
+
+  const AppCollapsibleContent.horizontal({
+    super.key,
+    required this.child,
+    this.collapsible = true,
+    this.duration = const Duration(milliseconds: 180),
+  }) : axis = Axis.horizontal;
 
   final Widget child;
   final bool collapsible;
   final Duration duration;
+  final Axis axis;
 
   @override
   Widget build(BuildContext context) {
@@ -1582,8 +1684,11 @@ class AppCollapsibleContent extends StatelessWidget {
       curve: Curves.easeOutCubic,
       builder: (context, value, child) => ClipRect(
         child: Align(
-          alignment: Alignment.topCenter,
-          heightFactor: value,
+          alignment: axis == Axis.vertical
+              ? Alignment.topCenter
+              : Alignment.centerLeft,
+          heightFactor: axis == Axis.vertical ? value : 1,
+          widthFactor: axis == Axis.horizontal ? value : 1,
           child: Opacity(
             opacity: value,
             child: IgnorePointer(ignoring: !visible, child: child),

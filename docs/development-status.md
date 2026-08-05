@@ -215,6 +215,16 @@
 - [x] 异步树行支持两级定制：简单 `builder` 只提供内容并保留标准 App Tree 行；`itemBuilder` 接收
   `AppAsyncTreeItemDetails`，可读取展开、选中、加载和错误状态，调用选择/展开/重试操作，并可复用
   `defaultItem` 或完全替换整行。父节点加载指示器显式约束为 16×16，避免被 Tree 行拉伸变形。
+- [x] 新增 `AppExpandableOverlay`：网格 Item 展开时保留原布局占位，以 Overlay 从原矩形动画到目标尺寸，
+  支持 auto/up/down/left/right、横向/纵向/双轴扩展、窗口边缘避让、点击外部与 Escape 收起，并遵循
+  全局减少动态效果设置；方向默认只改变对应单轴，显式 `axis: AppExpandAxis.both` 才同时改变宽高；
+  默认构造支持完全替换悬浮视图，`.sections` 支持保留主显示区并在方向侧追加展开区。新增
+  `AppCollapsible.horizontal` 与横向 Content 动画及左右方向图标。追加区默认在尺寸动画后半程淡入，
+  避免内容提前挤压；浮层阴影已移至圆角裁剪之外，示例按横向/纵向使用独立目标尺寸；`.sections`
+  可通过 `overlayMainBuilder` 提供无卡片表面的主内容，避免原 Item 边框与浮层边框重叠。展开期间会监听
+  窗口指标与锚点布局尺寸变化，重新计算浮层尺寸和避让位置，使浮层随响应式 Item 一起缩放。该能力已
+  下沉为共享 `AppOverlayAnchorTracker`，`AppExpandableOverlay` 与 `AppCombobox` 统一接入，后续自定义
+  锚定浮层不再各自维护窗口/锚点监听逻辑；上游 Tooltip、Popover 等继续使用 shadcn 定位系统。
 - [x] 图表基础设施第一阶段：接入 `fl_chart 1.2.0` 作为纯绘制引擎，新增独立 `AppChartTheme`；
   `AppBarChart` 已使用 App 主题生成色板、字体、网格、圆角、Tooltip、图例和桌面 Hover 外观，
   未采用 fl_chart 原生默认风格，且与 DataGrid 主题完全隔离。

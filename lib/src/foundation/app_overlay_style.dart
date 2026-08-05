@@ -100,3 +100,69 @@ class AppOverlayShadow extends StatelessWidget {
     );
   }
 }
+
+/// Keeps anchored overlays in sync with window metrics and responsive anchor
+/// layout changes. Custom App overlays should wrap their anchor with this
+/// widget instead of maintaining component-specific resize listeners.
+class AppOverlayAnchorTracker extends StatefulWidget {
+  const AppOverlayAnchorTracker({
+    super.key,
+    required this.onGeometryChanged,
+    required this.child,
+    this.enabled = true,
+  });
+
+  final VoidCallback onGeometryChanged;
+  final Widget child;
+  final bool enabled;
+
+  @override
+  State<AppOverlayAnchorTracker> createState() =>
+      _AppOverlayAnchorTrackerState();
+}
+
+class _AppOverlayAnchorTrackerState extends State<AppOverlayAnchorTracker>
+    with WidgetsBindingObserver {
+  bool _refreshScheduled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didUpdateWidget(AppOverlayAnchorTracker oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.enabled && !oldWidget.enabled) _scheduleRefresh();
+  }
+
+  @override
+  void didChangeMetrics() => _scheduleRefresh();
+
+  void _scheduleRefresh() {
+    if (!widget.enabled || _refreshScheduled) return;
+    _refreshScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _refreshScheduled = false;
+      if (mounted && widget.enabled) widget.onGeometryChanged();
+    });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return NotificationListener<SizeChangedLayoutNotification>(
+      onNotification: (_) {
+        _scheduleRefresh();
+        return false;
+      },
+      child: SizeChangedLayoutNotifier(child: widget.child),
+    );
+  }
+}

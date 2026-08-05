@@ -180,6 +180,26 @@ class _StructuredLayoutPageState extends State<StructuredLayoutPage> {
           ),
         ),
         const ComponentSection(
+          title: '网格 Item 原地悬浮展开',
+          code: '''// 保留主显示区，在指定方向追加展开区
+AppExpandableOverlay.sections(
+  expandedSize: const Size(420, 240),
+  direction: AppExpandDirection.auto,
+  // axis: AppExpandAxis.both, // 需要同时改变宽高时显式开启
+  mainBuilder: (_, open) => SummaryCard(onTap: open),
+  overlayMainBuilder: (_, close) => SummaryContent(onTap: close),
+  contentBuilder: (_, close) => DetailPanel(onClose: close),
+)
+
+// 主显示与展开视图完全不同时，使用默认构造
+AppExpandableOverlay(
+  expandedSize: const Size(420, 240),
+  collapsedBuilder: (_, open) => SummaryCard(onTap: open),
+  expandedBuilder: (_, close) => FullDetailCard(onClose: close),
+)''',
+          child: SizedBox(height: 280, child: _ExpandableGridDemo()),
+        ),
+        const ComponentSection(
           title: '表格',
           child: AppTable(
             rows: [
@@ -227,6 +247,68 @@ class _StructuredLayoutPageState extends State<StructuredLayoutPage> {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _ExpandableGridDemo extends StatelessWidget {
+  const _ExpandableGridDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    const directions = <AppExpandDirection>[
+      AppExpandDirection.right,
+      AppExpandDirection.down,
+      AppExpandDirection.up,
+      AppExpandDirection.left,
+    ];
+    const labels = <String>['向右展开', '向下展开', '向上展开', '向左展开'];
+    return GridView.builder(
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
+        childAspectRatio: 2.4,
+      ),
+      itemCount: directions.length,
+      itemBuilder: (context, index) => AppExpandableOverlay.sections(
+        expandedSize:
+            directions[index] == AppExpandDirection.left ||
+                directions[index] == AppExpandDirection.right
+            ? const Size(480, 0)
+            : const Size(0, 300),
+        direction: directions[index],
+        mainBuilder: (context, open) => GestureDetector(
+          onTap: open,
+          child: AppCard(child: Center(child: Text('${labels[index]} · 点击卡片'))),
+        ),
+        overlayMainBuilder: (context, close) => GestureDetector(
+          onTap: close,
+          child: Center(child: Text('${labels[index]} · 点击卡片')),
+        ),
+        contentBuilder: (context, close) => Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Row(
+                children: <Widget>[
+                  Expanded(child: Text(labels[index]).h3()),
+                  AppIconButton(
+                    icon: const Icon(LucideIcons.x),
+                    tooltip: '收起',
+                    variant: AppButtonVariant.ghost,
+                    onPressed: close,
+                  ),
+                ],
+              ),
+              const Gap(16),
+              const Text('浮层完整覆盖原 Item，底层网格尺寸和相邻卡片位置保持不变。'),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

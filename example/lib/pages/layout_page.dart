@@ -100,19 +100,38 @@ class LayoutPage extends StatelessWidget {
             ),
             const ComponentSection(
               title: '折叠与分隔线',
-              child: AppCollapsible(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  AppCollapsibleTrigger(child: Text('高级详情')),
-                  AppCollapsibleContent(
-                    child: Column(
-                      children: [
-                        AppDivider(),
-                        Padding(
-                          padding: EdgeInsets.only(top: 12),
-                          child: Text('隐藏内容使用相同主题。'),
+                  AppCollapsible(
+                    children: [
+                      AppCollapsibleTrigger(child: Text('纵向高级详情')),
+                      AppCollapsibleContent(
+                        child: Column(
+                          children: [
+                            AppDivider(),
+                            Padding(
+                              padding: EdgeInsets.only(top: 12),
+                              child: Text('隐藏内容使用相同主题。'),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
+                  ),
+                  Gap(16),
+                  AppCollapsible.horizontal(
+                    width: 520,
+                    triggerExtent: 180,
+                    children: [
+                      AppCollapsibleTrigger(child: Text('横向详情')),
+                      AppCollapsibleContent.horizontal(
+                        child: Padding(
+                          padding: EdgeInsets.only(left: 16),
+                          child: Text('内容沿水平方向展开，不改变垂直高度。'),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
