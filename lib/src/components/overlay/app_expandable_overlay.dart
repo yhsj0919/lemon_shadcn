@@ -12,6 +12,8 @@ enum AppExpandDirection { auto, up, down, left, right }
 
 enum AppExpandAxis { both, horizontal, vertical }
 
+enum AppAnchoredOverlayViewMode { expand, cover }
+
 typedef AppExpandableOverlayBuilder =
     Widget Function(BuildContext context, VoidCallback toggle);
 
@@ -35,7 +37,26 @@ class AppExpandableOverlay extends StatefulWidget {
     this.decorateSurface = true,
     this.contentRevealStart = 0.48,
   }) : overlayMainBuilder = null,
-       _retainMain = false;
+       viewMode = AppAnchoredOverlayViewMode.cover;
+
+  const AppExpandableOverlay.cover({
+    super.key,
+    required this.collapsedBuilder,
+    required this.expandedBuilder,
+    required this.expandedSize,
+    this.expanded,
+    this.onExpandedChanged,
+    this.direction = AppExpandDirection.auto,
+    this.axis,
+    this.duration = const Duration(milliseconds: 260),
+    this.curve = Curves.easeOutCubic,
+    this.viewportMargin = 12,
+    this.dismissOnTapOutside = true,
+    this.closeOnEscape = true,
+    this.decorateSurface = true,
+    this.contentRevealStart = 0.48,
+  }) : overlayMainBuilder = null,
+       viewMode = AppAnchoredOverlayViewMode.cover;
 
   /// Keeps [mainBuilder] visible after opening and adds [contentBuilder] in
   /// the resolved expansion direction, similar to a regular collapsible.
@@ -58,7 +79,28 @@ class AppExpandableOverlay extends StatefulWidget {
     this.contentRevealStart = 0.48,
   }) : collapsedBuilder = mainBuilder,
        expandedBuilder = contentBuilder,
-       _retainMain = true;
+       viewMode = AppAnchoredOverlayViewMode.expand;
+
+  const AppExpandableOverlay.expand({
+    super.key,
+    required AppExpandableOverlayBuilder mainBuilder,
+    required AppExpandableOverlayBuilder contentBuilder,
+    this.overlayMainBuilder,
+    required this.expandedSize,
+    this.expanded,
+    this.onExpandedChanged,
+    this.direction = AppExpandDirection.auto,
+    this.axis,
+    this.duration = const Duration(milliseconds: 260),
+    this.curve = Curves.easeOutCubic,
+    this.viewportMargin = 12,
+    this.dismissOnTapOutside = true,
+    this.closeOnEscape = true,
+    this.decorateSurface = true,
+    this.contentRevealStart = 0.48,
+  }) : collapsedBuilder = mainBuilder,
+       expandedBuilder = contentBuilder,
+       viewMode = AppAnchoredOverlayViewMode.expand;
 
   AppExpandableOverlay.horizontal({
     super.key,
@@ -78,7 +120,7 @@ class AppExpandableOverlay extends StatefulWidget {
   }) : expandedSize = Size(expandedWidth, double.infinity),
        axis = AppExpandAxis.horizontal,
        overlayMainBuilder = null,
-       _retainMain = false;
+       viewMode = AppAnchoredOverlayViewMode.cover;
 
   final AppExpandableOverlayBuilder collapsedBuilder;
   final AppExpandableOverlayBuilder expandedBuilder;
@@ -109,7 +151,7 @@ class AppExpandableOverlay extends StatefulWidget {
   /// hidden during the first part of the size animation prevents it from
   /// looking squeezed into a space that has not opened yet.
   final double contentRevealStart;
-  final bool _retainMain;
+  final AppAnchoredOverlayViewMode viewMode;
 
   @override
   State<AppExpandableOverlay> createState() => _AppExpandableOverlayState();
@@ -252,7 +294,7 @@ class _AppExpandableOverlayState extends State<AppExpandableOverlay>
     final direction = _resolveDirection(viewport);
     final targetSize = _targetSize(viewport, direction);
     final targetOffset = _targetOffset(viewport, targetSize, direction);
-    Widget content = widget._retainMain
+    Widget content = widget.viewMode == AppAnchoredOverlayViewMode.expand
         ? _buildSectionContent(context, direction)
         : widget.expandedBuilder(context, _toggle);
     if (widget.decorateSurface) {

@@ -133,6 +133,48 @@ class OverlayPage extends StatelessWidget {
           ),
         ),
         ComponentSection(
+          title: '通用锚点浮层',
+          code: '''AppAnchoredOverlay(
+  placement: AppAnchoredOverlayPlacement.auto,
+  triggers: {AppAnchoredOverlayTrigger.manual},
+  width: AppAnchoredOverlayWidth.matchAnchor,
+  anchorBuilder: (_, actions) => AppButton.outline(
+    onPressed: actions.toggle,
+    child: const Text('任意锚点'),
+  ),
+  overlayBuilder: (_, actions) => DetailPanel(onClose: actions.close),
+)''',
+          child: AppAnchoredOverlay(
+            placement: AppAnchoredOverlayPlacement.auto,
+            triggers: const <AppAnchoredOverlayTrigger>{
+              AppAnchoredOverlayTrigger.manual,
+            },
+            width: AppAnchoredOverlayWidth.fixed,
+            fixedWidth: 280,
+            anchorBuilder: (context, actions) => AppButton.outline(
+              onPressed: actions.toggle,
+              child: const Text('打开通用锚点浮层'),
+            ),
+            overlayBuilder: (context, actions) => Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  const Text('任意浮层内容').h4(),
+                  const Gap(8),
+                  const Text('自动选择空间更充足的方向，并跟随锚点和窗口尺寸变化。'),
+                  const Gap(12),
+                  AppButton.outline(
+                    onPressed: actions.close,
+                    child: const Text('关闭'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        ComponentSection(
           title: '轻提示',
           child: AppButton.primary(
             onPressed: () => AppToast.show(

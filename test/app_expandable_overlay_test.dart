@@ -16,7 +16,7 @@ void main() {
             crossAxisCount: 2,
             childAspectRatio: 2,
             children: <Widget>[
-              AppExpandableOverlay(
+              AppExpandableOverlay.cover(
                 expandedSize: const Size(420, 240),
                 direction: AppExpandDirection.right,
                 collapsedBuilder: (context, toggle) => GestureDetector(
@@ -145,7 +145,7 @@ void main() {
           child: SizedBox(
             width: 140,
             height: 80,
-            child: AppExpandableOverlay.sections(
+            child: AppExpandableOverlay.expand(
               expandedSize: const Size(360, 80),
               direction: AppExpandDirection.right,
               mainBuilder: (context, toggle) => GestureDetector(

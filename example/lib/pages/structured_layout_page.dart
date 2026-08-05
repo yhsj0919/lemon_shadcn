@@ -182,7 +182,7 @@ class _StructuredLayoutPageState extends State<StructuredLayoutPage> {
         const ComponentSection(
           title: '网格 Item 原地悬浮展开',
           code: '''// 保留主显示区，在指定方向追加展开区
-AppExpandableOverlay.sections(
+AppExpandableOverlay.expand(
   expandedSize: const Size(420, 240),
   direction: AppExpandDirection.auto,
   // axis: AppExpandAxis.both, // 需要同时改变宽高时显式开启
@@ -192,7 +192,7 @@ AppExpandableOverlay.sections(
 )
 
 // 主显示与展开视图完全不同时，使用默认构造
-AppExpandableOverlay(
+AppExpandableOverlay.cover(
   expandedSize: const Size(420, 240),
   collapsedBuilder: (_, open) => SummaryCard(onTap: open),
   expandedBuilder: (_, close) => FullDetailCard(onClose: close),
@@ -272,7 +272,7 @@ class _ExpandableGridDemo extends StatelessWidget {
         childAspectRatio: 2.4,
       ),
       itemCount: directions.length,
-      itemBuilder: (context, index) => AppExpandableOverlay.sections(
+      itemBuilder: (context, index) => AppExpandableOverlay.expand(
         expandedSize:
             directions[index] == AppExpandDirection.left ||
                 directions[index] == AppExpandDirection.right
