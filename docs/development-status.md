@@ -206,6 +206,56 @@
 
 ## 进行中
 
+- [x] 图表基础设施第一阶段：接入 `fl_chart 1.2.0` 作为纯绘制引擎，新增独立 `AppChartTheme`；
+  `AppBarChart` 已使用 App 主题生成色板、字体、网格、圆角、Tooltip、图例和桌面 Hover 外观，
+  未采用 fl_chart 原生默认风格，且与 DataGrid 主题完全隔离。
+- [x] `AppBarChart` 已覆盖简单/多系列业务数据、单柱/系列/局部/全局颜色优先级、横纵轴、数值格式化、
+  参考线、数据标签、空数据稳定高度、图例显隐、Hover 高亮、点击回调、受控选中和高级 data builder；
+  Gallery 已新增独立“图表”分类与交互示例。
+- [x] 图表第二阶段：公共坐标轴、参考线、选中模型、数值格式化、主题色板和图例已抽为单一实现；
+  新增 `AppLineChart` / `.area` / `.step` 与 `AppPieChart` / `.donut`，统一支持主题外观、
+  Hover 数据反馈、点击回调、受控选中、图例显隐、局部颜色和底层 data builder。
+- [x] 新增低模板 `AppChartCard` 与 `AppAsyncChart`：业务标题/说明/操作区保持统一，异步加载、错误、
+  空数据和正常图表共用固定高度；异步包装只接收格式化数据，不处理请求或分页协议。
+- [x] 饼图/环形图使用独立 `pieAnimationDuration`，默认缩短为 240ms；柱状图与折线图继续使用
+  320ms 通用动画，局部差异仍由统一 `AppChartTheme` 管理。
+- [x] 新增 `AppBarChart.stacked`，复用普通柱状图的数据、主题、图例、Tooltip 和选择模型；
+  每个堆叠分段保留独立颜色、Hover、点击回调及受控选中身份，并支持正负值分别从零轴累积。
+- [x] 新增 `AppBarChart.horizontal`：横轴使用数值配置、纵轴使用分类配置，分类标签、数值刻度、
+  轴标题、柱体标签和 Tooltip 均做反向旋转补偿，保持桌面端文字正向阅读并复用普通柱点击模型。
+- [x] 数据标签避让已接入统一主题：柱状图根据可用尺寸自动抽样，密集多系列每组仅保留最大值标签；
+  饼图通过 `pieLabelMinPercent` 隐藏过小扇区文字，完整数据始终可从 Hover/Tooltip 获取。
+- [x] 图表键盘访问已统一：鼠标按下自动聚焦，方向键循环浏览可见数据，Enter/空格复用点击回调，
+  开启选中时同步复用选中回调，Esc 清理选中；焦点环使用 shadcn ring/radius。
+- [x] 修正图表默认交互语义：持续选中是 App 层扩展能力，现默认 `selectionEnabled: false`；
+  默认仅 Hover 高亮/显示信息，点击仍触发业务回调。需要点击锁定时必须显式开启选中并可受控管理。
+- [x] 图表信息浮层改为独立的鼠标跟随 Tooltip：不参与图表布局，并根据指针位置自动进行上下、左右避让；
+  柱状图（含堆叠/横向）、折线图、面积图、阶梯图、饼图和环形图共用同一主题样式。
+- [x] Tooltip 动画提升为全局 `AppTooltipTheme`：普通 `AppTooltip` 与图表信息浮层共享淡入淡出时长，
+  图表的鼠标跟随及空间避让切换使用共享平移动画，并统一遵循全局动态效果开关。
+- [x] 鼠标跟随 Tooltip 已从图表目录抽为 Overlay 基础设施 `AppPointerTooltip` / `AppPointerTooltipArea`；
+  padding、间距、圆角、淡入淡出和避让移动均由全局 `AppTooltipTheme` 管理，图表层不再维护重复实现。
+- [x] 图表焦点环按输入方式显示：鼠标点击不再残留粗边框，键盘导航仍保留弱化焦点提示；
+  坐标轴标签统一单行、省略超长内容，纵轴默认预留宽度提升至 56px，并可由 `AppChartAxis.reservedSize` 覆盖。
+- [x] 坐标轴预留宽度已改为自动测量格式化后的刻度/分类文本，并由 `axisMinReservedSize` / `axisMaxReservedSize`
+  限制占用范围；`AppChartAxis.reservedSize` 继续作为局部显式覆盖，柱状、横向柱状和折线图共用规则。
+- [x] 新增 `AppScatterChart`：支持多系列、系列/单点颜色与半径、自动坐标范围、统一坐标轴、图例显隐、
+  Hover 高亮、全局 Pointer Tooltip、点击回调、方向键浏览/激活、可选持续选中和底层 `ScatterChartData` builder；
+  Gallery 独立展示。
+- [x] 新增 `AppRadarChart` 首版：支持指标、多系列、系列颜色、polygon/circle、刻度数量、统一图例、
+  Pointer Tooltip、Hover 系列高亮、方向键浏览/激活、点击回调与底层 `RadarChartData` builder；
+  少于三个指标或系列长度不匹配时显示稳定空状态；
+  Gallery 已增加独立的多系列对比与点击回调示例。
+- [x] 新增 `AppCandlestickChart` 首版：以轻量 CustomPainter 补足 fl_chart 未提供的 K 线类型，支持 OHLC、
+  涨跌/单点颜色、统一坐标轴与网格、自动标签抽样、Pointer Tooltip、Hover 高亮、键盘浏览和点击回调；
+  不引入第二套图表依赖，也不复制上游实现。
+- [x] 新增统一 `AppChartExportBoundary` / `AppChartExportController`：任意 App 图表无需修改内部实现即可
+  导出 PNG 或 `ui.Image`，默认使用当前主题背景并支持像素倍率、背景和留白配置；组件只返回平台无关的
+  图像数据，文件保存、下载、分享或上传继续交给业务平台服务处理。
+- [x] 新增共享 LTTB 海量数据降采样：折线/面积/阶梯图默认在单系列超过 1000 点时只降低绘制密度，
+  始终保留首尾和显著峰谷；散点数据通常无序，因此默认不采样，仅在调用方确认数据有序并显式启用
+  LTTB 时生效。Hover、键盘与点击回调仍返回原始数据索引，坐标范围始终从完整数据计算；可调整阈值、
+  关闭降采样或直接使用公共 `appChartSampleIndices`。空值断线标记继续保留，不改变业务数据本身。
 - [x] 审查提交 `3dd2e3a`：Pagination 恢复上游别名，图标尺寸移入全局 theme token；
   DataGrid 的行高、表头、筛选区、分页栏、padding、字号集中到 `AppDataGridMetrics`，
   默认值保持提交前外观；拖拽浮层改用主题 popover 色，暗色模式不再固定白底。
@@ -217,6 +267,9 @@
 
 ## 尚未完成
 
+- [ ] 全包测试基线仍需单独清理：当前 `flutter test --concurrency=1` 为 102 通过、38 失败，主要集中在
+  Advanced Inputs 查找不到上游输入节点，以及旧主题测试仍断言调整前的 input 色和控件高度；图表专项
+  34 项全部通过，静态分析通过。本轮不把既有测试失败误记为图表完成状态。
 - [x] 落地 `AppFormDialog`：布局对齐 `AppAlertDialog`，不对 content 强制 small+muted；
   Overlay Demo 与回归测试已覆盖。详见 `docs/component-inventory.md`「表单弹窗」。
 - [x] 状态 Palette 已接入主要 Form 选中控件及 `AppNavigationItem`。

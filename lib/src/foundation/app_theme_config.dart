@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart' show immutable;
-import 'package:flutter/painting.dart' show BoxShadow, Color, Offset;
+import 'package:flutter/painting.dart'
+    show BoxShadow, Color, EdgeInsets, Offset;
 import 'package:flutter/widgets.dart' show Widget;
 
 import '../components/display/app_text.dart';
@@ -74,6 +75,158 @@ class AppDataGridMetrics {
   final double footerHeight;
   final double horizontalPadding;
   final double fontSize;
+}
+
+/// Shared motion timings for application tooltips, including chart tooltips.
+@immutable
+class AppTooltipTheme {
+  const AppTooltipTheme({
+    this.fadeDuration = const Duration(milliseconds: 140),
+    this.moveDuration = const Duration(milliseconds: 120),
+    this.padding = const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+    this.margin = 8,
+    this.radius = 7,
+  });
+
+  final Duration fadeDuration;
+  final Duration moveDuration;
+  final EdgeInsets padding;
+  final double margin;
+  final double radius;
+
+  AppTooltipTheme copyWith({
+    Duration? fadeDuration,
+    Duration? moveDuration,
+    EdgeInsets? padding,
+    double? margin,
+    double? radius,
+  }) => AppTooltipTheme(
+    fadeDuration: fadeDuration ?? this.fadeDuration,
+    moveDuration: moveDuration ?? this.moveDuration,
+    padding: padding ?? this.padding,
+    margin: margin ?? this.margin,
+    radius: radius ?? this.radius,
+  );
+}
+
+/// Shared chart appearance tokens. An empty [palette] derives a harmonious
+/// palette from the active shadcn color scheme instead of using fl_chart's
+/// native colors.
+@immutable
+class AppChartTheme {
+  const AppChartTheme({
+    this.palette = const <Color>[],
+    this.height = 280,
+    this.barWidth = 16,
+    this.groupSpacing = 20,
+    this.axisMinReservedSize = 40,
+    this.axisMaxReservedSize = 96,
+    this.labelFontSize = 12,
+    this.gridOpacity = 0.55,
+    this.inactiveOpacity = 0.32,
+    this.hoverScale = 1.12,
+    this.radius = 5,
+    this.lineWidth = 2.5,
+    this.pieRadius = 76,
+    this.donutHoleRadius = 48,
+    this.pointRadius = 3,
+    this.pieSectionSpacing = 3,
+    this.legendSpacing = 12,
+    this.dataLabelMinSpacing = 44,
+    this.pieLabelMinPercent = 6,
+    this.keyboardFocusWidth = 2,
+    this.animationDuration = const Duration(milliseconds: 320),
+    this.pieAnimationDuration = const Duration(milliseconds: 240),
+  }) : assert(height > 0),
+       assert(barWidth > 0),
+       assert(groupSpacing >= 0),
+       assert(axisMinReservedSize >= 0),
+       assert(axisMaxReservedSize >= axisMinReservedSize),
+       assert(labelFontSize > 0),
+       assert(gridOpacity >= 0 && gridOpacity <= 1),
+       assert(inactiveOpacity >= 0 && inactiveOpacity <= 1),
+       assert(hoverScale >= 1),
+       assert(radius >= 0),
+       assert(lineWidth > 0),
+       assert(pieRadius > 0),
+       assert(donutHoleRadius >= 0),
+       assert(pointRadius > 0),
+       assert(pieSectionSpacing >= 0),
+       assert(legendSpacing >= 0),
+       assert(dataLabelMinSpacing > 0),
+       assert(pieLabelMinPercent >= 0 && pieLabelMinPercent <= 100),
+       assert(keyboardFocusWidth > 0);
+
+  final List<Color> palette;
+  final double height;
+  final double barWidth;
+  final double groupSpacing;
+  final double axisMinReservedSize;
+  final double axisMaxReservedSize;
+  final double labelFontSize;
+  final double gridOpacity;
+  final double inactiveOpacity;
+  final double hoverScale;
+  final double radius;
+  final double lineWidth;
+  final double pieRadius;
+  final double donutHoleRadius;
+  final double pointRadius;
+  final double pieSectionSpacing;
+  final double legendSpacing;
+  final double dataLabelMinSpacing;
+  final double pieLabelMinPercent;
+  final double keyboardFocusWidth;
+  final Duration animationDuration;
+  final Duration pieAnimationDuration;
+
+  AppChartTheme copyWith({
+    List<Color>? palette,
+    double? height,
+    double? barWidth,
+    double? groupSpacing,
+    double? axisMinReservedSize,
+    double? axisMaxReservedSize,
+    double? labelFontSize,
+    double? gridOpacity,
+    double? inactiveOpacity,
+    double? hoverScale,
+    double? radius,
+    double? lineWidth,
+    double? pieRadius,
+    double? donutHoleRadius,
+    double? pointRadius,
+    double? pieSectionSpacing,
+    double? legendSpacing,
+    double? dataLabelMinSpacing,
+    double? pieLabelMinPercent,
+    double? keyboardFocusWidth,
+    Duration? animationDuration,
+    Duration? pieAnimationDuration,
+  }) => AppChartTheme(
+    palette: palette ?? this.palette,
+    height: height ?? this.height,
+    barWidth: barWidth ?? this.barWidth,
+    groupSpacing: groupSpacing ?? this.groupSpacing,
+    axisMinReservedSize: axisMinReservedSize ?? this.axisMinReservedSize,
+    axisMaxReservedSize: axisMaxReservedSize ?? this.axisMaxReservedSize,
+    labelFontSize: labelFontSize ?? this.labelFontSize,
+    gridOpacity: gridOpacity ?? this.gridOpacity,
+    inactiveOpacity: inactiveOpacity ?? this.inactiveOpacity,
+    hoverScale: hoverScale ?? this.hoverScale,
+    radius: radius ?? this.radius,
+    lineWidth: lineWidth ?? this.lineWidth,
+    pieRadius: pieRadius ?? this.pieRadius,
+    donutHoleRadius: donutHoleRadius ?? this.donutHoleRadius,
+    pointRadius: pointRadius ?? this.pointRadius,
+    pieSectionSpacing: pieSectionSpacing ?? this.pieSectionSpacing,
+    legendSpacing: legendSpacing ?? this.legendSpacing,
+    dataLabelMinSpacing: dataLabelMinSpacing ?? this.dataLabelMinSpacing,
+    pieLabelMinPercent: pieLabelMinPercent ?? this.pieLabelMinPercent,
+    keyboardFocusWidth: keyboardFocusWidth ?? this.keyboardFocusWidth,
+    animationDuration: animationDuration ?? this.animationDuration,
+    pieAnimationDuration: pieAnimationDuration ?? this.pieAnimationDuration,
+  );
 }
 
 /// Shared interactive motion tokens for [AppButton], [AppIconButton], and
@@ -220,6 +373,8 @@ class AppThemeConfig {
     this.shadows = const AppShadowTheme(),
     this.controls = const AppControlMetrics(),
     this.dataGrid = const AppDataGridMetrics(),
+    this.tooltip = const AppTooltipTheme(),
+    this.chart = const AppChartTheme(),
     this.controlPalette,
     this.textTheme,
     this.errorPresenter,
@@ -248,6 +403,8 @@ class AppThemeConfig {
     AppShadowTheme shadows = const AppShadowTheme(),
     AppControlMetrics controls = const AppControlMetrics(),
     AppDataGridMetrics dataGrid = const AppDataGridMetrics(),
+    AppTooltipTheme tooltip = const AppTooltipTheme(),
+    AppChartTheme chart = const AppChartTheme(),
     AppVisualPalette? controlPalette,
     AppTextTheme? textTheme,
     AppErrorPresenter? errorPresenter,
@@ -280,6 +437,8 @@ class AppThemeConfig {
       shadows: shadows,
       controls: controls,
       dataGrid: dataGrid,
+      tooltip: tooltip,
+      chart: chart,
       controlPalette: controlPalette,
       textTheme: textTheme,
       errorPresenter: errorPresenter,
@@ -431,6 +590,8 @@ class AppThemeConfig {
   final AppShadowTheme shadows;
   final AppControlMetrics controls;
   final AppDataGridMetrics dataGrid;
+  final AppTooltipTheme tooltip;
+  final AppChartTheme chart;
   final AppVisualPalette? controlPalette;
   final AppTextTheme? textTheme;
   final AppErrorPresenter? errorPresenter;
@@ -445,6 +606,8 @@ class AppThemeConfig {
     AppShadowTheme? shadows,
     AppControlMetrics? controls,
     AppDataGridMetrics? dataGrid,
+    AppTooltipTheme? tooltip,
+    AppChartTheme? chart,
     AppVisualPalette? controlPalette,
     AppTextTheme? textTheme,
     bool clearTextTheme = false,
@@ -461,6 +624,8 @@ class AppThemeConfig {
       shadows: shadows ?? this.shadows,
       controls: controls ?? this.controls,
       dataGrid: dataGrid ?? this.dataGrid,
+      tooltip: tooltip ?? this.tooltip,
+      chart: chart ?? this.chart,
       controlPalette: controlPalette ?? this.controlPalette,
       textTheme: clearTextTheme ? null : (textTheme ?? this.textTheme),
       errorPresenter: errorPresenter ?? this.errorPresenter,

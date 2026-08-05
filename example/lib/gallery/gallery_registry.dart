@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import '../pages/actions_page.dart';
+import '../pages/charts_page.dart';
 import '../pages/data_display_page.dart';
 import '../pages/data_grid_page.dart';
 import '../pages/dashboard_page.dart';
@@ -222,6 +223,13 @@ abstract final class GalleryRegistry {
       subtitle: '固定列、拖动排序、分页器与无限滚动',
       group: 'App 组件',
       builder: (_) => const DataGridPage(),
+    ),
+    GalleryEntry(
+      id: 'charts',
+      label: '图表',
+      subtitle: '柱状、折线、面积、阶梯、饼图与环形图',
+      group: 'App 组件',
+      builder: (_) => const ChartsPage(),
     ),
     GalleryEntry(
       id: 'navigation',

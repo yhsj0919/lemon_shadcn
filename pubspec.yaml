@@ -12,6 +12,7 @@ dependencies:
   cross_file: ^0.3.5+4
   desktop_drop: ^0.7.1
   file_picker: ^11.0.3
+  fl_chart: ^1.2.0
   flutter:
     sdk: flutter
   shadcn_flutter: ^0.0.53

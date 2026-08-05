@@ -2,8 +2,9 @@ import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
 import '../../foundation/app_overlay_style.dart';
+import '../../foundation/app_shadcn_scope.dart';
+import '../../foundation/app_theme_config.dart';
 
-typedef AppTooltip = shad.Tooltip;
 typedef AppInstantTooltip = shad.InstantTooltip;
 typedef AppOverlayController = shad.OverlayController;
 typedef AppOverlayCompleter<T> = shad.OverlayCompleter<T>;
@@ -13,6 +14,49 @@ typedef AppSheetConfiguration<T> = shad.SheetConfiguration<T>;
 typedef AppPopoverConfiguration<T> = shad.PopoverConfiguration<T>;
 typedef AppToastOverlay = shad.ToastOverlay;
 typedef AppToastLocation = shad.ToastLocation;
+
+class AppTooltip extends StatelessWidget {
+  const AppTooltip({
+    super.key,
+    required this.child,
+    required this.tooltip,
+    this.alignment = Alignment.topCenter,
+    this.anchorAlignment = Alignment.bottomCenter,
+    this.waitDuration = const Duration(milliseconds: 500),
+    this.showDuration,
+    this.minDuration = Duration.zero,
+  });
+
+  final Widget child;
+  final WidgetBuilder tooltip;
+  final AlignmentGeometry alignment;
+  final AlignmentGeometry anchorAlignment;
+  final Duration waitDuration;
+  final Duration? showDuration;
+  final Duration minDuration;
+
+  @override
+  Widget build(BuildContext context) {
+    final config = AppTheme.maybeOf(context);
+    final animationsDisabled =
+        config?.motion.enabled == false ||
+        MediaQuery.maybeOf(context)?.disableAnimations == true;
+    final duration = animationsDisabled
+        ? Duration.zero
+        : (showDuration ??
+              config?.tooltip.fadeDuration ??
+              const AppTooltipTheme().fadeDuration);
+    return shad.Tooltip(
+      alignment: alignment,
+      anchorAlignment: anchorAlignment,
+      waitDuration: waitDuration,
+      showDuration: duration,
+      minDuration: minDuration,
+      tooltip: tooltip,
+      child: child,
+    );
+  }
+}
 
 class AppHoverCard extends StatelessWidget {
   const AppHoverCard({
