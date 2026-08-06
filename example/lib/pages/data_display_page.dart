@@ -174,19 +174,60 @@ class DataDisplayPage extends StatelessWidget {
             ),
             ComponentSection(
               title: '头像',
-              child: const Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                crossAxisAlignment: WrapCrossAlignment.center,
+              child: const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  AppAvatar.circle(initials: 'LS'),
+                  AppText.label('中文姓名'),
+                  Gap(10),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      AppAvatar.circle(name: '林晓', initialsCount: 1, size: 40),
+                      AppAvatar.circle(name: '张三', size: 48),
+                      AppAvatar.square(name: '王小明', size: 48),
+                      AppAvatar.square(
+                        name: '产品设计',
+                        initialsCount: 2,
+                        size: 56,
+                      ),
+                    ],
+                  ),
+                  Gap(20),
+                  AppText.label('中文头像组'),
+                  Gap(10),
                   AppAvatarGroup(
                     alignment: Alignment(-0.85, 0),
                     gap: 2,
                     children: [
-                      AppAvatar.circle(initials: 'A'),
-                      AppAvatar.square(initials: 'B'),
-                      AppAvatar.circle(initials: 'C'),
+                      AppAvatar.circle(name: '王芳', initialsCount: 1),
+                      AppAvatar.square(name: '李雷', initialsCount: 1),
+                      AppAvatar.circle(name: '赵敏', initialsCount: 1),
+                      AppAvatar.square(name: '周宁', initialsCount: 1),
+                    ],
+                  ),
+                  Gap(20),
+                  AppText.label('自定义文字样式'),
+                  Gap(10),
+                  Wrap(
+                    spacing: 12,
+                    children: [
+                      AppAvatar.circle(
+                        initials: '陈',
+                        size: 48,
+                        backgroundColor: Color(0xffdbeafe),
+                        textStyle: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      AppAvatar.square(
+                        initials: '设计',
+                        size: 48,
+                        backgroundColor: Color(0xfffee2e2),
+                        foregroundColor: Color(0xffb91c1c),
+                      ),
                     ],
                   ),
                 ],

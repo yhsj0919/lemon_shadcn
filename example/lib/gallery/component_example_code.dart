@@ -244,8 +244,13 @@ AppDescriptions(
   rowKey: (user) => user.id,
   loader: (query) => repository.loadMoreUsers(query),
 );''',
-    '头像': '''AppAvatar.circle(initials: 'LS');
-AppAvatarGroup(children: avatars);''',
+    '头像': '''const AppAvatar.circle(name: '林晓', initialsCount: 1);
+const AppAvatar.square(name: '张三', initialsCount: 2);
+const AppAvatarGroup(children: [
+  AppAvatar.circle(name: '王芳', initialsCount: 1),
+  AppAvatar.square(name: '李雷', initialsCount: 1),
+  AppAvatar.circle(name: '赵敏', initialsCount: 1),
+]);''',
     '徽章': '''AppBadge.success(size: AppBadgeSize.large, child: const Text('大'));
 AppBadge.success(
   padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
