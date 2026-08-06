@@ -266,14 +266,53 @@ class _AppAnchoredOverlayState extends State<AppAnchoredOverlay>
       AppAnchoredOverlayWidth.matchAnchor => _anchorSize.width,
       AppAnchoredOverlayWidth.fixed => widget.fixedWidth,
     };
+    final placementWidth = switch (placement) {
+      AppAnchoredOverlayPlacement.left =>
+        _anchorGlobal.dx - widget.gap - widget.viewportMargin,
+      AppAnchoredOverlayPlacement.right =>
+        viewport.width -
+            widget.viewportMargin -
+            _anchorGlobal.dx -
+            _anchorSize.width -
+            widget.gap,
+      _ => availableWidth,
+    };
+    final placementHeight = switch (placement) {
+      AppAnchoredOverlayPlacement.top =>
+        _anchorGlobal.dy - widget.gap - widget.viewportMargin,
+      AppAnchoredOverlayPlacement.bottom || AppAnchoredOverlayPlacement.auto =>
+        viewport.height -
+            widget.viewportMargin -
+            _anchorGlobal.dy -
+            _anchorSize.height -
+            widget.gap,
+      _ => availableHeight,
+    };
+    final constrainedMaxWidth = math.max(
+      0.0,
+      math.min(widget.maxWidth, placementWidth),
+    );
+    final constrainedMaxHeight = math.max(
+      0.0,
+      math.min(widget.maxHeight, placementHeight),
+    );
+    final collisionOffset = _collisionOffset(
+      viewport: viewport,
+      placement: placement,
+      maxWidth: constrainedMaxWidth,
+      maxHeight: constrainedMaxHeight,
+    );
+    Widget overlayContent = widget.overlayBuilder(context, _actions);
+    if (width != null) {
+      overlayContent = SizedBox(width: width, child: overlayContent);
+    }
     Widget content = ConstrainedBox(
       constraints: BoxConstraints(
-        maxWidth: math.min(widget.maxWidth, availableWidth),
-        maxHeight: math.min(widget.maxHeight, availableHeight),
+        maxWidth: constrainedMaxWidth,
+        maxHeight: constrainedMaxHeight,
       ),
-      child: widget.overlayBuilder(context, _actions),
+      child: overlayContent,
     );
-    if (width != null) content = SizedBox(width: width, child: content);
     if (widget.decorateSurface) {
       final theme = ShadcnTheme.of(context);
       content = AppOverlayShadow(
@@ -324,7 +363,7 @@ class _AppAnchoredOverlayState extends State<AppAnchoredOverlay>
         showWhenUnlinked: false,
         targetAnchor: widget.targetAnchor ?? anchors.$1,
         followerAnchor: widget.followerAnchor ?? anchors.$2,
-        offset: widget.offset + anchors.$3,
+        offset: widget.offset + anchors.$3 + collisionOffset,
         child: FadeTransition(
           opacity: CurvedAnimation(parent: _animation, curve: widget.curve),
           child: ScaleTransition(
@@ -337,6 +376,33 @@ class _AppAnchoredOverlayState extends State<AppAnchoredOverlay>
         ),
       ),
     );
+  }
+
+  Offset _collisionOffset({
+    required Size viewport,
+    required AppAnchoredOverlayPlacement placement,
+    required double maxWidth,
+    required double maxHeight,
+  }) {
+    if (placement == AppAnchoredOverlayPlacement.top ||
+        placement == AppAnchoredOverlayPlacement.bottom ||
+        placement == AppAnchoredOverlayPlacement.auto) {
+      final desiredLeft = _anchorGlobal.dx + (_anchorSize.width - maxWidth) / 2;
+      final minLeft = widget.viewportMargin;
+      final maxLeft = math.max(
+        minLeft,
+        viewport.width - widget.viewportMargin - maxWidth,
+      );
+      return Offset(desiredLeft.clamp(minLeft, maxLeft) - desiredLeft, 0);
+    }
+
+    final desiredTop = _anchorGlobal.dy + (_anchorSize.height - maxHeight) / 2;
+    final minTop = widget.viewportMargin;
+    final maxTop = math.max(
+      minTop,
+      viewport.height - widget.viewportMargin - maxHeight,
+    );
+    return Offset(0, desiredTop.clamp(minTop, maxTop) - desiredTop);
   }
 
   AppAnchoredOverlayPlacement _resolvePlacement(Size viewport) {

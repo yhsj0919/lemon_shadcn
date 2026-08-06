@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lemon_shadcn/lemon_shadcn.dart';
+import 'package:lemon_shadcn/shadcn.dart' as shad;
 
 void main() {
   const options = [
@@ -109,4 +110,44 @@ void main() {
 
     expect(tester.takeException(), isA<FlutterError>());
   });
+
+  testWidgets('select releases focus when its popup is dismissed outside', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: Column(
+          children: [
+            const AppSelect<String>(
+              options: options,
+              onChanged: _ignoreSelection,
+            ),
+            const SizedBox(
+              key: ValueKey<String>('outside-select'),
+              width: 200,
+              height: 100,
+            ),
+          ],
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Select an option'));
+    await tester.pumpAndSettle();
+    expect(find.text('Administrator'), findsOneWidget);
+
+    await tester.tapAt(const Offset(790, 590));
+    await tester.pumpAndSettle();
+    expect(find.text('Administrator'), findsNothing);
+    expect(
+      tester
+          .widget<shad.Select<String>>(find.byType(shad.Select<String>))
+          .focusNode!
+          .hasFocus,
+      isFalse,
+    );
+  });
 }
+
+void _ignoreSelection(String? value) {}

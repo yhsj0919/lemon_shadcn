@@ -447,7 +447,7 @@ class _ComponentSectionState extends State<ComponentSection> {
           const Gap(20),
           widget.child,
           const Gap(20),
-          const AppDivider(),
+          const AppDivider.horizontal(),
           AppCollapsible(
             isExpanded: _showCode,
             onExpansionChanged: (value) => setState(() => _showCode = value),

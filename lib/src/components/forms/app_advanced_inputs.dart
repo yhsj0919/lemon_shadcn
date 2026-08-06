@@ -223,7 +223,9 @@ class _AppEditablePartWidgetState extends State<_AppEditablePartWidget> {
             maxLength: widget.part.length,
             onChanged: _onChanged,
             inputFormatters: widget.part.inputFormatters,
-            placeholder: widget.part.hintText == null ? null : Text(widget.part.hintText!),
+            placeholder: widget.part.hintText == null
+                ? null
+                : Text(widget.part.hintText!),
             obscureText: widget.part.obscureText,
             maxLines: 1,
             textAlign: TextAlign.center,
@@ -544,7 +546,9 @@ class _AppItemPickerControlState<V> extends State<_AppItemPickerControl<V>> {
                       widget.options.map((option) => option.value).toList(),
                     ),
                     value: widget.value,
-                    placeholder: widget.hintText == null ? null : Text(widget.hintText!),
+                    placeholder: widget.hintText == null
+                        ? null
+                        : Text(widget.hintText!),
                     title: widget.title,
                     layout: widget.layout,
                     mode: widget.mode,
@@ -661,9 +665,9 @@ class _AppColorInputControl extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = shad.Theme.of(context);
-    return AppPromptControlFrame(
+    return AppPromptControlFrame.builder(
       enabled: enabled,
-      child: shad.ComponentTheme(
+      builder: (context, popup) => shad.ComponentTheme(
         data: shad.ColorInputTheme(
           popoverPadding: EdgeInsets.all(8 * theme.scaling),
         ),
@@ -693,29 +697,31 @@ class _AppColorInputControl extends StatelessWidget {
             onChanged: (value) {
               if (value != null) onChanged(value);
             },
-            editorBuilder: (context, handler) => SizedBox(
-              width: 340,
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                alignment: Alignment.topLeft,
-                child: DefaultTextStyle.merge(
-                  textAlign: TextAlign.center,
-                  child: SizedBox(
-                    width: 480,
-                    height: 400,
-                    child: shad.ComponentTheme(
-                      data: const shad.TextFieldTheme(
-                        padding: EdgeInsets.only(left: 18, right: 4),
-                      ),
-                      child: shad.ColorPicker(
-                        value: handler.value ?? value,
-                        showAlpha: showAlpha ?? true,
-                        enableEyeDropper: enableEyeDropper,
-                        spacing: 8,
-                        controlSpacing: 6,
-                        sliderSize: 18,
-                        onChanging: (value) => handler.value = value,
-                        onChanged: (value) => handler.value = value,
+            editorBuilder: (overlayContext, handler) => popup(
+              SizedBox(
+                width: 340,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.topLeft,
+                  child: DefaultTextStyle.merge(
+                    textAlign: TextAlign.center,
+                    child: SizedBox(
+                      width: 480,
+                      height: 400,
+                      child: shad.ComponentTheme(
+                        data: const shad.TextFieldTheme(
+                          padding: EdgeInsets.only(left: 18, right: 4),
+                        ),
+                        child: shad.ColorPicker(
+                          value: handler.value ?? value,
+                          showAlpha: showAlpha ?? true,
+                          enableEyeDropper: enableEyeDropper,
+                          spacing: 8,
+                          controlSpacing: 6,
+                          sliderSize: 18,
+                          onChanging: (value) => handler.value = value,
+                          onChanged: (value) => handler.value = value,
+                        ),
                       ),
                     ),
                   ),

@@ -152,11 +152,11 @@ class _AppPhoneInputState extends State<AppPhoneInput> {
   Widget build(BuildContext context) {
     final theme = shad.Theme.of(context);
     return AppControlBox(
-      child: AppPromptControlFrame(
+      child: AppPromptControlFrame.builder(
         enabled: widget.enabled,
         maintainBorder: true,
         activateOnPointerDown: false,
-        child: IgnorePointer(
+        builder: (context, popup) => IgnorePointer(
           ignoring: !widget.enabled,
           child: Opacity(
             opacity: widget.enabled ? 1 : 0.5,
@@ -190,28 +190,30 @@ class _AppPhoneInputState extends State<AppPhoneInput> {
                       if (value != null) _changeCountry(value);
                     },
                     itemBuilder: (context, country) => _flag(country),
-                    popup: shad.SelectPopup.builder(
-                      builder: (context, query) => shad.SelectItemList(
-                        children: [
-                          for (final country
-                              in widget.countries ?? shad.Country.values)
-                            if (query == null ||
-                                _matchesCountry(country, query))
-                              shad.SelectItemButton(
-                                value: country,
-                                child: Row(
-                                  children: [
-                                    _flag(country),
-                                    const shad.Gap(8),
-                                    Expanded(child: Text(country.name)),
-                                    const shad.Gap(16),
-                                    Text(country.dialCode),
-                                  ],
+                    popup: (context) => popup(
+                      shad.SelectPopup.builder(
+                        builder: (context, query) => shad.SelectItemList(
+                          children: [
+                            for (final country
+                                in widget.countries ?? shad.Country.values)
+                              if (query == null ||
+                                  _matchesCountry(country, query))
+                                shad.SelectItemButton(
+                                  value: country,
+                                  child: Row(
+                                    children: [
+                                      _flag(country),
+                                      const shad.Gap(8),
+                                      Expanded(child: Text(country.name)),
+                                      const shad.Gap(16),
+                                      Text(country.dialCode),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ).asBuilder,
+                    ),
                   ),
                 ),
                 Container(width: 1, color: theme.colorScheme.border),

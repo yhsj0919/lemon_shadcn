@@ -187,10 +187,18 @@ class _AppExpandableOverlayState extends State<AppExpandableOverlay>
     super.didUpdateWidget(oldWidget);
     _syncDuration();
     if (_controlled && oldWidget.expanded != widget.expanded) {
-      _expanded ? _openOverlay() : _closeOverlay();
+      _scheduleOverlaySync();
     } else if (!_controlled && oldWidget.expanded != widget.expanded) {
       _internalExpanded = widget.expanded ?? _internalExpanded;
+      _scheduleOverlaySync();
     }
+  }
+
+  void _scheduleOverlaySync() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _expanded ? _openOverlay() : _closeOverlay();
+    });
   }
 
   @override

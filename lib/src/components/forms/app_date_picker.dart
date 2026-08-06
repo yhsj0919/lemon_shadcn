@@ -69,56 +69,68 @@ class AppDatePicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final localizations = shad.ShadcnLocalizations.of(context);
-    final resolvedMode = mode ?? shad.PromptMode.popover;
-    final picker = switch (_kind) {
-      _AppDatePickerKind.single => shad.ObjectFormField<DateTime>(
-        value: value,
-        onChanged: onChanged,
-        enabled: enabled,
-        mode: resolvedMode,
-        immediateValueChange: false,
-        placeholder: Text(hintText ?? localizations.placeholderDatePicker),
-        trailing: const Icon(shad.LucideIcons.calendarDays),
-        popoverAlignment: popoverAlignment,
-        popoverAnchorAlignment: popoverAnchorAlignment,
-        popoverPadding: popoverPadding,
-        dialogTitle: dialogTitle,
-        builder: (context, value) => Text(_formatAppDate(value)),
-        editorBuilder: (context, handler) => _AppSingleDateEditor(
-          handler: handler,
-          initialView: initialView,
-          initialViewType: initialViewType,
-          stateBuilder: stateBuilder,
-          showActions: resolvedMode == shad.PromptMode.popover,
-        ),
-      ),
-      _AppDatePickerKind.range => shad.ObjectFormField<shad.DateTimeRange>(
-        value: rangeValue,
-        onChanged: onRangeChanged,
-        enabled: enabled,
-        mode: resolvedMode,
-        immediateValueChange: false,
-        placeholder: Text(hintText ?? localizations.placeholderDatePicker),
-        trailing: const Icon(shad.LucideIcons.calendarRange),
-        popoverAlignment: popoverAlignment,
-        popoverAnchorAlignment: popoverAnchorAlignment,
-        popoverPadding: popoverPadding,
-        dialogTitle: dialogTitle,
-        builder: (context, value) => Text(
-          '${_formatAppDate(value.start)} - ${_formatAppDate(value.end)}',
-        ),
-        editorBuilder: (context, handler) => _AppRangeDateEditor(
-          handler: handler,
-          initialView: initialView,
-          initialViewType: initialViewType,
-          stateBuilder: stateBuilder,
-          showActions: resolvedMode == shad.PromptMode.popover,
-        ),
-      ),
-    };
     return AppControlBox(
-      child: AppPromptControlFrame(enabled: enabled, child: picker),
+      child: AppPromptControlFrame.builder(
+        enabled: enabled,
+        builder: (context, popup) {
+          final localizations = shad.ShadcnLocalizations.of(context);
+          final resolvedMode = mode ?? shad.PromptMode.popover;
+          return switch (_kind) {
+            _AppDatePickerKind.single => shad.ObjectFormField<DateTime>(
+              value: value,
+              onChanged: onChanged,
+              enabled: enabled,
+              mode: resolvedMode,
+              immediateValueChange: false,
+              placeholder: Text(
+                hintText ?? localizations.placeholderDatePicker,
+              ),
+              trailing: const Icon(shad.LucideIcons.calendarDays),
+              popoverAlignment: popoverAlignment,
+              popoverAnchorAlignment: popoverAnchorAlignment,
+              popoverPadding: popoverPadding,
+              dialogTitle: dialogTitle,
+              builder: (context, value) => Text(_formatAppDate(value)),
+              editorBuilder: (overlayContext, handler) => popup(
+                _AppSingleDateEditor(
+                  handler: handler,
+                  initialView: initialView,
+                  initialViewType: initialViewType,
+                  stateBuilder: stateBuilder,
+                  showActions: resolvedMode == shad.PromptMode.popover,
+                ),
+              ),
+            ),
+            _AppDatePickerKind.range => shad.ObjectFormField<shad.DateTimeRange>(
+              value: rangeValue,
+              onChanged: onRangeChanged,
+              enabled: enabled,
+              mode: resolvedMode,
+              immediateValueChange: false,
+              placeholder: Text(
+                hintText ?? localizations.placeholderDatePicker,
+              ),
+              trailing: const Icon(shad.LucideIcons.calendarRange),
+              popoverAlignment: popoverAlignment,
+              popoverAnchorAlignment: popoverAnchorAlignment,
+              popoverPadding: popoverPadding,
+              dialogTitle: dialogTitle,
+              builder: (context, value) => Text(
+                '${_formatAppDate(value.start)} - ${_formatAppDate(value.end)}',
+              ),
+              editorBuilder: (overlayContext, handler) => popup(
+                _AppRangeDateEditor(
+                  handler: handler,
+                  initialView: initialView,
+                  initialViewType: initialViewType,
+                  stateBuilder: stateBuilder,
+                  showActions: resolvedMode == shad.PromptMode.popover,
+                ),
+              ),
+            ),
+          };
+        },
+      ),
     );
   }
 }

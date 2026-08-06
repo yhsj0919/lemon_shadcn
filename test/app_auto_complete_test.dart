@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lemon_shadcn/lemon_shadcn.dart';
+import 'package:lemon_shadcn/shadcn.dart' as shad;
 
 void main() {
   testWidgets('debounces formatted option searches and selects a value', (
@@ -32,9 +33,9 @@ void main() {
     await tester.pumpAndSettle();
     expect(queries, ['']);
 
-    await tester.enterText(find.byType(TextField), 'a');
+    await tester.enterText(find.byType(shad.TextField), 'a');
     await tester.pump(const Duration(milliseconds: 100));
-    await tester.enterText(find.byType(TextField), 'ad');
+    await tester.enterText(find.byType(shad.TextField), 'ad');
     await tester.pump(const Duration(milliseconds: 299));
     expect(queries, ['']);
 

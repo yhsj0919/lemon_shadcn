@@ -36,13 +36,20 @@ void main() {
     );
 
     final nextDate = DateTime(2026, 8, 1);
-    final nextRange = shad.DateTimeRange(DateTime(2026, 8, 1), DateTime(2026, 8, 3));
-    const nextTime = shad.TimeOfDay(hour: 14, minute: 45);
-    tester.widget<shad.DatePicker>(find.byType(shad.DatePicker)).onChanged!(nextDate);
-    tester.widget<shad.DateRangePicker>(find.byType(shad.DateRangePicker)).onChanged!(
-      nextRange,
+    final nextRange = shad.DateTimeRange(
+      DateTime(2026, 8, 1),
+      DateTime(2026, 8, 3),
     );
-    tester.widget<shad.TimePicker>(find.byType(shad.TimePicker)).onChanged!(nextTime);
+    const nextTime = shad.TimeOfDay(hour: 14, minute: 45);
+    tester.widget<shad.DatePicker>(find.byType(shad.DatePicker)).onChanged!(
+      nextDate,
+    );
+    tester
+        .widget<shad.DateRangePicker>(find.byType(shad.DateRangePicker))
+        .onChanged!(nextRange);
+    tester.widget<shad.TimePicker>(find.byType(shad.TimePicker)).onChanged!(
+      nextTime,
+    );
     await tester.pump();
 
     expect(controller.value<DateTime>('date'), nextDate);
@@ -72,11 +79,11 @@ void main() {
 
     await tester.tap(find.text('Choose date'));
     await tester.pumpAndSettle();
-    expect(find.byType(DatePickerDialog), findsOneWidget);
+    expect(find.byType(shad.DatePickerDialog), findsOneWidget);
 
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
     await tester.pumpAndSettle();
-    expect(find.byType(DatePickerDialog), findsNothing);
+    expect(find.byType(shad.DatePickerDialog), findsNothing);
   });
 
   testWidgets('time picker opens inside the shared overlay host', (
@@ -89,12 +96,52 @@ void main() {
           value: null,
           onChanged: (_) {},
           hintText: 'Choose time',
+          showSeconds: true,
         ),
       ),
     );
 
     await tester.tap(find.text('Choose time'));
     await tester.pumpAndSettle();
-    expect(find.byType(TimePickerDialog), findsOneWidget);
+    expect(find.byType(shad.TimePickerDialog), findsOneWidget);
+  });
+
+  testWidgets('prompt control releases focus after an outside dismissal', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: Column(
+          children: [
+            AppDatePicker(
+              value: null,
+              onChanged: (_) {},
+              hintText: 'Dismiss date',
+            ),
+            const SizedBox(
+              key: ValueKey<String>('outside-date'),
+              width: 200,
+              height: 100,
+            ),
+          ],
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Dismiss date'));
+    await tester.pumpAndSettle();
+    expect(find.byType(shad.DatePickerDialog), findsOneWidget);
+
+    await tester.tapAt(const Offset(790, 590));
+    await tester.pumpAndSettle();
+    expect(find.byType(shad.DatePickerDialog), findsNothing);
+    final outlines = tester.widgetList<shad.FocusOutline>(
+      find.descendant(
+        of: find.byType(AppDatePicker),
+        matching: find.byType(shad.FocusOutline),
+      ),
+    );
+    expect(outlines.any((outline) => outline.focused), isFalse);
   });
 }

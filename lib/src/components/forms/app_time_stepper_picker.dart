@@ -30,26 +30,33 @@ class AppTimeStepperPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final localizations = shad.ShadcnLocalizations.of(context);
-    final picker = shad.ObjectFormField<shad.TimeOfDay>(
-      value: value,
-      enabled: enabled,
-      mode: mode,
-      popoverPadding: EdgeInsets.zero,
-      placeholder: Text(hintText ?? localizations.placeholderTimePicker),
-      trailing: const Icon(shad.LucideIcons.clock),
-      onChanged: onChanged,
-      immediateValueChange: false,
-      builder: (context, value) =>
-          Text(localizations.formatTimeOfDay(value, use24HourFormat: true)),
-      editorBuilder: (context, handler) => _AppTimeStepperEditor(
-        initialValue: handler.value,
-        minuteStep: minuteStep,
-        handler: handler,
-      ),
-    );
     return AppControlBox(
-      child: AppPromptControlFrame(enabled: enabled, child: picker),
+      child: AppPromptControlFrame.builder(
+        enabled: enabled,
+        builder: (context, popup) {
+          final localizations = shad.ShadcnLocalizations.of(context);
+          return shad.ObjectFormField<shad.TimeOfDay>(
+            value: value,
+            enabled: enabled,
+            mode: mode,
+            popoverPadding: EdgeInsets.zero,
+            placeholder: Text(hintText ?? localizations.placeholderTimePicker),
+            trailing: const Icon(shad.LucideIcons.clock),
+            onChanged: onChanged,
+            immediateValueChange: false,
+            builder: (context, value) => Text(
+              localizations.formatTimeOfDay(value, use24HourFormat: true),
+            ),
+            editorBuilder: (overlayContext, handler) => popup(
+              _AppTimeStepperEditor(
+                initialValue: handler.value,
+                minuteStep: minuteStep,
+                handler: handler,
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }
@@ -75,21 +82,24 @@ class AppDateTimePicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final picker = shad.ObjectFormField<DateTime>(
-      value: value,
-      onChanged: onChanged,
-      enabled: enabled,
-      mode: mode,
-      immediateValueChange: false,
-      popoverPadding: EdgeInsets.zero,
-      placeholder: Text(hintText ?? '选择日期和时间'),
-      trailing: const Icon(shad.LucideIcons.calendarClock),
-      builder: (context, value) => Text(_formatDateTime(value)),
-      editorBuilder: (context, handler) =>
-          _AppDateTimeEditor(handler: handler, minuteStep: minuteStep),
-    );
     return AppControlBox(
-      child: AppPromptControlFrame(enabled: enabled, child: picker),
+      child: AppPromptControlFrame.builder(
+        enabled: enabled,
+        builder: (context, popup) => shad.ObjectFormField<DateTime>(
+          value: value,
+          onChanged: onChanged,
+          enabled: enabled,
+          mode: mode,
+          immediateValueChange: false,
+          popoverPadding: EdgeInsets.zero,
+          placeholder: Text(hintText ?? '选择日期和时间'),
+          trailing: const Icon(shad.LucideIcons.calendarClock),
+          builder: (context, value) => Text(_formatDateTime(value)),
+          editorBuilder: (overlayContext, handler) => popup(
+            _AppDateTimeEditor(handler: handler, minuteStep: minuteStep),
+          ),
+        ),
+      ),
     );
   }
 }

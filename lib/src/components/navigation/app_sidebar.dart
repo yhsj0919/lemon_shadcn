@@ -154,7 +154,7 @@ class _AppSidebarState extends State<AppSidebar> {
                   if (compact && groupIndex > 0)
                     const Padding(
                       padding: EdgeInsets.symmetric(vertical: 6),
-                      child: AppDivider(),
+                      child: AppDivider.horizontal(),
                     ),
                   if (!compact && group.label != null)
                     _SidebarGroupTitle(

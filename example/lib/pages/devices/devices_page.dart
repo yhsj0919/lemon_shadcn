@@ -165,7 +165,7 @@ class _DeviceList extends StatelessWidget {
             ],
           ),
         ),
-        AppDivider(color: colors.border, height: 1, thickness: 1),
+        AppDivider.horizontal(color: colors.border, height: 1, thickness: 1),
         Expanded(
           child: Builder(
             builder: (context) {
@@ -717,7 +717,11 @@ class _MetricStrip extends StatelessWidget {
           children: [
             for (var row = 0; row * columns < items.length; row++) ...[
               if (row > 0)
-                AppDivider(color: colors.border, height: 1, thickness: 1),
+                AppDivider.horizontal(
+                  color: colors.border,
+                  height: 1,
+                  thickness: 1,
+                ),
               IntrinsicHeight(
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -825,7 +829,11 @@ class _PropertyGrid extends StatelessWidget {
             children: [
               for (var i = 0; i < rows.length; i++) ...[
                 if (i > 0)
-                  AppDivider(color: colors.border, height: 1, thickness: 1),
+                  AppDivider.horizontal(
+                    color: colors.border,
+                    height: 1,
+                    thickness: 1,
+                  ),
                 _PropertyRow(item: rows[i]),
               ],
             ],
@@ -864,7 +872,12 @@ class _PropertyColumn extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         for (var i = 0; i < rows.length; i++) ...[
-          if (i > 0) AppDivider(color: colors.border, height: 1, thickness: 1),
+          if (i > 0)
+            AppDivider.horizontal(
+              color: colors.border,
+              height: 1,
+              thickness: 1,
+            ),
           _PropertyRow(item: rows[i]),
         ],
       ],
@@ -939,7 +952,7 @@ class _MapBlock extends StatelessWidget {
             ],
           ),
         ),
-        AppDivider(color: colors.border),
+        AppDivider.horizontal(color: colors.border),
         SizedBox(
           height: 180,
           child: Stack(

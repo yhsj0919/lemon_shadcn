@@ -7,7 +7,11 @@ import '../../foundation/app_outline_style.dart';
 import '../../foundation/app_overlay_style.dart';
 
 typedef AppSelectControlBuilder =
-    Widget Function(BuildContext context, Widget Function(Widget) popup);
+    Widget Function(
+      BuildContext context,
+      Widget Function(Widget) popup,
+      FocusNode focusNode,
+    );
 
 /// Shared visual and lifecycle shell for select-like controls.
 class AppSelectControlShell extends StatefulWidget {
@@ -25,11 +29,23 @@ class AppSelectControlShell extends StatefulWidget {
 }
 
 class _AppSelectControlShellState extends State<AppSelectControlShell> {
+  final FocusNode _focusNode = FocusNode();
   bool _open = false;
 
   void _setOpen(bool value) {
     if (!mounted || _open == value) return;
     setState(() => _open = value);
+  }
+
+  void _handlePopupDisposed() {
+    _setOpen(false);
+    if (_focusNode.hasFocus) _focusNode.unfocus();
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
   }
 
   @override
@@ -61,7 +77,7 @@ class _AppSelectControlShellState extends State<AppSelectControlShell> {
     }
 
     Widget popup(Widget child) => _AppSelectPopupSurface(
-      onDisposed: () => _setOpen(false),
+      onDisposed: _handlePopupDisposed,
       child: shad.ComponentTheme(
         data: AppOverlayStyle.cardTheme(
           context,
@@ -79,7 +95,7 @@ class _AppSelectControlShellState extends State<AppSelectControlShell> {
         ),
         child: Listener(
           onPointerDown: widget.enabled ? (_) => _setOpen(true) : null,
-          child: widget.builder(context, popup),
+          child: widget.builder(context, popup, _focusNode),
         ),
       ),
     );

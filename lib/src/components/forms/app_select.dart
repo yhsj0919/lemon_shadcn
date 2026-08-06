@@ -175,8 +175,9 @@ class _AppSelectState<V> extends State<AppSelect<V>> {
             : anchorWidth;
         return AppSelectControlShell(
           enabled: widget.enabled && widget.onChanged != null,
-          builder: (context, popup) => shad.Select<V>(
+          builder: (context, popup, focusNode) => shad.Select<V>(
             value: widget.value,
+            focusNode: focusNode,
             enabled: widget.enabled,
             canUnselect: widget.clearable,
             expandIcon: showExpandIcon ? const shad.SelectExpandIcon() : null,

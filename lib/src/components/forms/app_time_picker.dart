@@ -9,6 +9,53 @@ import 'app_time_stepper_picker.dart';
 
 Widget? _hint(String? text) => text == null ? null : Text(text);
 
+Widget _buildTimePickerField(
+  BuildContext context, {
+  required shad.TimeOfDay? value,
+  required ValueChanged<shad.TimeOfDay?>? onChanged,
+  required shad.PromptMode mode,
+  required String? hintText,
+  required AlignmentGeometry? popoverAlignment,
+  required AlignmentGeometry? popoverAnchorAlignment,
+  required EdgeInsetsGeometry? popoverPadding,
+  required bool? use24HourFormat,
+  required bool showSeconds,
+  required Widget? dialogTitle,
+  required bool enabled,
+  required Widget Function(Widget) popup,
+}) {
+  final localizations = shad.ShadcnLocalizations.of(context);
+  final resolved24HourFormat =
+      use24HourFormat ?? MediaQuery.alwaysUse24HourFormatOf(context);
+  return shad.ObjectFormField<shad.TimeOfDay>(
+    value: value,
+    onChanged: onChanged,
+    enabled: enabled,
+    mode: mode,
+    placeholder: _hint(hintText) ?? Text(localizations.placeholderTimePicker),
+    trailing: const Icon(shad.LucideIcons.clock),
+    popoverAlignment: popoverAlignment,
+    popoverAnchorAlignment: popoverAnchorAlignment,
+    popoverPadding: popoverPadding,
+    dialogTitle: dialogTitle,
+    builder: (context, value) => Text(
+      localizations.formatTimeOfDay(
+        value,
+        use24HourFormat: resolved24HourFormat,
+        showSeconds: showSeconds,
+      ),
+    ),
+    editorBuilder: (context, handler) => popup(
+      shad.TimePickerDialog(
+        initialValue: handler.value,
+        use24HourFormat: resolved24HourFormat,
+        showSeconds: showSeconds,
+        onChanged: (value) => handler.value = value,
+      ),
+    ),
+  );
+}
+
 class AppTimePicker extends StatelessWidget {
   const AppTimePicker({
     super.key,
@@ -49,13 +96,14 @@ class AppTimePicker extends StatelessWidget {
       );
     }
     return AppControlBox(
-      child: AppPromptControlFrame(
+      child: AppPromptControlFrame.builder(
         enabled: enabled,
-        child: shad.TimePicker(
+        builder: (context, popup) => _buildTimePickerField(
+          context,
           value: value,
           onChanged: onChanged,
           mode: mode,
-          placeholder: _hint(hintText),
+          hintText: hintText,
           popoverAlignment: popoverAlignment,
           popoverAnchorAlignment: popoverAnchorAlignment,
           popoverPadding: popoverPadding,
@@ -63,6 +111,7 @@ class AppTimePicker extends StatelessWidget {
           showSeconds: showSeconds,
           dialogTitle: dialogTitle,
           enabled: enabled,
+          popup: popup,
         ),
       ),
     );
@@ -101,13 +150,14 @@ class AppLegacyTimePicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppControlBox(
-      child: AppPromptControlFrame(
+      child: AppPromptControlFrame.builder(
         enabled: enabled,
-        child: shad.TimePicker(
+        builder: (context, popup) => _buildTimePickerField(
+          context,
           value: value,
           onChanged: onChanged,
           mode: mode,
-          placeholder: _hint(hintText),
+          hintText: hintText,
           popoverAlignment: popoverAlignment,
           popoverAnchorAlignment: popoverAnchorAlignment,
           popoverPadding: popoverPadding,
@@ -115,6 +165,7 @@ class AppLegacyTimePicker extends StatelessWidget {
           showSeconds: showSeconds,
           dialogTitle: dialogTitle,
           enabled: enabled,
+          popup: popup,
         ),
       ),
     );

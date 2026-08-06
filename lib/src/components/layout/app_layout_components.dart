@@ -4,11 +4,12 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
+export '../display/app_divider.dart';
+
 typedef AppAccordion = shad.Accordion;
 typedef AppAccordionItem = shad.AccordionItem;
 typedef AppAccordionTrigger = shad.AccordionTrigger;
 typedef AppCard = shad.Card;
-typedef AppDivider = shad.Divider;
 typedef AppOutlinedContainer = shad.OutlinedContainer;
 typedef AppTimelineData = shad.TimelineData;
 typedef AppCarouselController = shad.CarouselController;

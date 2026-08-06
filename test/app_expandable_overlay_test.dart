@@ -249,4 +249,50 @@ void main() {
       240,
     );
   });
+
+  testWidgets('updated expanded value synchronizes an uncontrolled overlay', (
+    tester,
+  ) async {
+    final expanded = ValueNotifier<bool>(false);
+    addTearDown(expanded.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(
+            width: 140,
+            height: 80,
+            child: ValueListenableBuilder<bool>(
+              valueListenable: expanded,
+              builder: (context, value, child) => AppExpandableOverlay(
+                expanded: value,
+                expandedSize: const Size(140, 200),
+                direction: AppExpandDirection.down,
+                collapsedBuilder: (context, toggle) => const Text('Collapsed'),
+                expandedBuilder: (context, toggle) => const SizedBox(
+                  key: ValueKey<String>('externally-expanded'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expanded.value = true;
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey<String>('externally-expanded')),
+      findsOneWidget,
+    );
+
+    expanded.value = false;
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey<String>('externally-expanded')),
+      findsNothing,
+    );
+  });
 }

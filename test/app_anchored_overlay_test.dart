@@ -67,4 +67,45 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Popup'), findsOneWidget);
   });
+
+  testWidgets('overlay stays inside viewport near an edge', (tester) async {
+    tester.view.physicalSize = const Size(400, 300);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: Align(
+          alignment: Alignment.topRight,
+          child: AppAnchoredOverlay(
+            placement: AppAnchoredOverlayPlacement.bottom,
+            width: AppAnchoredOverlayWidth.fixed,
+            fixedWidth: 300,
+            viewportMargin: 12,
+            decorateSurface: false,
+            anchorBuilder: (context, actions) => const SizedBox(
+              width: 40,
+              height: 40,
+              child: Text('Edge anchor'),
+            ),
+            overlayBuilder: (context, actions) => const SizedBox(
+              key: ValueKey<String>('edge-overlay'),
+              height: 80,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Edge anchor'));
+    await tester.pumpAndSettle();
+
+    final rect = tester.getRect(
+      find.byKey(const ValueKey<String>('edge-overlay')),
+    );
+    expect(rect.left, greaterThanOrEqualTo(12));
+    expect(rect.right, lessThanOrEqualTo(388));
+  });
 }

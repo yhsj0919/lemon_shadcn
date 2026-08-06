@@ -324,8 +324,9 @@ class _AppAutoCompleteControlState<V>
   Widget build(BuildContext context) {
     return AppSelectControlShell(
       enabled: widget.enabled,
-      builder: (context, popup) => shad.Select<V>(
+      builder: (context, popup, focusNode) => shad.Select<V>(
         value: widget.value,
+        focusNode: focusNode,
         enabled: widget.enabled,
         canUnselect: widget.clearable,
         onChanged: widget.onChanged,

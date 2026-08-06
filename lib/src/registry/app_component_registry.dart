@@ -826,7 +826,7 @@ abstract final class AppComponentRegistry {
       appName: 'AppDivider',
       upstreamName: 'Divider',
       category: AppComponentCategory.layout,
-      adapter: AppComponentAdapter.alias,
+      adapter: AppComponentAdapter.wrapper,
       status: AppComponentStatus.implemented,
     ),
     AppComponentRegistration(

@@ -79,7 +79,7 @@ void main() {
       ),
     );
 
-    await tester.enterText(find.byType(TextField).last, '+12025550199');
+    await tester.enterText(find.byType(shad.TextField).last, '+12025550199');
     await tester.pump();
     expect(controller.value<shad.PhoneNumber>('phone')?.number, '2025550199');
 

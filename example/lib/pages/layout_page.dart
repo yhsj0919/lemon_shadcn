@@ -109,7 +109,7 @@ class LayoutPage extends StatelessWidget {
                       AppCollapsibleContent(
                         child: Column(
                           children: [
-                            AppDivider(),
+                            AppDivider.horizontal(),
                             Padding(
                               padding: EdgeInsets.only(top: 12),
                               child: Text('隐藏内容使用相同主题。'),
@@ -132,6 +132,28 @@ class LayoutPage extends StatelessWidget {
                         ),
                       ),
                     ],
+                  ),
+                  Gap(24),
+                  SizedBox(
+                    width: 360,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        AppDivider.text('OR'),
+                        Gap(16),
+                        SizedBox(
+                          height: 72,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text('Left'),
+                              AppDivider.vertical(width: 32),
+                              Text('Right'),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
