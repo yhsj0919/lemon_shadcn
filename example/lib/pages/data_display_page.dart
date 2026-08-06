@@ -213,6 +213,17 @@ class DataDisplayPage extends StatelessWidget {
                   Wrap(
                     spacing: 12,
                     children: [
+                      AppAvatar.square(
+                        name: '世茂',
+                        appearance: AppAvatarAppearance.soft,
+                        size: 48,
+                      ),
+                      AppAvatar.square(
+                        name: '运营',
+                        appearance: AppAvatarAppearance.soft,
+                        color: Color(0xffd97706),
+                        size: 48,
+                      ),
                       AppAvatar.circle(
                         initials: '陈',
                         size: 48,

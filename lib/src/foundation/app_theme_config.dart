@@ -267,8 +267,8 @@ class AppMotionTokens {
       BoxShadow(
         color: color.withValues(alpha: hoverShadowOpacity * t),
         blurRadius: 10 + 6 * t,
-        spreadRadius: -4,
-        offset: Offset(0, 3 + 3 * t),
+        spreadRadius: -2,
+        offset: Offset(0, 2 + 2 * t),
       ),
     ];
   }
@@ -341,11 +341,11 @@ class AppShadowTheme {
     this.enabled = true,
     this.colorMode = AppShadowColorMode.auto,
     this.ambientOpacity = 0.03,
-    this.colorOpacity = 0.10,
+    this.colorOpacity = 0.12,
     this.darkColorOpacity = 0.16,
-    this.blurRadius = 14,
-    this.spreadRadius = -5,
-    this.offset = const Offset(0, 4),
+    this.blurRadius = 12,
+    this.spreadRadius = -2,
+    this.offset = const Offset(0, 2),
   });
 
   const AppShadowTheme.none()
@@ -394,7 +394,7 @@ class AppShadowTheme {
     );
     final dark = shad.Theme.of(context).brightness == shad.Brightness.dark;
     final levelFactor = switch (level) {
-      AppShadowLevel.card => 0.8,
+      AppShadowLevel.card => 1.0,
       AppShadowLevel.raised => 1.0,
       AppShadowLevel.floating => 1.35,
       AppShadowLevel.interactive => 1.0,
@@ -414,34 +414,7 @@ class AppShadowTheme {
       ];
     }
 
-    if ((colorMode ?? this.colorMode) == AppShadowColorMode.background) {
-      return [
-        BoxShadow(
-          color: resolvedColor.withValues(
-            alpha: (dark ? 0.18 : 0.12) * effectiveIntensity,
-          ),
-          blurRadius: 7,
-          offset: const Offset(0, 2),
-        ),
-        BoxShadow(
-          color: resolvedColor.withValues(
-            alpha: (dark ? 0.34 : 0.28) * effectiveIntensity,
-          ),
-          blurRadius: 12,
-          spreadRadius: -2,
-          offset: const Offset(0, 4),
-        ),
-      ];
-    }
-
     return [
-      BoxShadow(
-        color: resolvedColor.withValues(
-          alpha: ambientOpacity * effectiveIntensity,
-        ),
-        blurRadius: blurRadius * 0.45,
-        offset: offset * 0.35,
-      ),
       BoxShadow(
         color: resolvedColor.withValues(alpha: opacity),
         blurRadius: blurRadius,
@@ -474,6 +447,7 @@ class AppShadowTheme {
             colors.primary,
     };
     final resolved = source ?? colors.primary;
+    if (mode == AppShadowColorMode.custom) return resolved;
     final hsl = HSLColor.fromColor(resolved);
     if (mode == AppShadowColorMode.background) {
       return hsl
@@ -611,9 +585,9 @@ class AppThemeConfig {
           ambientOpacity: 0.05,
           colorOpacity: 0.12,
           darkColorOpacity: 0.2,
-          blurRadius: 22,
-          spreadRadius: -6,
-          offset: Offset(0, 8),
+          blurRadius: 18,
+          spreadRadius: -3,
+          offset: Offset(0, 3),
         ),
       ),
       AppThemePreset.fluent => AppThemeConfig(
@@ -652,8 +626,8 @@ class AppThemeConfig {
           colorOpacity: 0.08,
           darkColorOpacity: 0.16,
           blurRadius: 10,
-          spreadRadius: -3,
-          offset: Offset(0, 3),
+          spreadRadius: -2,
+          offset: Offset(0, 2),
         ),
       ),
       AppThemePreset.material => AppThemeConfig(
@@ -694,8 +668,8 @@ class AppThemeConfig {
           colorOpacity: 0.16,
           darkColorOpacity: 0.24,
           blurRadius: 14,
-          spreadRadius: -3,
-          offset: Offset(0, 5),
+          spreadRadius: -2,
+          offset: Offset(0, 2),
         ),
       ),
     };

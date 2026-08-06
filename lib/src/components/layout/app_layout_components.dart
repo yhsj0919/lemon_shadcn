@@ -4,6 +4,8 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
+import '../display/app_semantic_style.dart';
+
 export '../display/app_divider.dart';
 export 'app_card.dart';
 
@@ -429,10 +431,8 @@ class AppAlert extends StatelessWidget {
     this.title,
     this.content,
     this.trailing,
-  }) : variant = AppAlertVariant.standard,
-       backgroundColor = null,
-       borderColor = null,
-       foregroundColor = null;
+    this.color,
+  }) : variant = AppAlertVariant.standard;
 
   const AppAlert.info({
     super.key,
@@ -440,10 +440,8 @@ class AppAlert extends StatelessWidget {
     this.title,
     this.content,
     this.trailing,
-  }) : variant = AppAlertVariant.info,
-       backgroundColor = null,
-       borderColor = null,
-       foregroundColor = null;
+    this.color,
+  }) : variant = AppAlertVariant.info;
 
   const AppAlert.success({
     super.key,
@@ -451,10 +449,8 @@ class AppAlert extends StatelessWidget {
     this.title,
     this.content,
     this.trailing,
-  }) : variant = AppAlertVariant.success,
-       backgroundColor = null,
-       borderColor = null,
-       foregroundColor = null;
+    this.color,
+  }) : variant = AppAlertVariant.success;
 
   const AppAlert.warning({
     super.key,
@@ -462,10 +458,8 @@ class AppAlert extends StatelessWidget {
     this.title,
     this.content,
     this.trailing,
-  }) : variant = AppAlertVariant.warning,
-       backgroundColor = null,
-       borderColor = null,
-       foregroundColor = null;
+    this.color,
+  }) : variant = AppAlertVariant.warning;
 
   const AppAlert.destructive({
     super.key,
@@ -473,10 +467,8 @@ class AppAlert extends StatelessWidget {
     this.title,
     this.content,
     this.trailing,
-  }) : variant = AppAlertVariant.destructive,
-       backgroundColor = null,
-       borderColor = null,
-       foregroundColor = null;
+    this.color,
+  }) : variant = AppAlertVariant.destructive;
 
   const AppAlert.custom({
     super.key,
@@ -484,9 +476,7 @@ class AppAlert extends StatelessWidget {
     this.title,
     this.content,
     this.trailing,
-    required this.backgroundColor,
-    required this.borderColor,
-    required this.foregroundColor,
+    required this.color,
   }) : variant = AppAlertVariant.custom;
 
   final Widget? leading;
@@ -494,13 +484,11 @@ class AppAlert extends StatelessWidget {
   final Widget? content;
   final Widget? trailing;
   final AppAlertVariant variant;
-  final Color? backgroundColor;
-  final Color? borderColor;
-  final Color? foregroundColor;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
-    if (variant == AppAlertVariant.standard) {
+    if (variant == AppAlertVariant.standard && color == null) {
       return shad.Alert(
         leading: leading,
         title: title,
@@ -509,72 +497,25 @@ class AppAlert extends StatelessWidget {
       );
     }
     final theme = shad.Theme.of(context);
-    final dark = theme.brightness == Brightness.dark;
-    final colors = switch (variant) {
-      AppAlertVariant.info =>
-        dark
-            ? const (
-                background: Color(0xff172554),
-                border: Color(0xff1d4ed8),
-                foreground: Color(0xffbfdbfe),
-              )
-            : const (
-                background: Color(0xffeff6ff),
-                border: Color(0xff93c5fd),
-                foreground: Color(0xff1e40af),
-              ),
-      AppAlertVariant.success =>
-        dark
-            ? const (
-                background: Color(0xff052e16),
-                border: Color(0xff15803d),
-                foreground: Color(0xffbbf7d0),
-              )
-            : const (
-                background: Color(0xfff0fdf4),
-                border: Color(0xff86efac),
-                foreground: Color(0xff166534),
-              ),
-      AppAlertVariant.warning =>
-        dark
-            ? const (
-                background: Color(0xff451a03),
-                border: Color(0xffb45309),
-                foreground: Color(0xfffde68a),
-              )
-            : const (
-                background: Color(0xfffffbeb),
-                border: Color(0xfffcd34d),
-                foreground: Color(0xff92400e),
-              ),
-      AppAlertVariant.destructive =>
-        dark
-            ? const (
-                background: Color(0xff450a0a),
-                border: Color(0xffb91c1c),
-                foreground: Color(0xfffecaca),
-              )
-            : const (
-                background: Color(0xfffef2f2),
-                border: Color(0xfffca5a5),
-                foreground: Color(0xff991b1b),
-              ),
-      AppAlertVariant.custom => (
-        background: backgroundColor!,
-        border: borderColor!,
-        foreground: foregroundColor!,
-      ),
-      AppAlertVariant.standard => throw StateError('Handled above'),
+    final tone = switch (variant) {
+      AppAlertVariant.standard => AppSemanticTone.primary,
+      AppAlertVariant.info => AppSemanticTone.info,
+      AppAlertVariant.success => AppSemanticTone.success,
+      AppAlertVariant.warning => AppSemanticTone.warning,
+      AppAlertVariant.destructive => AppSemanticTone.destructive,
+      AppAlertVariant.custom => AppSemanticTone.primary,
     };
+    final resolvedColor =
+        color ?? AppSemanticPalette.resolve(theme, tone).solid;
     return shad.ComponentTheme<shad.AlertTheme>(
       data: shad.AlertTheme(
-        backgroundColor: colors.background,
-        borderColor: colors.border,
+        backgroundColor: AppSoftColor.background(theme, resolvedColor),
+        borderColor: resolvedColor,
       ),
       child: DefaultTextStyle.merge(
-        style: TextStyle(color: colors.foreground),
+        style: TextStyle(color: resolvedColor),
         child: IconTheme.merge(
-          data: IconThemeData(color: colors.foreground),
+          data: IconThemeData(color: resolvedColor),
           child: shad.Alert(
             leading: leading,
             title: title,

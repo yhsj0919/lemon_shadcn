@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
 import '../../foundation/app_visual_style.dart';
+import '../display/app_semantic_style.dart';
 
 typedef AppNavigationButton = shad.NavigationButton;
 typedef AppNavigationBarAlignment = shad.NavigationBarAlignment;
@@ -122,6 +123,7 @@ class AppNavigationItem extends StatelessWidget {
     this.enabled,
     this.overflow = shad.NavigationOverflow.ellipsis,
     this.marginAlignment,
+    this.selectedColor,
   });
 
   final Widget child;
@@ -135,6 +137,7 @@ class AppNavigationItem extends StatelessWidget {
   final bool? enabled;
   final shad.NavigationOverflow overflow;
   final AlignmentGeometry? marginAlignment;
+  final Color? selectedColor;
 
   @override
   Widget build(BuildContext context) {
@@ -165,10 +168,13 @@ class AppNavigationItem extends StatelessWidget {
       selected: selected,
       onChanged: onChanged,
       style: _withControlPalette(style ?? defaultStyle, selected: false),
-      selectedStyle: _withControlPalette(
-        selectedStyle ?? defaultSelectedStyle,
-        selected: true,
-      ),
+      selectedStyle:
+          selectedStyle ??
+          _withControlPalette(
+            defaultSelectedStyle,
+            selected: true,
+            selectedColor: selectedColor,
+          ),
       spacing: spacing,
       alignment: alignment,
       enabled: enabled,
@@ -182,6 +188,7 @@ class AppNavigationItem extends StatelessWidget {
 shad.AbstractButtonStyle _withControlPalette(
   shad.AbstractButtonStyle base, {
   required bool selected,
+  Color? selectedColor,
 }) {
   Set<WidgetState> effectiveStates(Set<WidgetState> states) => {
     ...states,
@@ -190,6 +197,20 @@ shad.AbstractButtonStyle _withControlPalette(
 
   return base.copyWith(
     decoration: (context, states, decoration) {
+      if (selected) {
+        final theme = shad.Theme.of(context);
+        final color = selectedColor ?? theme.colorScheme.primary;
+        if (decoration is BoxDecoration) {
+          return decoration.copyWith(
+            color: AppSoftColor.background(
+              theme,
+              color,
+              lightOpacity: 0.08,
+              darkOpacity: 0.12,
+            ),
+          );
+        }
+      }
       final colors = resolveAppControlVisuals(context, effectiveStates(states));
       if (colors == null) return decoration;
       if (decoration is BoxDecoration) {
@@ -212,10 +233,20 @@ shad.AbstractButtonStyle _withControlPalette(
       return decoration;
     },
     textStyle: (context, states, textStyle) {
+      if (selected) {
+        return textStyle.copyWith(
+          color: selectedColor ?? shad.Theme.of(context).colorScheme.primary,
+        );
+      }
       final colors = resolveAppControlVisuals(context, effectiveStates(states));
       return textStyle.copyWith(color: colors?.foreground);
     },
     iconTheme: (context, states, iconTheme) {
+      if (selected) {
+        return iconTheme.copyWith(
+          color: selectedColor ?? shad.Theme.of(context).colorScheme.primary,
+        );
+      }
       final colors = resolveAppControlVisuals(context, effectiveStates(states));
       return iconTheme.copyWith(color: colors?.foreground);
     },

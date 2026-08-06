@@ -246,6 +246,10 @@ AppDescriptions(
 );''',
     '头像': '''const AppAvatar.circle(name: '林晓', initialsCount: 1);
 const AppAvatar.square(name: '张三', initialsCount: 2);
+const AppAvatar.square(
+  name: '世茂',
+  appearance: AppAvatarAppearance.soft,
+);
 const AppAvatarGroup(children: [
   AppAvatar.circle(name: '王芳', initialsCount: 1),
   AppAvatar.square(name: '李雷', initialsCount: 1),
@@ -294,6 +298,10 @@ const AppLinearProgressIndicator(value: 0.64);''',
 );''',
     '卡片': '''const AppCard(
   child: Text('卡片内容'),
+);
+const AppCard.soft(
+  color: Color(0xffd97706),
+  child: Text('颜色驱动卡片'),
 );''',
     '提示变体': '''AppAlert.warning(
   title: const Text('订阅即将到期'),

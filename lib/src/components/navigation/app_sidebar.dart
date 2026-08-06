@@ -79,6 +79,7 @@ class AppSidebar extends StatefulWidget {
     this.footer,
     this.expandedWidth = 248,
     this.compactWidth = 64,
+    this.selectedColor,
   });
 
   final AppSidebarContent content;
@@ -89,6 +90,7 @@ class AppSidebar extends StatefulWidget {
   final Widget? footer;
   final double expandedWidth;
   final double compactWidth;
+  final Color? selectedColor;
 
   @override
   State<AppSidebar> createState() => _AppSidebarState();
@@ -134,59 +136,62 @@ class _AppSidebarState extends State<AppSidebar> {
   @override
   Widget build(BuildContext context) {
     final compact = widget.mode == AppSidebarMode.compact;
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 180),
-      curve: Curves.easeOutCubic,
-      width: compact ? widget.compactWidth : widget.expandedWidth,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (widget.header != null)
-            Padding(
-              padding: EdgeInsets.all(compact ? 8 : 16),
-              child: widget.header,
-            ),
-          Expanded(
-            child: ListView(
-              padding: EdgeInsets.symmetric(horizontal: compact ? 8 : 10),
-              children: [
-                for (final (groupIndex, group) in _groups.indexed) ...[
-                  if (compact && groupIndex > 0)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 6),
-                      child: AppDivider.horizontal(),
-                    ),
-                  if (!compact && group.label != null)
-                    _SidebarGroupTitle(
-                      label: group.label!,
-                      first: groupIndex == 0,
-                    ),
-                  for (final destination in group.items)
-                    compact
-                        ? _CompactDestination(
-                            destination: destination,
-                            selectedId: widget.selectedId,
-                            onSelected: widget.onDestinationSelected,
-                          )
-                        : _ExpandedDestination(
-                            destination: destination,
-                            selectedId: widget.selectedId,
-                            expandedIds: _expanded,
-                            onToggle: (id) => setState(() {
-                              if (!_expanded.remove(id)) _expanded.add(id);
-                            }),
-                            onSelected: widget.onDestinationSelected,
-                          ),
+    return _SidebarSelectionScope(
+      color: widget.selectedColor,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOutCubic,
+        width: compact ? widget.compactWidth : widget.expandedWidth,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (widget.header != null)
+              Padding(
+                padding: EdgeInsets.all(compact ? 8 : 16),
+                child: widget.header,
+              ),
+            Expanded(
+              child: ListView(
+                padding: EdgeInsets.symmetric(horizontal: compact ? 8 : 10),
+                children: [
+                  for (final (groupIndex, group) in _groups.indexed) ...[
+                    if (compact && groupIndex > 0)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 6),
+                        child: AppDivider.horizontal(),
+                      ),
+                    if (!compact && group.label != null)
+                      _SidebarGroupTitle(
+                        label: group.label!,
+                        first: groupIndex == 0,
+                      ),
+                    for (final destination in group.items)
+                      compact
+                          ? _CompactDestination(
+                              destination: destination,
+                              selectedId: widget.selectedId,
+                              onSelected: widget.onDestinationSelected,
+                            )
+                          : _ExpandedDestination(
+                              destination: destination,
+                              selectedId: widget.selectedId,
+                              expandedIds: _expanded,
+                              onToggle: (id) => setState(() {
+                                if (!_expanded.remove(id)) _expanded.add(id);
+                              }),
+                              onSelected: widget.onDestinationSelected,
+                            ),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
-          if (widget.footer != null)
-            Padding(
-              padding: EdgeInsets.all(compact ? 8 : 12),
-              child: widget.footer,
-            ),
-        ],
+            if (widget.footer != null)
+              Padding(
+                padding: EdgeInsets.all(compact ? 8 : 12),
+                child: widget.footer,
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -295,10 +300,11 @@ class _CompactDestination extends StatelessWidget {
     final trigger = SizedBox.square(
       dimension: 46,
       child: selected
-          ? AppButton.secondary(
+          ? AppButton.selected(
               onPressed: destination.children.isEmpty
                   ? () => onSelected(destination.id)
                   : () {},
+              color: _SidebarSelectionScope.colorOf(context),
               config: AppButtonConfig.plain,
               child: Icon(destination.icon, size: 19),
             )
@@ -439,16 +445,21 @@ class _SidebarButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final label = AppText.listItem(destination.label);
     final button = selected
-        ? AppButton.secondary(
+        ? AppButton.selected(
             onPressed: onPressed,
-            leading: Icon(destination.icon, size: 18),
-            trailing: trailing,
+            color: _SidebarSelectionScope.colorOf(context),
             config: const AppButtonConfig(
               alignment: Alignment.centerLeft,
               pressEffect: AppButtonPressEffect.none,
             ),
-
-            child: label,
+            child: Row(
+              children: [
+                Icon(destination.icon, size: 18),
+                const SizedBox(width: 8),
+                Expanded(child: label),
+                ?trailing,
+              ],
+            ),
           )
         : AppButton.ghost(
             onPressed: onPressed,
@@ -463,4 +474,18 @@ class _SidebarButton extends StatelessWidget {
           );
     return Padding(padding: const EdgeInsets.only(bottom: 4), child: button);
   }
+}
+
+class _SidebarSelectionScope extends InheritedWidget {
+  const _SidebarSelectionScope({required this.color, required super.child});
+
+  final Color? color;
+
+  static Color? colorOf(BuildContext context) => context
+      .dependOnInheritedWidgetOfExactType<_SidebarSelectionScope>()
+      ?.color;
+
+  @override
+  bool updateShouldNotify(_SidebarSelectionScope oldWidget) =>
+      color != oldWidget.color;
 }

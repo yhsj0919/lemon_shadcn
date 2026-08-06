@@ -9,6 +9,7 @@ import '../../foundation/app_interactive_style.dart';
 import '../../foundation/app_shadcn_scope.dart';
 import '../../foundation/app_theme_config.dart';
 import '../../motion/app_hover_press_ticker.dart';
+import '../display/app_semantic_style.dart';
 
 typedef AppButtonCallback = FutureOr<void> Function();
 typedef AppWidgetGroupItem = shad.ButtonGroupItem;
@@ -377,12 +378,14 @@ abstract final class AppButton {
     AppButtonCallback? onPressed,
     AppButtonSize? size,
     AppButtonConfig? config,
+    Color? color,
   }) => _AppAsyncButton(
     key: key,
     variant: AppButtonVariant.selected,
     onPressed: onPressed,
     size: size,
     config: config,
+    selectedColor: color,
     child: child,
   );
 
@@ -611,6 +614,7 @@ class _AppAsyncButton extends StatefulWidget {
     this.interactive = false,
     this.iconOnly = false,
     this.shapeOverride,
+    this.selectedColor,
   }) : assert(action == null || onPressed == null);
 
   final AppButtonVariant variant;
@@ -626,6 +630,7 @@ class _AppAsyncButton extends StatefulWidget {
   final bool interactive;
   final bool iconOnly;
   final shad.ButtonShape? shapeOverride;
+  final Color? selectedColor;
 
   @override
   State<_AppAsyncButton> createState() => _AppAsyncButtonState();
@@ -850,27 +855,39 @@ class _AppAsyncButtonState extends State<_AppAsyncButton>
     final selectedStyle = secondaryStyle.copyWith(
       decoration: (context, states, value) {
         if (value is! BoxDecoration) return value;
+        final selectedColor = widget.selectedColor ?? theme.colorScheme.primary;
         final opacity = states.contains(WidgetState.disabled)
-            ? 0.07
+            ? 0.04
             : states.contains(WidgetState.pressed)
-            ? 0.20
+            ? 0.14
             : states.contains(WidgetState.hovered)
-            ? 0.17
-            : 0.14;
+            ? 0.11
+            : 0.08;
         return value.copyWith(
-          color: theme.colorScheme.primary.withValues(alpha: opacity),
+          color: AppSoftColor.background(
+            theme,
+            selectedColor,
+            lightOpacity: opacity,
+            darkOpacity: opacity,
+          ),
         );
       },
-      textStyle: (context, states, value) => value.copyWith(
-        color: theme.colorScheme.primary.withValues(
-          alpha: states.contains(WidgetState.disabled) ? 0.45 : 1,
-        ),
-      ),
-      iconTheme: (context, states, value) => value.copyWith(
-        color: theme.colorScheme.primary.withValues(
-          alpha: states.contains(WidgetState.disabled) ? 0.45 : 1,
-        ),
-      ),
+      textStyle: (context, states, value) {
+        final selectedColor = widget.selectedColor ?? theme.colorScheme.primary;
+        return value.copyWith(
+          color: selectedColor.withValues(
+            alpha: states.contains(WidgetState.disabled) ? 0.45 : 1,
+          ),
+        );
+      },
+      iconTheme: (context, states, value) {
+        final selectedColor = widget.selectedColor ?? theme.colorScheme.primary;
+        return value.copyWith(
+          color: selectedColor.withValues(
+            alpha: states.contains(WidgetState.disabled) ? 0.45 : 1,
+          ),
+        );
+      },
     );
     final outlineStyle = sized(
       shad.ButtonStyle.outline(

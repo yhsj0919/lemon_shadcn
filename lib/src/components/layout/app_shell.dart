@@ -32,6 +32,7 @@ class AppShell extends StatelessWidget {
     this.contentTransitionDuration,
     this.contentTransitionCurve = Curves.easeOutCubic,
     this.transitionShadowQuality = AppShadowQuality.reduced,
+    this.selectedColor,
   });
 
   final AppSidebarContent sidebarContent;
@@ -59,6 +60,7 @@ class AppShell extends StatelessWidget {
   final Duration? contentTransitionDuration;
   final Curve contentTransitionCurve;
   final AppShadowQuality transitionShadowQuality;
+  final Color? selectedColor;
 
   AppSidebarType _responsiveType(double width) {
     if (width >= expandedBreakpoint) return AppSidebarType.expanded;
@@ -147,6 +149,7 @@ class AppShell extends StatelessWidget {
                 ? null
                 : AppSidebarFooter(child: sidebarFooter!),
             expandedWidth: sidebarWidth,
+            selectedColor: selectedColor,
           ),
         ),
       ),
@@ -185,6 +188,7 @@ class AppShell extends StatelessWidget {
                           : null,
                       expandedWidth: sidebarWidth,
                       compactWidth: compactSidebarWidth,
+                      selectedColor: selectedColor,
                     ),
                   ),
                 ),

@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
 import '../actions/app_button.dart';
+import '../display/app_semantic_style.dart';
 import '../../foundation/app_overlay_style.dart';
 
 // Keep these public surfaces as aliases so constructor and behavior changes in
@@ -67,12 +68,14 @@ class AppNavigationMenu extends StatefulWidget {
     this.surfaceOpacity,
     this.surfaceBlur,
     this.contentPadding,
+    this.selectedColor,
     required this.children,
   });
 
   final double? surfaceOpacity;
   final double? surfaceBlur;
   final EdgeInsetsGeometry? contentPadding;
+  final Color? selectedColor;
   final List<Widget> children;
 
   @override
@@ -195,6 +198,8 @@ class AppNavigationMenuItemState extends State<AppNavigationMenuItem> {
   Widget build(BuildContext context) {
     final menu = shad.Data.of<_AppNavigationMenuState>(context);
     final theme = shad.Theme.of(context);
+    final selectedColor =
+        menu.widget.selectedColor ?? theme.colorScheme.primary;
     return AnimatedBuilder(
       animation: menu._overlayController,
       builder: (context, child) => shad.Button(
@@ -202,8 +207,19 @@ class AppNavigationMenuItemState extends State<AppNavigationMenuItem> {
           decoration: (context, states, value) => menu.isActive(this)
               ? (value as BoxDecoration).copyWith(
                   borderRadius: BorderRadius.circular(theme.radiusMd),
-                  color: theme.colorScheme.muted.scaleAlpha(0.8),
+                  color: AppSoftColor.background(
+                    theme,
+                    selectedColor,
+                    lightOpacity: 0.08,
+                    darkOpacity: 0.12,
+                  ),
                 )
+              : value,
+          textStyle: (context, states, value) => menu.isActive(this)
+              ? value.copyWith(color: selectedColor)
+              : value,
+          iconTheme: (context, states, value) => menu.isActive(this)
+              ? value.copyWith(color: selectedColor)
               : value,
         ),
         trailing: widget.content == null
@@ -791,7 +807,9 @@ class AppCommand extends StatelessWidget {
           loadingBuilder: loadingBuilder,
           surfaceOpacity: surfaceOpacity,
           surfaceBlur: surfaceBlur,
-          searchPlaceholder: searchHintText == null ? null : Text(searchHintText!),
+          searchPlaceholder: searchHintText == null
+              ? null
+              : Text(searchHintText!),
           builder: builder,
         ),
       ),

@@ -34,11 +34,20 @@ class LayoutPage extends StatelessWidget {
             ),
             const ComponentSection(
               title: '卡片',
-              child: AppCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [Text('默认卡片'), Gap(6), Text('样式继续由上游主题统一控制。')],
-                ),
+              child: Wrap(
+                spacing: 20,
+                runSpacing: 20,
+                children: [
+                  AppCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [Text('默认卡片'), Gap(6), Text('保持扁平，不主动添加阴影。')],
+                    ),
+                  ),
+                  AppCard.elevated(child: Text('单层主题阴影')),
+                  AppCard.soft(color: Color(0xffd97706), child: Text('颜色驱动卡片')),
+                  AppCard.soft(color: Color(0xff2563eb), child: Text('蓝色减淡卡片')),
+                ],
               ),
             ),
             const ComponentSection(
@@ -73,9 +82,7 @@ class LayoutPage extends StatelessWidget {
                   ),
                   Gap(12),
                   AppAlert.custom(
-                    backgroundColor: Color(0xfffaf5ff),
-                    borderColor: Color(0xffd8b4fe),
-                    foregroundColor: Color(0xff6b21a8),
+                    color: Color(0xff7e22ce),
                     leading: Icon(LucideIcons.sparkles),
                     title: Text('自定义配色'),
                     content: Text('背景、边框和前景色均可独立设置。'),

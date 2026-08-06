@@ -162,7 +162,7 @@ class _AppPointerTooltipState extends State<AppPointerTooltip>
                   BoxShadow(
                     color: theme.colorScheme.foreground.withValues(alpha: 0.08),
                     blurRadius: 12,
-                    offset: const Offset(0, 4),
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),

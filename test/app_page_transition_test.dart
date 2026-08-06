@@ -45,7 +45,7 @@ void main() {
       ),
     );
 
-    expect(normal, hasLength(2));
+    expect(normal, hasLength(1));
     expect(reduced, hasLength(1));
     expect(reduced.single.blurRadius, lessThanOrEqualTo(6));
     expect(disabled, isEmpty);
@@ -125,7 +125,35 @@ void main() {
       ),
     );
 
-    expect(innerCard(normalKey).boxShadow, hasLength(2));
+    expect(innerCard(normalKey).boxShadow, hasLength(1));
     expect(innerCard(reducedKey).boxShadow, hasLength(1));
+  });
+
+  testWidgets('soft card derives fill, border, and shadow from one color', (
+    tester,
+  ) async {
+    const accent = Color(0xffd97706);
+    final config = AppThemeConfig.standard();
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(config: config),
+        home: const Center(
+          child: AppCard.soft(color: accent, child: Text('Tinted card')),
+        ),
+      ),
+    );
+
+    final card = tester.widget<shad.Card>(find.byType(shad.Card));
+    expect(card.filled, isTrue);
+    expect(card.borderColor, accent);
+    expect(
+      card.fillColor,
+      Color.alphaBlend(
+        accent.withValues(alpha: 0.06),
+        config.lightTheme.colorScheme.background,
+      ),
+    );
+    expect(card.boxShadow, hasLength(1));
+    expect(card.boxShadow!.single.color, accent.withValues(alpha: 0.12));
   });
 }

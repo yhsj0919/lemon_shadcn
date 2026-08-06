@@ -3,21 +3,10 @@ import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
 import '../../foundation/app_compact_label_style.dart';
 import '../../foundation/app_interactive_style.dart';
+import 'app_semantic_style.dart';
 
 /// Visual treatment for semantic [AppBadge] variants.
-enum AppBadgeStyle {
-  /// Saturated fill with contrasting foreground.
-  solid,
-
-  /// Light tinted background with accent foreground.
-  soft,
-
-  /// No background — colored label and icons only.
-  plain,
-
-  /// Accent border with transparent fill.
-  outline,
-}
+enum AppBadgeStyle { solid, soft, plain, outline }
 
 /// Preset badge sizes, similar to [AppButtonSize].
 @immutable
@@ -170,7 +159,7 @@ abstract final class AppBadge {
               border: Border.all(color: const Color(0x00000000)),
             ),
             AppBadgeStyle.soft => value.copyWith(
-              color: palette.softBackground,
+              color: AppSoftColor.background(theme, palette.solid),
               border: Border.all(color: const Color(0x00000000)),
             ),
             AppBadgeStyle.plain => value.copyWith(
@@ -212,70 +201,20 @@ abstract final class AppBadge {
     );
   }
 
-  static _BadgePalette _infoPalette(shad.ThemeData theme, bool dark) => dark
-      ? const _BadgePalette(
-          solid: Color(0xff2563eb),
-          onSolid: Color(0xffffffff),
-          softBackground: Color(0xff172554),
-          foreground: Color(0xffbfdbfe),
-        )
-      : const _BadgePalette(
-          solid: Color(0xff2563eb),
-          onSolid: Color(0xffffffff),
-          softBackground: Color(0xffeff6ff),
-          foreground: Color(0xff1e40af),
-        );
+  static _BadgePalette _infoPalette(shad.ThemeData theme, bool dark) =>
+      AppSemanticPalette.resolve(theme, AppSemanticTone.info);
 
-  static _BadgePalette _successPalette(shad.ThemeData theme, bool dark) => dark
-      ? const _BadgePalette(
-          solid: Color(0xff16a34a),
-          onSolid: Color(0xffffffff),
-          softBackground: Color(0xff052e16),
-          foreground: Color(0xffbbf7d0),
-        )
-      : const _BadgePalette(
-          solid: Color(0xff16a34a),
-          onSolid: Color(0xffffffff),
-          softBackground: Color(0xfff0fdf4),
-          foreground: Color(0xff166534),
-        );
+  static _BadgePalette _successPalette(shad.ThemeData theme, bool dark) =>
+      AppSemanticPalette.resolve(theme, AppSemanticTone.success);
 
-  static _BadgePalette _warningPalette(shad.ThemeData theme, bool dark) => dark
-      ? const _BadgePalette(
-          solid: Color(0xffd97706),
-          onSolid: Color(0xffffffff),
-          softBackground: Color(0xff451a03),
-          foreground: Color(0xfffde68a),
-        )
-      : const _BadgePalette(
-          solid: Color(0xffd97706),
-          onSolid: Color(0xffffffff),
-          softBackground: Color(0xfffffbeb),
-          foreground: Color(0xff92400e),
-        );
+  static _BadgePalette _warningPalette(shad.ThemeData theme, bool dark) =>
+      AppSemanticPalette.resolve(theme, AppSemanticTone.warning);
 
   static _BadgePalette _destructivePalette(shad.ThemeData theme, bool dark) =>
-      dark
-      ? _BadgePalette(
-          solid: theme.colorScheme.destructive,
-          onSolid: const Color(0xffffffff),
-          softBackground: const Color(0xff450a0a),
-          foreground: const Color(0xfffecaca),
-        )
-      : _BadgePalette(
-          solid: theme.colorScheme.destructive,
-          onSolid: const Color(0xffffffff),
-          softBackground: const Color(0xfffef2f2),
-          foreground: const Color(0xff991b1b),
-        );
+      AppSemanticPalette.resolve(theme, AppSemanticTone.destructive);
 
   static _BadgePalette _mutedPalette(shad.ThemeData theme, bool dark) =>
-      _BadgePalette(
-        solid: theme.colorScheme.secondary,
-        onSolid: theme.colorScheme.secondaryForeground,
-        softBackground: theme.colorScheme.muted,
-        foreground: theme.colorScheme.mutedForeground,
-      );
+      AppSemanticPalette.resolve(theme, AppSemanticTone.secondary);
 
   static Widget primary({
     Key? key,
@@ -558,17 +497,4 @@ abstract final class AppBadge {
   );
 }
 
-@immutable
-class _BadgePalette {
-  const _BadgePalette({
-    required this.solid,
-    required this.onSolid,
-    required this.softBackground,
-    required this.foreground,
-  });
-
-  final Color solid;
-  final Color onSolid;
-  final Color softBackground;
-  final Color foreground;
-}
+typedef _BadgePalette = AppSemanticPalette;

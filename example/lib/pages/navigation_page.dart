@@ -100,6 +100,7 @@ class _NavigationPageState extends State<NavigationPage> {
                   ),
                   AppNavigationItem(
                     key: ValueKey('profile'),
+                    selectedColor: Color(0xff0f9f6e),
                     label: Text('个人资料'),
                     child: Icon(LucideIcons.user),
                   ),

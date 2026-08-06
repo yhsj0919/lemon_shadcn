@@ -1,9 +1,12 @@
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
+import 'app_semantic_style.dart';
 import 'app_text.dart';
 
 enum AppAvatarShape { circle, square }
+
+enum AppAvatarAppearance { solid, soft }
 
 /// An avatar with explicit circular and square shape variants.
 class AppAvatar extends StatelessWidget implements shad.AvatarWidget {
@@ -12,6 +15,8 @@ class AppAvatar extends StatelessWidget implements shad.AvatarWidget {
     this.initials,
     this.name,
     this.initialsCount = 1,
+    this.appearance = AppAvatarAppearance.solid,
+    this.color,
     this.backgroundColor,
     this.foregroundColor,
     this.textStyle,
@@ -30,6 +35,8 @@ class AppAvatar extends StatelessWidget implements shad.AvatarWidget {
     this.initials,
     this.name,
     this.initialsCount = 1,
+    this.appearance = AppAvatarAppearance.solid,
+    this.color,
     this.backgroundColor,
     this.foregroundColor,
     this.textStyle,
@@ -61,9 +68,11 @@ class AppAvatar extends StatelessWidget implements shad.AvatarWidget {
   }
 
   final AppAvatarShape shape;
+  final AppAvatarAppearance appearance;
   final String? initials;
   final String? name;
   final int initialsCount;
+  final Color? color;
   final Color? backgroundColor;
   final Color? foregroundColor;
   final TextStyle? textStyle;
@@ -88,15 +97,20 @@ class AppAvatar extends StatelessWidget implements shad.AvatarWidget {
         borderRadius ??
         avatarTheme?.borderRadius ??
         theme.radius * resolvedSize;
+    final accent = color ?? theme.colorScheme.primary;
+    final soft = appearance == AppAvatarAppearance.soft;
     final resolvedBackground =
         backgroundColor ??
-        avatarTheme?.backgroundColor ??
-        theme.colorScheme.muted;
+        (soft
+            ? AppSoftColor.background(theme, accent)
+            : avatarTheme?.backgroundColor ?? theme.colorScheme.muted);
     final resolvedForeground =
         foregroundColor ??
         textStyle?.color ??
-        avatarTheme?.textStyle?.color ??
-        _contrastingForeground(resolvedBackground);
+        (soft
+            ? accent
+            : avatarTheme?.textStyle?.color ??
+                  _contrastingForeground(resolvedBackground));
     final resolvedTextStyle =
         AppTextTheme.resolve(context, AppTextRole.bodyStrong, null)
             .copyWith(fontWeight: FontWeight.bold)

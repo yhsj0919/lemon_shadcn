@@ -124,6 +124,40 @@ void main() {
     expect(textColor('M'), const Color(0xffff0000));
   });
 
+  testWidgets('soft avatar uses accent text and a tinted background', (
+    tester,
+  ) async {
+    const accent = Color(0xffc2410c);
+    final config = AppThemeConfig.standard(primary: accent);
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(config: config),
+        home: const Center(
+          child: AppAvatar.square(
+            name: '世茂',
+            appearance: AppAvatarAppearance.soft,
+          ),
+        ),
+      ),
+    );
+
+    final text = tester.widget<Text>(find.text('世'));
+    final background = tester.widget<ColoredBox>(
+      find.descendant(
+        of: find.byType(AppAvatar),
+        matching: find.byType(ColoredBox),
+      ),
+    );
+    expect(text.style?.color, accent);
+    expect(
+      background.color,
+      Color.alphaBlend(
+        accent.withValues(alpha: 0.14),
+        config.lightTheme.colorScheme.background,
+      ),
+    );
+  });
+
   testWidgets('avatar initials follow AppText typography and system scaling', (
     tester,
   ) async {
