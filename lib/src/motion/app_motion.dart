@@ -4,8 +4,8 @@ import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
 import '../foundation/app_shadcn_scope.dart';
 import '../foundation/app_theme_config.dart';
-import '../foundation/app_visual_style.dart';
 import 'app_hover_press_ticker.dart';
+import 'app_page_transition.dart';
 
 enum AppMotionEffect { none, tint, lift, scale, glow, depth }
 
@@ -431,33 +431,11 @@ class _AppMotionState extends State<AppMotion> with TickerProviderStateMixin {
   }
 
   Color _resolveShadowColor(BuildContext context, AppThemeConfig config) {
-    final visual = AppVisualStyle.maybeOf(context);
-    final colors = shad.Theme.of(context).colorScheme;
-    final mode = widget.shadowColorMode ?? config.shadows.colorMode;
-    final source = switch (mode) {
-      AppShadowColorMode.custom => widget.shadowColor,
-      AppShadowColorMode.background => visual?.background,
-      AppShadowColorMode.border => visual?.border,
-      AppShadowColorMode.accent => visual?.accent,
-      AppShadowColorMode.primary => colors.primary,
-      AppShadowColorMode.auto =>
-        widget.shadowColor ??
-            visual?.shadow ??
-            visual?.border ??
-            visual?.accent ??
-            visual?.background ??
-            colors.primary,
-    };
-    final resolved = source ?? colors.primary;
-    if (mode == AppShadowColorMode.background) {
-      final hsl = HSLColor.fromColor(resolved);
-      return hsl
-          .withSaturation((hsl.saturation * 0.9).clamp(0, 1))
-          .withLightness(hsl.lightness.clamp(0.26, 0.34))
-          .toColor();
-    }
-    final hsl = HSLColor.fromColor(resolved);
-    return hsl.withSaturation((hsl.saturation * 0.72).clamp(0, 1)).toColor();
+    return config.shadows.resolveColor(
+      context,
+      colorMode: widget.shadowColorMode,
+      color: widget.shadowColor,
+    );
   }
 
   List<BoxShadow> _resolveShadows(
@@ -465,40 +443,14 @@ class _AppMotionState extends State<AppMotion> with TickerProviderStateMixin {
     AppThemeConfig config, {
     double intensity = 1,
   }) {
-    final theme = config.shadows;
-    if (!theme.enabled) return const [];
-    final color = _resolveShadowColor(context, config);
-    final dark = MediaQuery.platformBrightnessOf(context) == Brightness.dark;
-    final mode = widget.shadowColorMode ?? theme.colorMode;
-    if (mode == AppShadowColorMode.background) {
-      return [
-        BoxShadow(
-          color: color.withValues(alpha: (dark ? 0.18 : 0.12) * intensity),
-          blurRadius: 7,
-          offset: const Offset(0, 2),
-        ),
-        BoxShadow(
-          color: color.withValues(alpha: (dark ? 0.34 : 0.28) * intensity),
-          blurRadius: 12,
-          spreadRadius: -2,
-          offset: const Offset(0, 4),
-        ),
-      ];
-    }
-    final colorOpacity = dark ? theme.darkColorOpacity : theme.colorOpacity;
-    return [
-      BoxShadow(
-        color: color.withValues(alpha: theme.ambientOpacity * intensity),
-        blurRadius: theme.blurRadius * 0.45,
-        offset: theme.offset * 0.35,
-      ),
-      BoxShadow(
-        color: color.withValues(alpha: colorOpacity * intensity),
-        blurRadius: theme.blurRadius,
-        spreadRadius: theme.spreadRadius,
-        offset: theme.offset,
-      ),
-    ];
+    return config.shadows.resolve(
+      context,
+      level: AppShadowLevel.interactive,
+      quality: AppPageTransitionScope.shadowQualityOf(context),
+      colorMode: widget.shadowColorMode,
+      color: widget.shadowColor,
+      intensity: intensity,
+    );
   }
 }
 

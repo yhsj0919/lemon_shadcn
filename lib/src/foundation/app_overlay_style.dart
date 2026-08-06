@@ -1,6 +1,10 @@
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
+import '../motion/app_page_transition.dart';
+import 'app_shadcn_scope.dart';
+import 'app_theme_config.dart';
+
 /// Shared visual and layout tokens for application overlays.
 abstract final class AppOverlayStyle {
   static const EdgeInsets compactPadding = EdgeInsets.symmetric(
@@ -27,6 +31,14 @@ abstract final class AppOverlayStyle {
       Color.fromRGBO(0, 0, 0, isDark(context) ? 0.38 : 0.20);
 
   static List<BoxShadow> floatingShadows(BuildContext context) {
+    final config = AppTheme.maybeOf(context);
+    if (config != null) {
+      return config.shadows.resolve(
+        context,
+        level: AppShadowLevel.floating,
+        quality: AppPageTransitionScope.shadowQualityOf(context),
+      );
+    }
     final dark = isDark(context);
     return [
       BoxShadow(

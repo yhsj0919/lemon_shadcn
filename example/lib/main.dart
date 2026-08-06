@@ -66,6 +66,7 @@ class _GalleryShellState extends State<GalleryShell> {
       brandSubtitle: '管理端组件示例',
       sidebarMode: _sidebarMode,
       onSidebarModeChanged: (mode) => setState(() => _sidebarMode = mode),
+      contentTransitionDuration: const Duration(milliseconds: 180),
       sidebarFrame: (sidebar) => AppCard(
         padding: EdgeInsets.zero,
         clipBehavior: Clip.antiAlias,

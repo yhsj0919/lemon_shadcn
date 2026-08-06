@@ -1,9 +1,12 @@
 import 'package:flutter/foundation.dart' show immutable;
 import 'package:flutter/painting.dart'
-    show BoxShadow, Color, EdgeInsets, Offset;
-import 'package:flutter/widgets.dart' show Widget;
+    show BoxShadow, Color, EdgeInsets, HSLColor, Offset;
+import 'package:flutter/widgets.dart' show BuildContext, Widget;
+import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
 import '../components/display/app_text.dart';
+import '../motion/app_page_transition.dart';
+import 'app_shadow_types.dart';
 import 'app_theme_aliases.dart';
 import 'app_visual_style.dart';
 
@@ -330,6 +333,8 @@ class AppMotionTheme {
 
 enum AppShadowColorMode { auto, background, border, accent, primary, custom }
 
+enum AppShadowLevel { card, raised, floating, interactive }
+
 @immutable
 class AppShadowTheme {
   const AppShadowTheme({
@@ -361,6 +366,123 @@ class AppShadowTheme {
   final double blurRadius;
   final double spreadRadius;
   final Offset offset;
+
+  /// Resolves the theme's complete shadow treatment for a surface.
+  ///
+  /// Callers should use this instead of composing additional business-side
+  /// blur layers. During page transitions quality is reduced automatically.
+  List<BoxShadow> resolve(
+    BuildContext context, {
+    AppShadowLevel level = AppShadowLevel.card,
+    AppShadowQuality? quality,
+    AppShadowColorMode? colorMode,
+    Color? color,
+    double intensity = 1,
+  }) {
+    final effectiveQuality =
+        quality ?? AppPageTransitionScope.shadowQualityOf(context);
+    if (!enabled ||
+        effectiveQuality == AppShadowQuality.disabled ||
+        intensity <= 0) {
+      return const [];
+    }
+
+    final resolvedColor = resolveColor(
+      context,
+      colorMode: colorMode,
+      color: color,
+    );
+    final dark = shad.Theme.of(context).brightness == shad.Brightness.dark;
+    final levelFactor = switch (level) {
+      AppShadowLevel.card => 0.8,
+      AppShadowLevel.raised => 1.0,
+      AppShadowLevel.floating => 1.35,
+      AppShadowLevel.interactive => 1.0,
+    };
+    final effectiveIntensity = intensity.clamp(0.0, 3.0) * levelFactor;
+    final opacity =
+        (dark ? darkColorOpacity : colorOpacity) * effectiveIntensity;
+
+    if (effectiveQuality == AppShadowQuality.reduced) {
+      return [
+        BoxShadow(
+          color: resolvedColor.withValues(alpha: opacity * 0.65),
+          blurRadius: blurRadius.clamp(0, 6),
+          spreadRadius: spreadRadius.clamp(-3, 0),
+          offset: offset * 0.55,
+        ),
+      ];
+    }
+
+    if ((colorMode ?? this.colorMode) == AppShadowColorMode.background) {
+      return [
+        BoxShadow(
+          color: resolvedColor.withValues(
+            alpha: (dark ? 0.18 : 0.12) * effectiveIntensity,
+          ),
+          blurRadius: 7,
+          offset: const Offset(0, 2),
+        ),
+        BoxShadow(
+          color: resolvedColor.withValues(
+            alpha: (dark ? 0.34 : 0.28) * effectiveIntensity,
+          ),
+          blurRadius: 12,
+          spreadRadius: -2,
+          offset: const Offset(0, 4),
+        ),
+      ];
+    }
+
+    return [
+      BoxShadow(
+        color: resolvedColor.withValues(
+          alpha: ambientOpacity * effectiveIntensity,
+        ),
+        blurRadius: blurRadius * 0.45,
+        offset: offset * 0.35,
+      ),
+      BoxShadow(
+        color: resolvedColor.withValues(alpha: opacity),
+        blurRadius: blurRadius,
+        spreadRadius: spreadRadius,
+        offset: offset,
+      ),
+    ];
+  }
+
+  Color resolveColor(
+    BuildContext context, {
+    AppShadowColorMode? colorMode,
+    Color? color,
+  }) {
+    final visual = AppVisualStyle.maybeOf(context);
+    final colors = shad.Theme.of(context).colorScheme;
+    final mode = colorMode ?? this.colorMode;
+    final source = switch (mode) {
+      AppShadowColorMode.custom => color,
+      AppShadowColorMode.background => visual?.background,
+      AppShadowColorMode.border => visual?.border,
+      AppShadowColorMode.accent => visual?.accent,
+      AppShadowColorMode.primary => colors.primary,
+      AppShadowColorMode.auto =>
+        color ??
+            visual?.shadow ??
+            visual?.border ??
+            visual?.accent ??
+            visual?.background ??
+            colors.primary,
+    };
+    final resolved = source ?? colors.primary;
+    final hsl = HSLColor.fromColor(resolved);
+    if (mode == AppShadowColorMode.background) {
+      return hsl
+          .withSaturation((hsl.saturation * 0.9).clamp(0, 1))
+          .withLightness(hsl.lightness.clamp(0.26, 0.34))
+          .toColor();
+    }
+    return hsl.withSaturation((hsl.saturation * 0.72).clamp(0, 1)).toColor();
+  }
 }
 
 @immutable

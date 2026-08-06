@@ -53,6 +53,20 @@ abstract final class AppComponentRegistry {
       status: AppComponentStatus.implemented,
     ),
     AppComponentRegistration(
+      appName: 'AppPageTransition',
+      upstreamName: 'AnimatedSwitcher / RepaintBoundary',
+      category: AppComponentCategory.layout,
+      adapter: AppComponentAdapter.independent,
+      status: AppComponentStatus.implemented,
+    ),
+    AppComponentRegistration(
+      appName: 'AppDeferredDuringTransition',
+      upstreamName: 'InheritedWidget transition phase',
+      category: AppComponentCategory.layout,
+      adapter: AppComponentAdapter.independent,
+      status: AppComponentStatus.implemented,
+    ),
+    AppComponentRegistration(
       appName: 'AppShadcnScope',
       upstreamName: 'ShadcnLayer',
       category: AppComponentCategory.foundation,
@@ -826,7 +840,7 @@ abstract final class AppComponentRegistry {
       appName: 'AppCard',
       upstreamName: 'Card',
       category: AppComponentCategory.layout,
-      adapter: AppComponentAdapter.alias,
+      adapter: AppComponentAdapter.wrapper,
       status: AppComponentStatus.implemented,
     ),
     AppComponentRegistration(

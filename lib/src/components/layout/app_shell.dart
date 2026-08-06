@@ -5,6 +5,8 @@ import '../actions/app_button.dart';
 import '../display/app_text.dart';
 import '../navigation/app_sidebar.dart';
 import '../overlay/app_overlay_components.dart';
+import '../../foundation/app_shadow_types.dart';
+import '../../motion/app_page_transition.dart';
 
 /// Responsive admin shell with expanded, compact, drawer, and auto sidebar modes.
 class AppShell extends StatelessWidget {
@@ -27,6 +29,9 @@ class AppShell extends StatelessWidget {
     this.compactBreakpoint = 720,
     this.sidebarMode = AppSidebarType.auto,
     this.onSidebarModeChanged,
+    this.contentTransitionDuration,
+    this.contentTransitionCurve = Curves.easeOutCubic,
+    this.transitionShadowQuality = AppShadowQuality.reduced,
   });
 
   final AppSidebarContent sidebarContent;
@@ -48,6 +53,12 @@ class AppShell extends StatelessWidget {
   final double compactBreakpoint;
   final AppSidebarType sidebarMode;
   final ValueChanged<AppSidebarType>? onSidebarModeChanged;
+
+  /// Enables transition-friendly switching for the shell content when set.
+  /// The current [selectedId] is used as the page identity.
+  final Duration? contentTransitionDuration;
+  final Curve contentTransitionCurve;
+  final AppShadowQuality transitionShadowQuality;
 
   AppSidebarType _responsiveType(double width) {
     if (width >= expandedBreakpoint) return AppSidebarType.expanded;
@@ -102,6 +113,17 @@ class AppShell extends StatelessWidget {
 
   Widget _frame(Widget sidebar) =>
       sidebarFrame == null ? sidebar : sidebarFrame!(sidebar);
+
+  Widget _content() {
+    final duration = contentTransitionDuration;
+    if (duration == null) return child;
+    return AppPageTransition(
+      duration: duration,
+      curve: contentTransitionCurve,
+      shadowQuality: transitionShadowQuality,
+      child: KeyedSubtree(key: ValueKey(selectedId), child: child),
+    );
+  }
 
   void _showDrawer(BuildContext context) {
     AppDrawer.show<void>(
@@ -210,7 +232,7 @@ class AppShell extends StatelessWidget {
                           ],
                         ),
                       ),
-                    Expanded(child: child),
+                    Expanded(child: _content()),
                   ],
                 ),
               ),
