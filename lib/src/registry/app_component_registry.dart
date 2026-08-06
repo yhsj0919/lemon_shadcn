@@ -357,7 +357,7 @@ abstract final class AppComponentRegistry {
       appName: 'AppAvatar',
       upstreamName: 'Avatar',
       category: AppComponentCategory.dataDisplay,
-      adapter: AppComponentAdapter.alias,
+      adapter: AppComponentAdapter.wrapper,
       status: AppComponentStatus.implemented,
     ),
     AppComponentRegistration(

@@ -6,6 +6,7 @@ class AppDivider extends StatelessWidget implements PreferredSizeWidget {
   const AppDivider.horizontal({
     super.key,
     this.color,
+    this.width,
     this.height,
     this.thickness,
     this.indent,
@@ -16,13 +17,13 @@ class AppDivider extends StatelessWidget implements PreferredSizeWidget {
     this.padding,
     this.childAlignment,
   }) : axis = Axis.horizontal,
-       width = null,
        assert(child == null || label == null);
 
   const AppDivider.vertical({
     super.key,
     this.color,
     this.width,
+    this.height,
     this.thickness,
     this.indent,
     this.endIndent,
@@ -32,7 +33,6 @@ class AppDivider extends StatelessWidget implements PreferredSizeWidget {
     this.padding,
     this.childAlignment,
   }) : axis = Axis.vertical,
-       height = null,
        assert(child == null || label == null);
 
   const AppDivider.text(
@@ -79,7 +79,7 @@ class AppDivider extends StatelessWidget implements PreferredSizeWidget {
     final resolvedChild =
         child ?? (label == null ? null : Text(label!, style: textStyle));
     if (axis == Axis.horizontal) {
-      return shad.Divider(
+      final divider = shad.Divider(
         color: color,
         height: height,
         thickness: thickness,
@@ -89,6 +89,7 @@ class AppDivider extends StatelessWidget implements PreferredSizeWidget {
         childAlignment: childAlignment,
         child: resolvedChild,
       );
+      return width == null ? divider : SizedBox(width: width, child: divider);
     }
 
     final theme = shad.Theme.of(context);
@@ -113,32 +114,41 @@ class AppDivider extends StatelessWidget implements PreferredSizeWidget {
       ),
     );
 
-    if (resolvedChild == null) {
-      return SizedBox(
-        width: resolvedWidth,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [line(top: indent ?? 0, bottom: endIndent ?? 0)],
-        ),
-      );
-    }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final resolvedHeight =
+            height ??
+            (constraints.hasBoundedHeight ? constraints.maxHeight : 16);
+        if (resolvedChild == null) {
+          return SizedBox(
+            width: resolvedWidth,
+            height: resolvedHeight,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [line(top: indent ?? 0, bottom: endIndent ?? 0)],
+            ),
+          );
+        }
 
-    final renderedLabel = DefaultTextStyle.merge(
-      style: TextStyle(
-        color: theme.colorScheme.mutedForeground,
-        fontSize: 12 * theme.scaling,
-      ),
-      child: Padding(padding: resolvedPadding, child: resolvedChild),
-    );
-    return SizedBox(
-      width: resolvedWidth,
-      child: Column(
-        children: [
-          line(top: indent ?? 0),
-          renderedLabel,
-          line(bottom: endIndent ?? 0),
-        ],
-      ),
+        final renderedLabel = DefaultTextStyle.merge(
+          style: TextStyle(
+            color: theme.colorScheme.mutedForeground,
+            fontSize: 12 * theme.scaling,
+          ),
+          child: Padding(padding: resolvedPadding, child: resolvedChild),
+        );
+        return SizedBox(
+          width: resolvedWidth,
+          height: resolvedHeight,
+          child: Column(
+            children: [
+              line(top: indent ?? 0),
+              renderedLabel,
+              line(bottom: endIndent ?? 0),
+            ],
+          ),
+        );
+      },
     );
   }
 }

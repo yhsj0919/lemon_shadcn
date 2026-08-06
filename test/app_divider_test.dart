@@ -42,6 +42,36 @@ void main() {
     expect(tester.getSize(find.byType(AppDivider)), const Size(8, 100));
   });
 
+  testWidgets(
+    'vertical divider supports an explicit size in an unbounded Row',
+    (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          builder: AppShadcnScope.builder(),
+          home: const Align(
+            alignment: Alignment.topLeft,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('Left'),
+                    AppDivider.vertical(width: 12, height: 40),
+                    Text('Right'),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      expect(tester.takeException(), isNull);
+      expect(tester.getSize(find.byType(AppDivider)), const Size(12, 40));
+    },
+  );
+
   testWidgets('text divider places a label between two lines', (tester) async {
     await tester.pumpWidget(
       MaterialApp(

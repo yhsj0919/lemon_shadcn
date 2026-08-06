@@ -8,7 +8,8 @@ import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 import '../../foundation/app_compact_label_style.dart';
 import '../../foundation/app_interactive_style.dart';
 
-typedef AppAvatar = shad.Avatar;
+export 'app_avatar.dart';
+
 typedef AppAvatarBadge = shad.AvatarBadge;
 typedef AppAvatarGroup = shad.AvatarGroup;
 typedef AppProgress = shad.Progress;

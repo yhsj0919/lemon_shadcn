@@ -192,14 +192,14 @@ class DataDisplayPage extends StatelessWidget {
                 runSpacing: 12,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  const AppAvatar(initials: 'LS'),
+                  const AppAvatar.circle(initials: 'LS'),
                   const AppAvatarGroup(
                     alignment: Alignment(-0.85, 0),
                     gap: 2,
                     children: [
-                      AppAvatar(initials: 'A'),
-                      AppAvatar(initials: 'B'),
-                      AppAvatar(initials: 'C'),
+                      AppAvatar.circle(initials: 'A'),
+                      AppAvatar.square(initials: 'B'),
+                      AppAvatar.circle(initials: 'C'),
                     ],
                   ),
                   AppBadge.primary(child: const Text('主要')),
@@ -319,7 +319,7 @@ class DataDisplayPage extends StatelessWidget {
                   AppSkeleton(
                     child: Row(
                       children: [
-                        AppAvatar(initials: 'LS'),
+                        AppAvatar.circle(initials: 'LS'),
                         Gap(8),
                         Text('正在加载资料'),
                       ],
@@ -389,7 +389,7 @@ class DataDisplayPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   AppChat(
-                    avatarPrefix: AppAvatar(initials: 'A'),
+                    avatarPrefix: AppAvatar.square(initials: 'A'),
                     children: [
                       AppChatBubble(child: Text('主题可以共享吗？')),
                       AppChatBubble(child: Text('可以，通过 AppThemeConfig 共享。')),
