@@ -4,13 +4,79 @@ import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 typedef AppAnimatedValueBuilder<T> = shad.AnimatedValueBuilder<T>;
 typedef AppRepeatedAnimationBuilder = shad.RepeatedAnimationBuilder;
 typedef AppDotIndicator = shad.DotIndicator;
-typedef AppOverflowMarquee = shad.OverflowMarquee;
 typedef AppSelectableText = shad.SelectableText;
 typedef AppRefreshTrigger = shad.RefreshTrigger;
 typedef AppSwiper = shad.Swiper;
 typedef AppBackdropTransform = shad.BackdropTransform;
 typedef AppScaleBackdropTransform = shad.ScaleBackdropTransform;
 typedef AppNoBackdropTransform = shad.NoBackdropTransform;
+
+/// Scrolls overflowing content automatically or only while it is hovered.
+class AppOverflowMarquee extends StatefulWidget {
+  const AppOverflowMarquee({
+    super.key,
+    required this.child,
+    this.direction,
+    this.duration,
+    this.delayDuration,
+    this.step,
+    this.fadePortion,
+    this.curve,
+  }) : startOnHover = false;
+
+  /// Keeps content still until the pointer enters, and resets it when the
+  /// pointer leaves.
+  const AppOverflowMarquee.hover({
+    super.key,
+    required this.child,
+    this.direction,
+    this.duration,
+    this.delayDuration,
+    this.step,
+    this.fadePortion,
+    this.curve,
+  }) : startOnHover = true;
+
+  final Widget child;
+  final Axis? direction;
+  final Duration? duration;
+  final Duration? delayDuration;
+  final double? step;
+  final double? fadePortion;
+  final Curve? curve;
+  final bool startOnHover;
+
+  @override
+  State<AppOverflowMarquee> createState() => _AppOverflowMarqueeState();
+}
+
+class _AppOverflowMarqueeState extends State<AppOverflowMarquee> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    final shouldAnimate = !reduceMotion && (!widget.startOnHover || _hovered);
+    final content = shouldAnimate
+        ? shad.OverflowMarquee(
+            direction: widget.direction,
+            duration: widget.duration,
+            delayDuration: widget.delayDuration,
+            step: widget.step,
+            fadePortion: widget.fadePortion,
+            curve: widget.curve,
+            child: widget.child,
+          )
+        : ClipRect(child: widget.child);
+
+    if (!widget.startOnHover) return content;
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: content,
+    );
+  }
+}
 
 /// Low-level scrollbar that requires the same controller as its ScrollView.
 class AppScrollbar extends StatelessWidget {

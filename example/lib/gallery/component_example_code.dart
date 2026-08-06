@@ -270,7 +270,10 @@ const AppLinearProgressIndicator(value: 0.64);''',
     '状态轨迹': '''const AppTracker(data: [
   AppTrackerData(level: TrackerLevel.fine, tooltip: Text('正常')),
 ]);''',
-    '溢出滚动': '''const AppOverflowMarquee(child: Text('较长的滚动内容'));''',
+    '溢出滚动': '''const AppText.body(
+  '鼠标划入后滚动的较长内容',
+  scrollMode: AppTextScrollMode.hover,
+);''',
     '可选文本': '''const AppSelectableText('这段内容可以复制');''',
     '滚动条视图': '''const AppScrollbarView(child: Text('可滚动内容'));''',
     '异步视图': '''AppAsyncView<List<String>>(

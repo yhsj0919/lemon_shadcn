@@ -72,6 +72,49 @@ class TypographyPage extends StatelessWidget {
           ),
         ),
         ComponentSection(
+          title: '溢出滚动',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: 280,
+                child: AppText.body(
+                  '自动模式：文字溢出后自动开始滚动展示完整内容。',
+                  scrollMode: AppTextScrollMode.automatic,
+                ),
+              ),
+              Gap(16),
+              SizedBox(
+                width: 280,
+                child: AppText.body(
+                  '悬停模式：默认保持静止，鼠标划入后开始滚动。',
+                  scrollMode: AppTextScrollMode.hover,
+                ),
+              ),
+              Gap(16),
+              SizedBox(
+                width: 280,
+                child: AppText.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(text: '混合字号：'),
+                      TextSpan(
+                        text: '重点内容 20',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      TextSpan(text: ' 与普通正文共同滚动。'),
+                    ],
+                  ),
+                  scrollMode: AppTextScrollMode.hover,
+                ),
+              ),
+            ],
+          ),
+        ),
+        ComponentSection(
           title: '局部主题覆盖',
           child: ComponentTheme<AppTextTheme>(
             data: AppTextTheme(

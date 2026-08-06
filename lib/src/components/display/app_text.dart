@@ -1,6 +1,17 @@
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
+import 'app_utility_components.dart';
+
+/// Optional overflow behavior for a single-line [AppText].
+enum AppTextScrollMode {
+  /// Starts scrolling as soon as the text overflows.
+  automatic,
+
+  /// Stays at the start and scrolls only while the pointer is inside.
+  hover,
+}
+
 /// Semantic typography roles for product and admin screens.
 ///
 /// Defaults follow a compact admin scale so pages can pick a role without
@@ -265,7 +276,39 @@ class AppText extends StatelessWidget {
     this.maxLines,
     this.overflow,
     this.softWrap,
-  });
+    this.leading,
+    this.trailing,
+    this.leadingGap,
+    this.trailingGap,
+    this.scrollMode,
+    this.scrollDuration,
+    this.scrollDelayDuration,
+    this.scrollStep,
+    this.scrollFadePortion,
+    this.scrollCurve,
+  }) : textSpan = null;
+
+  /// Rich-text variant for content with mixed sizes, weights, or colors.
+  const AppText.rich(
+    this.textSpan, {
+    super.key,
+    this.role = AppTextRole.body,
+    this.style,
+    this.textAlign,
+    this.maxLines,
+    this.overflow,
+    this.softWrap,
+    this.leading,
+    this.trailing,
+    this.leadingGap,
+    this.trailingGap,
+    this.scrollMode,
+    this.scrollDuration,
+    this.scrollDelayDuration,
+    this.scrollStep,
+    this.scrollFadePortion,
+    this.scrollCurve,
+  }) : data = null;
 
   const AppText.display(
     this.data, {
@@ -275,7 +318,18 @@ class AppText extends StatelessWidget {
     this.maxLines,
     this.overflow,
     this.softWrap,
-  }) : role = AppTextRole.display;
+    this.leading,
+    this.trailing,
+    this.leadingGap,
+    this.trailingGap,
+    this.scrollMode,
+    this.scrollDuration,
+    this.scrollDelayDuration,
+    this.scrollStep,
+    this.scrollFadePortion,
+    this.scrollCurve,
+  }) : textSpan = null,
+       role = AppTextRole.display;
 
   const AppText.h1(
     this.data, {
@@ -285,7 +339,18 @@ class AppText extends StatelessWidget {
     this.maxLines,
     this.overflow,
     this.softWrap,
-  }) : role = AppTextRole.h1;
+    this.leading,
+    this.trailing,
+    this.leadingGap,
+    this.trailingGap,
+    this.scrollMode,
+    this.scrollDuration,
+    this.scrollDelayDuration,
+    this.scrollStep,
+    this.scrollFadePortion,
+    this.scrollCurve,
+  }) : textSpan = null,
+       role = AppTextRole.h1;
 
   const AppText.h2(
     this.data, {
@@ -295,7 +360,18 @@ class AppText extends StatelessWidget {
     this.maxLines,
     this.overflow,
     this.softWrap,
-  }) : role = AppTextRole.h2;
+    this.leading,
+    this.trailing,
+    this.leadingGap,
+    this.trailingGap,
+    this.scrollMode,
+    this.scrollDuration,
+    this.scrollDelayDuration,
+    this.scrollStep,
+    this.scrollFadePortion,
+    this.scrollCurve,
+  }) : textSpan = null,
+       role = AppTextRole.h2;
 
   const AppText.h3(
     this.data, {
@@ -305,7 +381,18 @@ class AppText extends StatelessWidget {
     this.maxLines,
     this.overflow,
     this.softWrap,
-  }) : role = AppTextRole.h3;
+    this.leading,
+    this.trailing,
+    this.leadingGap,
+    this.trailingGap,
+    this.scrollMode,
+    this.scrollDuration,
+    this.scrollDelayDuration,
+    this.scrollStep,
+    this.scrollFadePortion,
+    this.scrollCurve,
+  }) : textSpan = null,
+       role = AppTextRole.h3;
 
   const AppText.h4(
     this.data, {
@@ -315,7 +402,18 @@ class AppText extends StatelessWidget {
     this.maxLines,
     this.overflow,
     this.softWrap,
-  }) : role = AppTextRole.h4;
+    this.leading,
+    this.trailing,
+    this.leadingGap,
+    this.trailingGap,
+    this.scrollMode,
+    this.scrollDuration,
+    this.scrollDelayDuration,
+    this.scrollStep,
+    this.scrollFadePortion,
+    this.scrollCurve,
+  }) : textSpan = null,
+       role = AppTextRole.h4;
 
   const AppText.section(
     this.data, {
@@ -325,7 +423,18 @@ class AppText extends StatelessWidget {
     this.maxLines,
     this.overflow,
     this.softWrap,
-  }) : role = AppTextRole.section;
+    this.leading,
+    this.trailing,
+    this.leadingGap,
+    this.trailingGap,
+    this.scrollMode,
+    this.scrollDuration,
+    this.scrollDelayDuration,
+    this.scrollStep,
+    this.scrollFadePortion,
+    this.scrollCurve,
+  }) : textSpan = null,
+       role = AppTextRole.section;
 
   const AppText.title(
     this.data, {
@@ -335,7 +444,18 @@ class AppText extends StatelessWidget {
     this.maxLines,
     this.overflow,
     this.softWrap,
-  }) : role = AppTextRole.title;
+    this.leading,
+    this.trailing,
+    this.leadingGap,
+    this.trailingGap,
+    this.scrollMode,
+    this.scrollDuration,
+    this.scrollDelayDuration,
+    this.scrollStep,
+    this.scrollFadePortion,
+    this.scrollCurve,
+  }) : textSpan = null,
+       role = AppTextRole.title;
 
   const AppText.subtitle(
     this.data, {
@@ -345,7 +465,18 @@ class AppText extends StatelessWidget {
     this.maxLines,
     this.overflow,
     this.softWrap,
-  }) : role = AppTextRole.subtitle;
+    this.leading,
+    this.trailing,
+    this.leadingGap,
+    this.trailingGap,
+    this.scrollMode,
+    this.scrollDuration,
+    this.scrollDelayDuration,
+    this.scrollStep,
+    this.scrollFadePortion,
+    this.scrollCurve,
+  }) : textSpan = null,
+       role = AppTextRole.subtitle;
 
   const AppText.lead(
     this.data, {
@@ -355,7 +486,18 @@ class AppText extends StatelessWidget {
     this.maxLines,
     this.overflow,
     this.softWrap,
-  }) : role = AppTextRole.lead;
+    this.leading,
+    this.trailing,
+    this.leadingGap,
+    this.trailingGap,
+    this.scrollMode,
+    this.scrollDuration,
+    this.scrollDelayDuration,
+    this.scrollStep,
+    this.scrollFadePortion,
+    this.scrollCurve,
+  }) : textSpan = null,
+       role = AppTextRole.lead;
 
   const AppText.body(
     this.data, {
@@ -365,7 +507,18 @@ class AppText extends StatelessWidget {
     this.maxLines,
     this.overflow,
     this.softWrap,
-  }) : role = AppTextRole.body;
+    this.leading,
+    this.trailing,
+    this.leadingGap,
+    this.trailingGap,
+    this.scrollMode,
+    this.scrollDuration,
+    this.scrollDelayDuration,
+    this.scrollStep,
+    this.scrollFadePortion,
+    this.scrollCurve,
+  }) : textSpan = null,
+       role = AppTextRole.body;
 
   const AppText.bodyStrong(
     this.data, {
@@ -375,7 +528,18 @@ class AppText extends StatelessWidget {
     this.maxLines,
     this.overflow,
     this.softWrap,
-  }) : role = AppTextRole.bodyStrong;
+    this.leading,
+    this.trailing,
+    this.leadingGap,
+    this.trailingGap,
+    this.scrollMode,
+    this.scrollDuration,
+    this.scrollDelayDuration,
+    this.scrollStep,
+    this.scrollFadePortion,
+    this.scrollCurve,
+  }) : textSpan = null,
+       role = AppTextRole.bodyStrong;
 
   const AppText.label(
     this.data, {
@@ -385,7 +549,18 @@ class AppText extends StatelessWidget {
     this.maxLines,
     this.overflow,
     this.softWrap,
-  }) : role = AppTextRole.label;
+    this.leading,
+    this.trailing,
+    this.leadingGap,
+    this.trailingGap,
+    this.scrollMode,
+    this.scrollDuration,
+    this.scrollDelayDuration,
+    this.scrollStep,
+    this.scrollFadePortion,
+    this.scrollCurve,
+  }) : textSpan = null,
+       role = AppTextRole.label;
 
   const AppText.listItem(
     this.data, {
@@ -395,7 +570,18 @@ class AppText extends StatelessWidget {
     this.maxLines,
     this.overflow,
     this.softWrap,
-  }) : role = AppTextRole.listItem;
+    this.leading,
+    this.trailing,
+    this.leadingGap,
+    this.trailingGap,
+    this.scrollMode,
+    this.scrollDuration,
+    this.scrollDelayDuration,
+    this.scrollStep,
+    this.scrollFadePortion,
+    this.scrollCurve,
+  }) : textSpan = null,
+       role = AppTextRole.listItem;
 
   const AppText.listSecondary(
     this.data, {
@@ -405,7 +591,18 @@ class AppText extends StatelessWidget {
     this.maxLines,
     this.overflow,
     this.softWrap,
-  }) : role = AppTextRole.listSecondary;
+    this.leading,
+    this.trailing,
+    this.leadingGap,
+    this.trailingGap,
+    this.scrollMode,
+    this.scrollDuration,
+    this.scrollDelayDuration,
+    this.scrollStep,
+    this.scrollFadePortion,
+    this.scrollCurve,
+  }) : textSpan = null,
+       role = AppTextRole.listSecondary;
 
   const AppText.caption(
     this.data, {
@@ -415,7 +612,18 @@ class AppText extends StatelessWidget {
     this.maxLines,
     this.overflow,
     this.softWrap,
-  }) : role = AppTextRole.caption;
+    this.leading,
+    this.trailing,
+    this.leadingGap,
+    this.trailingGap,
+    this.scrollMode,
+    this.scrollDuration,
+    this.scrollDelayDuration,
+    this.scrollStep,
+    this.scrollFadePortion,
+    this.scrollCurve,
+  }) : textSpan = null,
+       role = AppTextRole.caption;
 
   const AppText.helper(
     this.data, {
@@ -425,7 +633,18 @@ class AppText extends StatelessWidget {
     this.maxLines,
     this.overflow,
     this.softWrap,
-  }) : role = AppTextRole.helper;
+    this.leading,
+    this.trailing,
+    this.leadingGap,
+    this.trailingGap,
+    this.scrollMode,
+    this.scrollDuration,
+    this.scrollDelayDuration,
+    this.scrollStep,
+    this.scrollFadePortion,
+    this.scrollCurve,
+  }) : textSpan = null,
+       role = AppTextRole.helper;
 
   const AppText.error(
     this.data, {
@@ -435,7 +654,18 @@ class AppText extends StatelessWidget {
     this.maxLines,
     this.overflow,
     this.softWrap,
-  }) : role = AppTextRole.error;
+    this.leading,
+    this.trailing,
+    this.leadingGap,
+    this.trailingGap,
+    this.scrollMode,
+    this.scrollDuration,
+    this.scrollDelayDuration,
+    this.scrollStep,
+    this.scrollFadePortion,
+    this.scrollCurve,
+  }) : textSpan = null,
+       role = AppTextRole.error;
 
   const AppText.code(
     this.data, {
@@ -445,7 +675,18 @@ class AppText extends StatelessWidget {
     this.maxLines,
     this.overflow,
     this.softWrap,
-  }) : role = AppTextRole.code;
+    this.leading,
+    this.trailing,
+    this.leadingGap,
+    this.trailingGap,
+    this.scrollMode,
+    this.scrollDuration,
+    this.scrollDelayDuration,
+    this.scrollStep,
+    this.scrollFadePortion,
+    this.scrollCurve,
+  }) : textSpan = null,
+       role = AppTextRole.code;
 
   const AppText.muted(
     this.data, {
@@ -455,23 +696,124 @@ class AppText extends StatelessWidget {
     this.maxLines,
     this.overflow,
     this.softWrap,
-  }) : role = AppTextRole.muted;
+    this.leading,
+    this.trailing,
+    this.leadingGap,
+    this.trailingGap,
+    this.scrollMode,
+    this.scrollDuration,
+    this.scrollDelayDuration,
+    this.scrollStep,
+    this.scrollFadePortion,
+    this.scrollCurve,
+  }) : textSpan = null,
+       role = AppTextRole.muted;
 
-  final String data;
+  final String? data;
+  final InlineSpan? textSpan;
   final AppTextRole role;
   final TextStyle? style;
   final TextAlign? textAlign;
   final int? maxLines;
   final TextOverflow? overflow;
   final bool? softWrap;
+  final Widget? leading;
+  final Widget? trailing;
+
+  /// Space between [leading] and the text. Defaults according to the resolved
+  /// font size: 4 for small text, 6 for body text, and 8 for larger headings.
+  final double? leadingGap;
+
+  /// Space between the text and [trailing]. Uses the same adaptive default as
+  /// [leadingGap].
+  final double? trailingGap;
+
+  /// Enables single-line overflow scrolling. Null keeps the normal text
+  /// layout; [AppTextScrollMode.automatic] and [AppTextScrollMode.hover]
+  /// select the two scrolling behaviors.
+  final AppTextScrollMode? scrollMode;
+  final Duration? scrollDuration;
+  final Duration? scrollDelayDuration;
+  final double? scrollStep;
+  final double? scrollFadePortion;
+  final Curve? scrollCurve;
+
+  static double _defaultGap(double? fontSize) {
+    if (fontSize == null || fontSize <= 12) return 4;
+    if (fontSize <= 16) return 6;
+    return 8;
+  }
+
+  Widget _accessory(Widget child, TextStyle textStyle) {
+    return IconTheme.merge(
+      data: IconThemeData(color: textStyle.color, size: textStyle.fontSize),
+      child: DefaultTextStyle.merge(style: textStyle, child: child),
+    );
+  }
+
+  Widget _scrollingText(Widget child) {
+    return switch (scrollMode) {
+      AppTextScrollMode.automatic => AppOverflowMarquee(
+        duration: scrollDuration,
+        delayDuration: scrollDelayDuration,
+        step: scrollStep,
+        fadePortion: scrollFadePortion,
+        curve: scrollCurve,
+        child: child,
+      ),
+      AppTextScrollMode.hover => AppOverflowMarquee.hover(
+        duration: scrollDuration,
+        delayDuration: scrollDelayDuration,
+        step: scrollStep,
+        fadePortion: scrollFadePortion,
+        curve: scrollCurve,
+        child: child,
+      ),
+      null => child,
+    };
+  }
 
   @override
-  Widget build(BuildContext context) => Text(
-    data,
-    style: AppTextTheme.resolve(context, role, style),
-    textAlign: textAlign,
-    maxLines: maxLines,
-    overflow: overflow,
-    softWrap: softWrap,
-  );
+  Widget build(BuildContext context) {
+    final resolvedStyle = AppTextTheme.resolve(context, role, style);
+    final text = textSpan == null
+        ? Text(
+            data!,
+            style: resolvedStyle,
+            textAlign: textAlign,
+            maxLines: scrollMode == null ? maxLines : 1,
+            overflow: scrollMode == null ? overflow : TextOverflow.visible,
+            softWrap: scrollMode == null ? softWrap : false,
+          )
+        : Text.rich(
+            textSpan!,
+            style: resolvedStyle,
+            textAlign: textAlign,
+            maxLines: scrollMode == null ? maxLines : 1,
+            overflow: scrollMode == null ? overflow : TextOverflow.visible,
+            softWrap: scrollMode == null ? softWrap : false,
+          );
+    final textContent = _scrollingText(text);
+
+    if (leading == null && trailing == null) return textContent;
+
+    final defaultGap = _defaultGap(resolvedStyle.fontSize);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        if (leading case final leading?) ...[
+          _accessory(leading, resolvedStyle),
+          if ((leadingGap ?? defaultGap) > 0)
+            SizedBox(width: leadingGap ?? defaultGap),
+        ],
+        Flexible(child: textContent),
+        if (trailing case final trailing?) ...[
+          if ((trailingGap ?? defaultGap) > 0)
+            SizedBox(width: trailingGap ?? defaultGap),
+          _accessory(trailing, resolvedStyle),
+        ],
+      ],
+    );
+  }
 }

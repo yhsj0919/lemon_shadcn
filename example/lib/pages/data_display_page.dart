@@ -352,7 +352,10 @@ class DataDisplayPage extends StatelessWidget {
               title: '溢出滚动',
               child: SizedBox(
                 width: 300,
-                child: AppOverflowMarquee(child: Text('长内容仅在超出可用宽度时滚动。')),
+                child: AppText.body(
+                  '长内容默认保持静止，鼠标划入且内容溢出时开始滚动。',
+                  scrollMode: AppTextScrollMode.hover,
+                ),
               ),
             ),
             const ComponentSection(

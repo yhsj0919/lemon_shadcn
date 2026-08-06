@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lemon_shadcn/lemon_shadcn.dart';
@@ -68,6 +69,123 @@ void main() {
 
     final text = tester.widget<Text>(find.text('Custom heading'));
     expect(text.style?.fontSize, 42);
+  });
+
+  testWidgets('AppText accessories inherit role style and adaptive gaps', (
+    tester,
+  ) async {
+    const iconData = IconData(0xe000);
+    await tester.pumpWidget(
+      _host(
+        const AppText.caption(
+          'Caption',
+          leading: Icon(iconData, key: Key('leading')),
+          trailing: Icon(iconData, key: Key('trailing')),
+        ),
+      ),
+    );
+
+    final leadingContext = tester.element(find.byKey(const Key('leading')));
+    final iconTheme = IconTheme.of(leadingContext);
+    final text = tester.widget<Text>(find.text('Caption'));
+    final gaps = tester.widgetList<SizedBox>(find.byType(SizedBox)).toList();
+
+    expect(iconTheme.color, text.style?.color);
+    expect(iconTheme.size, 12);
+    expect(gaps.where((gap) => gap.width == 4), hasLength(2));
+  });
+
+  testWidgets('AppText keeps explicit accessory color and size', (
+    tester,
+  ) async {
+    const iconData = IconData(0xe000);
+    await tester.pumpWidget(
+      _host(
+        const AppText.body(
+          'Status',
+          leading: Icon(
+            iconData,
+            key: Key('custom-icon'),
+            color: Color(0xffff0000),
+            size: 20,
+          ),
+          leadingGap: 2,
+        ),
+      ),
+    );
+
+    final icon = tester.widget<Icon>(find.byKey(const Key('custom-icon')));
+    expect(icon.color, const Color(0xffff0000));
+    expect(icon.size, 20);
+    expect(
+      tester
+          .widgetList<SizedBox>(find.byType(SizedBox))
+          .any((gap) => gap.width == 2),
+      isTrue,
+    );
+  });
+
+  testWidgets('AppText supports automatic and hover scrolling modes', (
+    tester,
+  ) async {
+    const hoverKey = Key('hover-text');
+    await tester.pumpWidget(
+      _host(
+        const Column(
+          children: [
+            SizedBox(
+              width: 100,
+              child: AppText.body(
+                'Automatic scrolling text',
+                scrollMode: AppTextScrollMode.automatic,
+              ),
+            ),
+            SizedBox(
+              width: 100,
+              child: AppText.body(
+                'Hover scrolling text',
+                key: hoverKey,
+                scrollMode: AppTextScrollMode.hover,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    expect(find.byType(shad.OverflowMarquee), findsOneWidget);
+
+    final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    addTearDown(mouse.removePointer);
+    await mouse.addPointer(location: Offset.zero);
+    await mouse.moveTo(tester.getCenter(find.byKey(hoverKey)));
+    await tester.pump();
+
+    expect(find.byType(shad.OverflowMarquee), findsNWidgets(2));
+  });
+
+  testWidgets('AppText.rich scrolls mixed text styles', (tester) async {
+    await tester.pumpWidget(
+      _host(
+        const SizedBox(
+          width: 120,
+          child: AppText.rich(
+            TextSpan(
+              children: [
+                TextSpan(text: 'Normal '),
+                TextSpan(text: 'Large', style: TextStyle(fontSize: 24)),
+              ],
+            ),
+            scrollMode: AppTextScrollMode.automatic,
+          ),
+        ),
+      ),
+    );
+
+    final text = tester.widget<Text>(find.byType(Text));
+    final children = (text.textSpan as TextSpan).children!;
+    expect((children.last as TextSpan).style?.fontSize, 24);
+    expect(find.byType(shad.OverflowMarquee), findsOneWidget);
   });
 
   testWidgets('AppThemeConfig.textTheme applies globally', (tester) async {
