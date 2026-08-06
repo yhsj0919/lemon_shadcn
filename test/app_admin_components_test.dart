@@ -154,6 +154,12 @@ void main() {
     );
 
     expect(find.byType(shad.OverflowMarquee), findsOneWidget);
+    expect(
+      tester
+          .widget<shad.OverflowMarquee>(find.byType(shad.OverflowMarquee))
+          .duration,
+      const Duration(milliseconds: 2500),
+    );
 
     final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
     addTearDown(mouse.removePointer);

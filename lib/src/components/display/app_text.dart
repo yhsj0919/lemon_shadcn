@@ -752,9 +752,12 @@ class AppText extends StatelessWidget {
   }
 
   Widget _scrollingText(Widget child) {
+    // Upstream scales this duration by overflowDistance / step. With the
+    // default 100px step, 2.5s yields a calm, readable speed of about 40px/s.
+    final duration = scrollDuration ?? const Duration(milliseconds: 2500);
     return switch (scrollMode) {
       AppTextScrollMode.automatic => AppOverflowMarquee(
-        duration: scrollDuration,
+        duration: duration,
         delayDuration: scrollDelayDuration,
         step: scrollStep,
         fadePortion: scrollFadePortion,
@@ -762,7 +765,7 @@ class AppText extends StatelessWidget {
         child: child,
       ),
       AppTextScrollMode.hover => AppOverflowMarquee.hover(
-        duration: scrollDuration,
+        duration: duration,
         delayDuration: scrollDelayDuration,
         step: scrollStep,
         fadePortion: scrollFadePortion,
