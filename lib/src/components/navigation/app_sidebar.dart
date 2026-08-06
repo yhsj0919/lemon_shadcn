@@ -138,59 +138,55 @@ class _AppSidebarState extends State<AppSidebar> {
       duration: const Duration(milliseconds: 180),
       curve: Curves.easeOutCubic,
       width: compact ? widget.compactWidth : widget.expandedWidth,
-      child: AppCard(
-        padding: EdgeInsets.zero,
-        clipBehavior: Clip.antiAlias,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (widget.header != null)
-              Padding(
-                padding: EdgeInsets.all(compact ? 8 : 16),
-                child: widget.header,
-              ),
-            Expanded(
-              child: ListView(
-                padding: EdgeInsets.symmetric(horizontal: compact ? 8 : 10),
-                children: [
-                  for (final (groupIndex, group) in _groups.indexed) ...[
-                    if (compact && groupIndex > 0)
-                      const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 6),
-                        child: AppDivider(),
-                      ),
-                    if (!compact && group.label != null)
-                      _SidebarGroupTitle(
-                        label: group.label!,
-                        first: groupIndex == 0,
-                      ),
-                    for (final destination in group.items)
-                      compact
-                          ? _CompactDestination(
-                              destination: destination,
-                              selectedId: widget.selectedId,
-                              onSelected: widget.onDestinationSelected,
-                            )
-                          : _ExpandedDestination(
-                              destination: destination,
-                              selectedId: widget.selectedId,
-                              expandedIds: _expanded,
-                              onToggle: (id) => setState(() {
-                                if (!_expanded.remove(id)) _expanded.add(id);
-                              }),
-                              onSelected: widget.onDestinationSelected,
-                            ),
-                  ],
-                ],
-              ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (widget.header != null)
+            Padding(
+              padding: EdgeInsets.all(compact ? 8 : 16),
+              child: widget.header,
             ),
-            if (widget.footer != null)
-              Padding(
-                padding: EdgeInsets.all(compact ? 8 : 12),
-                child: widget.footer,
-              ),
-          ],
-        ),
+          Expanded(
+            child: ListView(
+              padding: EdgeInsets.symmetric(horizontal: compact ? 8 : 10),
+              children: [
+                for (final (groupIndex, group) in _groups.indexed) ...[
+                  if (compact && groupIndex > 0)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 6),
+                      child: AppDivider(),
+                    ),
+                  if (!compact && group.label != null)
+                    _SidebarGroupTitle(
+                      label: group.label!,
+                      first: groupIndex == 0,
+                    ),
+                  for (final destination in group.items)
+                    compact
+                        ? _CompactDestination(
+                            destination: destination,
+                            selectedId: widget.selectedId,
+                            onSelected: widget.onDestinationSelected,
+                          )
+                        : _ExpandedDestination(
+                            destination: destination,
+                            selectedId: widget.selectedId,
+                            expandedIds: _expanded,
+                            onToggle: (id) => setState(() {
+                              if (!_expanded.remove(id)) _expanded.add(id);
+                            }),
+                            onSelected: widget.onDestinationSelected,
+                          ),
+                ],
+              ],
+            ),
+          ),
+          if (widget.footer != null)
+            Padding(
+              padding: EdgeInsets.all(compact ? 8 : 12),
+              child: widget.footer,
+            ),
+        ],
       ),
     );
   }

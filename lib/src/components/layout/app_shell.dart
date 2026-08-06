@@ -20,6 +20,7 @@ class AppShell extends StatelessWidget {
     this.pageSubtitle,
     this.headerActions = const [],
     this.sidebarFooter,
+    this.sidebarFrame,
     this.sidebarWidth = 248,
     this.compactSidebarWidth = 64,
     this.expandedBreakpoint = 1080,
@@ -38,6 +39,9 @@ class AppShell extends StatelessWidget {
   final String? pageSubtitle;
   final List<Widget> headerActions;
   final Widget? sidebarFooter;
+
+  /// App-layer chrome around [AppSidebar] (e.g. wrap with [AppCard]).
+  final Widget Function(Widget sidebar)? sidebarFrame;
   final double sidebarWidth;
   final double compactSidebarWidth;
   final double expandedBreakpoint;
@@ -96,6 +100,9 @@ class AppShell extends StatelessWidget {
     );
   }
 
+  Widget _frame(Widget sidebar) =>
+      sidebarFrame == null ? sidebar : sidebarFrame!(sidebar);
+
   void _showDrawer(BuildContext context) {
     AppDrawer.show<void>(
       context: context,
@@ -105,18 +112,20 @@ class AppShell extends StatelessWidget {
       constraints: BoxConstraints.tightFor(width: sidebarWidth + 24),
       builder: (overlayContext) => Padding(
         padding: const EdgeInsets.all(12),
-        child: AppSidebar(
-          content: sidebarContent,
-          selectedId: selectedId,
-          onDestinationSelected: (id) {
-            onDestinationSelected(id);
-            AppOverlay.close<void>(overlayContext);
-          },
-          header: AppSidebarHeader(child: _brand()),
-          footer: sidebarFooter == null
-              ? null
-              : AppSidebarFooter(child: sidebarFooter!),
-          expandedWidth: sidebarWidth,
+        child: _frame(
+          AppSidebar(
+            content: sidebarContent,
+            selectedId: selectedId,
+            onDestinationSelected: (id) {
+              onDestinationSelected(id);
+              AppOverlay.close<void>(overlayContext);
+            },
+            header: AppSidebarHeader(child: _brand()),
+            footer: sidebarFooter == null
+                ? null
+                : AppSidebarFooter(child: sidebarFooter!),
+            expandedWidth: sidebarWidth,
+          ),
         ),
       ),
     );
@@ -138,21 +147,23 @@ class AppShell extends StatelessWidget {
               if (!drawer)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(12, 12, 0, 12),
-                  child: AppSidebar(
-                    content: sidebarContent,
-                    selectedId: selectedId,
-                    onDestinationSelected: onDestinationSelected,
-                    mode: mode,
-                    header: AppSidebarHeader(
-                      child: _brand(compact: mode == AppSidebarMode.compact),
+                  child: _frame(
+                    AppSidebar(
+                      content: sidebarContent,
+                      selectedId: selectedId,
+                      onDestinationSelected: onDestinationSelected,
+                      mode: mode,
+                      header: AppSidebarHeader(
+                        child: _brand(compact: mode == AppSidebarMode.compact),
+                      ),
+                      footer: mode == AppSidebarMode.expanded
+                          ? sidebarFooter == null
+                                ? null
+                                : AppSidebarFooter(child: sidebarFooter!)
+                          : null,
+                      expandedWidth: sidebarWidth,
+                      compactWidth: compactSidebarWidth,
                     ),
-                    footer: mode == AppSidebarMode.expanded
-                        ? sidebarFooter == null
-                              ? null
-                              : AppSidebarFooter(child: sidebarFooter!)
-                        : null,
-                    expandedWidth: sidebarWidth,
-                    compactWidth: compactSidebarWidth,
                   ),
                 ),
               Expanded(
