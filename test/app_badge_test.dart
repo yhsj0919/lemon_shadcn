@@ -86,5 +86,8 @@ void main() {
       AppBadgeSize.normal.padding,
       const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
     );
+    expect(AppBadgeSize.small.contentGap, 2);
+    expect(AppBadgeSize.normal.contentGap, 4);
+    expect(AppBadgeSize.large.contentGap, 6);
   });
 }

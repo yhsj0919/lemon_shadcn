@@ -634,6 +634,13 @@ abstract final class AppComponentRegistry {
       status: AppComponentStatus.implemented,
     ),
     AppComponentRegistration(
+      appName: 'AppHoverOverlay',
+      upstreamName: 'MouseRegion + Stack',
+      category: AppComponentCategory.overlay,
+      adapter: AppComponentAdapter.independent,
+      status: AppComponentStatus.implemented,
+    ),
+    AppComponentRegistration(
       appName: 'AppTooltip',
       upstreamName: 'Tooltip',
       category: AppComponentCategory.overlay,

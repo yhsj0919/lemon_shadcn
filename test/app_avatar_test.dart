@@ -68,4 +68,31 @@ void main() {
     expect(find.byType(AppAvatar), findsNWidgets(2));
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('avatar initials automatically use a contrasting color', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: const Row(
+          children: [
+            AppAvatar.circle(initials: 'D', backgroundColor: Color(0xff111827)),
+            AppAvatar.square(initials: 'L', backgroundColor: Color(0xfff9fafb)),
+            AppAvatar.square(
+              initials: 'M',
+              backgroundColor: Color(0xff111827),
+              foregroundColor: Color(0xffff0000),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    Color? textColor(String text) =>
+        DefaultTextStyle.of(tester.element(find.text(text))).style.color;
+    expect(textColor('D'), const Color(0xffffffff));
+    expect(textColor('L'), const Color(0xff000000));
+    expect(textColor('M'), const Color(0xffff0000));
+  });
 }

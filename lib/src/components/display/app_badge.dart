@@ -27,6 +27,7 @@ class AppBadgeSize {
     required this.height,
     required this.padding,
     required this.iconSize,
+    required this.contentGap,
   });
 
   static const small = AppBadgeSize(
@@ -34,6 +35,7 @@ class AppBadgeSize {
     height: 16,
     padding: EdgeInsets.symmetric(horizontal: 6, vertical: 1),
     iconSize: 10,
+    contentGap: 2,
   );
 
   /// Default compact badge size.
@@ -42,6 +44,7 @@ class AppBadgeSize {
     height: AppCompactLabelStyle.badgeHeight,
     padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
     iconSize: 12,
+    contentGap: 4,
   );
 
   static const large = AppBadgeSize(
@@ -49,6 +52,7 @@ class AppBadgeSize {
     height: 24,
     padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
     iconSize: 14,
+    contentGap: 6,
   );
 
   final double fontSize;
@@ -57,27 +61,51 @@ class AppBadgeSize {
   final double height;
   final EdgeInsetsGeometry padding;
   final double iconSize;
+  final double contentGap;
 
   AppBadgeSize copyWith({
     double? fontSize,
     double? height,
     EdgeInsetsGeometry? padding,
     double? iconSize,
+    double? contentGap,
   }) {
     return AppBadgeSize(
       fontSize: fontSize ?? this.fontSize,
       height: height ?? this.height,
       padding: padding ?? this.padding,
       iconSize: iconSize ?? this.iconSize,
+      contentGap: contentGap ?? this.contentGap,
     );
   }
 }
 
 /// Semantic badge variants exposed through one App-prefixed facade.
 abstract final class AppBadge {
-  static Widget _content(Widget child, AppBadgeSize size) => SizedBox(
+  static Widget _content(
+    Widget child,
+    AppBadgeSize size, {
+    Widget? leading,
+    Widget? trailing,
+    double? leadingGap,
+    double? trailingGap,
+  }) => SizedBox(
     height: size.height,
-    child: Center(widthFactor: 1, child: child),
+    child: Center(
+      widthFactor: 1,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ?leading,
+          if (leading != null && (leadingGap ?? size.contentGap) > 0)
+            SizedBox(width: leadingGap ?? size.contentGap),
+          child,
+          if (trailing != null && (trailingGap ?? size.contentGap) > 0)
+            SizedBox(width: trailingGap ?? size.contentGap),
+          ?trailing,
+        ],
+      ),
+    ),
   );
 
   static shad.AbstractButtonStyle _style(
@@ -88,8 +116,8 @@ abstract final class AppBadge {
     FontWeight? fontWeight,
     bool zeroPadding = false,
   }) {
-    final resolvedPadding = padding ??
-        (zeroPadding ? EdgeInsets.zero : size.padding);
+    final resolvedPadding =
+        padding ?? (zeroPadding ? EdgeInsets.zero : size.padding);
     final compact = base.copyWith(
       decoration: (context, states, current) {
         if (current is BoxDecoration) {
@@ -255,6 +283,8 @@ abstract final class AppBadge {
     VoidCallback? onPressed,
     Widget? leading,
     Widget? trailing,
+    double? leadingGap,
+    double? trailingGap,
     shad.AbstractButtonStyle? style,
     AppBadgeSize size = AppBadgeSize.normal,
     EdgeInsetsGeometry? padding,
@@ -262,8 +292,6 @@ abstract final class AppBadge {
   }) => shad.PrimaryBadge(
     key: key,
     onPressed: onPressed,
-    leading: leading,
-    trailing: trailing,
     style: _style(
       style ?? shad.ButtonVariance.primary,
       interactive: onPressed != null,
@@ -271,7 +299,14 @@ abstract final class AppBadge {
       padding: padding,
       fontWeight: fontWeight,
     ),
-    child: _content(child, size),
+    child: _content(
+      child,
+      size,
+      leading: leading,
+      trailing: trailing,
+      leadingGap: leadingGap,
+      trailingGap: trailingGap,
+    ),
   );
 
   static Widget secondary({
@@ -280,6 +315,8 @@ abstract final class AppBadge {
     VoidCallback? onPressed,
     Widget? leading,
     Widget? trailing,
+    double? leadingGap,
+    double? trailingGap,
     shad.AbstractButtonStyle? style,
     AppBadgeStyle appearance = AppBadgeStyle.solid,
     AppBadgeSize size = AppBadgeSize.normal,
@@ -290,8 +327,6 @@ abstract final class AppBadge {
       return shad.SecondaryBadge(
         key: key,
         onPressed: onPressed,
-        leading: leading,
-        trailing: trailing,
         style: _style(
           style ?? shad.ButtonVariance.secondary,
           interactive: onPressed != null,
@@ -299,14 +334,19 @@ abstract final class AppBadge {
           padding: padding,
           fontWeight: fontWeight,
         ),
-        child: _content(child, size),
+        child: _content(
+          child,
+          size,
+          leading: leading,
+          trailing: trailing,
+          leadingGap: leadingGap,
+          trailingGap: trailingGap,
+        ),
       );
     }
     return shad.SecondaryBadge(
       key: key,
       onPressed: onPressed,
-      leading: leading,
-      trailing: trailing,
       style: _semanticStyle(
         _mutedPalette,
         style: appearance,
@@ -315,7 +355,14 @@ abstract final class AppBadge {
         padding: padding,
         fontWeight: fontWeight,
       ),
-      child: _content(child, size),
+      child: _content(
+        child,
+        size,
+        leading: leading,
+        trailing: trailing,
+        leadingGap: leadingGap,
+        trailingGap: trailingGap,
+      ),
     );
   }
 
@@ -325,6 +372,8 @@ abstract final class AppBadge {
     VoidCallback? onPressed,
     Widget? leading,
     Widget? trailing,
+    double? leadingGap,
+    double? trailingGap,
     shad.AbstractButtonStyle? style,
     AppBadgeSize size = AppBadgeSize.normal,
     EdgeInsetsGeometry? padding,
@@ -332,8 +381,6 @@ abstract final class AppBadge {
   }) => shad.OutlineBadge(
     key: key,
     onPressed: onPressed,
-    leading: leading,
-    trailing: trailing,
     style: _style(
       style ?? shad.ButtonVariance.outline,
       interactive: onPressed != null,
@@ -341,7 +388,14 @@ abstract final class AppBadge {
       padding: padding,
       fontWeight: fontWeight,
     ),
-    child: _content(child, size),
+    child: _content(
+      child,
+      size,
+      leading: leading,
+      trailing: trailing,
+      leadingGap: leadingGap,
+      trailingGap: trailingGap,
+    ),
   );
 
   static Widget destructive({
@@ -350,6 +404,8 @@ abstract final class AppBadge {
     VoidCallback? onPressed,
     Widget? leading,
     Widget? trailing,
+    double? leadingGap,
+    double? trailingGap,
     shad.AbstractButtonStyle? style,
     AppBadgeStyle appearance = AppBadgeStyle.solid,
     AppBadgeSize size = AppBadgeSize.normal,
@@ -360,8 +416,6 @@ abstract final class AppBadge {
       return shad.DestructiveBadge(
         key: key,
         onPressed: onPressed,
-        leading: leading,
-        trailing: trailing,
         style: _style(
           style ?? shad.ButtonVariance.destructive,
           interactive: onPressed != null,
@@ -369,14 +423,19 @@ abstract final class AppBadge {
           padding: padding,
           fontWeight: fontWeight,
         ),
-        child: _content(child, size),
+        child: _content(
+          child,
+          size,
+          leading: leading,
+          trailing: trailing,
+          leadingGap: leadingGap,
+          trailingGap: trailingGap,
+        ),
       );
     }
     return shad.SecondaryBadge(
       key: key,
       onPressed: onPressed,
-      leading: leading,
-      trailing: trailing,
       style: _semanticStyle(
         _destructivePalette,
         style: appearance,
@@ -385,7 +444,14 @@ abstract final class AppBadge {
         padding: padding,
         fontWeight: fontWeight,
       ),
-      child: _content(child, size),
+      child: _content(
+        child,
+        size,
+        leading: leading,
+        trailing: trailing,
+        leadingGap: leadingGap,
+        trailingGap: trailingGap,
+      ),
     );
   }
 
@@ -396,6 +462,8 @@ abstract final class AppBadge {
     VoidCallback? onPressed,
     Widget? leading,
     Widget? trailing,
+    double? leadingGap,
+    double? trailingGap,
     AppBadgeStyle appearance = AppBadgeStyle.soft,
     AppBadgeSize size = AppBadgeSize.normal,
     EdgeInsetsGeometry? padding,
@@ -403,8 +471,6 @@ abstract final class AppBadge {
   }) => shad.SecondaryBadge(
     key: key,
     onPressed: onPressed,
-    leading: leading,
-    trailing: trailing,
     style: _semanticStyle(
       _infoPalette,
       style: appearance,
@@ -413,7 +479,14 @@ abstract final class AppBadge {
       padding: padding,
       fontWeight: fontWeight,
     ),
-    child: _content(child, size),
+    child: _content(
+      child,
+      size,
+      leading: leading,
+      trailing: trailing,
+      leadingGap: leadingGap,
+      trailingGap: trailingGap,
+    ),
   );
 
   /// Green status badge. Default [appearance] is [AppBadgeStyle.soft].
@@ -423,6 +496,8 @@ abstract final class AppBadge {
     VoidCallback? onPressed,
     Widget? leading,
     Widget? trailing,
+    double? leadingGap,
+    double? trailingGap,
     AppBadgeStyle appearance = AppBadgeStyle.soft,
     AppBadgeSize size = AppBadgeSize.normal,
     EdgeInsetsGeometry? padding,
@@ -430,8 +505,6 @@ abstract final class AppBadge {
   }) => shad.SecondaryBadge(
     key: key,
     onPressed: onPressed,
-    leading: leading,
-    trailing: trailing,
     style: _semanticStyle(
       _successPalette,
       style: appearance,
@@ -440,7 +513,14 @@ abstract final class AppBadge {
       padding: padding,
       fontWeight: fontWeight,
     ),
-    child: _content(child, size),
+    child: _content(
+      child,
+      size,
+      leading: leading,
+      trailing: trailing,
+      leadingGap: leadingGap,
+      trailingGap: trailingGap,
+    ),
   );
 
   /// Amber status badge. Default [appearance] is [AppBadgeStyle.soft].
@@ -450,6 +530,8 @@ abstract final class AppBadge {
     VoidCallback? onPressed,
     Widget? leading,
     Widget? trailing,
+    double? leadingGap,
+    double? trailingGap,
     AppBadgeStyle appearance = AppBadgeStyle.soft,
     AppBadgeSize size = AppBadgeSize.normal,
     EdgeInsetsGeometry? padding,
@@ -457,8 +539,6 @@ abstract final class AppBadge {
   }) => shad.SecondaryBadge(
     key: key,
     onPressed: onPressed,
-    leading: leading,
-    trailing: trailing,
     style: _semanticStyle(
       _warningPalette,
       style: appearance,
@@ -467,7 +547,14 @@ abstract final class AppBadge {
       padding: padding,
       fontWeight: fontWeight,
     ),
-    child: _content(child, size),
+    child: _content(
+      child,
+      size,
+      leading: leading,
+      trailing: trailing,
+      leadingGap: leadingGap,
+      trailingGap: trailingGap,
+    ),
   );
 }
 

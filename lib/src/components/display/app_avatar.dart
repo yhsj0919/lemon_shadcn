@@ -9,6 +9,7 @@ class AppAvatar extends StatelessWidget implements shad.AvatarWidget {
     super.key,
     required this.initials,
     this.backgroundColor,
+    this.foregroundColor,
     this.size,
     this.badge,
     this.badgeAlignment,
@@ -21,6 +22,7 @@ class AppAvatar extends StatelessWidget implements shad.AvatarWidget {
     super.key,
     required this.initials,
     this.backgroundColor,
+    this.foregroundColor,
     this.size,
     this.borderRadius = 12,
     this.badge,
@@ -34,6 +36,7 @@ class AppAvatar extends StatelessWidget implements shad.AvatarWidget {
   final AppAvatarShape shape;
   final String initials;
   final Color? backgroundColor;
+  final Color? foregroundColor;
 
   @override
   final double? size;
@@ -48,15 +51,38 @@ class AppAvatar extends StatelessWidget implements shad.AvatarWidget {
 
   @override
   Widget build(BuildContext context) {
-    return shad.Avatar(
-      initials: initials,
-      backgroundColor: backgroundColor,
-      size: size,
-      borderRadius: borderRadius,
-      badge: badge,
-      badgeAlignment: badgeAlignment,
-      badgeGap: badgeGap,
-      provider: provider,
+    final theme = shad.Theme.of(context);
+    final avatarTheme = shad.ComponentTheme.maybeOf<shad.AvatarTheme>(context);
+    final resolvedBackground =
+        backgroundColor ??
+        avatarTheme?.backgroundColor ??
+        theme.colorScheme.muted;
+    final resolvedForeground =
+        foregroundColor ?? _contrastingForeground(resolvedBackground);
+    final textStyle =
+        (avatarTheme?.textStyle ?? const TextStyle(fontWeight: FontWeight.bold))
+            .copyWith(color: resolvedForeground);
+
+    return shad.ComponentTheme<shad.AvatarTheme>(
+      data: (avatarTheme ?? const shad.AvatarTheme()).copyWith(
+        textStyle: () => textStyle,
+      ),
+      child: shad.Avatar(
+        initials: initials,
+        backgroundColor: resolvedBackground,
+        size: size,
+        borderRadius: borderRadius,
+        badge: badge,
+        badgeAlignment: badgeAlignment,
+        badgeGap: badgeGap,
+        provider: provider,
+      ),
     );
+  }
+
+  static Color _contrastingForeground(Color background) {
+    return background.computeLuminance() > 0.179
+        ? const Color(0xff000000)
+        : const Color(0xffffffff);
   }
 }

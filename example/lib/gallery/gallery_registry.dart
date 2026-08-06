@@ -615,6 +615,17 @@ abstract final class GalleryRegistry {
       ),
     ),
     GalleryEntry(
+      id: 'app-hover-overlay',
+      label: 'AppHoverOverlay',
+      subtitle: '鼠标划入覆盖布局',
+      group: '反馈',
+      builder: (_) => const OverlayPage(
+        title: 'AppHoverOverlay',
+        description: '鼠标划入后，用完全自定义的上层内容覆盖指定布局。',
+        visibleSections: {'鼠标覆盖层'},
+      ),
+    ),
+    GalleryEntry(
       id: 'app-tooltip',
       label: 'AppTooltip',
       subtitle: '工具提示',
