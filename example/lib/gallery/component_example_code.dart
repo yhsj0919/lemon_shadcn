@@ -221,8 +221,11 @@ AppDescriptions(
   rowKey: (user) => user.id,
   loader: (query) => repository.loadMoreUsers(query),
 );''',
-    '头像与徽章': '''const AppAvatar(initials: 'LS');
-AppBadge.primary(child: const Text('主要'));''',
+    '头像与徽章': '''AppBadge.success(size: AppBadgeSize.large, child: const Text('大'));
+AppBadge.success(
+  padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
+  child: const Text('自定义内边距'),
+);''',
     '进度': '''const AppProgress(progress: 0.64);
 const AppLinearProgressIndicator(value: 0.64);''',
     '代码片段': '''const AppCodeSnippet(

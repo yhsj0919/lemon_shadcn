@@ -209,6 +209,56 @@ class DataDisplayPage extends StatelessWidget {
                   ),
                   AppBadge.outline(child: const Text('描边按钮')),
                   AppBadge.destructive(child: const Text('危险按钮')),
+                  AppBadge.info(
+                    leading: const Icon(AppLucideIcons.info, size: 12),
+                    child: const Text('信息'),
+                  ),
+                  AppBadge.success(
+                    leading: const Icon(AppLucideIcons.circleCheck, size: 12),
+                    child: const Text('在线 33'),
+                  ),
+                  AppBadge.warning(
+                    leading: const Icon(AppLucideIcons.triangleAlert, size: 12),
+                    child: const Text('警告'),
+                  ),
+                  AppBadge.destructive(
+                    appearance: AppBadgeStyle.soft,
+                    leading: const Icon(AppLucideIcons.circleAlert, size: 12),
+                    child: const Text('异常 4'),
+                  ),
+                  AppBadge.success(
+                    fontWeight: FontWeight.bold,
+                    appearance: AppBadgeStyle.plain,
+                    leading: const Icon(AppLucideIcons.circleCheck, size: 12),
+                    child: const Text('在线 33'),
+                  ),
+                  AppBadge.secondary(
+                    appearance: AppBadgeStyle.plain,
+                    leading: const Icon(AppLucideIcons.circleX, size: 12),
+                    child: const Text('离线 13'),
+                  ),
+                  AppBadge.destructive(
+                    appearance: AppBadgeStyle.plain,
+                    leading: const Icon(AppLucideIcons.circleAlert, size: 12),
+                    child: const Text('异常 4'),
+                  ),
+                  AppBadge.success(
+                    appearance: AppBadgeStyle.outline,
+                    child: const Text('成功描边'),
+                  ),
+                  AppBadge.success(
+                    size: AppBadgeSize.small,
+                    child: const Text('小'),
+                  ),
+                  AppBadge.success(child: const Text('默认')),
+                  AppBadge.success(
+                    size: AppBadgeSize.large,
+                    child: const Text('大'),
+                  ),
+                  AppBadge.success(
+                    padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
+                    child: const Text('自定义边距'),
+                  ),
                 ],
               ),
             ),
