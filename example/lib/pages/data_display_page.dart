@@ -185,8 +185,8 @@ class DataDisplayPage extends StatelessWidget {
                     crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       AppAvatar.circle(name: '林晓', initialsCount: 1, size: 40),
-                      AppAvatar.circle(name: '张三', size: 48),
-                      AppAvatar.square(name: '王小明', size: 48),
+                      AppAvatar.circle(name: '张三', initialsCount: 2, size: 48),
+                      AppAvatar.square(name: '王小明', initialsCount: 2, size: 48),
                       AppAvatar.square(
                         name: '产品设计',
                         initialsCount: 2,

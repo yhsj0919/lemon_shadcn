@@ -4,6 +4,7 @@ import 'package:lemon_shadcn/lemon_shadcn.dart';
 
 void main() {
   test('extracts a configurable number of Chinese and Latin initials', () {
+    expect(AppAvatar.getInitials('张三'), '张');
     expect(AppAvatar.getInitials('张三', count: 1), '张');
     expect(AppAvatar.getInitials('王小明', count: 2), '王小');
     expect(AppAvatar.getInitials('John Ronald Tolkien', count: 2), 'JR');
@@ -19,6 +20,7 @@ void main() {
           children: [
             AppAvatar.circle(name: '林晓', initialsCount: 1),
             AppAvatar.square(name: '王小明', initialsCount: 2),
+            AppAvatar.circle(name: '默认单字'),
           ],
         ),
       ),
@@ -26,6 +28,7 @@ void main() {
 
     expect(find.text('林'), findsOneWidget);
     expect(find.text('王小'), findsOneWidget);
+    expect(find.text('默'), findsOneWidget);
   });
 
   testWidgets('circle avatar uses a fully rounded border', (tester) async {

@@ -11,7 +11,7 @@ class AppAvatar extends StatelessWidget implements shad.AvatarWidget {
     super.key,
     this.initials,
     this.name,
-    this.initialsCount = 2,
+    this.initialsCount = 1,
     this.backgroundColor,
     this.foregroundColor,
     this.textStyle,
@@ -29,7 +29,7 @@ class AppAvatar extends StatelessWidget implements shad.AvatarWidget {
     super.key,
     this.initials,
     this.name,
-    this.initialsCount = 2,
+    this.initialsCount = 1,
     this.backgroundColor,
     this.foregroundColor,
     this.textStyle,
@@ -47,7 +47,7 @@ class AppAvatar extends StatelessWidget implements shad.AvatarWidget {
   ///
   /// Names containing spaces use the first character of each word. Unspaced
   /// names, including Chinese names, use their first [count] characters.
-  static String getInitials(String name, {int count = 2}) {
+  static String getInitials(String name, {int count = 1}) {
     if (count <= 0) {
       throw ArgumentError.value(count, 'count', 'Must be greater than zero.');
     }
