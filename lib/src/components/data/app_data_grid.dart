@@ -1594,7 +1594,7 @@ class _AppDataGridPagerState extends State<_AppDataGridPager> {
               width: 128,
               child: AppSelect<int>(
                 value: _state.pageSize,
-                placeholder: '条/页',
+                hintText: '条/页',
                 options: [
                   for (final size in widget.pageSizeOptions)
                     AppOption(value: size, label: '$size 条/页'),
@@ -2085,7 +2085,7 @@ class _AppDataGridFiltersDialogState extends State<_AppDataGridFiltersDialog> {
                                 children: [
                                   AppSelect<String>(
                                     value: rule.columnField,
-                                    placeholder: locale.filterColumn,
+                                    hintText: locale.filterColumn,
                                     options: columnOptions,
                                     onChanged: (value) {
                                       if (value == null) return;
@@ -2096,7 +2096,7 @@ class _AppDataGridFiltersDialogState extends State<_AppDataGridFiltersDialog> {
                                   ),
                                   AppSelect<TrinaFilterType>(
                                     value: _matchFilterType(rule.filterType),
-                                    placeholder: locale.filterType,
+                                    hintText: locale.filterType,
                                     options: typeOptions,
                                     optionConfig: AppOptionConfig(
                                       equals: _sameFilterType,

@@ -111,7 +111,7 @@ class _GalleryShellState extends State<GalleryShell> {
           width: 152,
           child: AppSelect<AppThemePreset>(
             value: widget.preset,
-            placeholder: '选择主题',
+            hintText: '选择主题',
             onChanged: (value) {
               if (value != null) widget.onPresetChanged(value);
             },

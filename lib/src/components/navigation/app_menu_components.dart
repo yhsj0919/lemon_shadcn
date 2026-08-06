@@ -761,7 +761,7 @@ class AppCommand extends StatelessWidget {
     this.loadingBuilder,
     this.surfaceOpacity,
     this.surfaceBlur,
-    this.searchPlaceholder,
+    this.searchHintText,
     this.height = 280,
   });
 
@@ -773,7 +773,7 @@ class AppCommand extends StatelessWidget {
   final WidgetBuilder? loadingBuilder;
   final double? surfaceOpacity;
   final double? surfaceBlur;
-  final Widget? searchPlaceholder;
+  final String? searchHintText;
   final double height;
 
   @override
@@ -791,7 +791,7 @@ class AppCommand extends StatelessWidget {
           loadingBuilder: loadingBuilder,
           surfaceOpacity: surfaceOpacity,
           surfaceBlur: surfaceBlur,
-          searchPlaceholder: searchPlaceholder,
+          searchPlaceholder: searchHintText == null ? null : Text(searchHintText!),
           builder: builder,
         ),
       ),

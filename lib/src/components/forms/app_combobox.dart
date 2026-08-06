@@ -32,7 +32,7 @@ class AppCombobox<V> extends StatefulWidget {
     this.onChanged,
     this.optionConfig = const AppOptionConfig(),
     this.initialOption,
-    this.placeholder = 'Search and select',
+    this.hintText = 'Search and select',
     this.enabled = true,
     this.clearable = false,
     this.displayMode = AppComboboxDisplayMode.text,
@@ -55,7 +55,7 @@ class AppCombobox<V> extends StatefulWidget {
     this.onChanged,
     this.optionConfig = const AppOptionConfig(),
     this.initialOption,
-    this.placeholder = 'Search and select',
+    this.hintText = 'Search and select',
     this.enabled = true,
     this.clearable = false,
     this.displayMode = AppComboboxDisplayMode.text,
@@ -78,7 +78,7 @@ class AppCombobox<V> extends StatefulWidget {
     this.onChanged,
     this.optionConfig = const AppOptionConfig(),
     this.initialOption,
-    this.placeholder = 'Search and select',
+    this.hintText = 'Search and select',
     this.enabled = true,
     this.clearable = false,
     this.displayMode = AppComboboxDisplayMode.text,
@@ -101,7 +101,7 @@ class AppCombobox<V> extends StatefulWidget {
   final ValueChanged<V?>? onChanged;
   final AppOptionConfig<V> optionConfig;
   final AppOption<V>? initialOption;
-  final String placeholder;
+  final String hintText;
   final bool enabled;
   final bool clearable;
   final AppComboboxDisplayMode displayMode;
@@ -450,7 +450,8 @@ class _AppComboboxState<V> extends State<AppCombobox<V>> {
           controller: _textController,
           focusNode: _focusNode,
           enabled: widget.enabled,
-          hintText: widget.placeholder,
+          hintText: widget.hintText,
+          placeholder: Text(widget.hintText),
           textAlignVertical: TextAlignVertical.center,
           border: Border.all(
             color: theme.colorScheme.border,
@@ -646,7 +647,7 @@ class AppComboboxFormField<V> extends FormField<V> {
     String? label,
     String? name,
     String? description,
-    String placeholder = 'Search and select',
+    String hintText = 'Search and select',
     bool required = false,
     double? width,
     bool clearable = false,
@@ -679,7 +680,7 @@ class AppComboboxFormField<V> extends FormField<V> {
                options: options,
                value: state.value,
                enabled: state.widget.enabled,
-               placeholder: placeholder,
+               hintText: hintText,
                clearable: clearable,
                displayMode: displayMode,
                editBehavior: editBehavior,
@@ -704,7 +705,7 @@ class AppComboboxFormField<V> extends FormField<V> {
     String? label,
     String? name,
     String? description,
-    String placeholder = 'Search and select',
+    String hintText = 'Search and select',
     bool required = false,
     double? width,
     bool clearable = false,
@@ -739,7 +740,7 @@ class AppComboboxFormField<V> extends FormField<V> {
                searchOptions: searchOptions,
                value: state.value,
                enabled: state.widget.enabled,
-               placeholder: placeholder,
+               hintText: hintText,
                clearable: clearable,
                displayMode: displayMode,
                editBehavior: editBehavior,
@@ -766,7 +767,7 @@ class AppComboboxFormField<V> extends FormField<V> {
     String? label,
     String? name,
     String? description,
-    String placeholder = 'Search and select',
+    String hintText = 'Search and select',
     bool required = false,
     double? width,
     bool clearable = false,
@@ -800,7 +801,7 @@ class AppComboboxFormField<V> extends FormField<V> {
                optionSource: optionSource,
                value: state.value,
                enabled: state.widget.enabled,
-               placeholder: placeholder,
+               hintText: hintText,
                clearable: clearable,
                displayMode: displayMode,
                editBehavior: editBehavior,

@@ -356,6 +356,7 @@ class _AppTextFieldState extends State<AppTextField> {
         ),
         textAlignVertical: TextAlignVertical.center,
         hintText: widget.hintText,
+        placeholder: widget.hintText == null ? null : Text(widget.hintText!),
         obscureText: _obscureText,
         keyboardType: widget.keyboardType,
         textInputAction: widget.textInputAction,

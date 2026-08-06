@@ -69,7 +69,7 @@ class _DeviceList extends StatelessWidget {
                           child: shad.TextField(
                             controller: controller.searchController,
                             onChanged: controller.setKeyword,
-                            placeholder: const Text('搜索设备'),
+                            hintText: '搜索设备',
                             border: Border.all(
                               color: theme.colorScheme.border,
                               width: 1,
@@ -264,7 +264,7 @@ class _DeviceFilterPanel extends StatelessWidget {
                 const SizedBox(height: 8),
                 AppSelect<String>(
                   value: controller.regionFilter,
-                  placeholder: '全部区域',
+                  hintText: '全部区域',
                   clearable: true,
                   options: regionOptions,
                   onChanged: controller.setRegionFilter,
@@ -274,7 +274,7 @@ class _DeviceFilterPanel extends StatelessWidget {
                 const SizedBox(height: 8),
                 AppSelect<String>(
                   value: controller.customerFilter,
-                  placeholder: '全部客户',
+                  hintText: '全部客户',
                   clearable: true,
                   options: customerOptions,
                   onChanged: controller.setCustomerFilter,

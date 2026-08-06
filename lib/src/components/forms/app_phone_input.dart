@@ -16,7 +16,7 @@ class AppPhoneInput extends StatefulWidget {
     this.initialCountry,
     this.onlyNumber = true,
     this.countries,
-    this.searchPlaceholder,
+    this.searchHintText,
     this.enabled = true,
   });
 
@@ -26,7 +26,7 @@ class AppPhoneInput extends StatefulWidget {
   final shad.Country? initialCountry;
   final bool onlyNumber;
   final List<shad.Country>? countries;
-  final Widget? searchPlaceholder;
+  final String? searchHintText;
   final bool enabled;
 
   @override
@@ -272,7 +272,7 @@ class AppPhoneInputFormField extends FormField<shad.PhoneNumber> {
     this.initialCountry,
     this.onlyNumber = true,
     this.countries,
-    this.searchPlaceholder,
+    this.searchHintText,
     this.onChanged,
     super.initialValue,
     super.onSaved,
@@ -299,7 +299,7 @@ class AppPhoneInputFormField extends FormField<shad.PhoneNumber> {
                  initialCountry: field.initialCountry,
                  onlyNumber: field.onlyNumber,
                  countries: field.countries,
-                 searchPlaceholder: field.searchPlaceholder,
+                 searchHintText: field.searchHintText,
                  enabled: field.enabled,
                  onChanged: (value) {
                    state.didChange(value);
@@ -319,7 +319,7 @@ class AppPhoneInputFormField extends FormField<shad.PhoneNumber> {
   final shad.Country? initialCountry;
   final bool onlyNumber;
   final List<shad.Country>? countries;
-  final Widget? searchPlaceholder;
+  final String? searchHintText;
   final ValueChanged<shad.PhoneNumber?>? onChanged;
   final AppAsyncFieldValidator<shad.PhoneNumber>? asyncValidator;
 }

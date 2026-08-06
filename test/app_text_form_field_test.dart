@@ -46,6 +46,19 @@ void main() {
     expect(find.text('initial@example.com'), findsOneWidget);
   });
 
+  testWidgets('shows hintText as visible placeholder when empty', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: const AppTextFormField(hintText: '输入内容'),
+      ),
+    );
+
+    expect(find.text('输入内容'), findsOneWidget);
+  });
+
   testWidgets('supports an explicit field width', (tester) async {
     await tester.pumpWidget(
       MaterialApp(

@@ -89,7 +89,7 @@ class MenusPage extends StatelessWidget {
           title: '命令面板',
           child: AppCommand(
             autofocus: false,
-            searchPlaceholder: const Text('搜索命令…'),
+            searchHintText: '搜索命令…',
             builder: (context, query) async* {
               final q = (query ?? '').toLowerCase();
               final filtered = _commands

@@ -165,6 +165,7 @@ class _AppTextAreaControlState extends State<_AppTextAreaControl> {
         controller: _controller,
         focusNode: widget.focusNode,
         hintText: widget.hintText,
+        placeholder: widget.hintText == null ? null : Text(widget.hintText!),
         initialHeight: height,
         minHeight: widget.minHeight,
         maxHeight: widget.maxHeight,

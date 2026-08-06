@@ -19,7 +19,7 @@ class AppDatePicker extends StatelessWidget {
     super.key,
     required this.value,
     this.onChanged,
-    this.placeholder,
+    this.hintText,
     this.mode,
     this.initialView,
     this.initialViewType,
@@ -37,7 +37,7 @@ class AppDatePicker extends StatelessWidget {
     super.key,
     required this.rangeValue,
     this.onRangeChanged,
-    this.placeholder,
+    this.hintText,
     this.mode = shad.PromptMode.popover,
     this.initialView,
     this.initialViewType,
@@ -56,7 +56,7 @@ class AppDatePicker extends StatelessWidget {
   final ValueChanged<DateTime?>? onChanged;
   final shad.DateTimeRange? rangeValue;
   final ValueChanged<shad.DateTimeRange?>? onRangeChanged;
-  final Widget? placeholder;
+  final String? hintText;
   final shad.PromptMode? mode;
   final shad.CalendarView? initialView;
   final shad.CalendarViewType? initialViewType;
@@ -78,7 +78,7 @@ class AppDatePicker extends StatelessWidget {
         enabled: enabled,
         mode: resolvedMode,
         immediateValueChange: false,
-        placeholder: placeholder ?? Text(localizations.placeholderDatePicker),
+        placeholder: Text(hintText ?? localizations.placeholderDatePicker),
         trailing: const Icon(shad.LucideIcons.calendarDays),
         popoverAlignment: popoverAlignment,
         popoverAnchorAlignment: popoverAnchorAlignment,
@@ -99,7 +99,7 @@ class AppDatePicker extends StatelessWidget {
         enabled: enabled,
         mode: resolvedMode,
         immediateValueChange: false,
-        placeholder: placeholder ?? Text(localizations.placeholderDatePicker),
+        placeholder: Text(hintText ?? localizations.placeholderDatePicker),
         trailing: const Icon(shad.LucideIcons.calendarRange),
         popoverAlignment: popoverAlignment,
         popoverAnchorAlignment: popoverAnchorAlignment,
@@ -297,7 +297,7 @@ class AppDatePickerFormField extends FormField<DateTime> {
     this.name,
     this.label,
     this.description,
-    this.placeholder,
+    this.hintText,
     this.required = false,
     this.width,
     this.mode,
@@ -327,7 +327,7 @@ class AppDatePickerFormField extends FormField<DateTime> {
                width: field.width,
                child: AppDatePicker(
                  value: state.value,
-                 placeholder: field.placeholder,
+                 hintText: field.hintText,
                  mode: field.mode,
                  initialView: field.initialView,
                  initialViewType: field.initialViewType,
@@ -346,7 +346,7 @@ class AppDatePickerFormField extends FormField<DateTime> {
   final String? name;
   final String? label;
   final String? description;
-  final Widget? placeholder;
+  final String? hintText;
   final bool required;
   final double? width;
   final shad.PromptMode? mode;
@@ -363,7 +363,7 @@ class AppDateRangePickerFormField extends FormField<shad.DateTimeRange> {
     this.name,
     this.label,
     this.description,
-    this.placeholder,
+    this.hintText,
     this.required = false,
     this.width,
     this.mode = shad.PromptMode.popover,
@@ -393,7 +393,7 @@ class AppDateRangePickerFormField extends FormField<shad.DateTimeRange> {
                width: field.width,
                child: AppDatePicker.range(
                  rangeValue: state.value,
-                 placeholder: field.placeholder,
+                 hintText: field.hintText,
                  mode: field.mode,
                  initialView: field.initialView,
                  initialViewType: field.initialViewType,
@@ -412,7 +412,7 @@ class AppDateRangePickerFormField extends FormField<shad.DateTimeRange> {
   final String? name;
   final String? label;
   final String? description;
-  final Widget? placeholder;
+  final String? hintText;
   final bool required;
   final double? width;
   final shad.PromptMode mode;

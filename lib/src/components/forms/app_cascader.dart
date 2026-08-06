@@ -32,7 +32,7 @@ class AppCascader<V> extends StatefulWidget {
     required this.levelCount,
     this.value = const [],
     this.onChanged,
-    this.placeholders = const [],
+    this.hintTexts = const [],
     this.optionConfig = const AppOptionConfig(),
     this.enabled = true,
     this.clearable = true,
@@ -49,7 +49,7 @@ class AppCascader<V> extends StatefulWidget {
     required this.levelCount,
     this.value = const [],
     this.onChanged,
-    this.placeholders = const [],
+    this.hintTexts = const [],
     this.optionConfig = const AppOptionConfig(),
     this.enabled = true,
     this.clearable = true,
@@ -65,7 +65,7 @@ class AppCascader<V> extends StatefulWidget {
   final int levelCount;
   final List<V> value;
   final ValueChanged<List<V>>? onChanged;
-  final List<String> placeholders;
+  final List<String> hintTexts;
   final AppOptionConfig<V> optionConfig;
   final bool enabled;
   final bool clearable;
@@ -224,7 +224,7 @@ class _AppCascaderState<V> extends State<AppCascader<V>> {
   }
 
   String _placeholderFor(int level) =>
-      level < widget.placeholders.length ? widget.placeholders[level] : '请选择';
+      level < widget.hintTexts.length ? widget.hintTexts[level] : '请选择';
 
   Widget _buildLevel(int level) {
     final parentReady = level == 0 || widget.value.length >= level;
@@ -243,7 +243,7 @@ class _AppCascaderState<V> extends State<AppCascader<V>> {
         value: level < widget.value.length ? widget.value[level] : null,
         enabled: widget.enabled && parentReady && !loading,
         clearable: widget.clearable,
-        placeholder: placeholder,
+        hintText: placeholder,
         optionConfig: widget.optionConfig,
         popupMinWidth: widget.popupMinWidth,
         onChanged: !_interactive || !parentReady || loading
@@ -286,7 +286,7 @@ class AppCascaderFormField<V> extends FormField<List<V>> {
     String? description,
     bool required = false,
     double? width,
-    List<String> placeholders = const [],
+    List<String> hintTexts = const [],
     AppOptionConfig<V> optionConfig = const AppOptionConfig(),
     bool clearable = true,
     Axis direction = Axis.horizontal,
@@ -317,7 +317,7 @@ class AppCascaderFormField<V> extends FormField<List<V>> {
                levelCount: levelCount,
                value: state.value ?? const [],
                enabled: state.widget.enabled,
-               placeholders: placeholders,
+               hintTexts: hintTexts,
                optionConfig: optionConfig,
                clearable: clearable,
                direction: direction,
@@ -342,7 +342,7 @@ class AppCascaderFormField<V> extends FormField<List<V>> {
     String? description,
     bool required = false,
     double? width,
-    List<String> placeholders = const [],
+    List<String> hintTexts = const [],
     AppOptionConfig<V> optionConfig = const AppOptionConfig(),
     bool clearable = true,
     Axis direction = Axis.horizontal,
@@ -373,7 +373,7 @@ class AppCascaderFormField<V> extends FormField<List<V>> {
                levelCount: levelCount,
                value: state.value ?? const [],
                enabled: state.widget.enabled,
-               placeholders: placeholders,
+               hintTexts: hintTexts,
                optionConfig: optionConfig,
                clearable: clearable,
                direction: direction,
@@ -499,7 +499,7 @@ class AppRegionPicker<V> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final levels = _levels;
-    final placeholders = [for (final level in levels) _placeholder(level)];
+    final hintTexts = [for (final level in levels) _placeholder(level)];
     final loader = loadOptions;
     if (loader != null) {
       return AppCascader<V>.async(
@@ -507,7 +507,7 @@ class AppRegionPicker<V> extends StatelessWidget {
         loadOptions: (index, path) => loader(levels[index], path),
         value: value,
         onChanged: onChanged,
-        placeholders: placeholders,
+        hintTexts: hintTexts,
         optionConfig: optionConfig,
         enabled: enabled,
         clearable: clearable,
@@ -522,7 +522,7 @@ class AppRegionPicker<V> extends StatelessWidget {
       levelCount: levels.length,
       value: value,
       onChanged: onChanged,
-      placeholders: placeholders,
+      hintTexts: hintTexts,
       optionConfig: optionConfig,
       enabled: enabled,
       clearable: clearable,

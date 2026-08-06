@@ -39,14 +39,14 @@ abstract final class AppFormattedParts {
     required int length,
     double? width,
     bool obscureText = false,
-    Widget? placeholder,
+    String? hintText,
   }) {
     return shad.FormattedValuePart(
       AppEditablePart(
         length: length,
         width: width ?? length * 14 + 8,
         obscureText: obscureText,
-        placeholder: placeholder,
+        hintText: hintText,
       ),
       value,
     );
@@ -63,14 +63,14 @@ class AppEditablePart extends shad.InputPart {
     required this.width,
     this.obscureText = false,
     this.inputFormatters = const [],
-    this.placeholder,
+    this.hintText,
   });
 
   final int length;
   final double width;
   final bool obscureText;
   final List<TextInputFormatter> inputFormatters;
-  final Widget? placeholder;
+  final String? hintText;
 
   @override
   bool get canHaveValue => true;
@@ -91,7 +91,7 @@ class AppEditablePart extends shad.InputPart {
             other.width == width &&
             other.obscureText == obscureText &&
             listEquals(other.inputFormatters, inputFormatters) &&
-            other.placeholder == placeholder;
+            other.hintText == hintText;
   }
 
   @override
@@ -100,7 +100,7 @@ class AppEditablePart extends shad.InputPart {
     width,
     obscureText,
     Object.hashAll(inputFormatters),
-    placeholder,
+    hintText,
   );
 }
 
@@ -123,7 +123,7 @@ class _AppEditablePartWidgetState extends State<_AppEditablePartWidget> {
     super.initState();
     _controller = _AppEditablePartController(
       maxLength: widget.part.length,
-      hasPlaceholder: widget.part.placeholder != null,
+      hasPlaceholder: widget.part.hintText != null,
       text: widget.data.initialValue,
     )..addListener(_textChanged);
     widget.data.controller?.addListener(_formattedValueChanged);
@@ -223,7 +223,7 @@ class _AppEditablePartWidgetState extends State<_AppEditablePartWidget> {
             maxLength: widget.part.length,
             onChanged: _onChanged,
             inputFormatters: widget.part.inputFormatters,
-            placeholder: widget.part.placeholder,
+            placeholder: widget.part.hintText == null ? null : Text(widget.part.hintText!),
             obscureText: widget.part.obscureText,
             maxLines: 1,
             textAlign: TextAlign.center,
@@ -427,7 +427,7 @@ class AppItemPickerFormField<V> extends FormField<V> {
     this.description,
     this.required = false,
     this.width,
-    this.placeholder,
+    this.hintText,
     this.title,
     this.layout,
     this.mode,
@@ -456,7 +456,7 @@ class AppItemPickerFormField<V> extends FormField<V> {
                  child: _AppItemPickerControl<V>(
                    options: field.options,
                    value: state.value,
-                   placeholder: field.placeholder,
+                   hintText: field.hintText,
                    title: field.title,
                    layout: field.layout,
                    mode: field.mode ?? shad.PromptMode.popover,
@@ -478,7 +478,7 @@ class AppItemPickerFormField<V> extends FormField<V> {
   final String? description;
   final bool required;
   final double? width;
-  final Widget? placeholder;
+  final String? hintText;
   final Widget? title;
   final shad.ItemPickerLayout? layout;
   final shad.PromptMode? mode;
@@ -493,7 +493,7 @@ class _AppItemPickerControl<V> extends StatefulWidget {
     required this.mode,
     required this.enabled,
     required this.onChanged,
-    this.placeholder,
+    this.hintText,
     this.title,
     this.layout,
   });
@@ -503,7 +503,7 @@ class _AppItemPickerControl<V> extends StatefulWidget {
   final shad.PromptMode mode;
   final bool enabled;
   final ValueChanged<V?> onChanged;
-  final Widget? placeholder;
+  final String? hintText;
   final Widget? title;
   final shad.ItemPickerLayout? layout;
 
@@ -544,7 +544,7 @@ class _AppItemPickerControlState<V> extends State<_AppItemPickerControl<V>> {
                       widget.options.map((option) => option.value).toList(),
                     ),
                     value: widget.value,
-                    placeholder: widget.placeholder,
+                    placeholder: widget.hintText == null ? null : Text(widget.hintText!),
                     title: widget.title,
                     layout: widget.layout,
                     mode: widget.mode,

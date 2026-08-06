@@ -26,8 +26,8 @@ class AppAutoCompleteFormField<V> extends FormField<V> {
     this.label,
     this.name,
     this.description,
-    this.placeholder = 'Search and select',
-    this.searchPlaceholder = 'Search',
+    this.hintText = 'Search and select',
+    this.searchHintText = 'Search',
     this.required = false,
     this.width,
     this.clearable = false,
@@ -56,8 +56,8 @@ class AppAutoCompleteFormField<V> extends FormField<V> {
     this.label,
     this.name,
     this.description,
-    this.placeholder = 'Search and select',
-    this.searchPlaceholder = 'Search',
+    this.hintText = 'Search and select',
+    this.searchHintText = 'Search',
     this.required = false,
     this.width,
     this.clearable = false,
@@ -86,8 +86,8 @@ class AppAutoCompleteFormField<V> extends FormField<V> {
     this.label,
     this.name,
     this.description,
-    this.placeholder = 'Search and select',
-    this.searchPlaceholder = 'Search',
+    this.hintText = 'Search and select',
+    this.searchHintText = 'Search',
     this.required = false,
     this.width,
     this.clearable = false,
@@ -116,8 +116,8 @@ class AppAutoCompleteFormField<V> extends FormField<V> {
   final String? label;
   final String? name;
   final String? description;
-  final String placeholder;
-  final String searchPlaceholder;
+  final String hintText;
+  final String searchHintText;
   final bool required;
   final double? width;
   final bool clearable;
@@ -150,8 +150,8 @@ class AppAutoCompleteFormField<V> extends FormField<V> {
           initialOption: field.initialOption,
           value: state.value,
           enabled: field.enabled,
-          placeholder: field.placeholder,
-          searchPlaceholder: field.searchPlaceholder,
+          hintText: field.hintText,
+          searchHintText: field.searchHintText,
           clearable: field.clearable,
           debounce: field.debounce,
           optionConfig: field.optionConfig,
@@ -177,8 +177,8 @@ class _AppAutoCompleteControl<V> extends StatefulWidget {
     required this.value,
     required this.onChanged,
     required this.enabled,
-    required this.placeholder,
-    required this.searchPlaceholder,
+    required this.hintText,
+    required this.searchHintText,
     required this.clearable,
     required this.debounce,
     this.initialOption,
@@ -196,8 +196,8 @@ class _AppAutoCompleteControl<V> extends StatefulWidget {
   final V? value;
   final ValueChanged<V?> onChanged;
   final bool enabled;
-  final String placeholder;
-  final String searchPlaceholder;
+  final String hintText;
+  final String searchHintText;
   final bool clearable;
   final Duration debounce;
   final AppOptionConfig<V> optionConfig;
@@ -329,7 +329,7 @@ class _AppAutoCompleteControlState<V>
         enabled: widget.enabled,
         canUnselect: widget.clearable,
         onChanged: widget.onChanged,
-        placeholder: Text(widget.placeholder).muted(),
+        placeholder: Text(widget.hintText).muted(),
         valueSelectionPredicate: (selected, candidate) {
           return selected != null &&
               candidate is V &&
@@ -344,7 +344,7 @@ class _AppAutoCompleteControlState<V>
         popup: (context) => popup(
           shad.SelectPopup<V>.builder(
             builder: _search,
-            searchPlaceholder: Text(widget.searchPlaceholder),
+            searchPlaceholder: Text(widget.searchHintText),
             loadingBuilder:
                 widget.loadingBuilder ??
                 (context) => const Padding(

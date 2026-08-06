@@ -65,7 +65,7 @@ void main() {
         home: AppDatePicker(
           value: null,
           onChanged: (_) {},
-          placeholder: const Text('Choose date'),
+          hintText: 'Choose date',
         ),
       ),
     );
@@ -88,7 +88,7 @@ void main() {
         home: AppTimePicker(
           value: null,
           onChanged: (_) {},
-          placeholder: const Text('Choose time'),
+          hintText: 'Choose time',
         ),
       ),
     );

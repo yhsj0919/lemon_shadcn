@@ -17,7 +17,7 @@ class AppTimeStepperPicker extends StatelessWidget {
     this.onChanged,
     this.minuteStep = 5,
     this.mode = shad.PromptMode.popover,
-    this.placeholder,
+    this.hintText,
     this.enabled = true,
   }) : assert(minuteStep > 0 && minuteStep <= 59);
 
@@ -25,7 +25,7 @@ class AppTimeStepperPicker extends StatelessWidget {
   final ValueChanged<shad.TimeOfDay?>? onChanged;
   final int minuteStep;
   final shad.PromptMode mode;
-  final Widget? placeholder;
+  final String? hintText;
   final bool enabled;
 
   @override
@@ -36,7 +36,7 @@ class AppTimeStepperPicker extends StatelessWidget {
       enabled: enabled,
       mode: mode,
       popoverPadding: EdgeInsets.zero,
-      placeholder: placeholder ?? Text(localizations.placeholderTimePicker),
+      placeholder: Text(hintText ?? localizations.placeholderTimePicker),
       trailing: const Icon(shad.LucideIcons.clock),
       onChanged: onChanged,
       immediateValueChange: false,
@@ -62,7 +62,7 @@ class AppDateTimePicker extends StatelessWidget {
     this.onChanged,
     this.minuteStep = 5,
     this.mode = shad.PromptMode.popover,
-    this.placeholder,
+    this.hintText,
     this.enabled = true,
   }) : assert(minuteStep > 0 && minuteStep <= 59);
 
@@ -70,7 +70,7 @@ class AppDateTimePicker extends StatelessWidget {
   final ValueChanged<DateTime?>? onChanged;
   final int minuteStep;
   final shad.PromptMode mode;
-  final Widget? placeholder;
+  final String? hintText;
   final bool enabled;
 
   @override
@@ -82,7 +82,7 @@ class AppDateTimePicker extends StatelessWidget {
       mode: mode,
       immediateValueChange: false,
       popoverPadding: EdgeInsets.zero,
-      placeholder: placeholder ?? const Text('选择日期和时间'),
+      placeholder: Text(hintText ?? '选择日期和时间'),
       trailing: const Icon(shad.LucideIcons.calendarClock),
       builder: (context, value) => Text(_formatDateTime(value)),
       editorBuilder: (context, handler) =>

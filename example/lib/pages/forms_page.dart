@@ -491,13 +491,13 @@ class _FormsPageState extends State<FormsPage> {
                   const Gap(12),
                   AppPhoneInputFormField(
                     label: '电话号码',
-                    searchPlaceholder: const Text('搜索国家或地区'),
+                    searchHintText: '搜索国家或地区',
                   ),
                   const Gap(12),
                   AppChipInputFormField<String>(
                     label: '标签',
                     initialValue: const ['flutter', 'desktop'],
-                    placeholder: const Text('输入标签后按回车'),
+                    hintText: '输入标签后按回车',
                     maxItems: 5,
                   ),
                   const Gap(12),
@@ -561,7 +561,7 @@ class _FormsPageState extends State<FormsPage> {
                   const Gap(12),
                   AppItemPickerFormField<String>(
                     label: '工作区图标',
-                    placeholder: Text('选择图标'),
+                    hintText: '选择图标',
                     title: Text('工作区图标'),
                     options: [
                       AppOption(value: 'folder', label: '文件夹'),

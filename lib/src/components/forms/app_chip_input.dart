@@ -50,7 +50,7 @@ class AppChipInput<T> extends StatefulWidget {
     required this.onChanged,
     this.parseChip,
     this.labelBuilder,
-    this.placeholder,
+    this.hintText,
     this.enabled = true,
     this.allowDuplicates = false,
     this.maxItems,
@@ -62,7 +62,7 @@ class AppChipInput<T> extends StatefulWidget {
   final ValueChanged<List<T>>? onChanged;
   final AppChipParser<T>? parseChip;
   final AppChipLabelBuilder<T>? labelBuilder;
-  final Widget? placeholder;
+  final String? hintText;
   final bool enabled;
   final bool allowDuplicates;
   final int? maxItems;
@@ -149,7 +149,7 @@ class _AppChipInputState<T> extends State<AppChipInput<T>> {
               horizontal: metrics.horizontalPadding,
             ),
             textAlignVertical: TextAlignVertical.center,
-            placeholder: widget.placeholder,
+            placeholder: widget.hintText == null ? null : Text(widget.hintText!),
             chipBuilder: (context, chip) => Text(_label(chip)),
             onChipSubmitted: _parse,
             onChipsChanged: (chips) =>
@@ -171,7 +171,7 @@ class AppChipInputFormField<T> extends FormField<List<T>> {
     this.width,
     this.parseChip,
     this.labelBuilder,
-    this.placeholder,
+    this.hintText,
     this.allowDuplicates = false,
     this.maxItems,
     this.onChanged,
@@ -201,7 +201,7 @@ class AppChipInputFormField<T> extends FormField<List<T>> {
                  value: state.value ?? const [],
                  parseChip: field.parseChip,
                  labelBuilder: field.labelBuilder,
-                 placeholder: field.placeholder,
+                 hintText: field.hintText,
                  allowDuplicates: field.allowDuplicates,
                  maxItems: field.maxItems,
                  focusNode: field.focusNode,
@@ -224,7 +224,7 @@ class AppChipInputFormField<T> extends FormField<List<T>> {
   final double? width;
   final AppChipParser<T>? parseChip;
   final AppChipLabelBuilder<T>? labelBuilder;
-  final Widget? placeholder;
+  final String? hintText;
   final bool allowDuplicates;
   final int? maxItems;
   final ValueChanged<List<T>>? onChanged;

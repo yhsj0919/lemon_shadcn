@@ -212,7 +212,7 @@ class _AddDeviceDialogState extends State<_AddDeviceDialog> {
                     children: [
                       _CascadeSelect(
                         label: '省份',
-                        placeholder: '请选择',
+                        hintText: '请选择',
                         options: _provinceOptions,
                         value: _province,
                         errorText: _regionErrorFor(_province, '请选择省份'),
@@ -226,7 +226,7 @@ class _AddDeviceDialogState extends State<_AddDeviceDialog> {
                       ),
                       _CascadeSelect(
                         label: '城市',
-                        placeholder: '请先选择省份',
+                        hintText: '请先选择省份',
                         options: _cityOptions,
                         value: _city,
                         enabled: _province != null,
@@ -240,7 +240,7 @@ class _AddDeviceDialogState extends State<_AddDeviceDialog> {
                       ),
                       _CascadeSelect(
                         label: '区县',
-                        placeholder: '请先选择城市',
+                        hintText: '请先选择城市',
                         options: _districtOptions,
                         value: _district,
                         enabled: _city != null,
@@ -353,7 +353,7 @@ class _AddDeviceDialogState extends State<_AddDeviceDialog> {
                       AppSelectFormField<String>(
                         name: 'network',
                         label: '联网方式',
-                        placeholder: '请选择',
+                        hintText: '请选择',
                         options: _networkOptions,
                         initialValue: '流量卡',
                       ),
@@ -462,7 +462,7 @@ class _AddDeviceDialogState extends State<_AddDeviceDialog> {
 class _CascadeSelect extends StatelessWidget {
   const _CascadeSelect({
     required this.label,
-    required this.placeholder,
+    required this.hintText,
     required this.options,
     required this.value,
     required this.onChanged,
@@ -471,7 +471,7 @@ class _CascadeSelect extends StatelessWidget {
   });
 
   final String label;
-  final String placeholder;
+  final String hintText;
   final List<AppOption<String>> options;
   final String? value;
   final ValueChanged<String?> onChanged;
@@ -487,7 +487,7 @@ class _CascadeSelect extends StatelessWidget {
       child: AppSelect<String>(
         value: value,
         options: options,
-        placeholder: placeholder,
+        hintText: hintText,
         enabled: enabled,
         onChanged: onChanged,
       ),

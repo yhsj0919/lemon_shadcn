@@ -23,7 +23,7 @@ class AppSelect<V> extends StatefulWidget {
     required this.options,
     this.value,
     this.onChanged,
-    this.placeholder = 'Select an option',
+    this.hintText = 'Select an option',
     this.enabled = true,
     this.clearable = false,
     this.sourceKey,
@@ -38,7 +38,7 @@ class AppSelect<V> extends StatefulWidget {
     required AppOptionLoader<V> loadOptions,
     V? value,
     ValueChanged<V?>? onChanged,
-    String placeholder = 'Select an option',
+    String hintText = 'Select an option',
     bool enabled = true,
     bool clearable = false,
     Duration cacheDuration = const Duration(minutes: 5),
@@ -61,7 +61,7 @@ class AppSelect<V> extends StatefulWidget {
     value: value,
     onChanged: onChanged,
     enabled: enabled,
-    placeholder: placeholder,
+    hintText: hintText,
     clearable: clearable,
     optionConfig: optionConfig,
     initialOption: initialOption,
@@ -76,7 +76,7 @@ class AppSelect<V> extends StatefulWidget {
     required AppAsyncOptionSource<V> optionSource,
     V? value,
     ValueChanged<V?>? onChanged,
-    String placeholder = 'Select an option',
+    String hintText = 'Select an option',
     bool enabled = true,
     bool clearable = false,
     Object? sourceKey,
@@ -98,7 +98,7 @@ class AppSelect<V> extends StatefulWidget {
     value: value,
     onChanged: onChanged,
     enabled: enabled,
-    placeholder: placeholder,
+    hintText: hintText,
     clearable: clearable,
     optionConfig: optionConfig,
     initialOption: initialOption,
@@ -111,7 +111,7 @@ class AppSelect<V> extends StatefulWidget {
   final List<AppOption<V>> options;
   final V? value;
   final ValueChanged<V?>? onChanged;
-  final String placeholder;
+  final String hintText;
   final bool enabled;
   final bool clearable;
   final Object? sourceKey;
@@ -190,7 +190,7 @@ class _AppSelectState<V> extends State<AppSelect<V>> {
                   ).copyWith(maxHeight: 320),
             onChanged: widget.enabled ? widget.onChanged : null,
             placeholder: Text(
-              widget.placeholder,
+              widget.hintText,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ).muted(),
@@ -243,7 +243,7 @@ class AppSelectFormField<V> extends FormField<V> {
     this.label,
     this.name,
     this.description,
-    this.placeholder = 'Select an option',
+    this.hintText = 'Select an option',
     this.required = false,
     this.width,
     this.clearable = false,
@@ -274,7 +274,7 @@ class AppSelectFormField<V> extends FormField<V> {
     this.label,
     this.name,
     this.description,
-    this.placeholder = 'Select an option',
+    this.hintText = 'Select an option',
     this.required = false,
     this.width,
     this.clearable = false,
@@ -305,7 +305,7 @@ class AppSelectFormField<V> extends FormField<V> {
     this.label,
     this.name,
     this.description,
-    this.placeholder = 'Select an option',
+    this.hintText = 'Select an option',
     this.required = false,
     this.width,
     this.clearable = false,
@@ -339,7 +339,7 @@ class AppSelectFormField<V> extends FormField<V> {
   final String? label;
   final String? name;
   final String? description;
-  final String placeholder;
+  final String hintText;
   final bool required;
   final double? width;
   final bool clearable;
@@ -359,7 +359,7 @@ class AppSelectFormField<V> extends FormField<V> {
             options: field.options!,
             value: state.value,
             enabled: field.enabled,
-            placeholder: field.placeholder,
+            hintText: field.hintText,
             clearable: field.clearable,
             sourceKey: field.sourceKey,
             dependentValuePolicy: field.dependentValuePolicy,
@@ -379,7 +379,7 @@ class AppSelectFormField<V> extends FormField<V> {
             dependentValuePolicy: field.dependentValuePolicy,
             value: state.value,
             enabled: field.enabled,
-            placeholder: field.placeholder,
+            hintText: field.hintText,
             clearable: field.clearable,
             optionConfig: field.optionConfig,
             initialOption: field.initialOption,
@@ -420,7 +420,7 @@ class _AppAsyncSelect<V> extends AppSelect<V> {
     required super.value,
     required super.onChanged,
     required super.enabled,
-    required super.placeholder,
+    required super.hintText,
     required super.clearable,
     super.optionConfig = const AppOptionConfig(),
     super.initialOption,
@@ -561,7 +561,7 @@ class _AppAsyncSelectState<V> extends State<_AppAsyncSelect<V>> {
           value: widget.value,
           onChanged: widget.onChanged,
           enabled: widget.enabled,
-          placeholder: widget.placeholder,
+          hintText: widget.hintText,
           clearable: widget.clearable,
           optionConfig: widget.optionConfig,
           initialOption: widget.initialOption,
