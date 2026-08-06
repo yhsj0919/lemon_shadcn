@@ -59,30 +59,27 @@ class _NavigationPageState extends State<NavigationPage> {
               ),
             ),
             ComponentSection(
-              title: '标签列表与切换器',
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  AppTabList(
-                    index: _tab,
-                    onChanged: (value) => setState(() => _tab = value),
-                    children: tabs,
-                  ),
-                  const Gap(12),
-                  SizedBox(
-                    height: 72,
-                    child: AppSwitcher(
-                      index: _tab,
-                      direction: AxisDirection.left,
-                      onIndexChanged: (value) => setState(() => _tab = value),
-                      children: const [
-                        Center(child: Text('概览面板')),
-                        Center(child: Text('动态面板')),
-                        Center(child: Text('设置面板')),
-                      ],
-                    ),
-                  ),
-                ],
+              title: '标签列表',
+              child: AppTabList(
+                index: _tab,
+                onChanged: (value) => setState(() => _tab = value),
+                children: tabs,
+              ),
+            ),
+            ComponentSection(
+              title: '面板切换器',
+              child: SizedBox(
+                height: 72,
+                child: AppSwitcher(
+                  index: _tab,
+                  direction: AxisDirection.left,
+                  onIndexChanged: (value) => setState(() => _tab = value),
+                  children: const [
+                    Center(child: Text('概览面板')),
+                    Center(child: Text('动态面板')),
+                    Center(child: Text('设置面板')),
+                  ],
+                ),
               ),
             ),
             ComponentSection(

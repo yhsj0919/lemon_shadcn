@@ -9,19 +9,7 @@ void _noop() {}
 class DataDisplayPage extends StatelessWidget {
   const DataDisplayPage({
     super.key,
-    this.visibleSections = const {
-      '空状态与条目',
-      '详情描述',
-      '结果状态',
-      '进度',
-      '代码片段',
-      '日历',
-      '加载与位置状态',
-      '状态轨迹',
-      '溢出与可选文本',
-      '异步视图',
-      '聊天',
-    },
+    this.visibleSections,
     this.title = '数据展示',
     this.description = '用于身份、状态和值展示的紧凑组件。',
   });
@@ -38,28 +26,27 @@ class DataDisplayPage extends StatelessWidget {
       sections:
           <ComponentSection>[
             const ComponentSection(
-              title: '空状态与条目',
-              child: Column(
+              title: '空状态',
+              child: AppEmpty(
+                icon: Icon(LucideIcons.inbox),
+                title: Text('暂无数据'),
+                description: Text('创建第一条记录后会显示在这里。'),
+              ),
+            ),
+            const ComponentSection(
+              title: '列表条目',
+              child: AppItemGroup(
                 children: [
-                  AppEmpty(
-                    icon: Icon(LucideIcons.inbox),
-                    title: Text('暂无数据'),
-                    description: Text('创建第一条记录后会显示在这里。'),
+                  AppItem(
+                    leading: Icon(LucideIcons.file),
+                    title: Text('项目说明.pdf'),
+                    description: Text('240 KB'),
+                    trailing: Icon(LucideIcons.chevronRight),
                   ),
-                  AppItemGroup(
-                    children: [
-                      AppItem(
-                        leading: Icon(LucideIcons.file),
-                        title: Text('项目说明.pdf'),
-                        description: Text('240 KB'),
-                        trailing: Icon(LucideIcons.chevronRight),
-                      ),
-                      AppItem(
-                        leading: Icon(LucideIcons.settings),
-                        title: Text('项目设置'),
-                        trailing: Icon(LucideIcons.chevronRight),
-                      ),
-                    ],
+                  AppItem(
+                    leading: Icon(LucideIcons.settings),
+                    title: Text('项目设置'),
+                    trailing: Icon(LucideIcons.chevronRight),
                   ),
                 ],
               ),
@@ -186,14 +173,14 @@ class DataDisplayPage extends StatelessWidget {
               child: const _ResultStatusShowcase(),
             ),
             ComponentSection(
-              title: '头像与徽章',
-              child: Wrap(
+              title: '头像',
+              child: const Wrap(
                 spacing: 12,
                 runSpacing: 12,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  const AppAvatar.circle(initials: 'LS'),
-                  const AppAvatarGroup(
+                  AppAvatar.circle(initials: 'LS'),
+                  AppAvatarGroup(
                     alignment: Alignment(-0.85, 0),
                     gap: 2,
                     children: [
@@ -202,6 +189,16 @@ class DataDisplayPage extends StatelessWidget {
                       AppAvatar.circle(initials: 'C'),
                     ],
                   ),
+                ],
+              ),
+            ),
+            ComponentSection(
+              title: '徽章',
+              child: Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
                   AppBadge.primary(child: const Text('主要')),
                   AppBadge.secondary(
                     onPressed: _noop,
@@ -263,13 +260,13 @@ class DataDisplayPage extends StatelessWidget {
               ),
             ),
             ComponentSection(
-              title: '进度',
-              child: Column(
+              title: '进度条',
+              child: const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const AppProgress(progress: 0.64),
-                  const Gap(12),
-                  const Row(
+                  AppProgress(progress: 0.64),
+                  Gap(12),
+                  Row(
                     children: [
                       SizedBox.square(
                         dimension: 24,
@@ -279,12 +276,14 @@ class DataDisplayPage extends StatelessWidget {
                       Expanded(child: AppLinearProgressIndicator(value: .64)),
                     ],
                   ),
-                  const Gap(12),
-                  AppNumberTicker(
-                    number: 1280,
-                    formatter: (value) => '${value.round()}',
-                  ),
                 ],
+              ),
+            ),
+            ComponentSection(
+              title: '数字滚动',
+              child: AppNumberTicker(
+                number: 1280,
+                formatter: (value) => '${value.round()}',
               ),
             ),
             const ComponentSection(
@@ -312,26 +311,25 @@ class DataDisplayPage extends StatelessWidget {
               ),
             ),
             const ComponentSection(
-              title: '加载与位置状态',
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  AppSkeleton(
-                    child: Row(
-                      children: [
-                        AppAvatar.circle(initials: 'LS'),
-                        Gap(8),
-                        Text('正在加载资料'),
-                      ],
-                    ),
-                  ),
-                  Gap(16),
-                  AppDotIndicator(index: 1, length: 4),
-                  Gap(16),
-                  AppKeyboardDisplay(
-                    keys: [LogicalKeyboardKey.control, LogicalKeyboardKey.keyK],
-                  ),
-                ],
+              title: '骨架屏',
+              child: AppSkeleton(
+                child: Row(
+                  children: [
+                    AppAvatar.circle(initials: 'LS'),
+                    Gap(8),
+                    Text('正在加载资料'),
+                  ],
+                ),
+              ),
+            ),
+            const ComponentSection(
+              title: '圆点指示器',
+              child: AppDotIndicator(index: 1, length: 4),
+            ),
+            const ComponentSection(
+              title: '键盘按键',
+              child: AppKeyboardDisplay(
+                keys: [LogicalKeyboardKey.control, LogicalKeyboardKey.keyK],
               ),
             ),
             const ComponentSection(
@@ -351,22 +349,22 @@ class DataDisplayPage extends StatelessWidget {
               ),
             ),
             const ComponentSection(
-              title: '溢出与可选文本',
+              title: '溢出滚动',
               child: SizedBox(
                 width: 300,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    AppOverflowMarquee(child: Text('长内容仅在超出可用宽度时滚动。')),
-                    Gap(12),
-                    AppSelectableText('这段内容可以选择并复制。'),
-                    Gap(12),
-                    SizedBox(
-                      height: 56,
-                      child: AppScrollbarView(child: Text('可滚动内容\n第二行\n第三行')),
-                    ),
-                  ],
-                ),
+                child: AppOverflowMarquee(child: Text('长内容仅在超出可用宽度时滚动。')),
+              ),
+            ),
+            const ComponentSection(
+              title: '可选文本',
+              child: AppSelectableText('这段内容可以选择并复制。'),
+            ),
+            const ComponentSection(
+              title: '滚动条视图',
+              child: SizedBox(
+                height: 56,
+                width: 300,
+                child: AppScrollbarView(child: Text('可滚动内容\n第二行\n第三行')),
               ),
             ),
             ComponentSection(

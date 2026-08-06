@@ -4,7 +4,16 @@ import 'package:lemon_shadcn/shadcn.dart';
 import 'actions_page.dart';
 
 class StructuredLayoutPage extends StatefulWidget {
-  const StructuredLayoutPage({super.key});
+  const StructuredLayoutPage({
+    super.key,
+    this.visibleSections,
+    this.title = '结构化布局',
+    this.description = '可调整尺寸、顺序、层级和表格布局。',
+  });
+
+  final Set<String>? visibleSections;
+  final String title;
+  final String description;
 
   @override
   State<StructuredLayoutPage> createState() => _StructuredLayoutPageState();
@@ -42,8 +51,8 @@ class _StructuredLayoutPageState extends State<StructuredLayoutPage> {
   @override
   Widget build(BuildContext context) {
     return ComponentPage(
-      title: '结构化布局',
-      description: '可调整尺寸、顺序、层级和表格布局。',
+      title: widget.title,
+      description: widget.description,
       sections: [
         ComponentSection(
           title: '轮播',
@@ -246,7 +255,9 @@ AppExpandableOverlay.cover(
             ),
           ),
         ),
-      ],
+      ].where((section) {
+        return widget.visibleSections?.contains(section.title) ?? true;
+      }).toList(),
     );
   }
 }

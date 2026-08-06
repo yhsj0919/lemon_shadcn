@@ -58,60 +58,72 @@ AppButton.primary(action: action, child: const Text('保存'));''',
   onChanged: (value) => setState(() => selected = value),
   child: const Text('固定工具栏'),
 );''',
-    '表单布局与输入组': '''AppFieldScope.horizontal(
+    '布局与装饰': '''AppFieldScope.horizontal(
   labelWidth: 80,
   child: const AppTextFormField(label: '名称'),
 );''',
-    '文本输入': '''AppTextFormField(
+    '邮箱与密码': '''AppTextFormField(
   label: '邮箱',
   hintText: 'name@example.com',
   validator: AppValidators.required(),
 );''',
-    '选择框': '''AppSelectFormField<String>(
+    '异步校验表单': '''AppTextFormField(
+  label: '用户名',
+  asyncValidator: (value) => repository.validateName(value),
+);''',
+    '图片选择': '''AppFilePickerFormField(
+  label: '头像',
+  allowedExtensions: const ['png', 'jpg'],
+);''',
+    '文件选择与上传': '''AppFilePickerFormField(
+  label: '附件',
+  allowedExtensions: const ['png', 'jpg'],
+  multiple: true,
+);''',
+    '静态选项': '''AppSelectFormField<String>(
   label: '静态角色',
   options: const [AppOption(value: 'admin', label: '管理员')],
-);
-
-AppSelectFormField<String>.async(
+);''',
+    '异步加载': '''AppSelectFormField<String>.async(
   label: '异步角色',
   loadOptions: repository.loadRoles,
   sourceKey: tenantId,
 );''',
-    '布尔与单选控件': '''AppCheckboxFormField(controlLabel: const Text('接受条款'));
-AppSwitchFormField(controlLabel: const Text('启用通知'));''',
-    '异步自动完成': '''AppAutoCompleteFormField<String>.source(
+    '选项源检索': '''AppAutoCompleteFormField<String>.source(
   label: '负责人',
   optionSource: roleSource,
 );''',
-    '组合框': '''AppComboboxFormField<User>.async(
+    '分页检索': '''AppAutoCompleteFormField<String>.paginated(
+  label: '负责人',
+  loadPage: repository.loadUsersPage,
+);''',
+    '静态检索': '''AppComboboxFormField<String>(
+  label: '标签',
+  options: const [AppOption(value: 'a', label: 'A')],
+);''',
+    '异步标签': '''AppComboboxFormField<User>.async(
   label: '负责人',
   searchOptions: repository.searchUsers,
-  optionConfig: AppOptionConfig(
-    equals: (a, b) => a.id == b.id,
-    optionBuilder: (context, option, state) => UserListItem(option.value),
-  ),
   displayMode: AppComboboxDisplayMode.token,
 );''',
-    '省市县联动': '''AppRegionPickerFormField<String>(
+    '静态省市县': '''AppRegionPickerFormField<String>(
   label: '省市县',
   options: regionTree,
-);
-
-AppRegionPickerFormField<String>.async(
+);''',
+    '动态省市': '''AppRegionPickerFormField<String>.async(
   label: '省市',
   variant: AppRegionPickerVariant.provinceCity,
   loadOptions: (level, selectedPath) => repository.loadRegions(
     level: level,
     parents: selectedPath,
   ),
-);
-
-AppRegionPickerFormField<String>(
+);''',
+    '静态市县': '''AppRegionPickerFormField<String>(
   label: '市县',
   variant: AppRegionPickerVariant.cityCounty,
   options: cityTree,
 );''',
-    '穿梭框': '''AppTransferFormField<String>(
+    '权限分配': '''AppTransferFormField<String>(
   label: '角色权限',
   options: const [
     AppOption(value: 'member', label: '管理成员'),
@@ -120,33 +132,44 @@ AppRegionPickerFormField<String>(
   initialValue: const ['report'],
   onChanged: (value) {},
 );''',
-    '文件选择': '''AppFilePickerFormField(
-  label: '附件',
-  allowedExtensions: const ['png', 'jpg'],
-  multiple: true,
+    '复选框': '''AppCheckboxFormField(controlLabel: const Text('接受条款'));''',
+    '开关': '''AppSwitchFormField(controlLabel: const Text('启用通知'));''',
+    '单选组': '''AppRadioGroupFormField<String>(
+  label: '角色',
+  options: const [AppOption(value: 'admin', label: '管理员')],
 );''',
-    '专用输入': '''AppInputOtpFormField(label: '验证码', length: 6);
-AppPhoneInputFormField(label: '电话号码');
-AppNumberInputFormField(label: '数量');''',
-    '托管异步校验': '''AppTextFormField(
-  label: '用户名',
-  asyncValidator: (value) => repository.validateName(value),
+    '滑块': '''AppSliderFormField(label: '音量', min: 0, max: 100);''',
+    '多行文本': '''AppTextAreaFormField(label: '备注');''',
+    '验证码': '''AppInputOtpFormField(label: '验证码', length: 6);''',
+    '电话号码': '''AppPhoneInputFormField(label: '电话号码');''',
+    '标签输入': '''AppChipInputFormField(label: '标签');''',
+    '星级评分': '''AppStarRatingFormField(label: '评分');''',
+    '数字输入': '''AppNumberInputFormField(label: '数量');''',
+    '日期': '''AppDatePickerFormField(label: '日期');''',
+    '日期范围': '''AppDateRangePickerFormField(label: '日期范围');''',
+    '日期时间': '''AppDateTimePickerFormField(label: '日期时间');''',
+    '时间': '''AppTimeStepperPickerFormField(label: '时间');''',
+    '格式化输入': '''AppFormattedInputFormField(label: '参考编号');''',
+    '颜色选择': '''AppColorInputFormField(label: '强调色');''',
+    '多选方案': '''AppMultipleChoiceFormField<String>(
+  label: '方案',
+  options: choices,
 );''',
-    '格式化与可视化选择': '''AppColorInputFormField(label: '强调色');
-AppFormattedInputFormField(label: '参考编号');''',
-    '排序与对象输入': '''AppSortableInputFormField<String>(
+    '条目选择': '''AppItemPickerFormField<String>(
+  label: '条目',
+  options: items,
+);''',
+    '拖动排序': '''AppSortableInputFormField<String>(
   label: '章节顺序',
   initialValue: const ['概览', '动态', '设置'],
   itemBuilder: (context, index, item) => Text(item),
 );''',
-    '日期与时间': '''AppDatePickerFormField(label: '日期');
-AppTimeStepperPickerFormField(label: '时间');
-AppDateTimePickerFormField(label: '日期时间');''',
-    '空状态与条目': '''AppEmpty(
+    '对象输入': '''AppObjectInputFormField(label: '对象');''',
+    '空状态': '''AppEmpty(
   icon: const Icon(AppLucideIcons.inbox),
   title: const Text('暂无数据'),
-);
-AppItem(title: const Text('项目说明.pdf'));''',
+);''',
+    '列表条目': '''AppItem(title: const Text('项目说明.pdf'));''',
     '详情描述': '''AppDescriptions(
       title: const Text('项目资料'),
       bordered: true,
@@ -221,13 +244,16 @@ AppDescriptions(
   rowKey: (user) => user.id,
   loader: (query) => repository.loadMoreUsers(query),
 );''',
-    '头像与徽章': '''AppBadge.success(size: AppBadgeSize.large, child: const Text('大'));
+    '头像': '''AppAvatar.circle(initials: 'LS');
+AppAvatarGroup(children: avatars);''',
+    '徽章': '''AppBadge.success(size: AppBadgeSize.large, child: const Text('大'));
 AppBadge.success(
   padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
   child: const Text('自定义内边距'),
 );''',
-    '进度': '''const AppProgress(progress: 0.64);
+    '进度条': '''const AppProgress(progress: 0.64);
 const AppLinearProgressIndicator(value: 0.64);''',
+    '数字滚动': '''AppNumberTicker(number: 1280);''',
     '代码片段': '''const AppCodeSnippet(
   code: Text('final theme = AppThemeConfig.standard();'),
 );''',
@@ -236,13 +262,17 @@ const AppLinearProgressIndicator(value: 0.64);''',
   selectionMode: CalendarSelectionMode.single,
 );''',
     '芯片': '''const AppChip(child: Text('Flutter'));''',
-    '加载与位置状态': '''const AppSkeleton(child: Text('正在加载资料'));
-const AppDotIndicator(index: 1, length: 4);''',
+    '骨架屏': '''const AppSkeleton(child: Text('正在加载资料'));''',
+    '圆点指示器': '''const AppDotIndicator(index: 1, length: 4);''',
+    '键盘按键': '''const AppKeyboardDisplay(
+  keys: [LogicalKeyboardKey.control, LogicalKeyboardKey.keyK],
+);''',
     '状态轨迹': '''const AppTracker(data: [
   AppTrackerData(level: TrackerLevel.fine, tooltip: Text('正常')),
 ]);''',
-    '溢出与可选文本': '''const AppOverflowMarquee(child: Text('较长的滚动内容'));
-const AppSelectableText('这段内容可以复制');''',
+    '溢出滚动': '''const AppOverflowMarquee(child: Text('较长的滚动内容'));''',
+    '可选文本': '''const AppSelectableText('这段内容可以复制');''',
+    '滚动条视图': '''const AppScrollbarView(child: Text('可滚动内容'));''',
     '异步视图': '''AppAsyncView<List<String>>(
   load: repository.load,
   builder: (context, items) => Text('\${items.length} 项'),
@@ -267,10 +297,13 @@ const AppSelectableText('这段内容可以复制');''',
     content: const Text('详细内容'),
   ),
 ]);''',
-    '折叠与分隔线': '''const AppCollapsible(children: [
+    '折叠面板': '''const AppCollapsible(children: [
   AppCollapsibleTrigger(child: Text('高级详情')),
   AppCollapsibleContent(child: Text('隐藏内容')),
 ]);''',
+    '分隔线': '''AppDivider.horizontal();
+AppDivider.text('OR');
+AppDivider.vertical(width: 32);''',
     '步骤': '''const AppSteps.horizontal(children: [
   Text('配置主题'), Text('添加组件'), Text('检查示例'),
 ]);''',
@@ -283,9 +316,13 @@ const AppSelectableText('这段内容可以复制');''',
     '导航菜单': '''AppNavigationMenu(children: [
   AppNavigationMenuItem(onPressed: onPressed, child: const Text('概览')),
 ]);''',
-    '下拉与上下文菜单': '''AppDropdownButton(
+    '下拉菜单': '''AppDropdownButton(
   items: items,
   child: const Text('更多操作'),
+);''',
+    '上下文菜单': '''AppContextMenu(
+  items: items,
+  child: const Text('右键打开菜单'),
 );''',
     '命令面板': '''AppCommand(
   builder: (context, query) async* {
@@ -302,10 +339,14 @@ const AppSelectableText('这段内容可以复制');''',
   onChanged: onTabChanged,
   children: const [AppTabItem(child: Text('概览'))],
 );''',
-    '标签列表与切换器': '''AppTabList(
+    '标签列表': '''AppTabList(
   index: index,
   onChanged: onChanged,
   children: const [AppTabItem(child: Text('列表'))],
+);''',
+    '面板切换器': '''AppSwitcher(
+  index: index,
+  children: const [Text('面板 A'), Text('面板 B')],
 );''',
     '导航栏': '''AppNavigationBar(
   selectedKey: selectedKey,
@@ -318,15 +359,58 @@ const AppSelectableText('这段内容可以复制');''',
     ),
   ],
 );''',
-    '模态浮层':
-        '''showAppSheet(context: context, builder: (context) => content);''',
-    '气泡与悬浮': '''AppHoverCard(
+    '对话框': '''AppDialog.show(
+  context: context,
+  builder: (context) => AppAlertDialog(
+    title: const Text('确认操作'),
+    content: const Text('内容'),
+  ),
+);''',
+    '表单对话框': '''AppDialog.show(
+  context: context,
+  builder: (context) => AppFormDialog(
+    title: const Text('编辑'),
+    content: const AppTextFormField(label: '名称'),
+  ),
+);''',
+    '抽屉': '''AppDrawer.show(
+  context: context,
+  builder: (context) => content,
+);''',
+    '面板': '''AppSheet.show(
+  context: context,
+  builder: (context) => content,
+);''',
+    '气泡弹层': '''AppPopover.show(
+  context: context,
+  builder: (context) => const AppCard(child: Text('气泡内容')),
+);''',
+    '悬浮卡片': '''AppHoverCard(
   child: const Text('悬浮卡片'),
   hoverBuilder: (context) => const Text('详细内容'),
 );''',
+    '工具提示': '''AppTooltip(
+  tooltip: (context) => const Text('辅助说明'),
+  child: const Icon(AppLucideIcons.circleHelp),
+);''',
+    '通用锚点浮层': '''AppAnchoredOverlay(
+  placement: AppAnchoredOverlayPlacement.auto,
+  triggers: {AppAnchoredOverlayTrigger.manual},
+  anchorBuilder: (_, actions) => AppButton.outline(
+    onPressed: actions.toggle,
+    child: const Text('锚点'),
+  ),
+  overlayBuilder: (_, actions) => DetailPanel(onClose: actions.close),
+);''',
     '轻提示': '''AppToast.show(context: context, title: '已保存');''',
-    '刷新与滑动触发器':
+    '下拉刷新':
         '''AppRefreshTrigger(onRefresh: repository.refresh, child: list);''',
+    '滑动触发器': '''AppSwiper(
+  position: OverlayPosition.left,
+  handler: SwiperHandler.drawer,
+  builder: (context) => drawer,
+  child: content,
+);''',
     '表格': '''const AppTable(rows: [
   AppTableHeader(cells: [AppTableCell(child: Text('组件'))]),
   AppTableRow(cells: [AppTableCell(child: Text('AppForm'))]),
@@ -348,6 +432,11 @@ const AppSelectableText('这段内容可以复制');''',
   itemBuilder: (context, index) => Text('面板 ${index + 1}'),
 );''',
     '树形结构': '''AppTree<String>(nodes: nodes, onSelected: onSelected);''',
+    '异步树与懒加载': '''AppTree<String>.async(
+  loadChildren: repository.loadChildren,
+  onSelected: onSelected,
+);''',
+    '网格 Item 原地悬浮展开': '''AppExpandableGrid(items: items);''',
     '标题层级': '''AppText.h1('页面标题');
 AppText.h2('区块标题');''',
     '内容角色': '''AppText.body('正文内容');

@@ -256,7 +256,7 @@ class _FormsPageState extends State<FormsPage> {
       sections:
           <ComponentSection>[
             ComponentSection(
-              title: '表单布局与输入组',
+              title: '布局与装饰',
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -279,327 +279,23 @@ class _FormsPageState extends State<FormsPage> {
               ),
             ),
             ComponentSection(
-              title: '文件选择',
+              title: '邮箱与密码',
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  AppImageInputFormField(
-                    label: '单文件图片',
-                    description: '仅选择一张图片，也可以直接拖入替换。',
-                    variant: AppFilePickerVariant.simple,
-                    multiple: false,
-                    maxFileSize: 10 * 1024 * 1024,
-                    trailingBuilder: (context, file, index) =>
-                        _buildUploadProgress(file, compact: true),
-                    onChanged: (files) =>
-                        _updateUploadFiles(files, single: true),
-                  ),
-                  const Gap(16),
-                  AppField(
-                    label: '模拟异步上传',
-                    description: '选择文件后通过 Future 模拟上传，并在右侧显示实时进度。',
-                    child: AppFilePicker(
-                      files: _files,
-                      allowedExtensions: const ['pdf', 'png', 'jpg', 'jpeg'],
-                      maxFileSize: 10 * 1024 * 1024,
-                      maxFiles: 5,
-                      dialogTitle: '选择文件',
-                      trailingBuilder: (context, file, index) =>
-                          _buildUploadProgress(file),
-                      onChanged: (files) =>
-                          _updateUploadFiles(files, single: false),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            ComponentSection(
-              title: '文本输入',
-              child: AppTextFormField.email(
-                label: '邮箱',
-                description: '用户开始输入后执行校验。',
-                required: true,
-                hintText: 'name@example.com',
-              ),
-            ),
-            ComponentSection(
-              title: '选择框',
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const AppSelectFormField<String>(
-                    label: '静态角色',
-                    options: FormsPage._roles,
+                  AppTextFormField.email(
+                    label: '邮箱',
+                    description: '用户开始输入后执行校验。',
                     required: true,
+                    hintText: 'name@example.com',
                   ),
                   const Gap(12),
-                  AppSelectFormField<String>.async(
-                    label: '异步角色',
-                    loadOptions: FormsPage._loadRoles,
-                    clearable: true,
-                  ),
+                  AppTextFormField.password(label: '密码'),
                 ],
               ),
             ),
             ComponentSection(
-              title: '异步自动完成',
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  AppAutoCompleteFormField<String>.source(
-                    label: '负责人',
-                    optionSource: FormsPage._roleSource,
-                  ),
-                  const Gap(12),
-                  AppAutoCompleteFormField<String>.paged(
-                    label: '分页选择负责人',
-                    pagedOptionSource: FormsPage._pagedRoleSource,
-                  ),
-                ],
-              ),
-            ),
-            ComponentSection(
-              title: '组合框',
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  AppComboboxFormField<_Assignee>(
-                    label: '静态对象检索',
-                    options: FormsPage._assignees,
-                    optionConfig: FormsPage._assigneeConfig,
-                    clearable: true,
-                  ),
-                  const Gap(12),
-                  AppComboboxFormField<_Assignee>.async(
-                    label: '异步标签检索',
-                    displayMode: AppComboboxDisplayMode.token,
-                    optionConfig: FormsPage._assigneeConfig,
-                    clearable: true,
-                    searchOptions: (query) async {
-                      await Future<void>.delayed(
-                        const Duration(milliseconds: 350),
-                      );
-                      final normalized = query.trim().toLowerCase();
-                      return FormsPage._assignees
-                          .where(
-                            (option) => FormsPage._assigneeConfig
-                                .searchableText(option)
-                                .toLowerCase()
-                                .contains(normalized),
-                          )
-                          .toList();
-                    },
-                  ),
-                ],
-              ),
-            ),
-            ComponentSection(
-              title: '省市县联动',
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  AppRegionPickerFormField<String>(
-                    label: '静态省市县',
-                    options: FormsPage._regions,
-                  ),
-                  const Gap(16),
-                  AppRegionPickerFormField<String>.async(
-                    label: '动态省市',
-                    variant: AppRegionPickerVariant.provinceCity,
-                    loadOptions: FormsPage._loadRegions,
-                  ),
-                  const Gap(16),
-                  AppRegionPickerFormField<String>(
-                    label: '静态市县',
-                    variant: AppRegionPickerVariant.cityCounty,
-                    options: [
-                      AppCascadeOption(
-                        value: '杭州市',
-                        label: '杭州市',
-                        children: [
-                          AppCascadeOption(value: '西湖区', label: '西湖区'),
-                          AppCascadeOption(value: '滨江区', label: '滨江区'),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            ComponentSection(
-              title: '穿梭框',
-              child: AppTransferFormField<String>(
-                label: '角色权限',
-                description: '选择条目后通过中间按钮在两侧移动。窄屏会自动切换为纵向布局。',
-                options: const [
-                  AppOption(value: 'dashboard', label: '查看仪表盘'),
-                  AppOption(value: 'member', label: '管理成员'),
-                  AppOption(value: 'report', label: '导出报表'),
-                  AppOption(value: 'settings', label: '修改设置'),
-                  AppOption(value: 'audit', label: '查看审计日志'),
-                ],
-                initialValue: _assignedPermissions,
-                height: 260,
-                onChanged: (value) =>
-                    setState(() => _assignedPermissions = value),
-              ),
-            ),
-            ComponentSection(
-              title: '布尔与单选控件',
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  AppCheckboxFormField(
-                    controlLabel: const Text('接受条款'),
-                    validator: (value) => value == true ? null : '此项必填。',
-                  ),
-                  const Gap(8),
-                  AppSwitchFormField(controlLabel: const Text('启用通知')),
-                  const Gap(8),
-                  AppRadioGroupFormField<String>(
-                    label: '密度',
-                    direction: Axis.horizontal,
-                    options: const [
-                      AppOption(value: 'compact', label: '紧凑'),
-                      AppOption(value: 'standard', label: '标准'),
-                      AppOption(value: 'comfortable', label: '宽松'),
-                    ],
-                  ),
-                  const Gap(8),
-                  AppSliderFormField(
-                    label: '音量',
-                    initialValue: const SliderValue.single(0.6),
-                    valueIndicatorBuilder: (context, value) =>
-                        SliderValueIndicator(value: value),
-                  ),
-                ],
-              ),
-            ),
-            ComponentSection(
-              title: '专用输入',
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  AppTextAreaFormField(label: '备注', hintText: '补充请求背景'),
-                  const Gap(12),
-                  AppInputOtpFormField(
-                    label: '验证码',
-                    length: 6,
-                    separatorEvery: 3,
-                    validator: AppValidators.exactLength(6),
-                  ),
-                  const Gap(12),
-                  AppPhoneInputFormField(
-                    label: '电话号码',
-                    searchHintText: '搜索国家或地区',
-                  ),
-                  const Gap(12),
-                  AppChipInputFormField<String>(
-                    label: '标签',
-                    initialValue: const ['flutter', 'desktop'],
-                    hintText: '输入标签后按回车',
-                    maxItems: 5,
-                  ),
-                  const Gap(12),
-                  AppStarRatingFormField(label: '体验评分', initialValue: 4),
-                  const Gap(12),
-                  AppNumberInputFormField(
-                    label: '数量',
-                    initialValue: 10,
-                    min: 0,
-                    max: 100,
-                  ),
-                ],
-              ),
-            ),
-            ComponentSection(
-              title: '日期与时间',
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  AppDatePickerFormField(label: '开始日期'),
-                  const Gap(12),
-                  AppDateRangePickerFormField(label: '日期范围'),
-                  const Gap(12),
-                  AppDateTimePickerFormField(label: '日期时间'),
-                  const Gap(12),
-                  AppTimePickerFormField(label: '开始时间', use24HourFormat: true),
-                ],
-              ),
-            ),
-            ComponentSection(
-              title: '格式化与可视化选择',
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  AppFormattedInputFormField(
-                    label: '参考编号',
-                    initialValue: AppFormattedValue([
-                      AppFormattedParts.fixed('APP-'),
-                      AppFormattedParts.editable('', length: 4),
-                      AppFormattedParts.fixed('-'),
-                      AppFormattedParts.editable('', length: 2),
-                    ]),
-                  ),
-                  const Gap(12),
-                  AppColorInputFormField(
-                    label: '强调色',
-                    initialValue: AppColorDerivative.fromColor(
-                      const Color(0xff4f46e5),
-                    ),
-                  ),
-                  const Gap(12),
-                  AppMultipleChoiceFormField<String>(
-                    label: '方案',
-                    initialValue: 'team',
-                    options: [
-                      AppOption(value: 'personal', label: '个人版'),
-                      AppOption(value: 'team', label: '团队版'),
-                      AppOption(value: 'business', label: '企业版'),
-                    ],
-                  ),
-                  const Gap(12),
-                  AppItemPickerFormField<String>(
-                    label: '工作区图标',
-                    hintText: '选择图标',
-                    title: Text('工作区图标'),
-                    options: [
-                      AppOption(value: 'folder', label: '文件夹'),
-                      AppOption(value: 'star', label: '星标'),
-                      AppOption(value: 'archive', label: '归档'),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            ComponentSection(
-              title: '排序与对象输入',
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  AppSortableInputFormField<String>(
-                    label: '章节顺序',
-                    initialValue: const ['概览', '动态', '设置'],
-                    itemBuilder: (context, index, item) => AppCard(
-                      padding: const EdgeInsets.all(12),
-                      child: Text('${index + 1}. $item'),
-                    ),
-                  ),
-                  const Gap(12),
-                  AppObjectInputFormField<String>(
-                    label: '短代码',
-                    initialValue: 'APP',
-                    converter: AppObjectConverter(
-                      (value) => [value],
-                      (parts) => parts.first,
-                    ),
-                    parts: const [AppEditablePart(length: 3, width: 56)],
-                  ),
-                ],
-              ),
-            ),
-            ComponentSection(
-              title: '托管异步校验',
+              title: '异步校验表单',
               child: AppForm(
                 controller: _formController,
                 child: Column(
@@ -643,6 +339,311 @@ class _FormsPageState extends State<FormsPage> {
                     ),
                   ],
                 ),
+              ),
+            ),
+            ComponentSection(
+              title: '图片选择',
+              child: AppImageInputFormField(
+                label: '单文件图片',
+                description: '仅选择一张图片，也可以直接拖入替换。',
+                variant: AppFilePickerVariant.simple,
+                multiple: false,
+                maxFileSize: 10 * 1024 * 1024,
+                trailingBuilder: (context, file, index) =>
+                    _buildUploadProgress(file, compact: true),
+                onChanged: (files) => _updateUploadFiles(files, single: true),
+              ),
+            ),
+            ComponentSection(
+              title: '文件选择与上传',
+              child: AppField(
+                label: '模拟异步上传',
+                description: '选择文件后通过 Future 模拟上传，并在右侧显示实时进度。',
+                child: AppFilePicker(
+                  files: _files,
+                  allowedExtensions: const ['pdf', 'png', 'jpg', 'jpeg'],
+                  maxFileSize: 10 * 1024 * 1024,
+                  maxFiles: 5,
+                  dialogTitle: '选择文件',
+                  trailingBuilder: (context, file, index) =>
+                      _buildUploadProgress(file),
+                  onChanged: (files) =>
+                      _updateUploadFiles(files, single: false),
+                ),
+              ),
+            ),
+            ComponentSection(
+              title: '静态选项',
+              child: const AppSelectFormField<String>(
+                label: '静态角色',
+                options: FormsPage._roles,
+                required: true,
+              ),
+            ),
+            ComponentSection(
+              title: '异步加载',
+              child: AppSelectFormField<String>.async(
+                label: '异步角色',
+                loadOptions: FormsPage._loadRoles,
+                clearable: true,
+              ),
+            ),
+            ComponentSection(
+              title: '选项源检索',
+              child: AppAutoCompleteFormField<String>.source(
+                label: '负责人',
+                optionSource: FormsPage._roleSource,
+              ),
+            ),
+            ComponentSection(
+              title: '分页检索',
+              child: AppAutoCompleteFormField<String>.paged(
+                label: '分页选择负责人',
+                pagedOptionSource: FormsPage._pagedRoleSource,
+              ),
+            ),
+            ComponentSection(
+              title: '静态检索',
+              child: AppComboboxFormField<_Assignee>(
+                label: '静态对象检索',
+                options: FormsPage._assignees,
+                optionConfig: FormsPage._assigneeConfig,
+                clearable: true,
+              ),
+            ),
+            ComponentSection(
+              title: '异步标签',
+              child: AppComboboxFormField<_Assignee>.async(
+                label: '异步标签检索',
+                displayMode: AppComboboxDisplayMode.token,
+                optionConfig: FormsPage._assigneeConfig,
+                clearable: true,
+                searchOptions: (query) async {
+                  await Future<void>.delayed(
+                    const Duration(milliseconds: 350),
+                  );
+                  final normalized = query.trim().toLowerCase();
+                  return FormsPage._assignees
+                      .where(
+                        (option) => FormsPage._assigneeConfig
+                            .searchableText(option)
+                            .toLowerCase()
+                            .contains(normalized),
+                      )
+                      .toList();
+                },
+              ),
+            ),
+            ComponentSection(
+              title: '静态省市县',
+              child: AppRegionPickerFormField<String>(
+                label: '静态省市县',
+                options: FormsPage._regions,
+              ),
+            ),
+            ComponentSection(
+              title: '动态省市',
+              child: AppRegionPickerFormField<String>.async(
+                label: '动态省市',
+                variant: AppRegionPickerVariant.provinceCity,
+                loadOptions: FormsPage._loadRegions,
+              ),
+            ),
+            ComponentSection(
+              title: '静态市县',
+              child: AppRegionPickerFormField<String>(
+                label: '静态市县',
+                variant: AppRegionPickerVariant.cityCounty,
+                options: [
+                  AppCascadeOption(
+                    value: '杭州市',
+                    label: '杭州市',
+                    children: [
+                      AppCascadeOption(value: '西湖区', label: '西湖区'),
+                      AppCascadeOption(value: '滨江区', label: '滨江区'),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            ComponentSection(
+              title: '权限分配',
+              child: AppTransferFormField<String>(
+                label: '角色权限',
+                description: '选择条目后通过中间按钮在两侧移动。窄屏会自动切换为纵向布局。',
+                options: const [
+                  AppOption(value: 'dashboard', label: '查看仪表盘'),
+                  AppOption(value: 'member', label: '管理成员'),
+                  AppOption(value: 'report', label: '导出报表'),
+                  AppOption(value: 'settings', label: '修改设置'),
+                  AppOption(value: 'audit', label: '查看审计日志'),
+                ],
+                initialValue: _assignedPermissions,
+                height: 260,
+                onChanged: (value) =>
+                    setState(() => _assignedPermissions = value),
+              ),
+            ),
+            ComponentSection(
+              title: '复选框',
+              child: AppCheckboxFormField(
+                controlLabel: const Text('接受条款'),
+                validator: (value) => value == true ? null : '此项必填。',
+              ),
+            ),
+            ComponentSection(
+              title: '开关',
+              child: AppSwitchFormField(controlLabel: const Text('启用通知')),
+            ),
+            ComponentSection(
+              title: '单选组',
+              child: AppRadioGroupFormField<String>(
+                label: '密度',
+                direction: Axis.horizontal,
+                options: const [
+                  AppOption(value: 'compact', label: '紧凑'),
+                  AppOption(value: 'standard', label: '标准'),
+                  AppOption(value: 'comfortable', label: '宽松'),
+                ],
+              ),
+            ),
+            ComponentSection(
+              title: '滑块',
+              child: AppSliderFormField(
+                label: '音量',
+                initialValue: const SliderValue.single(0.6),
+                valueIndicatorBuilder: (context, value) =>
+                    SliderValueIndicator(value: value),
+              ),
+            ),
+            ComponentSection(
+              title: '多行文本',
+              child: AppTextAreaFormField(label: '备注', hintText: '补充请求背景'),
+            ),
+            ComponentSection(
+              title: '验证码',
+              child: AppInputOtpFormField(
+                label: '验证码',
+                length: 6,
+                separatorEvery: 3,
+                validator: AppValidators.exactLength(6),
+              ),
+            ),
+            ComponentSection(
+              title: '电话号码',
+              child: AppPhoneInputFormField(
+                label: '电话号码',
+                searchHintText: '搜索国家或地区',
+              ),
+            ),
+            ComponentSection(
+              title: '标签输入',
+              child: AppChipInputFormField<String>(
+                label: '标签',
+                initialValue: const ['flutter', 'desktop'],
+                hintText: '输入标签后按回车',
+                maxItems: 5,
+              ),
+            ),
+            ComponentSection(
+              title: '星级评分',
+              child: AppStarRatingFormField(label: '体验评分', initialValue: 4),
+            ),
+            ComponentSection(
+              title: '数字输入',
+              child: AppNumberInputFormField(
+                label: '数量',
+                initialValue: 10,
+                min: 0,
+                max: 100,
+              ),
+            ),
+            ComponentSection(
+              title: '日期',
+              child: AppDatePickerFormField(label: '开始日期'),
+            ),
+            ComponentSection(
+              title: '日期范围',
+              child: AppDateRangePickerFormField(label: '日期范围'),
+            ),
+            ComponentSection(
+              title: '日期时间',
+              child: AppDateTimePickerFormField(label: '日期时间'),
+            ),
+            ComponentSection(
+              title: '时间',
+              child: AppTimePickerFormField(
+                label: '开始时间',
+                use24HourFormat: true,
+              ),
+            ),
+            ComponentSection(
+              title: '格式化输入',
+              child: AppFormattedInputFormField(
+                label: '参考编号',
+                initialValue: AppFormattedValue([
+                  AppFormattedParts.fixed('APP-'),
+                  AppFormattedParts.editable('', length: 4),
+                  AppFormattedParts.fixed('-'),
+                  AppFormattedParts.editable('', length: 2),
+                ]),
+              ),
+            ),
+            ComponentSection(
+              title: '颜色选择',
+              child: AppColorInputFormField(
+                label: '强调色',
+                initialValue: AppColorDerivative.fromColor(
+                  const Color(0xff4f46e5),
+                ),
+              ),
+            ),
+            ComponentSection(
+              title: '多选方案',
+              child: AppMultipleChoiceFormField<String>(
+                label: '方案',
+                initialValue: 'team',
+                options: [
+                  AppOption(value: 'personal', label: '个人版'),
+                  AppOption(value: 'team', label: '团队版'),
+                  AppOption(value: 'business', label: '企业版'),
+                ],
+              ),
+            ),
+            ComponentSection(
+              title: '条目选择',
+              child: AppItemPickerFormField<String>(
+                label: '工作区图标',
+                hintText: '选择图标',
+                title: Text('工作区图标'),
+                options: [
+                  AppOption(value: 'folder', label: '文件夹'),
+                  AppOption(value: 'star', label: '星标'),
+                  AppOption(value: 'archive', label: '归档'),
+                ],
+              ),
+            ),
+            ComponentSection(
+              title: '拖动排序',
+              child: AppSortableInputFormField<String>(
+                label: '章节顺序',
+                initialValue: const ['概览', '动态', '设置'],
+                itemBuilder: (context, index, item) => AppCard(
+                  padding: const EdgeInsets.all(12),
+                  child: Text('${index + 1}. $item'),
+                ),
+              ),
+            ),
+            ComponentSection(
+              title: '对象输入',
+              child: AppObjectInputFormField<String>(
+                label: '短代码',
+                initialValue: 'APP',
+                converter: AppObjectConverter(
+                  (value) => [value],
+                  (parts) => parts.first,
+                ),
+                parts: const [AppEditablePart(length: 3, width: 56)],
               ),
             ),
           ].where((section) {
