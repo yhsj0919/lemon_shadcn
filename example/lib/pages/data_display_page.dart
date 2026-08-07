@@ -270,6 +270,55 @@ class DataDisplayPage extends StatelessWidget {
               ),
             ),
             ComponentSection(
+              title: '角标',
+              child: Wrap(
+                spacing: 28,
+                runSpacing: 28,
+                children: [
+                  AppCornerBadge.count(
+                    count: 42,
+                    child: AppAvatar.square(
+                      icon: Icon(AppLucideIcons.folder),
+                      color: Color(0xff0891b2),
+                      size: 52,
+                    ),
+                  ),
+                  AppCornerBadge.count(
+                    count: 18,
+                    position: AppCornerBadgePosition.topLeft,
+                    color: Color(0xff7c3aed),
+                    child: AppAvatar.square(
+                      icon: Icon(AppLucideIcons.keyRound),
+                      color: Color(0xff7c3aed),
+                      size: 52,
+                    ),
+                  ),
+                  AppCornerBadge.dot(
+                    position: AppCornerBadgePosition.bottomLeft,
+                    color: Color(0xff22c55e),
+                    child: AppAvatar.circle(
+                      icon: Icon(AppLucideIcons.user),
+                      color: Color(0xff3b82f6),
+                      size: 52,
+                    ),
+                  ),
+                  AppCornerBadge(
+                    position: AppCornerBadgePosition.bottomRight,
+                    // offset: Offset(2, 2),
+                    badge: AppBadge.warning(
+                      size: AppBadgeSize.small,
+                      child: Text('新'),
+                    ),
+                    child: AppAvatar.square(
+                      icon: Icon(AppLucideIcons.bell),
+                      color: Color(0xffd97706),
+                      size: 52,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            ComponentSection(
               title: '徽章',
               child: Wrap(
                 spacing: 12,

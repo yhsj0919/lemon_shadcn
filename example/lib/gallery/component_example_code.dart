@@ -306,6 +306,19 @@ const AppAvatarGroup(children: [
   AppAvatar.square(name: '李雷', initialsCount: 1),
   AppAvatar.circle(name: '赵敏', initialsCount: 1),
 ]);''',
+    '角标': '''AppCornerBadge.count(
+  count: 42,
+  position: AppCornerBadgePosition.topRight,
+  child: const AppAvatar.square(
+    icon: Icon(AppLucideIcons.folder),
+    color: Color(0xff0891b2),
+  ),
+);
+
+AppCornerBadge.dot(
+  position: AppCornerBadgePosition.bottomLeft,
+  child: yourWidget,
+);''',
     '徽章': '''AppBadge.success(size: AppBadgeSize.large, child: const Text('大'));
 AppBadge.success(
   padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),

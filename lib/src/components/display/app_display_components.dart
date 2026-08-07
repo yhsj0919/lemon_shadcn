@@ -9,6 +9,7 @@ import '../../foundation/app_compact_label_style.dart';
 import '../../foundation/app_interactive_style.dart';
 
 export 'app_avatar.dart';
+export 'app_corner_badge.dart';
 
 typedef AppAvatarBadge = shad.AvatarBadge;
 typedef AppAvatarGroup = shad.AvatarGroup;

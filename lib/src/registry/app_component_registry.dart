@@ -389,6 +389,13 @@ abstract final class AppComponentRegistry {
       status: AppComponentStatus.implemented,
     ),
     AppComponentRegistration(
+      appName: 'AppCornerBadge',
+      upstreamName: 'Badge overlay',
+      category: AppComponentCategory.dataDisplay,
+      adapter: AppComponentAdapter.wrapper,
+      status: AppComponentStatus.implemented,
+    ),
+    AppComponentRegistration(
       appName: 'AppCodeSnippet',
       upstreamName: 'CodeSnippet',
       category: AppComponentCategory.dataDisplay,

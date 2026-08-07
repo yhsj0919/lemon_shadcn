@@ -21,6 +21,7 @@ export 'src/components/charts/app_radar_chart.dart';
 export 'src/components/charts/app_scatter_chart.dart';
 export 'src/components/data/app_data_grid.dart';
 export 'src/components/display/app_badge.dart';
+export 'src/components/display/app_corner_badge.dart';
 export 'src/components/display/app_avatar.dart';
 export 'src/components/display/app_divider.dart';
 export 'src/components/display/app_text.dart';

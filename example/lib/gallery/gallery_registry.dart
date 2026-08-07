@@ -404,6 +404,17 @@ abstract final class GalleryRegistry {
       ),
     ),
     GalleryEntry(
+      id: 'app-corner-badge',
+      label: 'AppCornerBadge',
+      subtitle: '数字、圆点与自定义角标覆盖',
+      group: '展示',
+      builder: (_) => const DataDisplayPage(
+        title: 'AppCornerBadge',
+        description: '支持四角定位、偏移和自定义内容的角标。',
+        visibleSections: {'角标'},
+      ),
+    ),
+    GalleryEntry(
       id: 'app-chip',
       label: 'AppChip',
       subtitle: '芯片标签',
