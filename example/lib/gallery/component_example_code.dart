@@ -297,6 +297,10 @@ const AppAvatar.square(
   name: '世茂',
   appearance: AppAvatarAppearance.soft,
 );
+const AppAvatar.square(
+  icon: Icon(AppLucideIcons.building2),
+  color: Color(0xffd97706),
+);
 const AppAvatarGroup(children: [
   AppAvatar.circle(name: '王芳', initialsCount: 1),
   AppAvatar.square(name: '李雷', initialsCount: 1),

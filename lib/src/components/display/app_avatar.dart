@@ -10,10 +10,15 @@ enum AppAvatarAppearance { solid, soft }
 
 /// An avatar with explicit circular and square shape variants.
 class AppAvatar extends StatelessWidget implements shad.AvatarWidget {
+  static const double _softLightOpacity = 0.24;
+  static const double _softDarkOpacity = 0.20;
+
   const AppAvatar.circle({
     super.key,
     this.initials,
     this.name,
+    this.icon,
+    this.iconSize,
     this.initialsCount = 1,
     this.appearance = AppAvatarAppearance.solid,
     this.color,
@@ -25,7 +30,7 @@ class AppAvatar extends StatelessWidget implements shad.AvatarWidget {
     this.badgeAlignment,
     this.badgeGap,
     this.provider,
-  }) : assert(initials != null || name != null),
+  }) : assert(initials != null || name != null || icon != null),
        assert(initialsCount > 0),
        shape = AppAvatarShape.circle,
        borderRadius = 999;
@@ -34,6 +39,8 @@ class AppAvatar extends StatelessWidget implements shad.AvatarWidget {
     super.key,
     this.initials,
     this.name,
+    this.icon,
+    this.iconSize,
     this.initialsCount = 1,
     this.appearance = AppAvatarAppearance.solid,
     this.color,
@@ -46,7 +53,7 @@ class AppAvatar extends StatelessWidget implements shad.AvatarWidget {
     this.badgeAlignment,
     this.badgeGap,
     this.provider,
-  }) : assert(initials != null || name != null),
+  }) : assert(initials != null || name != null || icon != null),
        assert(initialsCount > 0),
        shape = AppAvatarShape.square;
 
@@ -72,6 +79,8 @@ class AppAvatar extends StatelessWidget implements shad.AvatarWidget {
   final String? initials;
   final String? name;
   final int initialsCount;
+  final Widget? icon;
+  final double? iconSize;
   final Color? color;
   final Color? backgroundColor;
   final Color? foregroundColor;
@@ -98,17 +107,17 @@ class AppAvatar extends StatelessWidget implements shad.AvatarWidget {
         avatarTheme?.borderRadius ??
         theme.radius * resolvedSize;
     final accent = color ?? theme.colorScheme.primary;
-    final soft = appearance == AppAvatarAppearance.soft;
+    final soft = appearance == AppAvatarAppearance.soft || icon != null;
     final resolvedBackground =
         backgroundColor ??
         (soft
-            ? AppSoftColor.background(theme, accent)
+            ? _softBackground(theme, accent)
             : avatarTheme?.backgroundColor ?? theme.colorScheme.muted);
     final resolvedForeground =
         foregroundColor ??
         textStyle?.color ??
         (soft
-            ? accent
+            ? _softForeground(theme, accent)
             : avatarTheme?.textStyle?.color ??
                   _contrastingForeground(resolvedBackground));
     final resolvedTextStyle =
@@ -118,7 +127,21 @@ class AppAvatar extends StatelessWidget implements shad.AvatarWidget {
             .merge(textStyle)
             .copyWith(color: resolvedForeground);
     final resolvedInitials =
-        initials ?? getInitials(name!, count: initialsCount);
+        initials ??
+        (name == null ? '' : getInitials(name!, count: initialsCount));
+    final fallback = icon == null
+        ? _initials(
+            value: resolvedInitials,
+            background: resolvedBackground,
+            textStyle: resolvedTextStyle,
+            size: resolvedSize,
+          )
+        : _icon(
+            icon: icon!,
+            background: resolvedBackground,
+            foreground: resolvedForeground,
+            iconSize: iconSize ?? resolvedSize * 0.48,
+          );
 
     final surface = _AppAvatarSurface(
       size: resolvedSize,
@@ -126,21 +149,11 @@ class AppAvatar extends StatelessWidget implements shad.AvatarWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(resolvedBorderRadius),
         child: provider == null
-            ? _initials(
-                value: resolvedInitials,
-                background: resolvedBackground,
-                textStyle: resolvedTextStyle,
-                size: resolvedSize,
-              )
+            ? fallback
             : Image(
                 image: provider!,
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => _initials(
-                  value: resolvedInitials,
-                  background: resolvedBackground,
-                  textStyle: resolvedTextStyle,
-                  size: resolvedSize,
-                ),
+                errorBuilder: (context, error, stackTrace) => fallback,
               ),
       ),
     );
@@ -183,10 +196,52 @@ class AppAvatar extends StatelessWidget implements shad.AvatarWidget {
     );
   }
 
+  Widget _icon({
+    required Widget icon,
+    required Color background,
+    required Color foreground,
+    required double iconSize,
+  }) {
+    return ColoredBox(
+      color: background,
+      child: Center(
+        child: IconTheme(
+          data: IconThemeData(color: foreground, size: iconSize),
+          child: icon,
+        ),
+      ),
+    );
+  }
+
   static Color _contrastingForeground(Color background) {
     return background.computeLuminance() > 0.179
         ? const Color(0xff000000)
         : const Color(0xffffffff);
+  }
+
+  static Color _softForeground(shad.ThemeData theme, Color accent) {
+    if (theme.brightness == Brightness.dark) return accent;
+    final hsl = HSLColor.fromColor(accent);
+    return hsl.withLightness((hsl.lightness * 0.82).clamp(0.0, 1.0)).toColor();
+  }
+
+  static Color _softBackground(shad.ThemeData theme, Color accent) {
+    final background = AppSoftColor.background(
+      theme,
+      accent,
+      lightOpacity: _softLightOpacity,
+      darkOpacity: _softDarkOpacity,
+    );
+    if (theme.brightness == Brightness.dark) return background;
+    final hsl = HSLColor.fromColor(background);
+    final clarified = hsl
+        .withSaturation((hsl.saturation * 1.2).clamp(0.0, 1.0))
+        .withLightness((hsl.lightness + 0.025).clamp(0.0, 1.0));
+    final hue = clarified.hue;
+    return (hue >= 20 && hue <= 50
+            ? clarified.withHue((hue + 10).clamp(0.0, 360.0))
+            : clarified)
+        .toColor();
   }
 }
 

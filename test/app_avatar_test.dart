@@ -148,13 +148,74 @@ void main() {
         matching: find.byType(ColoredBox),
       ),
     );
-    expect(text.style?.color, accent);
+    final expectedForeground = HSLColor.fromColor(
+      accent,
+    ).withLightness(HSLColor.fromColor(accent).lightness * 0.82).toColor();
+    expect(text.style?.color, expectedForeground);
+    final blendedBackground = Color.alphaBlend(
+      accent.withValues(alpha: 0.24),
+      config.lightTheme.colorScheme.background,
+    );
+    final backgroundHsl = HSLColor.fromColor(blendedBackground);
+    final clarified = backgroundHsl
+        .withSaturation((backgroundHsl.saturation * 1.2).clamp(0.0, 1.0))
+        .withLightness((backgroundHsl.lightness + 0.025).clamp(0.0, 1.0));
     expect(
       background.color,
-      Color.alphaBlend(
-        accent.withValues(alpha: 0.14),
-        config.lightTheme.colorScheme.background,
+      (clarified.hue >= 20 && clarified.hue <= 50
+              ? clarified.withHue(clarified.hue + 10)
+              : clarified)
+          .toColor(),
+    );
+  });
+
+  testWidgets('icon avatar uses the shared soft color treatment', (
+    tester,
+  ) async {
+    const accent = Color(0xffd97706);
+    final config = AppThemeConfig.standard();
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(config: config),
+        home: const Center(
+          child: AppAvatar.square(
+            icon: Icon(Icons.business),
+            color: accent,
+            size: 48,
+          ),
+        ),
       ),
+    );
+
+    final iconFinder = find.byIcon(Icons.business);
+    final icon = tester.widget<Icon>(iconFinder);
+    final iconTheme = IconTheme.of(tester.element(iconFinder));
+    final background = tester.widget<ColoredBox>(
+      find.descendant(
+        of: find.byType(AppAvatar),
+        matching: find.byType(ColoredBox),
+      ),
+    );
+    expect(icon.color, isNull);
+    final expectedForeground = HSLColor.fromColor(
+      accent,
+    ).withLightness(HSLColor.fromColor(accent).lightness * 0.82).toColor();
+    expect(iconTheme.color, expectedForeground);
+    expect(iconTheme.size, 48 * 0.48);
+    final blendedBackground = Color.alphaBlend(
+      accent.withValues(alpha: 0.24),
+      config.lightTheme.colorScheme.background,
+    );
+    final backgroundHsl = HSLColor.fromColor(blendedBackground);
+    final clarified = backgroundHsl
+        .withSaturation((backgroundHsl.saturation * 1.2).clamp(0.0, 1.0))
+        .withLightness((backgroundHsl.lightness + 0.025).clamp(0.0, 1.0));
+    expect(
+      background.color,
+      (clarified.hue >= 20 && clarified.hue <= 50
+              ? clarified.withHue(clarified.hue + 10)
+              : clarified)
+          .toColor(),
     );
   });
 

@@ -224,6 +224,31 @@ class DataDisplayPage extends StatelessWidget {
                         color: Color(0xffd97706),
                         size: 48,
                       ),
+                      AppAvatar.square(
+                        icon: Icon(AppLucideIcons.building2),
+                        color: Color(0xffd97706),
+                        size: 48,
+                      ),
+                      AppAvatar.square(
+                        icon: Icon(AppLucideIcons.heart),
+                        color: Color(0xffef4444),
+                        size: 48,
+                      ),
+                      AppAvatar.square(
+                        icon: Icon(AppLucideIcons.leaf),
+                        color: Color(0xff22c55e),
+                        size: 48,
+                      ),
+                      AppAvatar.square(
+                        icon: Icon(AppLucideIcons.droplet),
+                        color: Color(0xff3b82f6),
+                        size: 48,
+                      ),
+                      AppAvatar.square(
+                        icon: Icon(AppLucideIcons.sparkles),
+                        color: Color(0xff8b5cf6),
+                        size: 48,
+                      ),
                       AppAvatar.circle(
                         initials: '陈',
                         size: 48,
