@@ -25,6 +25,7 @@ class AppCard extends StatelessWidget {
     this.duration,
     this.shadowLevel,
     this.shadowQuality,
+    this.shadow = true,
     this.color,
     this.lightTintOpacity = 0.06,
     this.darkTintOpacity = 0.10,
@@ -46,6 +47,7 @@ class AppCard extends StatelessWidget {
     this.duration,
     this.shadowLevel = AppShadowLevel.card,
     this.shadowQuality,
+    this.shadow = true,
     this.color,
     this.lightTintOpacity = 0.06,
     this.darkTintOpacity = 0.10,
@@ -70,6 +72,7 @@ class AppCard extends StatelessWidget {
     this.duration,
     this.shadowLevel = AppShadowLevel.card,
     this.shadowQuality,
+    this.shadow = true,
     this.lightTintOpacity = 0.06,
     this.darkTintOpacity = 0.10,
   });
@@ -91,6 +94,9 @@ class AppCard extends StatelessWidget {
   final Duration? duration;
   final AppShadowLevel? shadowLevel;
   final AppShadowQuality? shadowQuality;
+
+  /// Quickly disables inherited, explicit, and theme-resolved shadows.
+  final bool shadow;
   final Color? color;
 
   /// Card backgrounds are intentionally lighter than avatar/badge soft fills.
@@ -116,20 +122,23 @@ class AppCard extends StatelessWidget {
                 lightOpacity: lightTintOpacity,
                 darkOpacity: darkTintOpacity,
               ));
-    final resolvedShadows =
-        boxShadow ??
-        (level == null
-            ? null
-            : AppTheme.of(context).shadows.resolve(
-                context,
-                level: level,
-                quality: shadowQuality,
-                colorMode: tintColor == null ? null : AppShadowColorMode.custom,
-                color: tintColor,
-                // Saturated shadows need slightly more opacity than neutral
-                // surface shadows to remain visible beside the soft tint.
-                intensity: tintColor == null ? 1 : 1.5,
-              ));
+    final resolvedShadows = !shadow
+        ? const <BoxShadow>[]
+        : boxShadow ??
+              (level == null
+                  ? null
+                  : AppTheme.of(context).shadows.resolve(
+                      context,
+                      level: level,
+                      quality: shadowQuality,
+                      colorMode: tintColor == null
+                          ? null
+                          : AppShadowColorMode.custom,
+                      color: tintColor,
+                      // Saturated shadows need slightly more opacity than neutral
+                      // surface shadows to remain visible beside the soft tint.
+                      intensity: tintColor == null ? 1 : 1.5,
+                    ));
     return shad.Card(
       padding: padding,
       filled: filled ?? (tintColor == null ? null : true),

@@ -104,6 +104,7 @@ void main() {
   ) async {
     const normalKey = Key('normal-card');
     const reducedKey = Key('reduced-card');
+    const disabledKey = Key('disabled-card');
     await tester.pumpWidget(
       _host(
         const Column(
@@ -112,6 +113,11 @@ void main() {
             AppPageTransitionScope(
               phase: AppPageTransitionPhase.entering,
               child: AppCard.elevated(key: reducedKey, child: Text('Reduced')),
+            ),
+            AppCard.elevated(
+              key: disabledKey,
+              shadow: false,
+              child: Text('Disabled'),
             ),
           ],
         ),
@@ -127,6 +133,7 @@ void main() {
 
     expect(innerCard(normalKey).boxShadow, hasLength(1));
     expect(innerCard(reducedKey).boxShadow, hasLength(1));
+    expect(innerCard(disabledKey).boxShadow, isEmpty);
   });
 
   testWidgets('soft card derives fill, border, and shadow from one color', (

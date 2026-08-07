@@ -320,6 +320,10 @@ const AppLinearProgressIndicator(value: 0.64);''',
 const AppCard.soft(
   color: Color(0xffd97706),
   child: Text('颜色驱动卡片'),
+);
+const AppCard.elevated(
+  shadow: false,
+  child: Text('快捷关闭阴影'),
 );''',
     '提示变体': '''AppAlert.warning(
   title: const Text('订阅即将到期'),

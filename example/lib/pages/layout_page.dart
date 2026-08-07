@@ -45,6 +45,7 @@ class LayoutPage extends StatelessWidget {
                     ),
                   ),
                   AppCard.elevated(child: Text('单层主题阴影')),
+                  AppCard.elevated(shadow: false, child: Text('快捷关闭阴影')),
                   AppCard.soft(color: Color(0xffd97706), child: Text('颜色驱动卡片')),
                   AppCard.soft(color: Color(0xff2563eb), child: Text('蓝色减淡卡片')),
                 ],
