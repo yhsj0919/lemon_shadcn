@@ -344,6 +344,14 @@ class DataDisplayPage extends StatelessWidget {
                     leading: const Icon(AppLucideIcons.triangleAlert, size: 12),
                     child: const Text('警告'),
                   ),
+                  AppBadge.warning(
+                    shape: AppBadgeShape.square,
+                    child: const Text('方形'),
+                  ),
+                  AppBadge.info(
+                    borderRadius: BorderRadius.circular(3),
+                    child: const Text('自定义圆角'),
+                  ),
                   AppBadge.destructive(
                     appearance: AppBadgeStyle.soft,
                     leading: const Icon(AppLucideIcons.circleAlert, size: 12),

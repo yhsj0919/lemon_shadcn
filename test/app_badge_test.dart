@@ -43,6 +43,14 @@ void main() {
               child: const Text('SuccessBold'),
             ),
             AppBadge.warning(child: const Text('Warning')),
+            AppBadge.warning(
+              shape: AppBadgeShape.square,
+              child: const Text('Square'),
+            ),
+            AppBadge.info(
+              borderRadius: BorderRadius.circular(2),
+              child: const Text('CustomRadius'),
+            ),
             AppBadge.destructive(
               appearance: AppBadgeStyle.soft,
               child: const Text('SoftDestructive'),
@@ -55,7 +63,7 @@ void main() {
     expect(find.byType(shad.PrimaryBadge), findsOneWidget);
     expect(find.byType(shad.OutlineBadge), findsOneWidget);
     expect(find.byType(shad.DestructiveBadge), findsOneWidget);
-    expect(find.byType(shad.SecondaryBadge), findsNWidgets(11));
+    expect(find.byType(shad.SecondaryBadge), findsNWidgets(13));
 
     for (final label in [
       'Primary',
@@ -71,6 +79,8 @@ void main() {
       'SuccessSolid',
       'SuccessBold',
       'Warning',
+      'Square',
+      'CustomRadius',
       'SoftDestructive',
     ]) {
       expect(find.text(label), findsOneWidget);
@@ -99,5 +109,19 @@ void main() {
     expect(AppBadgeSize.small.contentGap, 2);
     expect(AppBadgeSize.normal.contentGap, 4);
     expect(AppBadgeSize.large.contentGap, 6);
+    BoxDecoration decorationOf(String label) {
+      final text = find.text(label);
+      final badge = tester.widget<shad.SecondaryBadge>(
+        find.ancestor(of: text, matching: find.byType(shad.SecondaryBadge)),
+      );
+      return badge.style!.decoration(
+            tester.element(text),
+            const <WidgetState>{},
+          )
+          as BoxDecoration;
+    }
+
+    expect(decorationOf('Square').borderRadius, BorderRadius.circular(6));
+    expect(decorationOf('CustomRadius').borderRadius, BorderRadius.circular(2));
   });
 }

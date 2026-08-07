@@ -8,6 +8,9 @@ import 'app_semantic_style.dart';
 /// Visual treatment for semantic [AppBadge] variants.
 enum AppBadgeStyle { solid, soft, plain, outline }
 
+/// Badge outline shape. [pill] remains the default for compatibility.
+enum AppBadgeShape { pill, square }
+
 /// Preset badge sizes, similar to [AppButtonSize].
 @immutable
 class AppBadgeSize {
@@ -101,6 +104,8 @@ abstract final class AppBadge {
     shad.AbstractButtonStyle base, {
     required bool interactive,
     required AppBadgeSize size,
+    required AppBadgeShape shape,
+    BorderRadiusGeometry? borderRadius,
     EdgeInsetsGeometry? padding,
     FontWeight? fontWeight,
     bool zeroPadding = false,
@@ -110,7 +115,11 @@ abstract final class AppBadge {
     final compact = base.copyWith(
       decoration: (context, states, current) {
         if (current is BoxDecoration) {
-          return current.copyWith(borderRadius: BorderRadius.circular(999));
+          return current.copyWith(
+            borderRadius:
+                borderRadius ??
+                BorderRadius.circular(shape == AppBadgeShape.pill ? 999 : 6),
+          );
         }
         return current;
       },
@@ -130,6 +139,8 @@ abstract final class AppBadge {
     required AppBadgeStyle style,
     required bool interactive,
     required AppBadgeSize size,
+    required AppBadgeShape shape,
+    BorderRadiusGeometry? borderRadius,
     EdgeInsetsGeometry? padding,
     FontWeight? fontWeight,
   }) {
@@ -195,6 +206,8 @@ abstract final class AppBadge {
       ),
       interactive: interactive,
       size: size,
+      shape: shape,
+      borderRadius: borderRadius,
       padding: padding,
       fontWeight: fontWeight,
       zeroPadding: padding == null && style == AppBadgeStyle.plain,
@@ -226,6 +239,8 @@ abstract final class AppBadge {
     double? trailingGap,
     shad.AbstractButtonStyle? style,
     AppBadgeSize size = AppBadgeSize.normal,
+    AppBadgeShape shape = AppBadgeShape.pill,
+    BorderRadiusGeometry? borderRadius,
     EdgeInsetsGeometry? padding,
     FontWeight? fontWeight,
   }) => shad.PrimaryBadge(
@@ -235,6 +250,8 @@ abstract final class AppBadge {
       style ?? shad.ButtonVariance.primary,
       interactive: onPressed != null,
       size: size,
+      shape: shape,
+      borderRadius: borderRadius,
       padding: padding,
       fontWeight: fontWeight,
     ),
@@ -259,6 +276,8 @@ abstract final class AppBadge {
     shad.AbstractButtonStyle? style,
     AppBadgeStyle appearance = AppBadgeStyle.solid,
     AppBadgeSize size = AppBadgeSize.normal,
+    AppBadgeShape shape = AppBadgeShape.pill,
+    BorderRadiusGeometry? borderRadius,
     EdgeInsetsGeometry? padding,
     FontWeight? fontWeight,
   }) {
@@ -270,6 +289,8 @@ abstract final class AppBadge {
           style ?? shad.ButtonVariance.secondary,
           interactive: onPressed != null,
           size: size,
+          shape: shape,
+          borderRadius: borderRadius,
           padding: padding,
           fontWeight: fontWeight,
         ),
@@ -291,6 +312,8 @@ abstract final class AppBadge {
         style: appearance,
         interactive: onPressed != null,
         size: size,
+        shape: shape,
+        borderRadius: borderRadius,
         padding: padding,
         fontWeight: fontWeight,
       ),
@@ -315,6 +338,8 @@ abstract final class AppBadge {
     double? trailingGap,
     shad.AbstractButtonStyle? style,
     AppBadgeSize size = AppBadgeSize.normal,
+    AppBadgeShape shape = AppBadgeShape.pill,
+    BorderRadiusGeometry? borderRadius,
     EdgeInsetsGeometry? padding,
     FontWeight? fontWeight,
   }) => shad.OutlineBadge(
@@ -324,6 +349,8 @@ abstract final class AppBadge {
       style ?? shad.ButtonVariance.outline,
       interactive: onPressed != null,
       size: size,
+      shape: shape,
+      borderRadius: borderRadius,
       padding: padding,
       fontWeight: fontWeight,
     ),
@@ -348,6 +375,8 @@ abstract final class AppBadge {
     shad.AbstractButtonStyle? style,
     AppBadgeStyle appearance = AppBadgeStyle.solid,
     AppBadgeSize size = AppBadgeSize.normal,
+    AppBadgeShape shape = AppBadgeShape.pill,
+    BorderRadiusGeometry? borderRadius,
     EdgeInsetsGeometry? padding,
     FontWeight? fontWeight,
   }) {
@@ -359,6 +388,8 @@ abstract final class AppBadge {
           style ?? shad.ButtonVariance.destructive,
           interactive: onPressed != null,
           size: size,
+          shape: shape,
+          borderRadius: borderRadius,
           padding: padding,
           fontWeight: fontWeight,
         ),
@@ -380,6 +411,8 @@ abstract final class AppBadge {
         style: appearance,
         interactive: onPressed != null,
         size: size,
+        shape: shape,
+        borderRadius: borderRadius,
         padding: padding,
         fontWeight: fontWeight,
       ),
@@ -405,6 +438,8 @@ abstract final class AppBadge {
     double? trailingGap,
     AppBadgeStyle appearance = AppBadgeStyle.soft,
     AppBadgeSize size = AppBadgeSize.normal,
+    AppBadgeShape shape = AppBadgeShape.pill,
+    BorderRadiusGeometry? borderRadius,
     EdgeInsetsGeometry? padding,
     FontWeight? fontWeight,
   }) => shad.SecondaryBadge(
@@ -415,6 +450,8 @@ abstract final class AppBadge {
       style: appearance,
       interactive: onPressed != null,
       size: size,
+      shape: shape,
+      borderRadius: borderRadius,
       padding: padding,
       fontWeight: fontWeight,
     ),
@@ -439,6 +476,8 @@ abstract final class AppBadge {
     double? trailingGap,
     AppBadgeStyle appearance = AppBadgeStyle.soft,
     AppBadgeSize size = AppBadgeSize.normal,
+    AppBadgeShape shape = AppBadgeShape.pill,
+    BorderRadiusGeometry? borderRadius,
     EdgeInsetsGeometry? padding,
     FontWeight? fontWeight,
   }) => shad.SecondaryBadge(
@@ -449,6 +488,8 @@ abstract final class AppBadge {
       style: appearance,
       interactive: onPressed != null,
       size: size,
+      shape: shape,
+      borderRadius: borderRadius,
       padding: padding,
       fontWeight: fontWeight,
     ),
@@ -473,6 +514,8 @@ abstract final class AppBadge {
     double? trailingGap,
     AppBadgeStyle appearance = AppBadgeStyle.soft,
     AppBadgeSize size = AppBadgeSize.normal,
+    AppBadgeShape shape = AppBadgeShape.pill,
+    BorderRadiusGeometry? borderRadius,
     EdgeInsetsGeometry? padding,
     FontWeight? fontWeight,
   }) => shad.SecondaryBadge(
@@ -483,6 +526,8 @@ abstract final class AppBadge {
       style: appearance,
       interactive: onPressed != null,
       size: size,
+      shape: shape,
+      borderRadius: borderRadius,
       padding: padding,
       fontWeight: fontWeight,
     ),

@@ -320,6 +320,11 @@ AppCornerBadge.dot(
   child: yourWidget,
 );''',
     '徽章': '''AppBadge.success(size: AppBadgeSize.large, child: const Text('大'));
+AppBadge.warning(shape: AppBadgeShape.square, child: const Text('方形'));
+AppBadge.info(
+  borderRadius: BorderRadius.circular(3),
+  child: const Text('自定义圆角'),
+);
 AppBadge.success(
   padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
   child: const Text('自定义内边距'),
