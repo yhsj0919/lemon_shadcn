@@ -5,6 +5,7 @@ import '../actions/app_button.dart';
 import '../../foundation/app_control_box.dart';
 import '../../foundation/app_outline_style.dart';
 import '../../foundation/app_overlay_style.dart';
+import '../overlay/app_popup_switch_coordinator.dart';
 
 typedef AppSelectControlBuilder =
     Widget Function(
@@ -30,11 +31,27 @@ class AppSelectControlShell extends StatefulWidget {
 
 class _AppSelectControlShellState extends State<AppSelectControlShell> {
   final FocusNode _focusNode = FocusNode();
+  final GlobalKey _controlKey = GlobalKey();
+  late final AppPopupSwitchHandle _popupSwitch;
   bool _open = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _popupSwitch = AppPopupSwitchHandle(
+      anchorKey: _controlKey,
+      isOpen: () => _open,
+      open: _openControl,
+    );
+  }
 
   void _setOpen(bool value) {
     if (!mounted || _open == value) return;
     setState(() => _open = value);
+  }
+
+  void _handlePopupMounted() {
+    _setOpen(true);
   }
 
   void _handlePopupDisposed() {
@@ -42,8 +59,14 @@ class _AppSelectControlShellState extends State<AppSelectControlShell> {
     if (_focusNode.hasFocus) _focusNode.unfocus();
   }
 
+  void _openControl() {
+    if (!mounted || _open || !widget.enabled) return;
+    invokeFirstPopupButton(_controlKey);
+  }
+
   @override
   void dispose() {
+    _popupSwitch.dispose();
     _focusNode.dispose();
     super.dispose();
   }
@@ -76,7 +99,9 @@ class _AppSelectControlShellState extends State<AppSelectControlShell> {
       );
     }
 
-    Widget popup(Widget child) => _AppSelectPopupSurface(
+    Widget popup(Widget child) => AppPopupSwitchSurface(
+      handle: _popupSwitch,
+      onMounted: _handlePopupMounted,
       onDisposed: _handlePopupDisposed,
       child: shad.ComponentTheme(
         data: AppOverlayStyle.cardTheme(
@@ -93,33 +118,11 @@ class _AppSelectControlShellState extends State<AppSelectControlShell> {
         data: (ancestor ?? const shad.OutlineButtonTheme()).copyWith(
           decoration: () => decoration,
         ),
-        child: Listener(
-          onPointerDown: widget.enabled ? (_) => _setOpen(true) : null,
+        child: KeyedSubtree(
+          key: _controlKey,
           child: widget.builder(context, popup, _focusNode),
         ),
       ),
     );
   }
-}
-
-class _AppSelectPopupSurface extends StatefulWidget {
-  const _AppSelectPopupSurface({required this.child, required this.onDisposed});
-
-  final Widget child;
-  final VoidCallback onDisposed;
-
-  @override
-  State<_AppSelectPopupSurface> createState() => _AppSelectPopupSurfaceState();
-}
-
-class _AppSelectPopupSurfaceState extends State<_AppSelectPopupSurface> {
-  @override
-  void dispose() {
-    final onDisposed = widget.onDisposed;
-    WidgetsBinding.instance.addPostFrameCallback((_) => onDisposed());
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => widget.child;
 }

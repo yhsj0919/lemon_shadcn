@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
 import '../actions/app_button.dart';
+import '../overlay/app_popup_switch_coordinator.dart';
 import 'app_menu_components.dart';
 
 /// Button variants supported by [AppDropdownButton].
@@ -40,21 +41,45 @@ class AppDropdownButton extends StatefulWidget {
 
 class _AppDropdownButtonState extends State<AppDropdownButton> {
   final _buttonKey = GlobalKey();
+  late final AppPopupSwitchHandle _popupSwitch;
+  bool _open = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _popupSwitch = AppPopupSwitchHandle(
+      anchorKey: _buttonKey,
+      isOpen: () => _open,
+      open: _show,
+    );
+  }
+
+  void _show() {
+    if (!mounted || !widget.enabled || _open) return;
+    final buttonContext = _buttonKey.currentContext;
+    if (buttonContext == null) return;
+    shad.PopoverConfiguration<void>(
+      alignment: widget.alignment ?? Alignment.bottomLeft,
+      anchorAlignment: widget.anchorAlignment,
+      offset: widget.offset,
+      builder: (context) => AppPopupSwitchSurface(
+        handle: _popupSwitch,
+        onMounted: () => _open = true,
+        onDisposed: () => _open = false,
+        child: AppDropdownMenu(children: widget.items),
+      ),
+    ).show(buttonContext);
+  }
+
+  @override
+  void dispose() {
+    _popupSwitch.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    void open() {
-      final buttonContext = _buttonKey.currentContext;
-      if (buttonContext == null) return;
-      shad.PopoverConfiguration<void>(
-        alignment: widget.alignment ?? Alignment.bottomLeft,
-        anchorAlignment: widget.anchorAlignment,
-        offset: widget.offset,
-        builder: (context) => AppDropdownMenu(children: widget.items),
-      ).show(buttonContext);
-    }
-
-    final onPressed = widget.enabled ? open : null;
+    final onPressed = widget.enabled ? _show : null;
     final button = switch (widget.variant) {
       AppDropdownButtonVariant.primary => AppButton.primary(
         onPressed: onPressed,

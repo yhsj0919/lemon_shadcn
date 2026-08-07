@@ -88,10 +88,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 1));
     await tester.pump();
-    expect(
-      tester.getSize(find.byType(AppCommand)),
-      const Size(360, 280),
-    );
+    expect(tester.getSize(find.byType(AppCommand)), const Size(360, 280));
     expect(tester.takeException(), isNull);
   });
 
@@ -125,6 +122,49 @@ void main() {
     await tester.pumpAndSettle();
     expect(selected, isTrue);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('clicking another dropdown transfers the open menu', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: Scaffold(
+          body: Column(
+            children: [
+              AppDropdownButton(
+                items: [
+                  AppMenuButton(
+                    onPressed: (_) {},
+                    child: const Text('First item'),
+                  ),
+                ],
+                child: const Text('First dropdown'),
+              ),
+              AppDropdownButton(
+                items: [
+                  AppMenuButton(
+                    onPressed: (_) {},
+                    child: const Text('Second item'),
+                  ),
+                ],
+                child: const Text('Second dropdown'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('First dropdown'));
+    await tester.pumpAndSettle();
+    expect(find.text('First item'), findsOneWidget);
+
+    await tester.tap(find.text('Second dropdown'), warnIfMissed: false);
+    await tester.pumpAndSettle();
+    expect(find.text('First item'), findsNothing);
+    expect(find.text('Second item'), findsOneWidget);
   });
 }
 

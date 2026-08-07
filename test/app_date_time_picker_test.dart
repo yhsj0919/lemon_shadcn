@@ -144,4 +144,46 @@ void main() {
     );
     expect(outlines.any((outline) => outline.focused), isFalse);
   });
+
+  testWidgets('clicking another prompt control transfers the popup', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: Column(
+          children: [
+            AppDatePicker(
+              value: null,
+              onChanged: (_) {},
+              hintText: 'Switch date',
+            ),
+            AppTimePicker(
+              value: null,
+              onChanged: (_) {},
+              hintText: 'Switch time',
+              showSeconds: true,
+            ),
+          ],
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Switch date'));
+    await tester.pumpAndSettle();
+    expect(find.byType(shad.DatePickerDialog), findsOneWidget);
+
+    await tester.tap(find.text('Switch time'), warnIfMissed: false);
+    await tester.pumpAndSettle();
+    expect(find.byType(shad.DatePickerDialog), findsNothing);
+    expect(find.byType(shad.TimePickerDialog), findsOneWidget);
+
+    final dateOutlines = tester.widgetList<shad.FocusOutline>(
+      find.descendant(
+        of: find.byType(AppDatePicker),
+        matching: find.byType(shad.FocusOutline),
+      ),
+    );
+    expect(dateOutlines.any((outline) => outline.focused), isFalse);
+  });
 }

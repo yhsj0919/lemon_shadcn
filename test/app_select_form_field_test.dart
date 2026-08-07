@@ -148,6 +148,62 @@ void main() {
       isFalse,
     );
   });
+
+  testWidgets('clicking another select transfers the open popup and focus', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: const Column(
+          children: [
+            AppSelect<String>(
+              hintText: 'First select',
+              options: [AppOption(value: 'first', label: 'First option')],
+              onChanged: _ignoreSelection,
+            ),
+            AppSelect<String>(
+              hintText: 'Second select',
+              options: [AppOption(value: 'second', label: 'Second option')],
+              onChanged: _ignoreSelection,
+            ),
+            AppSelect<String>(
+              hintText: 'Third select',
+              options: [AppOption(value: 'third', label: 'Third option')],
+              onChanged: _ignoreSelection,
+            ),
+          ],
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('First select'));
+    await tester.pumpAndSettle();
+    expect(find.text('First option'), findsOneWidget);
+
+    await tester.tap(find.text('Second select'), warnIfMissed: false);
+    await tester.pumpAndSettle();
+    expect(find.text('First option'), findsNothing);
+    expect(find.text('Second option'), findsOneWidget);
+
+    await tester.tap(find.text('Third select'), warnIfMissed: false);
+    await tester.pumpAndSettle();
+    expect(find.text('Second option'), findsNothing);
+    expect(find.text('Third option'), findsOneWidget);
+
+    final selects = tester
+        .widgetList<shad.Select<String>>(find.byType(shad.Select<String>))
+        .toList();
+    expect(
+      selects.take(2).every((select) => !select.focusNode!.hasFocus),
+      isTrue,
+    );
+
+    await tester.tapAt(const Offset(790, 590));
+    await tester.pumpAndSettle();
+    expect(find.text('Third option'), findsNothing);
+    expect(selects.every((select) => !select.focusNode!.hasFocus), isTrue);
+  });
 }
 
 void _ignoreSelection(String? value) {}
