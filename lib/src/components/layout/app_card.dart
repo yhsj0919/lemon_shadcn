@@ -27,8 +27,8 @@ class AppCard extends StatelessWidget {
     this.shadowQuality,
     this.shadow = true,
     this.color,
-    this.lightTintOpacity = 0.04,
-    this.darkTintOpacity = 0.07,
+    this.lightTintOpacity = 0.02,
+    this.darkTintOpacity = 0.04,
   });
 
   const AppCard.elevated({
@@ -49,8 +49,8 @@ class AppCard extends StatelessWidget {
     this.shadowQuality,
     this.shadow = true,
     this.color,
-    this.lightTintOpacity = 0.04,
-    this.darkTintOpacity = 0.07,
+    this.lightTintOpacity = 0.02,
+    this.darkTintOpacity = 0.04,
   });
 
   /// Color-driven card with a subtle tinted background, matching border, and
@@ -73,8 +73,8 @@ class AppCard extends StatelessWidget {
     this.shadowLevel = AppShadowLevel.card,
     this.shadowQuality,
     this.shadow = true,
-    this.lightTintOpacity = 0.04,
-    this.darkTintOpacity = 0.07,
+    this.lightTintOpacity = 0.02,
+    this.darkTintOpacity = 0.04,
   });
 
   final Widget child;
@@ -135,9 +135,9 @@ class AppCard extends StatelessWidget {
                           ? null
                           : AppShadowColorMode.custom,
                       color: tintColor,
-                      // Saturated shadows need slightly more opacity than neutral
-                      // surface shadows to remain visible beside the soft tint.
-                      intensity: tintColor == null ? 1 : 1.5,
+                      // Keep colored elevation visible without letting its glow
+                      // visually deepen the deliberately subtle tinted surface.
+                      intensity: tintColor == null ? 1 : 0.8,
                     ));
     return shad.Card(
       padding: padding,
