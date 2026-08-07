@@ -135,63 +135,78 @@ class _AppSidebarState extends State<AppSidebar> {
 
   @override
   Widget build(BuildContext context) {
-    final compact = widget.mode == AppSidebarMode.compact;
+    final targetWidth = widget.mode == AppSidebarMode.compact
+        ? widget.compactWidth
+        : widget.expandedWidth;
+    // Keep menu chrome in sync with the animating width so expanded rows are
+    // not laid out inside a still-narrow sidebar during resize transitions.
+    final switchWidth = (widget.compactWidth + widget.expandedWidth) / 2;
     return _SidebarSelectionScope(
       color: widget.selectedColor,
-      child: AnimatedContainer(
+      child: TweenAnimationBuilder<double>(
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeOutCubic,
-        width: compact ? widget.compactWidth : widget.expandedWidth,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (widget.header != null)
-              Padding(
-                padding: EdgeInsets.all(compact ? 8 : 16),
-                child: widget.header,
-              ),
-            Expanded(
-              child: ListView(
-                padding: EdgeInsets.symmetric(horizontal: compact ? 8 : 10),
-                children: [
-                  for (final (groupIndex, group) in _groups.indexed) ...[
-                    if (compact && groupIndex > 0)
-                      const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 6),
-                        child: AppDivider.horizontal(),
-                      ),
-                    if (!compact && group.label != null)
-                      _SidebarGroupTitle(
-                        label: group.label!,
-                        first: groupIndex == 0,
-                      ),
-                    for (final destination in group.items)
-                      compact
-                          ? _CompactDestination(
-                              destination: destination,
-                              selectedId: widget.selectedId,
-                              onSelected: widget.onDestinationSelected,
-                            )
-                          : _ExpandedDestination(
-                              destination: destination,
-                              selectedId: widget.selectedId,
-                              expandedIds: _expanded,
-                              onToggle: (id) => setState(() {
-                                if (!_expanded.remove(id)) _expanded.add(id);
-                              }),
-                              onSelected: widget.onDestinationSelected,
-                            ),
-                  ],
-                ],
-              ),
+        tween: Tween<double>(end: targetWidth),
+        builder: (context, width, _) {
+          final compact = width < switchWidth;
+          return SizedBox(
+            width: width,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (widget.header != null)
+                  Padding(
+                    padding: EdgeInsets.all(compact ? 8 : 16),
+                    child: widget.header,
+                  ),
+                Expanded(
+                  child: ListView(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: compact ? 8 : 10,
+                    ),
+                    children: [
+                      for (final (groupIndex, group) in _groups.indexed) ...[
+                        if (compact && groupIndex > 0)
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 6),
+                            child: AppDivider.horizontal(),
+                          ),
+                        if (!compact && group.label != null)
+                          _SidebarGroupTitle(
+                            label: group.label!,
+                            first: groupIndex == 0,
+                          ),
+                        for (final destination in group.items)
+                          compact
+                              ? _CompactDestination(
+                                  destination: destination,
+                                  selectedId: widget.selectedId,
+                                  onSelected: widget.onDestinationSelected,
+                                )
+                              : _ExpandedDestination(
+                                  destination: destination,
+                                  selectedId: widget.selectedId,
+                                  expandedIds: _expanded,
+                                  onToggle: (id) => setState(() {
+                                    if (!_expanded.remove(id)) {
+                                      _expanded.add(id);
+                                    }
+                                  }),
+                                  onSelected: widget.onDestinationSelected,
+                                ),
+                      ],
+                    ],
+                  ),
+                ),
+                if (widget.footer != null)
+                  Padding(
+                    padding: EdgeInsets.all(compact ? 8 : 12),
+                    child: widget.footer,
+                  ),
+              ],
             ),
-            if (widget.footer != null)
-              Padding(
-                padding: EdgeInsets.all(compact ? 8 : 12),
-                child: widget.footer,
-              ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -443,7 +458,11 @@ class _SidebarButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final label = AppText.listItem(destination.label);
+    final label = AppText.listItem(
+      destination.label,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+    );
     final button = selected
         ? AppButton.selected(
             onPressed: onPressed,
@@ -469,7 +488,6 @@ class _SidebarButton extends StatelessWidget {
               alignment: Alignment.centerLeft,
               pressEffect: AppButtonPressEffect.none,
             ),
-
             child: label,
           );
     return Padding(padding: const EdgeInsets.only(bottom: 4), child: button);
