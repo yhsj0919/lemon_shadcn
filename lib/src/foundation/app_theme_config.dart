@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart' show immutable;
 import 'package:flutter/painting.dart'
     show BoxShadow, Color, EdgeInsets, HSLColor, Offset;
-import 'package:flutter/widgets.dart' show BuildContext, Widget;
+import 'package:flutter/widgets.dart' show Brightness, BuildContext, Widget;
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
 import '../components/display/app_text.dart';
@@ -748,8 +748,17 @@ AppColorScheme _accentScheme(
   );
 }
 
-AppColorScheme _flatInputScheme(AppColorScheme scheme) =>
-    scheme.copyWith(input: () => scheme.background);
+AppColorScheme _flatInputScheme(AppColorScheme scheme) {
+  final dark = scheme.brightness == Brightness.dark;
+  Color soften(Color color, double opacity) =>
+      Color.alphaBlend(color.withValues(alpha: opacity), scheme.background);
+
+  return scheme.copyWith(
+    input: () => scheme.background,
+    border: () => soften(scheme.border, dark ? 0.78 : 0.72),
+    ring: () => soften(scheme.ring, dark ? 0.72 : 0.55),
+  );
+}
 
 abstract final class LemonThemes {
   static final AppThemeData light = AppThemeData(
