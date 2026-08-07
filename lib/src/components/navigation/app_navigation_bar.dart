@@ -202,12 +202,7 @@ shad.AbstractButtonStyle _withControlPalette(
         final color = selectedColor ?? theme.colorScheme.primary;
         if (decoration is BoxDecoration) {
           return decoration.copyWith(
-            color: AppSoftColor.background(
-              theme,
-              color,
-              lightOpacity: 0.08,
-              darkOpacity: 0.12,
-            ),
+            color: AppSoftColor.selectionBackground(theme, color),
           );
         }
       }

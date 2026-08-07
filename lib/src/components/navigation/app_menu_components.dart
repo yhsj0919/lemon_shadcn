@@ -207,12 +207,7 @@ class AppNavigationMenuItemState extends State<AppNavigationMenuItem> {
           decoration: (context, states, value) => menu.isActive(this)
               ? (value as BoxDecoration).copyWith(
                   borderRadius: BorderRadius.circular(theme.radiusMd),
-                  color: AppSoftColor.background(
-                    theme,
-                    selectedColor,
-                    lightOpacity: 0.08,
-                    darkOpacity: 0.12,
-                  ),
+                  color: AppSoftColor.selectionBackground(theme, selectedColor),
                 )
               : value,
           textStyle: (context, states, value) => menu.isActive(this)

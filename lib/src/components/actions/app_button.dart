@@ -856,19 +856,29 @@ class _AppAsyncButtonState extends State<_AppAsyncButton>
       decoration: (context, states, value) {
         if (value is! BoxDecoration) return value;
         final selectedColor = widget.selectedColor ?? theme.colorScheme.primary;
-        final opacity = states.contains(WidgetState.disabled)
+        final disabled = states.contains(WidgetState.disabled);
+        final pressed = states.contains(WidgetState.pressed);
+        final hovered = states.contains(WidgetState.hovered);
+        final lightOpacity = disabled
             ? 0.04
-            : states.contains(WidgetState.pressed)
+            : pressed
             ? 0.14
-            : states.contains(WidgetState.hovered)
+            : hovered
             ? 0.11
-            : 0.08;
+            : AppSoftColor.selectionLightOpacity;
+        final darkOpacity = disabled
+            ? 0.06
+            : pressed
+            ? 0.18
+            : hovered
+            ? 0.15
+            : AppSoftColor.selectionDarkOpacity;
         return value.copyWith(
           color: AppSoftColor.background(
             theme,
             selectedColor,
-            lightOpacity: opacity,
-            darkOpacity: opacity,
+            lightOpacity: lightOpacity,
+            darkOpacity: darkOpacity,
           ),
         );
       },

@@ -510,7 +510,7 @@ class AppAlert extends StatelessWidget {
     return shad.ComponentTheme<shad.AlertTheme>(
       data: shad.AlertTheme(
         backgroundColor: AppSoftColor.background(theme, resolvedColor),
-        borderColor: resolvedColor,
+        borderColor: AppSoftColor.border(theme, resolvedColor),
       ),
       child: DefaultTextStyle.merge(
         style: TextStyle(color: resolvedColor),

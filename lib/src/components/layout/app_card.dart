@@ -105,11 +105,7 @@ class AppCard extends StatelessWidget {
     final theme = shad.Theme.of(context);
     final resolvedBorderColor =
         borderColor ??
-        (tintColor == null
-            ? null
-            : tintColor.withValues(
-                alpha: theme.brightness == Brightness.dark ? 0.28 : 0.18,
-              ));
+        (tintColor == null ? null : AppSoftColor.border(theme, tintColor));
     final resolvedFillColor =
         fillColor ??
         (tintColor == null

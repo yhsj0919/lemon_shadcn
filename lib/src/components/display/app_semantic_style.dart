@@ -4,11 +4,18 @@ import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 /// Shared soft-background calculation. Components keep their own color APIs
 /// and presets, but derive tinted backgrounds with the same rule.
 abstract final class AppSoftColor {
+  static const double softLightOpacity = 0.14;
+  static const double softDarkOpacity = 0.20;
+  static const double selectionLightOpacity = 0.08;
+  static const double selectionDarkOpacity = 0.12;
+  static const double borderLightOpacity = 0.18;
+  static const double borderDarkOpacity = 0.28;
+
   static Color background(
     shad.ThemeData theme,
     Color color, {
-    double lightOpacity = 0.14,
-    double darkOpacity = 0.20,
+    double lightOpacity = softLightOpacity,
+    double darkOpacity = softDarkOpacity,
   }) {
     final dark = theme.brightness == Brightness.dark;
     return Color.alphaBlend(
@@ -16,6 +23,21 @@ abstract final class AppSoftColor {
       theme.colorScheme.background,
     );
   }
+
+  static Color selectionBackground(shad.ThemeData theme, Color color) =>
+      background(
+        theme,
+        color,
+        lightOpacity: selectionLightOpacity,
+        darkOpacity: selectionDarkOpacity,
+      );
+
+  static Color border(shad.ThemeData theme, Color color) => background(
+    theme,
+    color,
+    lightOpacity: borderLightOpacity,
+    darkOpacity: borderDarkOpacity,
+  );
 }
 
 enum AppSemanticTone { primary, secondary, info, success, warning, destructive }

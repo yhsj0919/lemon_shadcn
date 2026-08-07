@@ -33,7 +33,13 @@ void main() {
         config.lightTheme.colorScheme.background,
       ),
     );
-    expect(componentTheme.data.borderColor, color);
+    expect(
+      componentTheme.data.borderColor,
+      Color.alphaBlend(
+        color.withValues(alpha: 0.18),
+        config.lightTheme.colorScheme.background,
+      ),
+    );
 
     final textContext = tester.element(find.text('Custom alert'));
     final iconContext = tester.element(find.byIcon(Icons.info));
@@ -58,7 +64,15 @@ void main() {
         (widget) => widget is shad.ComponentTheme<shad.AlertTheme>,
       ),
     );
-    expect(componentTheme.data.borderColor, color);
+    final context = tester.element(find.text('Override warning'));
+    final theme = shad.Theme.of(context);
+    expect(
+      componentTheme.data.borderColor,
+      Color.alphaBlend(
+        color.withValues(alpha: 0.18),
+        theme.colorScheme.background,
+      ),
+    );
     expect(
       DefaultTextStyle.of(
         tester.element(find.text('Override warning')),
