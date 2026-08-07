@@ -79,9 +79,19 @@ void main() {
     final smallContext = tester.element(find.text('SuccessSmall'));
     final largeContext = tester.element(find.text('SuccessLarge'));
     final boldContext = tester.element(find.text('SuccessBold'));
+    final warningContext = tester.element(find.text('Warning'));
+    final destructiveContext = tester.element(find.text('SoftDestructive'));
     expect(DefaultTextStyle.of(smallContext).style.fontSize, 10);
     expect(DefaultTextStyle.of(largeContext).style.fontSize, 14);
     expect(DefaultTextStyle.of(boldContext).style.fontWeight, FontWeight.bold);
+    expect(
+      DefaultTextStyle.of(warningContext).style.color,
+      const Color(0xffd97706),
+    );
+    expect(
+      DefaultTextStyle.of(destructiveContext).style.color,
+      const Color(0xffef4444),
+    );
     expect(
       AppBadgeSize.normal.padding,
       const EdgeInsets.symmetric(horizontal: 8, vertical: 2),

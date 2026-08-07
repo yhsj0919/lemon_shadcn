@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
 import 'app_empty.dart';
+import 'app_semantic_style.dart';
 
 enum AppResultStatus { success, info, warning, error, forbidden, notFound }
 
@@ -33,14 +34,21 @@ class AppResult extends StatelessWidget {
     AppResultStatus.notFound => shad.LucideIcons.fileQuestion,
   };
 
-  Color _color(shad.ThemeData theme) => switch (status) {
-    AppResultStatus.success => const Color(0xff16a34a),
-    AppResultStatus.info => theme.colorScheme.primary,
-    AppResultStatus.warning => const Color(0xffd97706),
-    AppResultStatus.error => theme.colorScheme.destructive,
-    AppResultStatus.forbidden => theme.colorScheme.destructive,
-    AppResultStatus.notFound => theme.colorScheme.mutedForeground,
+  AppSemanticTone get _tone => switch (status) {
+    AppResultStatus.success => AppSemanticTone.success,
+    AppResultStatus.info => AppSemanticTone.info,
+    AppResultStatus.warning => AppSemanticTone.warning,
+    AppResultStatus.error ||
+    AppResultStatus.forbidden => AppSemanticTone.destructive,
+    AppResultStatus.notFound => AppSemanticTone.secondary,
   };
+
+  Color _color(shad.ThemeData theme) {
+    final palette = AppSemanticPalette.resolve(theme, _tone);
+    return status == AppResultStatus.notFound
+        ? palette.foreground
+        : palette.solid;
+  }
 
   @override
   Widget build(BuildContext context) {

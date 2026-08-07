@@ -100,16 +100,16 @@ class AppSemanticPalette {
       AppSemanticTone.warning =>
         dark
             ? const AppSemanticPalette(
-                solid: Color(0xffd97706),
-                onSolid: Color(0xffffffff),
+                solid: Color(0xfffbbf24),
+                onSolid: Color(0xff1c1917),
                 softBackground: Color(0xff451a03),
-                foreground: Color(0xfffde68a),
+                foreground: Color(0xfffbbf24),
               )
             : const AppSemanticPalette(
-                solid: Color(0xffd97706),
-                onSolid: Color(0xffffffff),
+                solid: Color(0xfff59e0b),
+                onSolid: Color(0xff451a03),
                 softBackground: Color(0xfffffbeb),
-                foreground: Color(0xff92400e),
+                foreground: Color(0xffd97706),
               ),
       AppSemanticTone.destructive =>
         dark
@@ -117,13 +117,13 @@ class AppSemanticPalette {
                 solid: theme.colorScheme.destructive,
                 onSolid: const Color(0xffffffff),
                 softBackground: const Color(0xff450a0a),
-                foreground: const Color(0xfffecaca),
+                foreground: theme.colorScheme.destructive,
               )
             : AppSemanticPalette(
                 solid: theme.colorScheme.destructive,
                 onSolid: const Color(0xffffffff),
                 softBackground: const Color(0xfffef2f2),
-                foreground: const Color(0xff991b1b),
+                foreground: theme.colorScheme.destructive,
               ),
     };
   }
