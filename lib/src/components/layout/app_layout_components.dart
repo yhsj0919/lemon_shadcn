@@ -8,6 +8,7 @@ import '../display/app_semantic_style.dart';
 
 export '../display/app_divider.dart';
 export 'app_card.dart';
+export 'app_table.dart';
 
 typedef AppAccordion = shad.Accordion;
 typedef AppAccordionItem = shad.AccordionItem;
@@ -26,11 +27,6 @@ typedef AppStep = shad.Step;
 typedef AppTree<T> = shad.Tree<T>;
 typedef AppTreeNode<T> = shad.TreeNode<T>;
 typedef AppTreeItemNode<T> = shad.TreeItemNode<T>;
-typedef AppTable = shad.Table;
-typedef AppTableRow = shad.TableRow;
-typedef AppTableHeader = shad.TableHeader;
-typedef AppTableFooter = shad.TableFooter;
-typedef AppTableCell = shad.TableCell;
 typedef AppScaffold = shad.Scaffold;
 typedef AppAppBar = shad.AppBar;
 typedef AppDashedLine = shad.DashedLine;

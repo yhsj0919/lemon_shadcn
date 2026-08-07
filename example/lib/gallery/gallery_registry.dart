@@ -61,6 +61,17 @@ abstract final class GalleryRegistry {
 
     // —— 表单 ——
     GalleryEntry(
+      id: 'app-inline-edit',
+      label: 'AppInlineEdit',
+      subtitle: '双击进入编辑，失焦自动保存',
+      group: '表单',
+      builder: (_) => const FormsPage(
+        title: 'AppInlineEdit',
+        description: '数据展示场景的文本、选择、日期和其他表单控件就地编辑。',
+        visibleSections: {'就地编辑'},
+      ),
+    ),
+    GalleryEntry(
       id: 'app-text-field',
       label: 'AppTextFormField',
       subtitle: '布局、装饰、邮箱密码与异步校验',

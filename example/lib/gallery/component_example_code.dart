@@ -5,6 +5,22 @@ abstract final class ComponentExampleCode {
 // 此区块由多个组件组合，请参考上方展示并按需配置。''';
 
   static const _examples = <String, String>{
+    '就地编辑': '''AppInlineEdit.text(
+  value: user.name,
+  validator: (value) => value.trim().isEmpty ? '名称不能为空' : null,
+  onSaved: (value) async => repository.updateName(value),
+);
+
+// 任意现有表单控件都可以通过 control 接入。
+AppInlineEdit<MyValue>.immediate(
+  value: value,
+  displayBuilder: (_, value) => Text(value.label),
+  editorBuilder: (_, details) => MyFormControl(
+    value: details.value,
+    onChanged: details.onChanged,
+  ),
+  onSaved: save,
+);''',
     '组件概览': '''const categories = <String>[
   '按钮',
   '表单',
@@ -243,6 +259,19 @@ AppDescriptions(
   reorderableColumns: true,
   onRowsReordered: (orderedKeys, orderedRows) {},
 );''',
+    '无内部线与独立配色': '''AppDataGrid<User>.local(
+  columns: columns,
+  rows: users,
+  rowKey: (user) => user.id,
+  showInternalDividers: false,
+  headerBackgroundColor: colors.primary,
+  headerForegroundColor: colors.primaryForeground,
+  cellBackgroundColor: colors.card,
+  cellForegroundColor: colors.cardForeground,
+  rowBackgroundColor: (user) => user.disabled
+      ? colors.destructive.withValues(alpha: 0.08)
+      : null,
+);''',
     '单选': '''AppDataGrid<User>.local(
   columns: columns,
   rows: users,
@@ -449,10 +478,21 @@ AppDivider.vertical(width: 32);''',
   builder: (context) => drawer,
   child: content,
 );''',
-    '表格': '''const AppTable(rows: [
-  AppTableHeader(cells: [AppTableCell(child: Text('组件'))]),
-  AppTableRow(cells: [AppTableCell(child: Text('AppForm'))]),
-]);''',
+    '表格': '''const AppTable(
+  striped: true,
+  showInternalDividers: false,
+  headerBackgroundColor: Color(0xFFF1F5F9),
+  rows: [
+    AppTableHeader(cells: [
+      AppTableCell(child: Text('组件')),
+      AppTableCell(child: Text('状态')),
+    ]),
+    AppTableRow(cells: [
+      AppTableCell(child: Text('AppForm')),
+      AppTableCell(child: Text('正常')),
+    ]),
+  ],
+);''',
     '步进器': '''AppStepper.vertical(controller: controller, steps: steps);''',
     '窗口': '''AppWindow(
   title: const Text('窗口'),

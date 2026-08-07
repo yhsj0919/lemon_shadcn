@@ -41,6 +41,8 @@ typedef AppDataGridReorderCallback<T> =
 typedef AppDataGridCellChanged<T> =
     void Function(T row, String field, Object? value, Object? oldValue);
 
+typedef AppDataGridRowColor<T> = Color? Function(T row);
+
 class AppDataGridColumn<T> {
   const AppDataGridColumn({
     required this.id,
@@ -180,6 +182,12 @@ class AppDataGrid<T> extends StatefulWidget {
     this.reorderableColumns = false,
     this.columnMenuMode = AppDataGridColumnMenuMode.contextMenu,
     this.showFilters = false,
+    this.showInternalDividers = true,
+    this.headerBackgroundColor,
+    this.headerForegroundColor,
+    this.cellBackgroundColor,
+    this.cellForegroundColor,
+    this.rowBackgroundColor,
     this.empty,
   }) : _mode = _AppDataGridMode.local,
        loader = null,
@@ -206,6 +214,12 @@ class AppDataGrid<T> extends StatefulWidget {
     this.reorderableColumns = false,
     this.columnMenuMode = AppDataGridColumnMenuMode.contextMenu,
     this.showFilters = false,
+    this.showInternalDividers = true,
+    this.headerBackgroundColor,
+    this.headerForegroundColor,
+    this.cellBackgroundColor,
+    this.cellForegroundColor,
+    this.rowBackgroundColor,
     this.empty,
   }) : _mode = _AppDataGridMode.paginated,
        rows = const [];
@@ -229,6 +243,12 @@ class AppDataGrid<T> extends StatefulWidget {
     this.reorderableColumns = false,
     this.columnMenuMode = AppDataGridColumnMenuMode.contextMenu,
     this.showFilters = false,
+    this.showInternalDividers = true,
+    this.headerBackgroundColor,
+    this.headerForegroundColor,
+    this.cellBackgroundColor,
+    this.cellForegroundColor,
+    this.rowBackgroundColor,
     this.empty,
   }) : _mode = _AppDataGridMode.infinite,
        rows = const [],
@@ -260,6 +280,19 @@ class AppDataGrid<T> extends StatefulWidget {
   final bool reorderableColumns;
   final AppDataGridColumnMenuMode columnMenuMode;
   final bool showFilters;
+
+  /// Whether horizontal and vertical separators are drawn inside the grid.
+  /// The outer grid border is unaffected.
+  final bool showInternalDividers;
+
+  final Color? headerBackgroundColor;
+  final Color? headerForegroundColor;
+  final Color? cellBackgroundColor;
+  final Color? cellForegroundColor;
+
+  /// Resolves a background for each business row independently. Returning
+  /// null falls back to [cellBackgroundColor] and then the theme background.
+  final AppDataGridRowColor<T>? rowBackgroundColor;
   final Widget? empty;
   final _AppDataGridMode _mode;
 
@@ -430,6 +463,8 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
       titleRenderer: (context) => _AppDataGridControlTitle(
         manager: context.stateManager,
         height: context.height,
+        backgroundColor: widget.headerBackgroundColor,
+        showDivider: widget.showInternalDividers,
       ),
       renderer: (context) => _AppDataGridRowDragHandle(
         manager: context.stateManager,
@@ -460,6 +495,8 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
       titleRenderer: (context) => _AppDataGridSelectionTitle(
         manager: context.stateManager,
         height: context.height,
+        backgroundColor: widget.headerBackgroundColor,
+        showDivider: widget.showInternalDividers,
       ),
       renderer: (context) => _AppDataGridRowCheckbox(
         manager: context.stateManager,
@@ -505,6 +542,9 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
         context: rendererContext,
         reorderable: widget.reorderableColumns && column.reorderable,
         menuMode: widget.columnMenuMode,
+        backgroundColor: widget.headerBackgroundColor,
+        foregroundColor: widget.headerForegroundColor,
+        showDivider: widget.showInternalDividers,
         items: _columnMenuItems(
           rendererContext.stateManager,
           rendererContext.column,
@@ -888,9 +928,13 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
     ).style.copyWith(fontSize: metrics.fontSize);
     final style = TrinaGridStyleConfig(
       enableGridBorderShadow: false,
+      enableColumnBorderVertical: widget.showInternalDividers,
+      enableColumnBorderHorizontal: widget.showInternalDividers,
+      enableCellBorderVertical: widget.showInternalDividers,
+      enableCellBorderHorizontal: widget.showInternalDividers,
       enableRowHoverColor: true,
-      gridBackgroundColor: colors.background,
-      rowColor: colors.background,
+      gridBackgroundColor: widget.cellBackgroundColor ?? colors.background,
+      rowColor: widget.cellBackgroundColor ?? colors.background,
       rowHoveredColor: colors.accent,
       activatedColor: colors.accent,
       rowCheckedColor: colors.accent,
@@ -902,8 +946,8 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
       cellActiveColor: colors.primary,
       cellCheckedColor: colors.primaryForeground,
       cellCheckedSide: BorderSide(color: colors.border, width: 1),
-      cellColorInEditState: colors.background,
-      cellColorInReadOnlyState: colors.background,
+      cellColorInEditState: widget.cellBackgroundColor ?? colors.background,
+      cellColorInReadOnlyState: widget.cellBackgroundColor ?? colors.background,
       // Keep cell fills transparent so row selection/hover colors show through.
       cellReadonlyColor: null,
       cellDefaultColor: null,
@@ -924,16 +968,19 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
       defaultColumnTitlePadding: EdgeInsets.symmetric(
         horizontal: metrics.horizontalPadding,
       ),
-      cellTextStyle: textStyle.copyWith(color: colors.foreground),
+      cellTextStyle: textStyle.copyWith(
+        color: widget.cellForegroundColor ?? colors.foreground,
+      ),
       columnTextStyle: textStyle.copyWith(
-        color: colors.foreground,
+        color: widget.headerForegroundColor ?? colors.foreground,
         fontWeight: FontWeight.w600,
       ),
       gridBorderRadius: BorderRadius.circular(theme.radiusMd),
       gridPopupBorderRadius: BorderRadius.circular(theme.radiusMd),
       gridBorderWidth: 1,
-      cellVerticalBorderWidth: .5,
-      cellHorizontalBorderWidth: .5,
+      cellVerticalBorderWidth: widget.showInternalDividers ? .5 : 0,
+      cellHorizontalBorderWidth: widget.showInternalDividers ? .5 : 0,
+      filterHeaderColor: widget.headerBackgroundColor,
     );
     return TrinaGridConfiguration(
       selectingMode: TrinaGridSelectingMode.row,
@@ -941,8 +988,7 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
       rowSelectionCheckBoxBehavior: switch (widget.selectionMode) {
         AppDataGridSelectionMode.single =>
           TrinaGridRowSelectionCheckBoxBehavior.singleRowCheck,
-        AppDataGridSelectionMode.multiple ||
-        AppDataGridSelectionMode.none =>
+        AppDataGridSelectionMode.multiple || AppDataGridSelectionMode.none =>
           TrinaGridRowSelectionCheckBoxBehavior.none,
       },
       style: style,
@@ -1024,12 +1070,21 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
                     : TrinaGridMode.normal,
                 onLoaded: _onLoaded,
                 onChanged: _onChanged,
-                onSelected: widget.selectionMode == AppDataGridSelectionMode.single
+                onSelected:
+                    widget.selectionMode == AppDataGridSelectionMode.single
                     ? _onSelected
                     : null,
                 onRowDoubleTap: _onRowDoubleTap,
                 onRowChecked: _onRowChecked,
                 onRowsMoved: _onRowsMoved,
+                rowColorCallback: widget.rowBackgroundColor == null
+                    ? null
+                    : (rowContext) =>
+                          widget.rowBackgroundColor!(
+                            rowContext.row.data as T,
+                          ) ??
+                          widget.cellBackgroundColor ??
+                          appTheme.colorScheme.background,
                 createFooter: widget._mode == _AppDataGridMode.local
                     ? null
                     : _buildFooter,
@@ -1080,12 +1135,18 @@ class _AppDataGridColumnTitle extends StatelessWidget {
     required this.reorderable,
     required this.menuMode,
     required this.items,
+    required this.backgroundColor,
+    required this.foregroundColor,
+    required this.showDivider,
   });
 
   final TrinaColumnTitleRendererContext context;
   final bool reorderable;
   final AppDataGridColumnMenuMode menuMode;
   final List<shad.MenuItem> items;
+  final Color? backgroundColor;
+  final Color? foregroundColor;
+  final bool showDivider;
 
   @override
   Widget build(BuildContext buildContext) {
@@ -1102,10 +1163,15 @@ class _AppDataGridColumnTitle extends StatelessWidget {
       _ => null,
     };
     final titleAlignment = column.titleTextAlign.alignmentValue;
-    final mutedIcon = style.iconColor.withValues(alpha: .38);
-    final activeIcon = style.iconColor.withValues(alpha: .82);
+    final iconColor = foregroundColor ?? style.iconColor;
+    final mutedIcon = iconColor.withValues(alpha: .38);
+    final activeIcon = iconColor.withValues(alpha: .82);
     Widget title = DecoratedBox(
-      decoration: _appDataGridHeaderDecoration(manager),
+      decoration: _appDataGridHeaderDecoration(
+        manager,
+        backgroundColor: backgroundColor,
+        showDivider: showDivider,
+      ),
       child: Padding(
         padding: column.titlePadding ?? style.defaultColumnTitlePadding,
         child: Row(
@@ -1208,12 +1274,18 @@ class _AppDataGridColumnTitle extends StatelessWidget {
   }
 }
 
-BoxDecoration _appDataGridHeaderDecoration(TrinaGridStateManager manager) =>
-    BoxDecoration(
-      border: BorderDirectional(
-        end: BorderSide(color: manager.style.borderColor, width: .5),
-      ),
-    );
+BoxDecoration _appDataGridHeaderDecoration(
+  TrinaGridStateManager manager, {
+  Color? backgroundColor,
+  required bool showDivider,
+}) => BoxDecoration(
+  color: backgroundColor,
+  border: showDivider
+      ? BorderDirectional(
+          end: BorderSide(color: manager.style.borderColor, width: .5),
+        )
+      : null,
+);
 
 BoxDecoration _appDataGridDialogPanelDecoration(shad.ThemeData theme) =>
     BoxDecoration(
@@ -1258,17 +1330,25 @@ class _AppDataGridSelectionTitle extends StatelessWidget {
   const _AppDataGridSelectionTitle({
     required this.manager,
     required this.height,
+    required this.backgroundColor,
+    required this.showDivider,
   });
 
   final TrinaGridStateManager manager;
   final double height;
+  final Color? backgroundColor;
+  final bool showDivider;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       height: height,
       child: DecoratedBox(
-        decoration: _appDataGridHeaderDecoration(manager),
+        decoration: _appDataGridHeaderDecoration(
+          manager,
+          backgroundColor: backgroundColor,
+          showDivider: showDivider,
+        ),
         child: Center(child: _AppDataGridSelectAll(manager: manager)),
       ),
     );
@@ -1276,16 +1356,29 @@ class _AppDataGridSelectionTitle extends StatelessWidget {
 }
 
 class _AppDataGridControlTitle extends StatelessWidget {
-  const _AppDataGridControlTitle({required this.manager, required this.height});
+  const _AppDataGridControlTitle({
+    required this.manager,
+    required this.height,
+    required this.backgroundColor,
+    required this.showDivider,
+  });
 
   final TrinaGridStateManager manager;
   final double height;
+  final Color? backgroundColor;
+  final bool showDivider;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       height: height,
-      child: DecoratedBox(decoration: _appDataGridHeaderDecoration(manager)),
+      child: DecoratedBox(
+        decoration: _appDataGridHeaderDecoration(
+          manager,
+          backgroundColor: backgroundColor,
+          showDivider: showDivider,
+        ),
+      ),
     );
   }
 }
@@ -1460,9 +1553,7 @@ class _AppDataGridRowDragHandle extends StatelessWidget {
         width: feedbackWidth,
         height: manager.rowHeight,
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(
-            shad.Theme.of(context).radiusMd,
-          ),
+          borderRadius: BorderRadius.circular(shad.Theme.of(context).radiusMd),
           child: OverflowBox(
             alignment: AlignmentDirectional.centerStart,
             minWidth: manager.columnsWidth,
@@ -1488,8 +1579,7 @@ class _AppDataGridRowDragHandle extends StatelessWidget {
                         ),
                       ),
                       _ => Padding(
-                        padding:
-                            column.cellPadding ?? style.defaultCellPadding,
+                        padding: column.cellPadding ?? style.defaultCellPadding,
                         child: Align(
                           alignment: column.textAlign.alignmentValue,
                           child: Text(
@@ -1687,8 +1777,7 @@ class _AppDataGridColumnsDialogState extends State<_AppDataGridColumnsDialog> {
       .where((column) => !widget.isControlField(column.field))
       .toList(growable: false);
 
-  int get _visibleCount =>
-      _dataColumns.where((column) => !column.hide).length;
+  int get _visibleCount => _dataColumns.where((column) => !column.hide).length;
 
   shad.CheckboxState get _selectAllState {
     final visible = _visibleCount;
@@ -1705,10 +1794,7 @@ class _AppDataGridColumnsDialogState extends State<_AppDataGridColumnsDialog> {
       shad.LucideIcons.arrowUpDown,
       '默认',
     ),
-    _AppDataGridColumnOrderMode.ascending => (
-      shad.LucideIcons.arrowUpAZ,
-      '正序',
-    ),
+    _AppDataGridColumnOrderMode.ascending => (shad.LucideIcons.arrowUpAZ, '正序'),
     _AppDataGridColumnOrderMode.descending => (
       shad.LucideIcons.arrowDownAZ,
       '倒序',
@@ -1739,14 +1825,17 @@ class _AppDataGridColumnsDialogState extends State<_AppDataGridColumnsDialog> {
     final current = _dataColumns;
     final byField = {for (final column in current) column.field: column};
     final ordered = switch (next) {
-      _AppDataGridColumnOrderMode.defaults => _defaultFields
-          .map((field) => byField[field])
-          .whereType<TrinaColumn>()
-          .toList(growable: false),
-      _AppDataGridColumnOrderMode.ascending => (List<TrinaColumn>.of(current)
-        ..sort((a, b) => _columnLabel(a).compareTo(_columnLabel(b)))),
-      _AppDataGridColumnOrderMode.descending => (List<TrinaColumn>.of(current)
-        ..sort((a, b) => _columnLabel(b).compareTo(_columnLabel(a)))),
+      _AppDataGridColumnOrderMode.defaults =>
+        _defaultFields
+            .map((field) => byField[field])
+            .whereType<TrinaColumn>()
+            .toList(growable: false),
+      _AppDataGridColumnOrderMode.ascending => (List<TrinaColumn>.of(
+        current,
+      )..sort((a, b) => _columnLabel(a).compareTo(_columnLabel(b)))),
+      _AppDataGridColumnOrderMode.descending => (List<TrinaColumn>.of(
+        current,
+      )..sort((a, b) => _columnLabel(b).compareTo(_columnLabel(a)))),
     };
     _orderMode = next;
     _applyOrder(ordered);
@@ -1920,7 +2009,8 @@ class _AppDataGridFiltersDialogState extends State<_AppDataGridFiltersDialog> {
                 row.cells[FilterHelper.filterFieldColumn]?.value as String? ??
                 _allColumnsField,
             filterType: _matchFilterType(
-              row.cells[FilterHelper.filterFieldType]?.value as TrinaFilterType?,
+              row.cells[FilterHelper.filterFieldType]?.value
+                  as TrinaFilterType?,
             ),
             value:
                 row.cells[FilterHelper.filterFieldValue]?.value?.toString() ??
@@ -2089,9 +2179,7 @@ class _AppDataGridFiltersDialogState extends State<_AppDataGridFiltersDialog> {
                                     options: columnOptions,
                                     onChanged: (value) {
                                       if (value == null) return;
-                                      _commit(
-                                        () => rule.columnField = value,
-                                      );
+                                      _commit(() => rule.columnField = value);
                                     },
                                   ),
                                   AppSelect<TrinaFilterType>(

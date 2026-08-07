@@ -255,6 +255,10 @@ class _FormsPageState extends State<FormsPage> {
       description: widget.description,
       sections:
           <ComponentSection>[
+            const ComponentSection(
+              title: '就地编辑',
+              child: _InlineEditDemo(),
+            ),
             ComponentSection(
               title: '布局与装饰',
               child: Column(
@@ -649,6 +653,55 @@ class _FormsPageState extends State<FormsPage> {
           ].where((section) {
             return widget.visibleSections?.contains(section.title) ?? true;
           }).toList(),
+    );
+  }
+}
+
+class _InlineEditDemo extends StatefulWidget {
+  const _InlineEditDemo();
+
+  @override
+  State<_InlineEditDemo> createState() => _InlineEditDemoState();
+}
+
+class _InlineEditDemoState extends State<_InlineEditDemo> {
+  String _name = '双击修改设备名称';
+  String? _role = 'editor';
+  DateTime? _date = DateTime(2026, 8, 7);
+  bool _enabled = true;
+  double _rating = 4;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AppInlineEdit.text(
+            value: _name,
+            validator: (value) => value.trim().isEmpty ? '名称不能为空' : null,
+            onSaved: (value) => setState(() => _name = value),
+          ),
+          AppInlineEdit.select<String>(
+            value: _role,
+            options: FormsPage._roles,
+            onSaved: (value) => setState(() => _role = value),
+          ),
+          AppInlineEdit.date(
+            value: _date,
+            onSaved: (value) => setState(() => _date = value),
+          ),
+          AppInlineEdit.switchValue(
+            value: _enabled,
+            displayBuilder: (_, value) => Text(value ? '已启用' : '已停用'),
+            onSaved: (value) => setState(() => _enabled = value),
+          ),
+          AppInlineEdit.starRating(
+            value: _rating,
+            onSaved: (value) => setState(() => _rating = value),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -211,6 +211,9 @@ AppExpandableOverlay.cover(
         const ComponentSection(
           title: '表格',
           child: AppTable(
+            striped: true,
+            showInternalDividers: false,
+            headerBackgroundColor: Color(0xFFF1F5F9),
             rows: [
               AppTableHeader(
                 cells: [
@@ -222,6 +225,15 @@ AppExpandableOverlay.cover(
                 cells: [
                   AppTableCell(child: Text('AppForm')),
                   AppTableCell(child: Text('正常')),
+                ],
+              ),
+              AppTableRow(
+                cells: [
+                  AppTableCell(child: Text('AppDataGrid')),
+                  AppTableCell(
+                    foregroundColor: Color(0xFF16A34A),
+                    child: Text('已对齐'),
+                  ),
                 ],
               ),
             ],

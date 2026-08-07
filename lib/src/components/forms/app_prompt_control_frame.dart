@@ -3,6 +3,7 @@ import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
 import '../../foundation/app_overlay_style.dart';
 import '../overlay/app_popup_switch_coordinator.dart';
+import 'app_inline_edit_overlay_scope.dart';
 
 /// Shared frame for prompt controls backed by a popover or dialog.
 class AppPromptControlFrame extends StatefulWidget {
@@ -102,10 +103,17 @@ class _AppPromptControlFrameState extends State<AppPromptControlFrame> {
   Widget build(BuildContext context) {
     final theme = shad.Theme.of(context);
     final active = widget.enabled && (_pointerActive || _focused);
+    final inlineOverlay = AppInlineEditOverlayScope.maybeOf(context);
     Widget popup(Widget child) => AppPopupSwitchSurface(
       handle: _popupSwitch,
-      onMounted: () => _setPointerActive(true),
-      onDisposed: _handlePopupDisposed,
+      onMounted: () {
+        inlineOverlay?.opened();
+        _setPointerActive(true);
+      },
+      onDisposed: () {
+        _handlePopupDisposed();
+        inlineOverlay?.closed();
+      },
       child: child,
     );
     final child = widget.builder?.call(context, popup) ?? widget.child!;

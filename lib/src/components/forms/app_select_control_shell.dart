@@ -6,6 +6,7 @@ import '../../foundation/app_control_box.dart';
 import '../../foundation/app_outline_style.dart';
 import '../../foundation/app_overlay_style.dart';
 import '../overlay/app_popup_switch_coordinator.dart';
+import 'app_inline_edit_overlay_scope.dart';
 
 typedef AppSelectControlBuilder =
     Widget Function(
@@ -78,6 +79,7 @@ class _AppSelectControlShellState extends State<AppSelectControlShell> {
     final ancestor = shad.ComponentTheme.maybeOf<shad.OutlineButtonTheme>(
       context,
     );
+    final inlineOverlay = AppInlineEditOverlayScope.maybeOf(context);
 
     Decoration decoration(
       BuildContext context,
@@ -101,8 +103,14 @@ class _AppSelectControlShellState extends State<AppSelectControlShell> {
 
     Widget popup(Widget child) => AppPopupSwitchSurface(
       handle: _popupSwitch,
-      onMounted: _handlePopupMounted,
-      onDisposed: _handlePopupDisposed,
+      onMounted: () {
+        inlineOverlay?.opened();
+        _handlePopupMounted();
+      },
+      onDisposed: () {
+        _handlePopupDisposed();
+        inlineOverlay?.closed();
+      },
       child: shad.ComponentTheme(
         data: AppOverlayStyle.cardTheme(
           context,

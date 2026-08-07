@@ -34,7 +34,12 @@ class AppDescriptions extends StatelessWidget {
     this.runSpacing = 16,
     this.bordered = false,
     this.type = AppDescriptionsType.standard,
-    this.padding = const EdgeInsets.all(16),
+    this.padding = const EdgeInsets.all(12),
+    this.tableCellPadding = const EdgeInsets.symmetric(
+      horizontal: 12,
+      vertical: 8,
+    ),
+    this.margin = EdgeInsets.zero,
   }) : assert(columns > 0),
        assert(minColumnWidth > 0);
 
@@ -50,6 +55,8 @@ class AppDescriptions extends StatelessWidget {
   final bool bordered;
   final AppDescriptionsType type;
   final EdgeInsetsGeometry padding;
+  final EdgeInsetsGeometry tableCellPadding;
+  final EdgeInsetsGeometry margin;
 
   Widget _buildItem(BuildContext context, AppDescriptionItem item) {
     final theme = shad.Theme.of(context);
@@ -126,7 +133,7 @@ class AppDescriptions extends StatelessWidget {
         cells.add(
           index < items.length
               ? Padding(
-                  padding: padding,
+                  padding: tableCellPadding,
                   child: _buildItem(context, items[index]),
                 )
               : const SizedBox.shrink(),
@@ -204,13 +211,16 @@ class AppDescriptions extends StatelessWidget {
         ],
       );
     }
-    if (!bordered && type != AppDescriptionsType.table) return content;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        border: Border.all(color: theme.colorScheme.border, width: 1),
-        borderRadius: BorderRadius.circular(theme.radiusMd),
-      ),
-      child: content,
-    );
+    Widget result = content;
+    if (bordered || type == AppDescriptionsType.table) {
+      result = DecoratedBox(
+        decoration: BoxDecoration(
+          border: Border.all(color: theme.colorScheme.border, width: 1),
+          borderRadius: BorderRadius.circular(theme.radiusMd),
+        ),
+        child: content,
+      );
+    }
+    return Padding(padding: margin, child: result);
   }
 }

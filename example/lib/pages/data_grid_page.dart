@@ -104,6 +104,7 @@ class _DataGridPageState extends State<DataGridPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = ShadcnTheme.of(context).colorScheme;
     return ComponentPage(
       title: '高级表格',
       description: '排序、行/列拖动、多选均可按需开启。可编辑列双击进入编辑。',
@@ -135,6 +136,22 @@ class _DataGridPageState extends State<DataGridPage> {
           ),
         ),
         ComponentSection(
+          title: '无内部线与独立配色',
+          child: AppDataGrid<_GridUser>.local(
+            columns: _columns,
+            rows: _singleRows,
+            rowKey: (row) => row.id,
+            height: 300,
+            showInternalDividers: false,
+            headerBackgroundColor: colors.primary,
+            headerForegroundColor: colors.primaryForeground,
+            cellBackgroundColor: colors.card,
+            cellForegroundColor: colors.cardForeground,
+            rowBackgroundColor: (row) =>
+                row.id.isEven ? colors.primary.withValues(alpha: 0.06) : null,
+          ),
+        ),
+        ComponentSection(
           title: '单选',
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -151,9 +168,7 @@ class _DataGridPageState extends State<DataGridPage> {
                 rowKey: (row) => row.id,
                 height: 320,
                 selectionMode: AppDataGridSelectionMode.single,
-                selectedKeys: {
-                  if (_selectedRow != null) _selectedRow!.id,
-                },
+                selectedKeys: {if (_selectedRow != null) _selectedRow!.id},
                 onSelectionChanged: (rows) => setState(
                   () => _selectedRow = rows.isEmpty ? null : rows.first,
                 ),
@@ -198,10 +213,6 @@ class _GridUser {
   final String department;
   final String status;
 
-  _GridUser copy() => _GridUser(
-    id: id,
-    name: name,
-    department: department,
-    status: status,
-  );
+  _GridUser copy() =>
+      _GridUser(id: id, name: name, department: department, status: status);
 }

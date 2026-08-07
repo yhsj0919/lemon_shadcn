@@ -35,6 +35,7 @@ export 'src/components/display/app_utility_components.dart';
 export 'src/components/forms/app_field.dart';
 export 'src/components/forms/app_file_picker.dart';
 export 'src/components/forms/app_input_group.dart';
+export 'src/components/forms/app_inline_edit.dart';
 export 'src/components/forms/app_form.dart';
 export 'src/components/forms/app_input_otp.dart';
 export 'src/components/forms/app_auto_complete.dart';

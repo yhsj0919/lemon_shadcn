@@ -30,6 +30,7 @@ class AppAutoCompleteFormField<V> extends FormField<V> {
     this.searchHintText = 'Search',
     this.required = false,
     this.width,
+    this.minWidth = 160,
     this.clearable = false,
     this.debounce = const Duration(milliseconds: 300),
     this.cacheDuration = const Duration(minutes: 5),
@@ -60,6 +61,7 @@ class AppAutoCompleteFormField<V> extends FormField<V> {
     this.searchHintText = 'Search',
     this.required = false,
     this.width,
+    this.minWidth = 160,
     this.clearable = false,
     this.debounce = const Duration(milliseconds: 300),
     this.optionConfig = const AppOptionConfig(),
@@ -90,6 +92,7 @@ class AppAutoCompleteFormField<V> extends FormField<V> {
     this.searchHintText = 'Search',
     this.required = false,
     this.width,
+    this.minWidth = 160,
     this.clearable = false,
     this.debounce = const Duration(milliseconds: 300),
     this.optionConfig = const AppOptionConfig(),
@@ -120,6 +123,7 @@ class AppAutoCompleteFormField<V> extends FormField<V> {
   final String searchHintText;
   final bool required;
   final double? width;
+  final double minWidth;
   final bool clearable;
   final Duration debounce;
   final Duration cacheDuration;
@@ -153,6 +157,7 @@ class AppAutoCompleteFormField<V> extends FormField<V> {
           hintText: field.hintText,
           searchHintText: field.searchHintText,
           clearable: field.clearable,
+          minWidth: field.minWidth,
           debounce: field.debounce,
           optionConfig: field.optionConfig,
           loadingBuilder: field.loadingBuilder,
@@ -180,6 +185,7 @@ class _AppAutoCompleteControl<V> extends StatefulWidget {
     required this.hintText,
     required this.searchHintText,
     required this.clearable,
+    required this.minWidth,
     required this.debounce,
     this.initialOption,
     required this.optionConfig,
@@ -199,6 +205,7 @@ class _AppAutoCompleteControl<V> extends StatefulWidget {
   final String hintText;
   final String searchHintText;
   final bool clearable;
+  final double minWidth;
   final Duration debounce;
   final AppOptionConfig<V> optionConfig;
   final WidgetBuilder? loadingBuilder;
@@ -322,56 +329,59 @@ class _AppAutoCompleteControlState<V>
 
   @override
   Widget build(BuildContext context) {
-    return AppSelectControlShell(
-      enabled: widget.enabled,
-      builder: (context, popup, focusNode) => shad.Select<V>(
-        value: widget.value,
-        focusNode: focusNode,
+    return ConstrainedBox(
+      constraints: BoxConstraints(minWidth: widget.minWidth),
+      child: AppSelectControlShell(
         enabled: widget.enabled,
-        canUnselect: widget.clearable,
-        onChanged: widget.onChanged,
-        placeholder: Text(widget.hintText).muted(),
-        valueSelectionPredicate: (selected, candidate) {
-          return selected != null &&
-              candidate is V &&
-              _equals(selected, candidate);
-        },
-        itemBuilder: (context, value) {
-          final option = _findOption(value);
-          return option == null
-              ? Text(value.toString())
-              : widget.optionConfig.buildSelected(context, option);
-        },
-        popup: (context) => popup(
-          shad.SelectPopup<V>.builder(
-            builder: _search,
-            searchPlaceholder: Text(widget.searchHintText),
-            loadingBuilder:
-                widget.loadingBuilder ??
-                (context) => const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Center(child: shad.CircularProgressIndicator()),
-                ),
-            emptyBuilder:
-                widget.emptyBuilder ??
-                (context) => const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Text('No options found'),
-                ),
-            errorBuilder: (context, error, stackTrace) {
-              Future<List<AppOption<V>>> retry() async {
-                final options = widget.pagedOptionSource == null
-                    ? await _source!.retry(_lastQuery)
-                    : (await widget.pagedOptionSource!.retry(
-                        _lastQuery,
-                      )).options;
-                _remember(options);
-                return options;
-              }
+        builder: (context, popup, focusNode) => shad.Select<V>(
+          value: widget.value,
+          focusNode: focusNode,
+          enabled: widget.enabled,
+          canUnselect: widget.clearable,
+          onChanged: widget.onChanged,
+          placeholder: Text(widget.hintText).muted(),
+          valueSelectionPredicate: (selected, candidate) {
+            return selected != null &&
+                candidate is V &&
+                _equals(selected, candidate);
+          },
+          itemBuilder: (context, value) {
+            final option = _findOption(value);
+            return option == null
+                ? Text(value.toString())
+                : widget.optionConfig.buildSelected(context, option);
+          },
+          popup: (context) => popup(
+            shad.SelectPopup<V>.builder(
+              builder: _search,
+              searchPlaceholder: Text(widget.searchHintText),
+              loadingBuilder:
+                  widget.loadingBuilder ??
+                  (context) => const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Center(child: shad.CircularProgressIndicator()),
+                  ),
+              emptyBuilder:
+                  widget.emptyBuilder ??
+                  (context) => const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Text('No options found'),
+                  ),
+              errorBuilder: (context, error, stackTrace) {
+                Future<List<AppOption<V>>> retry() async {
+                  final options = widget.pagedOptionSource == null
+                      ? await _source!.retry(_lastQuery)
+                      : (await widget.pagedOptionSource!.retry(
+                          _lastQuery,
+                        )).options;
+                  _remember(options);
+                  return options;
+                }
 
-              return widget.loadErrorBuilder?.call(context, error, retry) ??
-                  _AppInitialLoadError<V>(error: error, retry: retry);
-            },
+                return widget.loadErrorBuilder?.call(context, error, retry) ??
+                    _AppInitialLoadError<V>(error: error, retry: retry);
+              },
+            ),
           ),
         ),
       ),

@@ -41,6 +41,7 @@ class AppCombobox<V> extends StatefulWidget {
     this.dependentValuePolicy = AppDependentValuePolicy.clearImmediately,
     this.emptyBuilder,
     this.maxPopupHeight = 280,
+    this.minWidth = 160,
   }) : searchOptions = null,
        optionSource = null,
        debounce = Duration.zero,
@@ -68,6 +69,7 @@ class AppCombobox<V> extends StatefulWidget {
     this.emptyBuilder,
     this.errorBuilder,
     this.maxPopupHeight = 280,
+    this.minWidth = 160,
   }) : options = null,
        optionSource = null;
 
@@ -90,6 +92,7 @@ class AppCombobox<V> extends StatefulWidget {
     this.emptyBuilder,
     this.errorBuilder,
     this.maxPopupHeight = 280,
+    this.minWidth = 160,
   }) : options = null,
        searchOptions = null,
        cacheDuration = Duration.zero;
@@ -114,6 +117,7 @@ class AppCombobox<V> extends StatefulWidget {
   final WidgetBuilder? emptyBuilder;
   final AppComboboxErrorBuilder? errorBuilder;
   final double maxPopupHeight;
+  final double minWidth;
 
   @override
   State<AppCombobox<V>> createState() => _AppComboboxState<V>();
@@ -606,21 +610,24 @@ class _AppComboboxState<V> extends State<AppCombobox<V>> {
 
   @override
   Widget build(BuildContext context) {
-    return TapRegion(
-      groupId: this,
-      onTapOutside: (_) {
-        _focusNode.unfocus();
-        _close();
-      },
-      child: CompositedTransformTarget(
-        link: _layerLink,
-        child: OverlayPortal(
-          controller: _overlay,
-          overlayChildBuilder: (context) =>
-              TapRegion(groupId: this, child: _buildPopup(context)),
-          child: AppOverlayAnchorTracker(
-            onGeometryChanged: _handleAnchorGeometryChanged,
-            child: KeyedSubtree(key: _anchorKey, child: _buildField(context)),
+    return ConstrainedBox(
+      constraints: BoxConstraints(minWidth: widget.minWidth),
+      child: TapRegion(
+        groupId: this,
+        onTapOutside: (_) {
+          _focusNode.unfocus();
+          _close();
+        },
+        child: CompositedTransformTarget(
+          link: _layerLink,
+          child: OverlayPortal(
+            controller: _overlay,
+            overlayChildBuilder: (context) =>
+                TapRegion(groupId: this, child: _buildPopup(context)),
+            child: AppOverlayAnchorTracker(
+              onGeometryChanged: _handleAnchorGeometryChanged,
+              child: KeyedSubtree(key: _anchorKey, child: _buildField(context)),
+            ),
           ),
         ),
       ),
