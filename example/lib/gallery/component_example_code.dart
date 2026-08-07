@@ -332,6 +332,10 @@ AppBadge.info(
   borderRadius: BorderRadius.circular(3),
   child: const Text('自定义圆角'),
 );
+AppBadge.custom(
+  color: const Color(0xff7c3aed),
+  child: const Text('自定义颜色'),
+);
 AppBadge.success(
   padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
   child: const Text('自定义内边距'),

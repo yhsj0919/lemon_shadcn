@@ -229,6 +229,45 @@ abstract final class AppBadge {
   static _BadgePalette _mutedPalette(shad.ThemeData theme, bool dark) =>
       AppSemanticPalette.resolve(theme, AppSemanticTone.secondary);
 
+  /// A badge derived from an arbitrary business color.
+  static Widget custom({
+    Key? key,
+    required Color color,
+    required Widget child,
+    VoidCallback? onPressed,
+    Widget? leading,
+    Widget? trailing,
+    double? leadingGap,
+    double? trailingGap,
+    AppBadgeStyle appearance = AppBadgeStyle.soft,
+    AppBadgeSize size = AppBadgeSize.normal,
+    AppBadgeShape shape = AppBadgeShape.pill,
+    BorderRadiusGeometry? borderRadius,
+    EdgeInsetsGeometry? padding,
+    FontWeight? fontWeight,
+  }) => shad.SecondaryBadge(
+    key: key,
+    onPressed: onPressed,
+    style: _semanticStyle(
+      (theme, dark) => AppSemanticPalette.custom(theme, color),
+      style: appearance,
+      interactive: onPressed != null,
+      size: size,
+      shape: shape,
+      borderRadius: borderRadius,
+      padding: padding,
+      fontWeight: fontWeight,
+    ),
+    child: _content(
+      child,
+      size,
+      leading: leading,
+      trailing: trailing,
+      leadingGap: leadingGap,
+      trailingGap: trailingGap,
+    ),
+  );
+
   static Widget primary({
     Key? key,
     required Widget child,

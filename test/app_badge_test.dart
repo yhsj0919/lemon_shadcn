@@ -51,6 +51,10 @@ void main() {
               borderRadius: BorderRadius.circular(2),
               child: const Text('CustomRadius'),
             ),
+            AppBadge.custom(
+              color: const Color(0xff7c3aed),
+              child: const Text('CustomColor'),
+            ),
             AppBadge.destructive(
               appearance: AppBadgeStyle.soft,
               child: const Text('SoftDestructive'),
@@ -63,7 +67,7 @@ void main() {
     expect(find.byType(shad.PrimaryBadge), findsOneWidget);
     expect(find.byType(shad.OutlineBadge), findsOneWidget);
     expect(find.byType(shad.DestructiveBadge), findsOneWidget);
-    expect(find.byType(shad.SecondaryBadge), findsNWidgets(13));
+    expect(find.byType(shad.SecondaryBadge), findsNWidgets(14));
 
     for (final label in [
       'Primary',
@@ -81,6 +85,7 @@ void main() {
       'Warning',
       'Square',
       'CustomRadius',
+      'CustomColor',
       'SoftDestructive',
     ]) {
       expect(find.text(label), findsOneWidget);
@@ -123,5 +128,9 @@ void main() {
 
     expect(decorationOf('Square').borderRadius, BorderRadius.circular(6));
     expect(decorationOf('CustomRadius').borderRadius, BorderRadius.circular(2));
+    expect(
+      DefaultTextStyle.of(tester.element(find.text('CustomColor'))).style.color,
+      const Color(0xff7c3aed),
+    );
   });
 }

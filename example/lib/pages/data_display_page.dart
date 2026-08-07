@@ -364,6 +364,10 @@ class DataDisplayPage extends StatelessWidget {
                     borderRadius: BorderRadius.circular(3),
                     child: const Text('自定义圆角'),
                   ),
+                  AppBadge.custom(
+                    color: Color(0xff7c3aed),
+                    child: Text('自定义颜色'),
+                  ),
                   AppBadge.destructive(
                     appearance: AppBadgeStyle.soft,
                     leading: const Icon(AppLucideIcons.circleAlert, size: 12),
