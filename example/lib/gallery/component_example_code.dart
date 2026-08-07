@@ -318,6 +318,13 @@ const AppAvatarGroup(children: [
 AppCornerBadge.dot(
   position: AppCornerBadgePosition.bottomLeft,
   child: yourWidget,
+);
+
+AppCornerBadge.count(
+  count: 7,
+  shape: AppBadgeShape.square,
+  borderRadius: BorderRadius.circular(3),
+  child: yourWidget,
 );''',
     '徽章': '''AppBadge.success(size: AppBadgeSize.large, child: const Text('大'));
 AppBadge.warning(shape: AppBadgeShape.square, child: const Text('方形'));

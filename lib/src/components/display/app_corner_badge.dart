@@ -1,6 +1,8 @@
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
+import 'app_badge.dart';
+
 enum AppCornerBadgePosition { topLeft, topRight, bottomLeft, bottomRight }
 
 /// Overlays a badge on any widget without changing the child's layout size.
@@ -24,6 +26,8 @@ class AppCornerBadge extends StatelessWidget {
     Color? foregroundColor,
     double size = 20,
     EdgeInsetsGeometry padding = const EdgeInsets.symmetric(horizontal: 5),
+    AppBadgeShape shape = AppBadgeShape.pill,
+    BorderRadiusGeometry? borderRadius,
     AppCornerBadgePosition position = AppCornerBadgePosition.topRight,
     Offset offset = Offset.zero,
     double overlap = 0.6,
@@ -45,6 +49,8 @@ class AppCornerBadge extends StatelessWidget {
         foregroundColor: foregroundColor,
         size: size,
         padding: padding,
+        shape: shape,
+        borderRadius: borderRadius,
       ),
       child: child,
     );
@@ -133,6 +139,8 @@ class _AppCountBadge extends StatelessWidget {
     required this.foregroundColor,
     required this.size,
     required this.padding,
+    required this.shape,
+    required this.borderRadius,
   });
 
   final int count;
@@ -141,6 +149,8 @@ class _AppCountBadge extends StatelessWidget {
   final Color? foregroundColor;
   final double size;
   final EdgeInsetsGeometry padding;
+  final AppBadgeShape shape;
+  final BorderRadiusGeometry? borderRadius;
 
   @override
   Widget build(BuildContext context) {
@@ -153,7 +163,9 @@ class _AppCountBadge extends StatelessWidget {
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: background,
-          borderRadius: BorderRadius.circular(999),
+          borderRadius:
+              borderRadius ??
+              BorderRadius.circular(shape == AppBadgeShape.pill ? 999 : 6),
         ),
         child: ConstrainedBox(
           constraints: BoxConstraints(minWidth: size, minHeight: size),

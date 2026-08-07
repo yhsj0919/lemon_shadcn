@@ -287,6 +287,7 @@ class DataDisplayPage extends StatelessWidget {
                     count: 18,
                     position: AppCornerBadgePosition.topLeft,
                     color: Color(0xff7c3aed),
+                    shape: AppBadgeShape.square,
                     child: AppAvatar.square(
                       icon: Icon(AppLucideIcons.keyRound),
                       color: Color(0xff7c3aed),
@@ -299,6 +300,17 @@ class DataDisplayPage extends StatelessWidget {
                     child: AppAvatar.circle(
                       icon: Icon(AppLucideIcons.user),
                       color: Color(0xff3b82f6),
+                      size: 52,
+                    ),
+                  ),
+                  AppCornerBadge.count(
+                    count: 7,
+                    position: AppCornerBadgePosition.bottomRight,
+                    color: Color(0xffef4444),
+                    borderRadius: BorderRadius.all(Radius.circular(2)),
+                    child: AppAvatar.square(
+                      icon: Icon(AppLucideIcons.mail),
+                      color: Color(0xffef4444),
                       size: 52,
                     ),
                   ),

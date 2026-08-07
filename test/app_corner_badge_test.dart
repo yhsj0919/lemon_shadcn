@@ -76,4 +76,48 @@ void main() {
     expect(await translationFor(0.5), const Offset(0.5, -0.5));
     expect(await translationFor(1), Offset.zero);
   });
+
+  testWidgets('count badge supports square and custom corner radii', (
+    tester,
+  ) async {
+    Future<BoxDecoration> decorationFor({
+      AppBadgeShape shape = AppBadgeShape.pill,
+      BorderRadiusGeometry? borderRadius,
+    }) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          builder: AppShadcnScope.builder(),
+          home: Center(
+            child: AppCornerBadge.count(
+              count: 7,
+              shape: shape,
+              borderRadius: borderRadius,
+              child: const SizedBox.square(dimension: 48),
+            ),
+          ),
+        ),
+      );
+      return tester
+              .widget<DecoratedBox>(
+                find.descendant(
+                  of: find.byType(AppCornerBadge),
+                  matching: find.byType(DecoratedBox),
+                ),
+              )
+              .decoration
+          as BoxDecoration;
+    }
+
+    expect(
+      (await decorationFor(shape: AppBadgeShape.square)).borderRadius,
+      BorderRadius.circular(6),
+    );
+    expect(
+      (await decorationFor(
+        shape: AppBadgeShape.square,
+        borderRadius: BorderRadius.circular(2),
+      )).borderRadius,
+      BorderRadius.circular(2),
+    );
+  });
 }
