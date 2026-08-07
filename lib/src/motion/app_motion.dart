@@ -306,11 +306,10 @@ class _AppMotionState extends State<AppMotion> with TickerProviderStateMixin {
               final shadowCapable =
                   widget.effect == AppMotionEffect.lift ||
                   widget.effect == AppMotionEffect.glow;
-              final shadowIntensity =
-                  (shadowCapable ? settled : 0.0) *
-                  (widget.shadowColorMode == AppShadowColorMode.background
-                      ? 2.4
-                      : 1.0);
+              final shadowIntensity = !shadowCapable
+                  ? 0.0
+                  : settled *
+                        (widget.effect == AppMotionEffect.glow ? 2.2 : 1.0);
               final tint = widget.effect == AppMotionEffect.tint
                   ? _resolveShadowColor(
                       context,
@@ -443,13 +442,21 @@ class _AppMotionState extends State<AppMotion> with TickerProviderStateMixin {
     AppThemeConfig config, {
     double intensity = 1,
   }) {
+    final glow = widget.effect == AppMotionEffect.glow;
+    final glowColor = glow
+        ? config.shadows.resolveSolidShadowColor(
+            context,
+            _resolveShadowColor(context, config),
+          )
+        : null;
     return config.shadows.resolve(
       context,
       level: AppShadowLevel.interactive,
       quality: AppPageTransitionScope.shadowQualityOf(context),
-      colorMode: widget.shadowColorMode,
-      color: widget.shadowColor,
+      colorMode: glow ? AppShadowColorMode.custom : widget.shadowColorMode,
+      color: glowColor ?? widget.shadowColor,
       intensity: intensity,
+      spreadRadius: glow ? 1 : null,
     );
   }
 }

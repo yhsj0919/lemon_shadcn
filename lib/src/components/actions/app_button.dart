@@ -327,6 +327,7 @@ abstract final class AppButton {
     Widget? trailing,
     String? loadingLabel,
     AppButtonSize? size,
+    bool shadow = false,
     bool interactive = false,
     AppButtonConfig? config,
   }) => _AppAsyncButton(
@@ -339,6 +340,7 @@ abstract final class AppButton {
     trailing: trailing,
     loadingLabel: loadingLabel,
     size: size,
+    shadow: shadow,
     interactive: interactive,
     config: config,
     child: child,
@@ -354,6 +356,7 @@ abstract final class AppButton {
     Widget? trailing,
     String? loadingLabel,
     AppButtonSize? size,
+    bool shadow = false,
     bool interactive = false,
     AppButtonConfig? config,
   }) => _AppAsyncButton(
@@ -366,6 +369,7 @@ abstract final class AppButton {
     trailing: trailing,
     loadingLabel: loadingLabel,
     size: size,
+    shadow: shadow,
     interactive: interactive,
     config: config,
     child: child,
@@ -379,11 +383,13 @@ abstract final class AppButton {
     AppButtonSize? size,
     AppButtonConfig? config,
     Color? color,
+    bool shadow = false,
   }) => _AppAsyncButton(
     key: key,
     variant: AppButtonVariant.selected,
     onPressed: onPressed,
     size: size,
+    shadow: shadow,
     config: config,
     selectedColor: color,
     child: child,
@@ -399,6 +405,7 @@ abstract final class AppButton {
     Widget? trailing,
     String? loadingLabel,
     AppButtonSize? size,
+    bool shadow = false,
     bool interactive = false,
     AppButtonConfig? config,
   }) => _AppAsyncButton(
@@ -411,6 +418,7 @@ abstract final class AppButton {
     trailing: trailing,
     loadingLabel: loadingLabel,
     size: size,
+    shadow: shadow,
     interactive: interactive,
     config: config,
     child: child,
@@ -453,6 +461,7 @@ abstract final class AppButton {
     Widget? trailing,
     String? loadingLabel,
     AppButtonSize? size,
+    bool shadow = false,
     bool interactive = false,
     AppButtonConfig? config,
   }) => _AppAsyncButton(
@@ -465,6 +474,7 @@ abstract final class AppButton {
     trailing: trailing,
     loadingLabel: loadingLabel,
     size: size,
+    shadow: shadow,
     interactive: interactive,
     config: config,
     child: child,
@@ -544,6 +554,7 @@ class AppIconButton extends StatelessWidget {
     this.size,
     this.config,
     this.interactive = false,
+    this.shadow = false,
   }) : _circle = false,
        assert(action == null || onPressed == null);
 
@@ -558,6 +569,7 @@ class AppIconButton extends StatelessWidget {
     this.size,
     this.config,
     this.interactive = false,
+    this.shadow = false,
   }) : _circle = true,
        assert(action == null || onPressed == null);
 
@@ -570,6 +582,7 @@ class AppIconButton extends StatelessWidget {
   final AppButtonSize? size;
   final AppButtonConfig? config;
   final bool interactive;
+  final bool shadow;
   final bool _circle;
 
   @override
@@ -587,6 +600,7 @@ class AppIconButton extends StatelessWidget {
           size: size,
           config: config,
           interactive: interactive,
+          shadow: shadow,
           iconOnly: true,
           shapeOverride: _circle
               ? shad.ButtonShape.circle
@@ -615,6 +629,7 @@ class _AppAsyncButton extends StatefulWidget {
     this.iconOnly = false,
     this.shapeOverride,
     this.selectedColor,
+    this.shadow = false,
   }) : assert(action == null || onPressed == null);
 
   final AppButtonVariant variant;
@@ -631,6 +646,7 @@ class _AppAsyncButton extends StatefulWidget {
   final bool iconOnly;
   final shad.ButtonShape? shapeOverride;
   final Color? selectedColor;
+  final bool shadow;
 
   @override
   State<_AppAsyncButton> createState() => _AppAsyncButtonState();
@@ -1053,26 +1069,42 @@ class _AppAsyncButtonState extends State<_AppAsyncButton>
     final config = _config;
     final wantsMotion =
         config.hoverLift || config.pressEffect != AppButtonPressEffect.none;
+    final supportsShadow =
+        widget.variant == AppButtonVariant.primary ||
+        widget.variant == AppButtonVariant.secondary ||
+        widget.variant == AppButtonVariant.selected ||
+        widget.variant == AppButtonVariant.outline ||
+        widget.variant == AppButtonVariant.destructive;
+    final showDefaultShadow = widget.shadow && supportsShadow;
     // Chrome / plain buttons: no transform wrapper, no hover jump.
-    if (!wantsMotion) return control;
+    if (!wantsMotion && !showDefaultShadow) return control;
 
     final enabledForPress = enabled && config.enabled && !_effectiveRunning;
     final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
     final backgroundless =
-        widget.variant == AppButtonVariant.outline ||
         widget.variant == AppButtonVariant.ghost ||
         widget.variant == AppButtonVariant.link ||
         widget.variant == AppButtonVariant.text;
-    final shadowColor = switch (widget.variant) {
+    final rawShadowColor = switch (widget.variant) {
       AppButtonVariant.primary => theme.colorScheme.primary,
+      // Pale secondary fills disappear when reused as a translucent shadow.
       AppButtonVariant.secondary => theme.colorScheme.secondaryForeground,
-      AppButtonVariant.selected => theme.colorScheme.primary,
+      AppButtonVariant.selected =>
+        widget.selectedColor ?? theme.colorScheme.primary,
       AppButtonVariant.destructive => theme.colorScheme.destructive,
-      AppButtonVariant.outline ||
+      // The flattened border token is intentionally very light; use its
+      // foreground semantic so the outline shadow remains visible on white.
+      AppButtonVariant.outline => theme.colorScheme.mutedForeground,
       AppButtonVariant.ghost ||
       AppButtonVariant.link ||
       AppButtonVariant.text => theme.colorScheme.foreground,
     };
+    final solidColorShadow = widget.variant == AppButtonVariant.primary;
+    final shadowColor = solidColorShadow
+        ? AppTheme.of(
+            context,
+          ).shadows.resolveSolidShadowColor(context, rawShadowColor)
+        : rawShadowColor;
     final circular =
         widget.iconOnly ||
         widget.shapeOverride == shad.ButtonShape.circle ||
@@ -1124,9 +1156,26 @@ class _AppAsyncButtonState extends State<_AppAsyncButton>
                     borderRadius: circular
                         ? BorderRadius.circular(999)
                         : theme.borderRadiusMd,
-                    boxShadow: backgroundless
+                    boxShadow: showDefaultShadow
+                        ? AppTheme.of(context).shadows.resolve(
+                            context,
+                            level: AppShadowLevel.interactive,
+                            colorMode: AppShadowColorMode.custom,
+                            color: shadowColor,
+                            blurRadius: 10,
+                            spreadRadius: 0,
+                            offset: const Offset(0, 3),
+                            intensity: (1.6 + hoverT * 0.25) * (1.0 - pressT),
+                          )
+                        : backgroundless
                         ? const []
-                        : _motion.hoverShadow(shadowColor, shadowT),
+                        : AppTheme.of(context).shadows.resolve(
+                            context,
+                            level: AppShadowLevel.interactive,
+                            colorMode: AppShadowColorMode.custom,
+                            color: shadowColor,
+                            intensity: shadowT,
+                          ),
                   ),
                   child: child,
                 ),

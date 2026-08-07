@@ -27,8 +27,18 @@ class ActionsPage extends StatelessWidget {
                 loadingLabel: '保存中',
                 child: const Text('异步主按钮'),
               ),
+              AppButton.primary(
+                shadow: true,
+                onPressed: () {},
+                child: const Text('阴影主按钮'),
+              ),
               AppButton.secondary(onPressed: () {}, child: const Text('次要按钮')),
               AppButton.outline(onPressed: () {}, child: const Text('描边按钮')),
+              AppButton.outline(
+                shadow: true,
+                onPressed: () {},
+                child: const Text('阴影描边按钮'),
+              ),
               AppButton.ghost(onPressed: () {}, child: const Text('幽灵按钮')),
               AppButton.destructive(
                 onPressed: () {},
@@ -36,6 +46,56 @@ class ActionsPage extends StatelessWidget {
               ),
               AppButton.link(onPressed: () {}, child: const Text('链接按钮')),
               AppButton.text(onPressed: () {}, child: const Text('文本按钮')),
+            ],
+          ),
+        ),
+        ComponentSection(
+          title: '按钮阴影',
+          child: Wrap(
+            spacing: 16,
+            runSpacing: 16,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              AppButton.primary(
+                shadow: true,
+                onPressed: () {},
+                child: const Text('主题色阴影'),
+              ),
+              AppButton.secondary(
+                shadow: true,
+                onPressed: () {},
+                child: const Text('次要色阴影'),
+              ),
+              AppButton.selected(
+                shadow: true,
+                color: const Color(0xff7c3aed),
+                onPressed: () {},
+                child: const Text('自定义选中色'),
+              ),
+              AppButton.outline(
+                shadow: true,
+                onPressed: () {},
+                child: const Text('边框色阴影'),
+              ),
+              AppButton.destructive(
+                shadow: true,
+                onPressed: () {},
+                child: const Text('危险色阴影'),
+              ),
+              AppIconButton(
+                shadow: true,
+                variant: AppButtonVariant.primary,
+                tooltip: '方形阴影图标按钮',
+                onPressed: () {},
+                icon: const Icon(LucideIcons.plus),
+              ),
+              AppIconButton.circle(
+                shadow: true,
+                variant: AppButtonVariant.outline,
+                tooltip: '圆形阴影图标按钮',
+                onPressed: () {},
+                icon: const Icon(LucideIcons.arrowUpRight),
+              ),
             ],
           ),
         ),

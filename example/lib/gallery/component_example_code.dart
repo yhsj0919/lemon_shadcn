@@ -20,7 +20,25 @@ Wrap(
   '从导航中选择组件分类，查看组件状态、交互方式和推荐用法。',
 );''',
     '按钮变体': '''AppButton.primary(onPressed: () {}, child: const Text('主要按钮'));
+AppButton.primary(shadow: true, onPressed: () {}, child: const Text('阴影按钮'));
 AppButton.outline(onPressed: () {}, child: const Text('描边按钮'));''',
+    '按钮阴影': '''AppButton.primary(
+  shadow: true,
+  onPressed: () {},
+  child: const Text('主题色阴影'),
+);
+AppButton.outline(
+  shadow: true,
+  onPressed: () {},
+  child: const Text('边框色阴影'),
+);
+AppIconButton.circle(
+  shadow: true,
+  variant: AppButtonVariant.outline,
+  tooltip: '阴影图标按钮',
+  onPressed: () {},
+  icon: const Icon(AppLucideIcons.arrowUpRight),
+);''',
     '按钮尺寸': '''AppButton.outline(
   size: AppButtonSize.small,
   onPressed: () {},

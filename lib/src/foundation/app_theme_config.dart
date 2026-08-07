@@ -239,14 +239,11 @@ class AppChartTheme {
 @immutable
 class AppMotionTokens {
   const AppMotionTokens({
-    this.hoverOffset = const Offset(0, -3),
-    this.hoverScale = 1.015,
-    this.pressedScale = 0.96,
-    this.pressExtraLift = 1.5,
-    this.unhoveredPressNudge = 1.0,
+    this.hoverOffset = const Offset(0, -2),
+    this.hoverScale = 1.008,
+    this.pressedScale = 0.985,
     this.hoverDuration = const Duration(milliseconds: 240),
     this.pressDuration = const Duration(milliseconds: 140),
-    this.hoverShadowOpacity = 0.14,
   });
 
   static const standard = AppMotionTokens();
@@ -254,44 +251,21 @@ class AppMotionTokens {
   final Offset hoverOffset;
   final double hoverScale;
   final double pressedScale;
-  final double pressExtraLift;
-  final double unhoveredPressNudge;
   final Duration hoverDuration;
   final Duration pressDuration;
-  final double hoverShadowOpacity;
-
-  /// Hover elevation shadow; [strength] 0..1 keeps list shape stable for lerps.
-  List<BoxShadow> hoverShadow(Color color, double strength) {
-    final t = strength.clamp(0.0, 1.0);
-    return [
-      BoxShadow(
-        color: color.withValues(alpha: hoverShadowOpacity * t),
-        blurRadius: 10 + 6 * t,
-        spreadRadius: -2,
-        offset: Offset(0, 2 + 2 * t),
-      ),
-    ];
-  }
-
   AppMotionTokens copyWith({
     Offset? hoverOffset,
     double? hoverScale,
     double? pressedScale,
-    double? pressExtraLift,
-    double? unhoveredPressNudge,
     Duration? hoverDuration,
     Duration? pressDuration,
-    double? hoverShadowOpacity,
   }) {
     return AppMotionTokens(
       hoverOffset: hoverOffset ?? this.hoverOffset,
       hoverScale: hoverScale ?? this.hoverScale,
       pressedScale: pressedScale ?? this.pressedScale,
-      pressExtraLift: pressExtraLift ?? this.pressExtraLift,
-      unhoveredPressNudge: unhoveredPressNudge ?? this.unhoveredPressNudge,
       hoverDuration: hoverDuration ?? this.hoverDuration,
       pressDuration: pressDuration ?? this.pressDuration,
-      hoverShadowOpacity: hoverShadowOpacity ?? this.hoverShadowOpacity,
     );
   }
 }
@@ -306,10 +280,10 @@ class AppMotionTheme {
     this.depthDuration = const Duration(milliseconds: 320),
     this.depthTiltDuration = const Duration(milliseconds: 100),
     this.depthPressDuration = const Duration(milliseconds: 150),
-    this.depthRotateY = 0.14,
-    this.depthOffsetY = -10,
-    this.depthTranslateZ = 18,
-    this.depthPressAmount = 0.42,
+    this.depthRotateY = 0.08,
+    this.depthOffsetY = -4,
+    this.depthTranslateZ = 8,
+    this.depthPressAmount = 0.25,
     this.tokens = const AppMotionTokens(),
     this.interactive = true,
   });
@@ -341,10 +315,10 @@ class AppShadowTheme {
     this.enabled = true,
     this.colorMode = AppShadowColorMode.auto,
     this.ambientOpacity = 0.03,
-    this.colorOpacity = 0.12,
-    this.darkColorOpacity = 0.16,
-    this.blurRadius = 12,
-    this.spreadRadius = -2,
+    this.colorOpacity = 0.09,
+    this.darkColorOpacity = 0.13,
+    this.blurRadius = 8,
+    this.spreadRadius = 0,
     this.offset = const Offset(0, 2),
   });
 
@@ -378,6 +352,9 @@ class AppShadowTheme {
     AppShadowColorMode? colorMode,
     Color? color,
     double intensity = 1,
+    double? blurRadius,
+    double? spreadRadius,
+    Offset? offset,
   }) {
     final effectiveQuality =
         quality ?? AppPageTransitionScope.shadowQualityOf(context);
@@ -402,14 +379,17 @@ class AppShadowTheme {
     final effectiveIntensity = intensity.clamp(0.0, 3.0) * levelFactor;
     final opacity =
         (dark ? darkColorOpacity : colorOpacity) * effectiveIntensity;
+    final resolvedBlurRadius = blurRadius ?? this.blurRadius;
+    final resolvedSpreadRadius = spreadRadius ?? this.spreadRadius;
+    final resolvedOffset = offset ?? this.offset;
 
     if (effectiveQuality == AppShadowQuality.reduced) {
       return [
         BoxShadow(
           color: resolvedColor.withValues(alpha: opacity * 0.65),
-          blurRadius: blurRadius.clamp(0, 6),
-          spreadRadius: spreadRadius.clamp(-3, 0),
-          offset: offset * 0.55,
+          blurRadius: resolvedBlurRadius.clamp(0, 6),
+          spreadRadius: resolvedSpreadRadius.clamp(0, 2) * 0.5,
+          offset: resolvedOffset * 0.55,
         ),
       ];
     }
@@ -417,9 +397,9 @@ class AppShadowTheme {
     return [
       BoxShadow(
         color: resolvedColor.withValues(alpha: opacity),
-        blurRadius: blurRadius,
-        spreadRadius: spreadRadius,
-        offset: offset,
+        blurRadius: resolvedBlurRadius,
+        spreadRadius: resolvedSpreadRadius,
+        offset: resolvedOffset,
       ),
     ];
   }
@@ -446,16 +426,29 @@ class AppShadowTheme {
             visual?.background ??
             colors.primary,
     };
+    // Color modes only select the source. Normalize chromatic colors to a
+    // shadow-safe luminance so bright surface colors do not disappear after
+    // blending with the page background. Hue and saturation stay unchanged.
     final resolved = source ?? colors.primary;
-    if (mode == AppShadowColorMode.custom) return resolved;
     final hsl = HSLColor.fromColor(resolved);
-    if (mode == AppShadowColorMode.background) {
-      return hsl
-          .withSaturation((hsl.saturation * 0.9).clamp(0, 1))
-          .withLightness(hsl.lightness.clamp(0.26, 0.34))
-          .toColor();
-    }
-    return hsl.withSaturation((hsl.saturation * 0.72).clamp(0, 1)).toColor();
+    if (hsl.saturation < 0.08) return resolved;
+    final dark = shad.Theme.of(context).brightness == shad.Brightness.dark;
+    final lightness = dark
+        ? hsl.lightness.clamp(0.58, 1.0)
+        : hsl.lightness.clamp(0.0, 0.32);
+    return hsl.withLightness(lightness).toColor();
+  }
+
+  /// Creates sufficient tonal separation between a solid-colored surface and
+  /// its same-hue shadow. Soft surfaces should continue using [resolveColor].
+  Color resolveSolidShadowColor(BuildContext context, Color color) {
+    final hsl = HSLColor.fromColor(color);
+    if (hsl.saturation < 0.08) return color;
+    final dark = shad.Theme.of(context).brightness == shad.Brightness.dark;
+    final lightness = dark
+        ? hsl.lightness.clamp(0.66, 1.0)
+        : hsl.lightness.clamp(0.0, 0.25);
+    return hsl.withLightness(lightness).toColor();
   }
 }
 
@@ -576,17 +569,17 @@ class AppThemeConfig {
         motion: const AppMotionTheme(
           tokens: AppMotionTokens(
             hoverOffset: Offset(0, -1),
-            hoverScale: 1.01,
-            pressedScale: 0.98,
+            hoverScale: 1.006,
+            pressedScale: 0.99,
             hoverDuration: Duration(milliseconds: 220),
           ),
         ),
         shadows: const AppShadowTheme(
-          ambientOpacity: 0.05,
-          colorOpacity: 0.12,
-          darkColorOpacity: 0.2,
-          blurRadius: 18,
-          spreadRadius: -3,
+          ambientOpacity: 0.04,
+          colorOpacity: 0.09,
+          darkColorOpacity: 0.14,
+          blurRadius: 10,
+          spreadRadius: 0,
           offset: Offset(0, 3),
         ),
       ),
@@ -616,17 +609,17 @@ class AppThemeConfig {
           tokens: AppMotionTokens(
             hoverOffset: Offset.zero,
             hoverScale: 1,
-            pressedScale: 0.99,
+            pressedScale: 0.995,
             hoverDuration: Duration(milliseconds: 120),
             pressDuration: Duration(milliseconds: 100),
           ),
         ),
         shadows: const AppShadowTheme(
-          ambientOpacity: 0.04,
-          colorOpacity: 0.08,
-          darkColorOpacity: 0.16,
-          blurRadius: 10,
-          spreadRadius: -2,
+          ambientOpacity: 0.03,
+          colorOpacity: 0.07,
+          darkColorOpacity: 0.12,
+          blurRadius: 8,
+          spreadRadius: 0,
           offset: Offset(0, 2),
         ),
       ),
@@ -658,17 +651,17 @@ class AppThemeConfig {
         motion: const AppMotionTheme(
           tokens: AppMotionTokens(
             hoverOffset: Offset(0, -1),
-            hoverScale: 1.01,
-            pressedScale: 0.97,
+            hoverScale: 1.006,
+            pressedScale: 0.985,
             hoverDuration: Duration(milliseconds: 200),
           ),
         ),
         shadows: const AppShadowTheme(
-          ambientOpacity: 0.08,
-          colorOpacity: 0.16,
-          darkColorOpacity: 0.24,
-          blurRadius: 14,
-          spreadRadius: -2,
+          ambientOpacity: 0.05,
+          colorOpacity: 0.11,
+          darkColorOpacity: 0.16,
+          blurRadius: 10,
+          spreadRadius: 0,
           offset: Offset(0, 2),
         ),
       ),

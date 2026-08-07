@@ -9,6 +9,7 @@ import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
 import '../../foundation/app_control_box.dart';
 import '../../foundation/app_shadcn_scope.dart';
+import '../../foundation/app_theme_config.dart';
 import 'app_field.dart';
 import 'app_form.dart';
 
@@ -24,15 +25,26 @@ class AppSortableDragFeedback extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = shad.Theme.of(context);
-    return Material(
-      color: theme.colorScheme.popover,
-      elevation: 4,
-      shadowColor: theme.colorScheme.foreground.withValues(alpha: 0.18),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(theme.radiusMd),
-        side: BorderSide(color: theme.colorScheme.border, width: 1),
+    final radius = BorderRadius.circular(theme.radiusMd);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: radius,
+        boxShadow: AppTheme.of(context).shadows.resolve(
+          context,
+          level: AppShadowLevel.floating,
+          colorMode: AppShadowColorMode.custom,
+          color: theme.colorScheme.foreground,
+        ),
       ),
-      child: child,
+      child: Material(
+        color: theme.colorScheme.popover,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: radius,
+          side: BorderSide(color: theme.colorScheme.border, width: 1),
+        ),
+        child: child,
+      ),
     );
   }
 }

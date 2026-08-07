@@ -126,6 +126,9 @@ class AppCard extends StatelessWidget {
                 quality: shadowQuality,
                 colorMode: tintColor == null ? null : AppShadowColorMode.custom,
                 color: tintColor,
+                // Saturated shadows need slightly more opacity than neutral
+                // surface shadows to remain visible beside the soft tint.
+                intensity: tintColor == null ? 1 : 1.5,
               ));
     return shad.Card(
       padding: padding,

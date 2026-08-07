@@ -42,9 +42,9 @@ abstract final class AppOverlayStyle {
     final dark = isDark(context);
     return [
       BoxShadow(
-        color: dark ? const Color(0x52000000) : const Color(0x1f000000),
-        blurRadius: 16,
-        spreadRadius: -2,
+        color: dark ? const Color(0x3d000000) : const Color(0x18000000),
+        blurRadius: 10,
+        spreadRadius: 0,
         offset: const Offset(0, 3),
       ),
     ];

@@ -9,7 +9,9 @@ class MotionPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = ShadcnTheme.of(context).colorScheme;
-    const followCardColor = Color(0xFF14B8A6);
+    // Keep this identical to the color-driven AppCard demo for direct visual
+    // comparison of the shared shadow rule.
+    const followCardColor = Color(0xffd97706);
     return ComponentPage(
       title: '动效',
       description: '具有主题感知阴影的可复用桌面反馈。',

@@ -158,13 +158,15 @@ class _AppPointerTooltipState extends State<AppPointerTooltip>
                 color: theme.colorScheme.popover,
                 border: Border.all(color: theme.colorScheme.border),
                 borderRadius: BorderRadius.circular(tooltip.radius),
-                boxShadow: <BoxShadow>[
-                  BoxShadow(
-                    color: theme.colorScheme.foreground.withValues(alpha: 0.08),
-                    blurRadius: 12,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+                boxShadow: AppTheme.of(context).shadows.resolve(
+                  context,
+                  level: AppShadowLevel.floating,
+                  colorMode: AppShadowColorMode.custom,
+                  color: theme.colorScheme.foreground,
+                  blurRadius: 8,
+                  spreadRadius: 0,
+                  offset: const Offset(0, 2),
+                ),
               ),
               child: Padding(
                 padding: tooltip.padding,
