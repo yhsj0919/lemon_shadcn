@@ -27,8 +27,8 @@ class AppCard extends StatelessWidget {
     this.shadowQuality,
     this.shadow = true,
     this.color,
-    this.lightTintOpacity = 0.06,
-    this.darkTintOpacity = 0.10,
+    this.lightTintOpacity = 0.04,
+    this.darkTintOpacity = 0.07,
   });
 
   const AppCard.elevated({
@@ -49,8 +49,8 @@ class AppCard extends StatelessWidget {
     this.shadowQuality,
     this.shadow = true,
     this.color,
-    this.lightTintOpacity = 0.06,
-    this.darkTintOpacity = 0.10,
+    this.lightTintOpacity = 0.04,
+    this.darkTintOpacity = 0.07,
   });
 
   /// Color-driven card with a subtle tinted background, matching border, and
@@ -73,8 +73,8 @@ class AppCard extends StatelessWidget {
     this.shadowLevel = AppShadowLevel.card,
     this.shadowQuality,
     this.shadow = true,
-    this.lightTintOpacity = 0.06,
-    this.darkTintOpacity = 0.10,
+    this.lightTintOpacity = 0.04,
+    this.darkTintOpacity = 0.07,
   });
 
   final Widget child;

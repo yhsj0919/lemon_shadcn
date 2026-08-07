@@ -162,7 +162,7 @@ void main() {
     expect(
       card.fillColor,
       Color.alphaBlend(
-        accent.withValues(alpha: 0.06),
+        accent.withValues(alpha: 0.04),
         config.lightTheme.colorScheme.background,
       ),
     );

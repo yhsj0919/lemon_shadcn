@@ -5,7 +5,6 @@ import '../../foundation/app_overlay_style.dart';
 import '../../foundation/app_shadcn_scope.dart';
 import '../../foundation/app_theme_config.dart';
 
-typedef AppInstantTooltip = shad.InstantTooltip;
 typedef AppOverlayController = shad.OverlayController;
 typedef AppOverlayCompleter<T> = shad.OverlayCompleter<T>;
 typedef AppDialogConfiguration<T> = shad.DialogConfiguration<T>;
@@ -22,7 +21,7 @@ class AppTooltip extends StatelessWidget {
     required this.tooltip,
     this.alignment = Alignment.topCenter,
     this.anchorAlignment = Alignment.bottomCenter,
-    this.waitDuration = const Duration(milliseconds: 500),
+    this.waitDuration,
     this.showDuration,
     this.minDuration = Duration.zero,
   });
@@ -31,7 +30,7 @@ class AppTooltip extends StatelessWidget {
   final WidgetBuilder tooltip;
   final AlignmentGeometry alignment;
   final AlignmentGeometry anchorAlignment;
-  final Duration waitDuration;
+  final Duration? waitDuration;
   final Duration? showDuration;
   final Duration minDuration;
 
@@ -46,13 +45,85 @@ class AppTooltip extends StatelessWidget {
         : (showDuration ??
               config?.tooltip.fadeDuration ??
               const AppTooltipTheme().fadeDuration);
+    final tooltipTheme = config?.tooltip ?? const AppTooltipTheme();
     return shad.Tooltip(
       alignment: alignment,
       anchorAlignment: anchorAlignment,
-      waitDuration: waitDuration,
+      waitDuration: waitDuration ?? tooltipTheme.waitDuration,
       showDuration: duration,
       minDuration: minDuration,
-      tooltip: tooltip,
+      tooltip: (context) => AppTooltipSurface(child: tooltip(context)),
+      child: child,
+    );
+  }
+}
+
+class AppTooltipSurface extends StatelessWidget {
+  const AppTooltipSurface({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = shad.Theme.of(context);
+    final tooltip =
+        AppTheme.maybeOf(context)?.tooltip ?? const AppTooltipTheme();
+    return Padding(
+      padding: EdgeInsets.all(tooltip.margin),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: tooltip.maxWidth),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: theme.colorScheme.foreground,
+            borderRadius: BorderRadius.circular(tooltip.radius),
+          ),
+          child: Padding(
+            padding: tooltip.padding,
+            child: DefaultTextStyle.merge(
+              style: TextStyle(
+                color: theme.colorScheme.background,
+                fontSize: tooltip.fontSize,
+                height: 1.25,
+              ),
+              child: IconTheme.merge(
+                data: IconThemeData(
+                  color: theme.colorScheme.background,
+                  size: tooltip.fontSize + 2,
+                ),
+                child: child,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class AppInstantTooltip extends StatelessWidget {
+  const AppInstantTooltip({
+    super.key,
+    required this.child,
+    required this.tooltipBuilder,
+    this.behavior = HitTestBehavior.translucent,
+    this.tooltipAlignment = Alignment.bottomCenter,
+    this.tooltipAnchorAlignment,
+  });
+
+  final Widget child;
+  final HitTestBehavior behavior;
+  final WidgetBuilder tooltipBuilder;
+  final AlignmentGeometry tooltipAlignment;
+  final AlignmentGeometry? tooltipAnchorAlignment;
+
+  @override
+  Widget build(BuildContext context) {
+    return shad.InstantTooltip(
+      behavior: behavior,
+      tooltipAlignment: tooltipAlignment,
+      tooltipAnchorAlignment: tooltipAnchorAlignment,
+      tooltipBuilder: (context) =>
+          AppTooltipSurface(child: tooltipBuilder(context)),
       child: child,
     );
   }

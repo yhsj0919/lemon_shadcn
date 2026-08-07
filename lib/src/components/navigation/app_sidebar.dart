@@ -319,7 +319,7 @@ class _CompactDestination extends StatelessWidget {
     if (destination.children.isEmpty) {
       return Padding(
         padding: const EdgeInsets.only(bottom: 4),
-        child: shad.Tooltip(
+        child: AppTooltip(
           tooltip: (context) => AppText.listItem(destination.label),
           child: trigger,
         ),

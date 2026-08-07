@@ -86,29 +86,41 @@ class AppTooltipTheme {
   const AppTooltipTheme({
     this.fadeDuration = const Duration(milliseconds: 140),
     this.moveDuration = const Duration(milliseconds: 120),
-    this.padding = const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-    this.margin = 8,
-    this.radius = 7,
+    this.waitDuration = const Duration(milliseconds: 400),
+    this.padding = const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+    this.margin = 7,
+    this.radius = 6,
+    this.fontSize = 12,
+    this.maxWidth = 240,
   });
 
   final Duration fadeDuration;
   final Duration moveDuration;
+  final Duration waitDuration;
   final EdgeInsets padding;
   final double margin;
   final double radius;
+  final double fontSize;
+  final double maxWidth;
 
   AppTooltipTheme copyWith({
     Duration? fadeDuration,
     Duration? moveDuration,
+    Duration? waitDuration,
     EdgeInsets? padding,
     double? margin,
     double? radius,
+    double? fontSize,
+    double? maxWidth,
   }) => AppTooltipTheme(
     fadeDuration: fadeDuration ?? this.fadeDuration,
     moveDuration: moveDuration ?? this.moveDuration,
+    waitDuration: waitDuration ?? this.waitDuration,
     padding: padding ?? this.padding,
     margin: margin ?? this.margin,
     radius: radius ?? this.radius,
+    fontSize: fontSize ?? this.fontSize,
+    maxWidth: maxWidth ?? this.maxWidth,
   );
 }
 

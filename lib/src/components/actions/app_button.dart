@@ -10,6 +10,7 @@ import '../../foundation/app_shadcn_scope.dart';
 import '../../foundation/app_theme_config.dart';
 import '../../motion/app_hover_press_ticker.dart';
 import '../display/app_semantic_style.dart';
+import '../overlay/app_overlay_components.dart';
 
 typedef AppButtonCallback = FutureOr<void> Function();
 typedef AppWidgetGroupItem = shad.ButtonGroupItem;
@@ -587,7 +588,7 @@ class AppIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return shad.Tooltip(
+    return AppTooltip(
       tooltip: (context) => Text(tooltip),
       child: Semantics(
         label: tooltip,

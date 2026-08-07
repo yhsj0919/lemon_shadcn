@@ -10,6 +10,7 @@ import '../../foundation/app_interactive_style.dart';
 import '../actions/app_button.dart';
 import '../display/app_empty.dart';
 import '../display/app_item.dart';
+import '../overlay/app_overlay_components.dart';
 import 'app_field.dart';
 import 'app_form.dart';
 import 'app_input_group.dart';
@@ -237,7 +238,7 @@ class _AppFilePickerState extends State<AppFilePicker> {
     final remove = !widget.allowRemove
         ? null
         : widget.variant == AppFilePickerVariant.simple
-        ? shad.Tooltip(
+        ? AppTooltip(
             tooltip: (context) => const Text('移除文件'),
             child: Semantics(
               button: true,

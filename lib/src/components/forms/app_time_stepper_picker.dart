@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
 import '../actions/app_button.dart';
+import '../overlay/app_overlay_components.dart';
 import '../../foundation/app_control_box.dart';
 import '../../foundation/app_interactive_style.dart';
 import 'app_field.dart';
@@ -345,10 +346,8 @@ class _AppTimeStepperEditorState extends State<_AppTimeStepperEditor> {
           Positioned(
             bottom: widget.showActions ? 60 : 0,
             right: 12,
-            child: shad.Tooltip(
-              tooltip: (context) => const shad.TooltipContainer(
-                child: Text('↑↓ 调整 1，按住 Shift 调整 5'),
-              ),
+            child: AppTooltip(
+              tooltip: (context) => const Text('↑↓ 调整 1，按住 Shift 调整 5'),
               child: Icon(
                 shad.LucideIcons.circleHelp,
                 size: 14,
