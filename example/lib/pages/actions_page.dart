@@ -27,18 +27,8 @@ class ActionsPage extends StatelessWidget {
                 loadingLabel: '保存中',
                 child: const Text('异步主按钮'),
               ),
-              AppButton.primary(
-                shadow: true,
-                onPressed: () {},
-                child: const Text('阴影主按钮'),
-              ),
               AppButton.secondary(onPressed: () {}, child: const Text('次要按钮')),
               AppButton.outline(onPressed: () {}, child: const Text('描边按钮')),
-              AppButton.outline(
-                shadow: true,
-                onPressed: () {},
-                child: const Text('阴影描边按钮'),
-              ),
               AppButton.ghost(onPressed: () {}, child: const Text('幽灵按钮')),
               AppButton.destructive(
                 onPressed: () {},

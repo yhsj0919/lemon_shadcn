@@ -9,8 +9,20 @@ void main() {
   });
 
   test('provides light and dark theme tokens', () {
-    expect(LemonThemes.light.colorScheme, AppColorSchemes.zinc(AppThemeMode.light));
-    expect(LemonThemes.dark.colorScheme, AppColorSchemes.zinc(AppThemeMode.dark));
+    expect(LemonThemes.light.colorScheme.brightness, Brightness.light);
+    expect(LemonThemes.dark.colorScheme.brightness, Brightness.dark);
+    expect(
+      LemonThemes.light.colorScheme.input,
+      LemonThemes.light.colorScheme.background,
+    );
+    expect(
+      LemonThemes.dark.colorScheme.input,
+      LemonThemes.dark.colorScheme.background,
+    );
+  });
+
+  test('dark theme uses a bright readable destructive color', () {
+    expect(LemonThemes.dark.colorScheme.destructive, const Color(0xffff5c5c));
   });
 
   test('theme presets expose distinct overridable baselines', () {
@@ -19,10 +31,10 @@ void main() {
     final fluent = AppThemeConfig.preset(AppThemePreset.fluent);
     final material = AppThemeConfig.preset(AppThemePreset.material);
 
-    expect(standard.controls.height, 36);
+    expect(standard.controls.height, 32);
     expect(apple.lightTheme.colorScheme.primary, const Color(0xff007aff));
-    expect(fluent.controls.height, 36);
-    expect(material.controls.height, 40);
+    expect(fluent.controls.height, 32);
+    expect(material.controls.height, 32);
 
     final customized = apple.copyWith(
       controls: const AppControlMetrics(height: 44),

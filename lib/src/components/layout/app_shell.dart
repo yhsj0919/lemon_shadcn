@@ -232,7 +232,14 @@ class AppShell extends StatelessWidget {
                                 ],
                               ),
                             ),
-                            ...headerActions,
+                            for (
+                              var index = 0;
+                              index < headerActions.length;
+                              index++
+                            ) ...[
+                              if (index > 0) const SizedBox(width: 12),
+                              headerActions[index],
+                            ],
                           ],
                         ),
                       ),

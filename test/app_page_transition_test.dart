@@ -145,7 +145,13 @@ void main() {
 
     final card = tester.widget<shad.Card>(find.byType(shad.Card));
     expect(card.filled, isTrue);
-    expect(card.borderColor, accent);
+    expect(
+      card.borderColor,
+      Color.alphaBlend(
+        accent.withValues(alpha: 0.18),
+        config.lightTheme.colorScheme.background,
+      ),
+    );
     expect(
       card.fillColor,
       Color.alphaBlend(
@@ -154,6 +160,11 @@ void main() {
       ),
     );
     expect(card.boxShadow, hasLength(1));
-    expect(card.boxShadow!.single.color, accent.withValues(alpha: 0.12));
+    expect(
+      card.boxShadow!.single.color,
+      HSLColor.fromColor(
+        accent,
+      ).withLightness(0.32).toColor().withValues(alpha: 0.135),
+    );
   });
 }

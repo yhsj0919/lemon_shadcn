@@ -15,6 +15,7 @@ class ComponentGallery extends StatefulWidget {
 
 class _ComponentGalleryState extends State<ComponentGallery> {
   var _preset = AppThemePreset.standard;
+  var _themeMode = AppThemeMode.light;
 
   @override
   Widget build(BuildContext context) {
@@ -27,14 +28,20 @@ class _ComponentGalleryState extends State<ComponentGallery> {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      themeMode: ThemeMode.system,
+      theme: ThemeData.light(),
+      darkTheme: ThemeData.dark(),
+      themeMode: _themeMode == AppThemeMode.dark
+          ? ThemeMode.dark
+          : ThemeMode.light,
       builder: AppShadcnScope.builder(
         locale: const Locale('zh', 'CN'),
-        config: AppThemeConfig.preset(_preset),
+        config: AppThemeConfig.preset(_preset, themeMode: _themeMode),
       ),
       home: GalleryShell(
         preset: _preset,
         onPresetChanged: (value) => setState(() => _preset = value),
+        themeMode: _themeMode,
+        onThemeModeChanged: (value) => setState(() => _themeMode = value),
       ),
     );
   }
@@ -45,10 +52,14 @@ class GalleryShell extends StatefulWidget {
     super.key,
     required this.preset,
     required this.onPresetChanged,
+    required this.themeMode,
+    required this.onThemeModeChanged,
   });
 
   final AppThemePreset preset;
   final ValueChanged<AppThemePreset> onPresetChanged;
+  final AppThemeMode themeMode;
+  final ValueChanged<AppThemeMode> onThemeModeChanged;
 
   @override
   State<GalleryShell> createState() => _GalleryShellState();
@@ -107,6 +118,24 @@ class _GalleryShellState extends State<GalleryShell> {
       pageTitle: selected.label,
       pageSubtitle: selected.subtitle,
       headerActions: [
+        AppIconButton(
+          key: const Key('theme-mode-toggle'),
+          variant: AppButtonVariant.outline,
+          config: AppButtonConfig.plain,
+          tooltip: widget.themeMode == AppThemeMode.dark
+              ? '切换到亮色模式'
+              : '切换到暗色模式',
+          onPressed: () => widget.onThemeModeChanged(
+            widget.themeMode == AppThemeMode.dark
+                ? AppThemeMode.light
+                : AppThemeMode.dark,
+          ),
+          icon: Icon(
+            widget.themeMode == AppThemeMode.dark
+                ? AppLucideIcons.sun
+                : AppLucideIcons.moon,
+          ),
+        ),
         SizedBox(
           key: const Key('theme-preset-picker'),
           width: 152,

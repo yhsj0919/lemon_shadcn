@@ -314,7 +314,6 @@ class AppShadowTheme {
   const AppShadowTheme({
     this.enabled = true,
     this.colorMode = AppShadowColorMode.auto,
-    this.ambientOpacity = 0.03,
     this.colorOpacity = 0.09,
     this.darkColorOpacity = 0.13,
     this.blurRadius = 8,
@@ -325,7 +324,6 @@ class AppShadowTheme {
   const AppShadowTheme.none()
     : enabled = false,
       colorMode = AppShadowColorMode.auto,
-      ambientOpacity = 0,
       colorOpacity = 0,
       darkColorOpacity = 0,
       blurRadius = 0,
@@ -334,7 +332,6 @@ class AppShadowTheme {
 
   final bool enabled;
   final AppShadowColorMode colorMode;
-  final double ambientOpacity;
   final double colorOpacity;
   final double darkColorOpacity;
   final double blurRadius;
@@ -575,7 +572,6 @@ class AppThemeConfig {
           ),
         ),
         shadows: const AppShadowTheme(
-          ambientOpacity: 0.04,
           colorOpacity: 0.09,
           darkColorOpacity: 0.14,
           blurRadius: 10,
@@ -615,7 +611,6 @@ class AppThemeConfig {
           ),
         ),
         shadows: const AppShadowTheme(
-          ambientOpacity: 0.03,
           colorOpacity: 0.07,
           darkColorOpacity: 0.12,
           blurRadius: 8,
@@ -657,7 +652,6 @@ class AppThemeConfig {
           ),
         ),
         shadows: const AppShadowTheme(
-          ambientOpacity: 0.05,
           colorOpacity: 0.11,
           darkColorOpacity: 0.16,
           blurRadius: 10,
@@ -743,6 +737,7 @@ AppColorScheme _accentScheme(
 
 AppColorScheme _flatInputScheme(AppColorScheme scheme) {
   final dark = scheme.brightness == Brightness.dark;
+  const darkDestructive = Color(0xffff5c5c);
   Color soften(Color color, double opacity) =>
       Color.alphaBlend(color.withValues(alpha: opacity), scheme.background);
 
@@ -750,6 +745,7 @@ AppColorScheme _flatInputScheme(AppColorScheme scheme) {
     input: () => scheme.background,
     border: () => soften(scheme.border, dark ? 0.78 : 0.72),
     ring: () => soften(scheme.ring, dark ? 0.72 : 0.55),
+    destructive: dark ? () => darkDestructive : null,
   );
 }
 

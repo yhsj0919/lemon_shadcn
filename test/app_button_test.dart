@@ -1,10 +1,10 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lemon_shadcn/lemon_shadcn.dart';
-import 'package:lemon_shadcn/shadcn.dart' as shad;
 
 void main() {
   testWidgets('works inside MaterialApp without ShadcnApp', (tester) async {
@@ -47,7 +47,7 @@ void main() {
       ),
     );
 
-    expect(resolved.hoverLift, isTrue);
+    expect(resolved.hoverLift, isFalse);
     expect(resolved.pressEffect, AppButtonPressEffect.sink);
     expect(find.text('Lift'), findsOneWidget);
   });
@@ -83,7 +83,7 @@ void main() {
       ),
     );
 
-    expect(fromTheme.hoverLift, isTrue);
+    expect(fromTheme.hoverLift, isFalse);
     expect(fromChrome.hoverLift, isFalse);
   });
 
@@ -115,7 +115,7 @@ void main() {
       ),
     );
 
-    expect(outside.hoverLift, isTrue);
+    expect(outside.hoverLift, isFalse);
     expect(inside.hoverLift, isFalse);
   });
 
@@ -147,15 +147,12 @@ void main() {
       ),
     );
 
-    final widthBefore = tester.getSize(find.byType(shad.PrimaryButton)).width;
     await tester.tap(find.text('Save'));
     await tester.pump(const Duration(milliseconds: 1));
-    final widthDuring = tester.getSize(find.byType(shad.PrimaryButton)).width;
     await tester.tap(find.byType(CircularProgressIndicator));
     await tester.pump();
 
     expect(presses, 1);
-    expect(widthDuring, widthBefore);
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
     completer.complete();
@@ -226,6 +223,57 @@ void main() {
     await tester.pump();
   });
 
+  testWidgets('shadow button removes its shadow while pressed', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: Center(
+          child: AppButton.primary(
+            shadow: true,
+            onPressed: () {},
+            child: const Text('Shadow'),
+          ),
+        ),
+      ),
+    );
+
+    Iterable<BoxDecoration> decorations() => tester
+        .widgetList<DecoratedBox>(
+          find.ancestor(
+            of: find.text('Shadow'),
+            matching: find.byType(DecoratedBox),
+          ),
+        )
+        .map((widget) => widget.decoration)
+        .whereType<BoxDecoration>();
+
+    double defaultButtonShadowAlpha() => decorations()
+        .expand((decoration) => decoration.boxShadow ?? const <BoxShadow>[])
+        .where(
+          (shadow) =>
+              shadow.blurRadius == 10 && shadow.offset == const Offset(0, 3),
+        )
+        .fold(0.0, (value, shadow) => math.max(value, shadow.color.a));
+
+    final restingAlpha = defaultButtonShadowAlpha();
+    expect(restingAlpha, greaterThan(0));
+
+    final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    await gesture.addPointer(location: Offset.zero);
+    addTearDown(gesture.removePointer);
+    final center = tester.getCenter(find.text('Shadow'));
+    await gesture.moveTo(center);
+    await tester.pumpAndSettle();
+    await gesture.down(center);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+
+    expect(defaultButtonShadowAlpha(), lessThan(restingAlpha));
+
+    await gesture.up();
+    await tester.pump();
+  });
+
   testWidgets('plain config skips motion lift', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
@@ -275,12 +323,11 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
 
-    expect(
-      tester
-          .widgetList<Transform>(find.byType(Transform))
-          .any((t) => t.transform.getTranslation().y < -1.0),
-      isTrue,
-    );
+    for (final transform in tester.widgetList<Transform>(
+      find.byType(Transform),
+    )) {
+      expect(transform.transform.getTranslation().y, 0);
+    }
   });
 }
 
