@@ -116,6 +116,8 @@ class AppItem extends StatelessWidget {
     );
     if (onPressed == null) return content;
     final style = shad.ButtonStyle.ghost().copyWith(
+      mouseCursor: (context, states) =>
+          enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
       decoration: (context, states, value) {
         if (value is! BoxDecoration) return value;
         return value.copyWith(

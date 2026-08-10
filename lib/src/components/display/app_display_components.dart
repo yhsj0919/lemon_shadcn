@@ -121,6 +121,9 @@ class AppChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final compactStyle = AppCompactLabelStyle.apply(
       style ?? shad.ButtonVariance.secondary,
+    ).copyWith(
+      mouseCursor: (context, states) =>
+          onPressed == null ? SystemMouseCursors.basic : SystemMouseCursors.click,
     );
     return shad.ComponentTheme<shad.ChipTheme>(
       data: const shad.ChipTheme(padding: AppCompactLabelStyle.padding),

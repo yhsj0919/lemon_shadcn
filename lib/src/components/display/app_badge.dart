@@ -130,6 +130,8 @@ abstract final class AppBadge {
       ),
       iconTheme: (context, states, current) =>
           current.copyWith(size: size.iconSize),
+      mouseCursor: (context, states) =>
+          interactive ? SystemMouseCursors.click : SystemMouseCursors.basic,
     );
     return interactive ? AppInteractiveStyle.hover(compact) : compact;
   }
