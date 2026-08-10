@@ -95,7 +95,7 @@ class AppSemanticPalette {
                 solid: Color(0xff16a34a),
                 onSolid: Color(0xffffffff),
                 softBackground: Color(0xfff0fdf4),
-                foreground: Color(0xff166534),
+                foreground: Color(0xff16a34a),
               ),
       AppSemanticTone.warning =>
         dark

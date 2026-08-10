@@ -74,6 +74,14 @@ class AppBadgeSize {
 
 /// Semantic badge variants exposed through one App-prefixed facade.
 abstract final class AppBadge {
+  static Widget _badge({required Widget child, VoidCallback? onPressed}) {
+    if (onPressed != null) return child;
+    return MouseRegion(
+      cursor: SystemMouseCursors.basic,
+      child: IgnorePointer(child: child),
+    );
+  }
+
   static Widget _content(
     Widget child,
     AppBadgeSize size, {
@@ -130,7 +138,7 @@ abstract final class AppBadge {
       ),
       iconTheme: (context, states, current) =>
           current.copyWith(size: size.iconSize),
-      mouseCursor: (context, states) =>
+      mouseCursor: (context, states, current) =>
           interactive ? SystemMouseCursors.click : SystemMouseCursors.basic,
     );
     return interactive ? AppInteractiveStyle.hover(compact) : compact;
@@ -247,7 +255,7 @@ abstract final class AppBadge {
     BorderRadiusGeometry? borderRadius,
     EdgeInsetsGeometry? padding,
     FontWeight? fontWeight,
-  }) => shad.SecondaryBadge(
+  }) => _badge(onPressed: onPressed, child: shad.SecondaryBadge(
     key: key,
     onPressed: onPressed,
     style: _semanticStyle(
@@ -268,7 +276,7 @@ abstract final class AppBadge {
       leadingGap: leadingGap,
       trailingGap: trailingGap,
     ),
-  );
+  ));
 
   static Widget primary({
     Key? key,
@@ -284,7 +292,7 @@ abstract final class AppBadge {
     BorderRadiusGeometry? borderRadius,
     EdgeInsetsGeometry? padding,
     FontWeight? fontWeight,
-  }) => shad.PrimaryBadge(
+  }) => _badge(onPressed: onPressed, child: shad.PrimaryBadge(
     key: key,
     onPressed: onPressed,
     style: _style(
@@ -304,7 +312,7 @@ abstract final class AppBadge {
       leadingGap: leadingGap,
       trailingGap: trailingGap,
     ),
-  );
+  ));
 
   static Widget secondary({
     Key? key,
@@ -323,7 +331,7 @@ abstract final class AppBadge {
     FontWeight? fontWeight,
   }) {
     if (style != null || appearance == AppBadgeStyle.solid) {
-      return shad.SecondaryBadge(
+      return _badge(onPressed: onPressed, child: shad.SecondaryBadge(
         key: key,
         onPressed: onPressed,
         style: _style(
@@ -343,9 +351,9 @@ abstract final class AppBadge {
           leadingGap: leadingGap,
           trailingGap: trailingGap,
         ),
-      );
+      ));
     }
-    return shad.SecondaryBadge(
+    return _badge(onPressed: onPressed, child: shad.SecondaryBadge(
       key: key,
       onPressed: onPressed,
       style: _semanticStyle(
@@ -366,7 +374,7 @@ abstract final class AppBadge {
         leadingGap: leadingGap,
         trailingGap: trailingGap,
       ),
-    );
+    ));
   }
 
   static Widget outline({
@@ -383,7 +391,7 @@ abstract final class AppBadge {
     BorderRadiusGeometry? borderRadius,
     EdgeInsetsGeometry? padding,
     FontWeight? fontWeight,
-  }) => shad.OutlineBadge(
+  }) => _badge(onPressed: onPressed, child: shad.OutlineBadge(
     key: key,
     onPressed: onPressed,
     style: _style(
@@ -403,7 +411,7 @@ abstract final class AppBadge {
       leadingGap: leadingGap,
       trailingGap: trailingGap,
     ),
-  );
+  ));
 
   static Widget destructive({
     Key? key,
@@ -422,7 +430,7 @@ abstract final class AppBadge {
     FontWeight? fontWeight,
   }) {
     if (style != null || appearance == AppBadgeStyle.solid) {
-      return shad.DestructiveBadge(
+      return _badge(onPressed: onPressed, child: shad.DestructiveBadge(
         key: key,
         onPressed: onPressed,
         style: _style(
@@ -442,9 +450,9 @@ abstract final class AppBadge {
           leadingGap: leadingGap,
           trailingGap: trailingGap,
         ),
-      );
+      ));
     }
-    return shad.SecondaryBadge(
+    return _badge(onPressed: onPressed, child: shad.SecondaryBadge(
       key: key,
       onPressed: onPressed,
       style: _semanticStyle(
@@ -465,7 +473,7 @@ abstract final class AppBadge {
         leadingGap: leadingGap,
         trailingGap: trailingGap,
       ),
-    );
+    ));
   }
 
   /// Blue status badge. Default [appearance] is [AppBadgeStyle.soft].
@@ -483,7 +491,7 @@ abstract final class AppBadge {
     BorderRadiusGeometry? borderRadius,
     EdgeInsetsGeometry? padding,
     FontWeight? fontWeight,
-  }) => shad.SecondaryBadge(
+  }) => _badge(onPressed: onPressed, child: shad.SecondaryBadge(
     key: key,
     onPressed: onPressed,
     style: _semanticStyle(
@@ -504,7 +512,7 @@ abstract final class AppBadge {
       leadingGap: leadingGap,
       trailingGap: trailingGap,
     ),
-  );
+  ));
 
   /// Green status badge. Default [appearance] is [AppBadgeStyle.soft].
   static Widget success({
@@ -521,7 +529,7 @@ abstract final class AppBadge {
     BorderRadiusGeometry? borderRadius,
     EdgeInsetsGeometry? padding,
     FontWeight? fontWeight,
-  }) => shad.SecondaryBadge(
+  }) => _badge(onPressed: onPressed, child: shad.SecondaryBadge(
     key: key,
     onPressed: onPressed,
     style: _semanticStyle(
@@ -542,7 +550,7 @@ abstract final class AppBadge {
       leadingGap: leadingGap,
       trailingGap: trailingGap,
     ),
-  );
+  ));
 
   /// Amber status badge. Default [appearance] is [AppBadgeStyle.soft].
   static Widget warning({
@@ -559,7 +567,7 @@ abstract final class AppBadge {
     BorderRadiusGeometry? borderRadius,
     EdgeInsetsGeometry? padding,
     FontWeight? fontWeight,
-  }) => shad.SecondaryBadge(
+  }) => _badge(onPressed: onPressed, child: shad.SecondaryBadge(
     key: key,
     onPressed: onPressed,
     style: _semanticStyle(
@@ -580,7 +588,7 @@ abstract final class AppBadge {
       leadingGap: leadingGap,
       trailingGap: trailingGap,
     ),
-  );
+  ));
 }
 
 typedef _BadgePalette = AppSemanticPalette;

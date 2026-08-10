@@ -331,6 +331,7 @@ abstract final class AppButton {
     bool shadow = false,
     bool interactive = false,
     AppButtonConfig? config,
+    Color? color,
   }) => _AppAsyncButton(
     key: key,
     variant: AppButtonVariant.primary,
@@ -344,6 +345,7 @@ abstract final class AppButton {
     shadow: shadow,
     interactive: interactive,
     config: config,
+    color: color,
     child: child,
   );
 
@@ -360,6 +362,7 @@ abstract final class AppButton {
     bool shadow = false,
     bool interactive = false,
     AppButtonConfig? config,
+    Color? color,
   }) => _AppAsyncButton(
     key: key,
     variant: AppButtonVariant.secondary,
@@ -373,6 +376,7 @@ abstract final class AppButton {
     shadow: shadow,
     interactive: interactive,
     config: config,
+    color: color,
     child: child,
   );
 
@@ -409,6 +413,7 @@ abstract final class AppButton {
     bool shadow = false,
     bool interactive = false,
     AppButtonConfig? config,
+    Color? color,
   }) => _AppAsyncButton(
     key: key,
     variant: AppButtonVariant.outline,
@@ -422,6 +427,7 @@ abstract final class AppButton {
     shadow: shadow,
     interactive: interactive,
     config: config,
+    color: color,
     child: child,
   );
 
@@ -437,6 +443,7 @@ abstract final class AppButton {
     AppButtonSize? size,
     bool interactive = false,
     AppButtonConfig? config,
+    Color? color,
   }) => _AppAsyncButton(
     key: key,
     variant: AppButtonVariant.ghost,
@@ -449,6 +456,7 @@ abstract final class AppButton {
     size: size,
     interactive: interactive,
     config: config,
+    color: color,
     child: child,
   );
 
@@ -630,6 +638,7 @@ class _AppAsyncButton extends StatefulWidget {
     this.iconOnly = false,
     this.shapeOverride,
     this.selectedColor,
+    this.color,
     this.shadow = false,
   }) : assert(action == null || onPressed == null);
 
@@ -647,6 +656,7 @@ class _AppAsyncButton extends StatefulWidget {
   final bool iconOnly;
   final shad.ButtonShape? shapeOverride;
   final Color? selectedColor;
+  final Color? color;
   final bool shadow;
 
   @override
@@ -823,13 +833,37 @@ class _AppAsyncButtonState extends State<_AppAsyncButton>
           value.copyWith(size: (metrics?.iconSize ?? 16) * sizeScale),
     );
 
-    final primaryStyle = sized(
+    shad.AbstractButtonStyle colorize(
+      shad.AbstractButtonStyle style, {
+      required bool solid,
+    }) {
+      final color = widget.color;
+      if (color == null) return style;
+      final palette = AppSemanticPalette.custom(theme, color);
+      return style.copyWith(
+        decoration: (context, states, value) {
+          if (value is! BoxDecoration) return value;
+          return value.copyWith(
+            color: solid ? palette.solid : const Color(0x00000000),
+            border: solid ? value.border : Border.all(color: palette.foreground),
+          );
+        },
+        textStyle: (context, states, value) => value.copyWith(
+          color: solid ? palette.onSolid : palette.foreground,
+        ),
+        iconTheme: (context, states, value) => value.copyWith(
+          color: solid ? palette.onSolid : palette.foreground,
+        ),
+      );
+    }
+
+    final primaryStyle = colorize(sized(
       shad.ButtonStyle.primary(
         size: _config.size,
         density: widget.iconOnly ? shad.ButtonDensity.icon : _config.density,
         shape: widget.shapeOverride ?? _config.shape,
       ),
-    );
+    ), solid: true);
     final destructiveStyle = sized(
       shad.ButtonStyle.destructive(
         size: _config.size,
@@ -862,13 +896,13 @@ class _AppAsyncButtonState extends State<_AppAsyncButton>
         ),
       ),
     );
-    final secondaryStyle = sized(
+    final secondaryStyle = colorize(sized(
       shad.ButtonStyle.secondary(
         size: _config.size,
         density: widget.iconOnly ? shad.ButtonDensity.icon : _config.density,
         shape: widget.shapeOverride ?? _config.shape,
       ),
-    );
+    ), solid: true);
     final selectedStyle = secondaryStyle.copyWith(
       decoration: (context, states, value) {
         if (value is! BoxDecoration) return value;
@@ -916,20 +950,20 @@ class _AppAsyncButtonState extends State<_AppAsyncButton>
         );
       },
     );
-    final outlineStyle = sized(
+    final outlineStyle = colorize(sized(
       shad.ButtonStyle.outline(
         size: _config.size,
         density: widget.iconOnly ? shad.ButtonDensity.icon : _config.density,
         shape: widget.shapeOverride ?? _config.shape,
       ),
-    );
-    final ghostStyle = sized(
+    ), solid: false);
+    final ghostStyle = colorize(sized(
       shad.ButtonStyle.ghost(
         size: _config.size,
         density: widget.iconOnly ? shad.ButtonDensity.icon : _config.density,
         shape: widget.shapeOverride ?? _config.shape,
       ),
-    );
+    ), solid: false);
     final linkStyle = sized(
       shad.ButtonStyle.link(
         size: _config.size,
