@@ -10,6 +10,8 @@ class AppTabs extends StatefulWidget {
     required this.children,
     this.padding,
     this.expand = false,
+    this.selectedColor,
+    this.selectedTextColor,
     this.duration = const Duration(milliseconds: 220),
     this.curve = Curves.easeOutCubic,
   });
@@ -19,6 +21,11 @@ class AppTabs extends StatefulWidget {
   final List<shad.TabChild> children;
   final EdgeInsetsGeometry? padding;
   final bool expand;
+  /// Background color of the selected tab. Defaults to the theme primary.
+  final Color? selectedColor;
+  /// Text and icon color of the selected tab. Defaults to an automatic
+  /// contrast color for [selectedColor].
+  final Color? selectedTextColor;
   final Duration duration;
   final Curve curve;
 
@@ -108,6 +115,11 @@ class _AppTabsState extends State<AppTabs> {
       widgetValue: widget.padding,
     );
     final selected = data.index == widget.index;
+    final selectedColor = widget.selectedColor ?? theme.colorScheme.primary;
+    final selectedForeground = widget.selectedTextColor ??
+        (selectedColor.computeLuminance() > 0.179
+        ? const Color(0xff000000)
+        : const Color(0xffffffff));
 
     return KeyedSubtree(
       key: _tabKeys[data.index],
@@ -121,9 +133,15 @@ class _AppTabsState extends State<AppTabs> {
             padding: tabPadding,
             child: Align(
               alignment: Alignment.center,
-              child: (selected ? child.foreground() : child.muted())
-                  .small()
-                  .medium(),
+              child: selected
+                  ? ColorFiltered(
+                      colorFilter: ColorFilter.mode(
+                        selectedForeground,
+                        BlendMode.srcIn,
+                      ),
+                      child: child.foreground().small().medium(),
+                    )
+                  : child.muted().small().medium(),
             ),
           ),
         ),
@@ -182,7 +200,7 @@ class _AppTabsState extends State<AppTabs> {
                     height: indicator.height,
                     child: DecoratedBox(
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.background,
+                        color: widget.selectedColor ?? theme.colorScheme.primary,
                         borderRadius: BorderRadius.circular(theme.radiusMd),
                       ),
                     ),
