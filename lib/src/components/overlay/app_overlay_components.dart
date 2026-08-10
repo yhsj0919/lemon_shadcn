@@ -262,6 +262,7 @@ class AppFormDialog extends StatelessWidget {
     this.surfaceBlur,
     this.surfaceOpacity,
     this.barrierColor,
+    this.backgroundColor,
     this.padding,
     this.constraints,
   });
@@ -274,6 +275,7 @@ class AppFormDialog extends StatelessWidget {
   final double? surfaceBlur;
   final double? surfaceOpacity;
   final Color? barrierColor;
+  final Color? backgroundColor;
   final EdgeInsetsGeometry? padding;
   final BoxConstraints? constraints;
 
@@ -328,7 +330,7 @@ class AppFormDialog extends StatelessWidget {
     ];
 
     Widget surface = shad.ModalContainer(
-      fillColor: theme.colorScheme.popover,
+      fillColor: backgroundColor ?? theme.colorScheme.popover,
       filled: true,
       borderRadius: theme.borderRadiusXxl,
       borderWidth: 1 * scaling,
