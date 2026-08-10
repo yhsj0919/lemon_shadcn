@@ -938,7 +938,7 @@ class _MapBlock extends StatelessWidget {
                 AppLucideIcons.mapPin,
                 size: 16,
                 color: device.status.isOnline
-                    ? colors.primary
+                    ? const Color(0xff22c55e)
                     : colors.mutedForeground,
               ),
               const SizedBox(width: 8),
@@ -972,7 +972,7 @@ class _MapBlock extends StatelessWidget {
                     AppLucideIcons.mapPin,
                     size: 18,
                     color: device.status.isOnline
-                        ? colors.primary
+                        ? const Color(0xff22c55e)
                         : colors.mutedForeground,
                   ),
                 ),
@@ -1016,7 +1016,9 @@ class _StatusPill extends StatelessWidget {
   final bool compact;
 
   Color _tone(AppColorScheme colors) => switch (status) {
-    DeviceStatus.online => colors.primary,
+    // Keep the online state visibly green instead of inheriting a potentially
+    // dark theme primary color.
+    DeviceStatus.online => const Color(0xff22c55e),
     DeviceStatus.offline => colors.mutedForeground,
     DeviceStatus.fault => colors.destructive,
   };
