@@ -6,7 +6,6 @@ import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
 import '../../foundation/app_control_box.dart';
 import '../../foundation/app_overlay_style.dart';
-import '../../foundation/app_shadcn_scope.dart';
 import 'app_async_option_source.dart';
 import 'app_chip_input.dart';
 import 'app_field.dart';
@@ -463,8 +462,9 @@ class _AppComboboxState<V> extends State<AppCombobox<V>> {
             strokeAlign: BorderSide.strokeAlignInside,
           ),
           padding: EdgeInsets.symmetric(
-            horizontal:
-                AppTheme.maybeOf(context)?.controls.horizontalPadding ?? 12,
+            horizontal: AppControlMetricsScope.resolve(
+              context,
+            ).horizontalPadding,
           ),
           features: [
             shad.InputFeature.leading(

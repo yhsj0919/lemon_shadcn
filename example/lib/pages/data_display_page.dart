@@ -383,14 +383,8 @@ class DataDisplayPage extends StatelessWidget {
                           SizedBox(
                             width: itemWidth,
                             child: AppDescriptions.custom(
-                              title: const Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(LucideIcons.triangleAlert, size: 20),
-                                  Gap(8),
-                                  Text('告警数据'),
-                                ],
-                              ),
+                              titleIcon: const Icon(LucideIcons.triangleAlert),
+                              title: const Text('告警数据'),
                               actions: AppDropdownButton(
                                 variant: AppDropdownButtonVariant.ghost,
                                 items: [
@@ -457,14 +451,8 @@ class DataDisplayPage extends StatelessWidget {
                           SizedBox(
                             width: itemWidth,
                             child: AppDescriptions.custom(
-                              title: const Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(LucideIcons.monitor, size: 20),
-                                  Gap(8),
-                                  Text('设备信息'),
-                                ],
-                              ),
+                              titleIcon: const Icon(LucideIcons.monitor),
+                              title: const Text('设备信息'),
                               actions: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [

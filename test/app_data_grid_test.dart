@@ -76,6 +76,43 @@ void main() {
     expect(surface.color, expected);
   });
 
+  testWidgets('data grid falls back to dark theme foreground colors', (
+    tester,
+  ) async {
+    late Color expectedForeground;
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(
+          config: AppThemeConfig.standard(themeMode: AppThemeMode.dark),
+        ),
+        home: Builder(
+          builder: (context) {
+            expectedForeground = shad.Theme.of(context).colorScheme.foreground;
+            return const SizedBox(
+              width: 420,
+              child: AppDataGrid<_Row>.local(
+                height: 180,
+                columns: [
+                  AppDataGridColumn(id: 'name', title: 'Name', value: _name),
+                ],
+                rows: [_Row(1, 'Ada')],
+                rowKey: _rowId,
+              ),
+            );
+          },
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final style = tester
+        .widget<TrinaGrid>(find.byType(TrinaGrid))
+        .configuration
+        .style;
+    expect(style.columnTextStyle.color, expectedForeground);
+    expect(style.cellTextStyle.color, expectedForeground);
+  });
+
   testWidgets('data grid supports fully borderless style and typography', (
     tester,
   ) async {
@@ -159,6 +196,8 @@ void main() {
 }
 
 String _name(_Row row) => row.name;
+
+int _rowId(_Row row) => row.id;
 
 class _Row {
   const _Row(this.id, this.name);

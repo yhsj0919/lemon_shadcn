@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
-import '../../foundation/app_shadcn_scope.dart';
+import '../../foundation/app_control_box.dart';
 import 'app_field.dart';
 import 'app_form.dart';
 
@@ -149,9 +149,7 @@ class _AppTextAreaControlState extends State<_AppTextAreaControl> {
   Widget build(BuildContext context) {
     final theme = shad.Theme.of(context);
     final height =
-        widget.height ??
-        AppTheme.maybeOf(context)?.controls.textAreaHeight ??
-        100;
+        widget.height ?? AppControlMetricsScope.resolve(context).textAreaHeight;
     return shad.ComponentTheme(
       data: shad.FocusOutlineTheme(
         align: 0,

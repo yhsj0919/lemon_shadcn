@@ -58,8 +58,9 @@ class AppSortableDragHandle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = shad.Theme.of(context);
-    final iconSize = AppTheme.maybeOf(context)?.controls.iconSize ?? 16;
-    final contentGap = AppTheme.maybeOf(context)?.controls.contentGap ?? 8;
+    final metrics = AppControlMetricsScope.resolve(context);
+    final iconSize = metrics.iconSize;
+    final contentGap = metrics.contentGap;
     return Padding(
       padding: EdgeInsets.all(contentGap),
       child: Icon(
@@ -322,7 +323,7 @@ class _AppObjectInputControlState<T> extends State<_AppObjectInputControl<T>> {
 
   @override
   Widget build(BuildContext context) {
-    final height = AppTheme.maybeOf(context)?.controls.height ?? 32;
+    final height = AppControlMetricsScope.resolve(context).height;
     final scaling = shad.Theme.of(context).scaling;
     return AppControlBox(
       child: shad.ComponentTheme<shad.FormattedInputTheme>(

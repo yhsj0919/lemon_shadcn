@@ -55,6 +55,29 @@ class AppControlMetrics {
 
   /// Content box used by bordered controls that sit inside the shared slot.
   double get borderedContentHeight => height - 1;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is AppControlMetrics &&
+          height == other.height &&
+          buttonHeight == other.buttonHeight &&
+          horizontalPadding == other.horizontalPadding &&
+          fontSize == other.fontSize &&
+          iconSize == other.iconSize &&
+          contentGap == other.contentGap &&
+          textAreaHeight == other.textAreaHeight;
+
+  @override
+  int get hashCode => Object.hash(
+    height,
+    buttonHeight,
+    horizontalPadding,
+    fontSize,
+    iconSize,
+    contentGap,
+    textAreaHeight,
+  );
 }
 
 /// Shared DataGrid dimensions. Defaults preserve the standard grid appearance

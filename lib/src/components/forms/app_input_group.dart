@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
-import '../../foundation/app_shadcn_scope.dart';
+import '../../foundation/app_control_box.dart';
 
 /// Shared frame for compound inputs with leading/trailing addons.
 class AppInputGroup extends StatelessWidget {
@@ -29,10 +29,10 @@ class AppInputGroup extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = shad.Theme.of(context);
-    final metrics = AppTheme.maybeOf(context)?.controls;
+    final metrics = AppControlMetricsScope.resolve(context);
     final radius = BorderRadius.circular(theme.radiusMd);
     return SizedBox(
-      height: height ?? metrics?.height ?? 32,
+      height: height ?? metrics.height,
       child: DecoratedBox(
         decoration: BoxDecoration(
           color:
@@ -54,11 +54,11 @@ class AppInputGroup extends StatelessWidget {
             children: [
               if (leading != null) ...[
                 AppInputGroupAddon(child: leading!),
-                SizedBox(width: metrics?.contentGap ?? 8),
+                SizedBox(width: metrics.contentGap),
               ],
               Expanded(child: child),
               if (trailing != null) ...[
-                SizedBox(width: metrics?.contentGap ?? 8),
+                SizedBox(width: metrics.contentGap),
                 AppInputGroupAddon(child: trailing!),
               ],
             ],
@@ -81,7 +81,7 @@ class AppInputGroupAddon extends StatelessWidget {
     ),
     child: IconTheme.merge(
       data: IconThemeData(
-        size: AppTheme.maybeOf(context)?.controls.iconSize ?? 16,
+        size: AppControlMetricsScope.resolve(context).iconSize,
         color: shad.Theme.of(context).colorScheme.mutedForeground,
       ),
       child: child,

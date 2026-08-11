@@ -7,7 +7,6 @@ import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
 import '../../foundation/app_control_box.dart';
 import '../../foundation/app_overlay_style.dart';
-import '../../foundation/app_shadcn_scope.dart';
 import '../actions/app_button.dart';
 import 'app_field.dart';
 import 'app_form.dart';
@@ -857,7 +856,7 @@ class _AppFormattedInputControlState extends State<_AppFormattedInputControl> {
 
   @override
   Widget build(BuildContext context) {
-    final height = AppTheme.maybeOf(context)?.controls.height ?? 32;
+    final height = AppControlMetricsScope.resolve(context).height;
     final scaling = shad.Theme.of(context).scaling;
     return AppControlBox(
       child: shad.ComponentTheme<shad.FormattedInputTheme>(

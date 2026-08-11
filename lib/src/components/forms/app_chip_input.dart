@@ -3,8 +3,6 @@ import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
 import '../../foundation/app_control_box.dart';
-import '../../foundation/app_shadcn_scope.dart';
-import '../../foundation/app_theme_config.dart';
 import 'app_field.dart';
 import 'app_form.dart';
 
@@ -125,8 +123,7 @@ class _AppChipInputState<T> extends State<AppChipInput<T>> {
   @override
   Widget build(BuildContext context) {
     final theme = shad.Theme.of(context);
-    final metrics =
-        AppTheme.maybeOf(context)?.controls ?? const AppControlMetrics();
+    final metrics = AppControlMetricsScope.resolve(context);
     final contentHeight = metrics.borderedContentHeight;
     return shad.ComponentTheme(
       data: shad.FocusOutlineTheme(
@@ -149,7 +146,9 @@ class _AppChipInputState<T> extends State<AppChipInput<T>> {
               horizontal: metrics.horizontalPadding,
             ),
             textAlignVertical: TextAlignVertical.center,
-            placeholder: widget.hintText == null ? null : Text(widget.hintText!),
+            placeholder: widget.hintText == null
+                ? null
+                : Text(widget.hintText!),
             chipBuilder: (context, chip) => Text(_label(chip)),
             onChipSubmitted: _parse,
             onChipsChanged: (chips) =>

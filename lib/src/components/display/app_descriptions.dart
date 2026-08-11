@@ -4,6 +4,10 @@ import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 import '../../foundation/app_control_box.dart';
 import '../../foundation/app_theme_config.dart';
 
+// Public constructor names intentionally differ from the nullable internal
+// override slots so the legacy non-null getters remain source-compatible.
+// ignore_for_file: prefer_initializing_formals
+
 enum AppDescriptionLayout { vertical, horizontal }
 
 enum AppDescriptionsType { standard, table }
@@ -20,6 +24,8 @@ class AppDescriptionsTheme extends shad.ComponentThemeData {
     this.labelStyle,
     this.valueStyle,
     this.titleStyle,
+    this.titleIconTheme,
+    this.titleGap,
     this.labelIconTheme,
     this.labelAlignment,
     this.padding,
@@ -36,6 +42,8 @@ class AppDescriptionsTheme extends shad.ComponentThemeData {
     this.labelStyle,
     this.valueStyle,
     this.titleStyle,
+    this.titleIconTheme,
+    this.titleGap,
     this.labelIconTheme,
     this.labelAlignment,
   }) : density = AppDescriptionsDensity.compact,
@@ -52,6 +60,8 @@ class AppDescriptionsTheme extends shad.ComponentThemeData {
   final TextStyle? labelStyle;
   final TextStyle? valueStyle;
   final TextStyle? titleStyle;
+  final IconThemeData? titleIconTheme;
+  final double? titleGap;
   final IconThemeData? labelIconTheme;
   final AlignmentGeometry? labelAlignment;
   final EdgeInsetsGeometry? padding;
@@ -73,12 +83,27 @@ class AppDescriptionItem {
     this.labelAlignment,
     this.valueWidth,
     this.valueAlignment = AlignmentDirectional.topStart,
-  }) : assert(span > 0),
+  }) : _isDivider = false,
+       assert(span > 0),
        assert(valueWidth == null || valueWidth > 0);
+
+  /// Creates a full-row divider that participates in the item order.
+  const AppDescriptionItem.divider({required Widget divider})
+    : label = const SizedBox.shrink(),
+      value = divider,
+      icon = null,
+      span = 1,
+      labelAlignment = null,
+      valueWidth = null,
+      valueAlignment = AlignmentDirectional.topStart,
+      _isDivider = true;
 
   final Widget label;
   final Widget value;
   final Widget? icon;
+
+  /// Number of responsive columns occupied in standard mode.
+  /// Table mode requires every item to keep the default span of one.
   final int span;
 
   /// Alignment of this item's complete label, including its optional icon.
@@ -87,6 +112,7 @@ class AppDescriptionItem {
   /// Optional width for controls such as fields that would otherwise fill a cell.
   final double? valueWidth;
   final AlignmentGeometry valueAlignment;
+  final bool _isDivider;
 }
 
 /// Responsive key-value details for entity and record pages.
@@ -95,6 +121,7 @@ class AppDescriptions extends StatelessWidget {
     super.key,
     required this.items,
     this.title,
+    this.titleIcon,
     this.actions,
     this.columns = 3,
     this.minColumnWidth = 220,
@@ -104,20 +131,26 @@ class AppDescriptions extends StatelessWidget {
     this.labelStyle,
     this.valueStyle,
     this.titleStyle,
+    this.titleIconTheme,
+    this.titleGap,
     this.labelIconTheme,
     this.labelAlignment,
-    this.spacing,
-    this.runSpacing,
+    double? spacing,
+    double? runSpacing,
     this.labelGap,
     this.contentGap,
     this.bordered = false,
     this.type = AppDescriptionsType.standard,
-    this.padding,
-    this.tableCellPadding,
+    EdgeInsetsGeometry? padding,
+    EdgeInsetsGeometry? tableCellPadding,
     this.headerPadding,
     this.controlMetrics,
     this.margin = EdgeInsets.zero,
-  }) : customChild = null,
+  }) : _spacing = spacing,
+       _runSpacing = runSpacing,
+       _padding = padding,
+       _tableCellPadding = tableCellPadding,
+       customChild = null,
        assert(columns > 0),
        assert(minColumnWidth > 0);
 
@@ -129,16 +162,23 @@ class AppDescriptions extends StatelessWidget {
     super.key,
     required Widget child,
     this.title,
+    this.titleIcon,
     this.actions,
     this.density,
     this.valueStyle,
     this.titleStyle,
-    this.padding,
+    this.titleIconTheme,
+    this.titleGap,
+    EdgeInsetsGeometry? padding,
     this.headerPadding,
     this.controlMetrics,
     this.bordered = false,
     this.margin = EdgeInsets.zero,
-  }) : items = const [],
+  }) : _padding = padding,
+       _spacing = null,
+       _runSpacing = null,
+       _tableCellPadding = null,
+       items = const [],
        customChild = child,
        columns = 1,
        minColumnWidth = 1,
@@ -147,16 +187,14 @@ class AppDescriptions extends StatelessWidget {
        labelStyle = null,
        labelIconTheme = null,
        labelAlignment = null,
-       spacing = null,
-       runSpacing = null,
        labelGap = null,
        contentGap = null,
-       type = AppDescriptionsType.standard,
-       tableCellPadding = null;
+       type = AppDescriptionsType.standard;
 
   final List<AppDescriptionItem> items;
   final Widget? customChild;
   final Widget? title;
+  final Widget? titleIcon;
   final Widget? actions;
   final int columns;
   final double minColumnWidth;
@@ -166,16 +204,33 @@ class AppDescriptions extends StatelessWidget {
   final TextStyle? labelStyle;
   final TextStyle? valueStyle;
   final TextStyle? titleStyle;
+  final IconThemeData? titleIconTheme;
+  final double? titleGap;
   final IconThemeData? labelIconTheme;
   final AlignmentGeometry? labelAlignment;
-  final double? spacing;
-  final double? runSpacing;
+  final double? _spacing;
+  final double? _runSpacing;
+
+  /// Requested horizontal item spacing, or the stable standard default.
+  double get spacing => _spacing ?? 12;
+
+  /// Requested vertical item spacing, or the stable standard default.
+  double get runSpacing => _runSpacing ?? 8;
   final double? labelGap;
   final double? contentGap;
   final bool bordered;
   final AppDescriptionsType type;
-  final EdgeInsetsGeometry? padding;
-  final EdgeInsetsGeometry? tableCellPadding;
+
+  final EdgeInsetsGeometry? _padding;
+  final EdgeInsetsGeometry? _tableCellPadding;
+
+  /// Requested content padding, or the stable standard default.
+  EdgeInsetsGeometry get padding => _padding ?? const EdgeInsets.all(12);
+
+  /// Requested table-cell padding, or the stable standard default.
+  EdgeInsetsGeometry get tableCellPadding =>
+      _tableCellPadding ??
+      const EdgeInsets.symmetric(horizontal: 12, vertical: 8);
   final EdgeInsetsGeometry? headerPadding;
   final AppControlMetrics? controlMetrics;
   final EdgeInsetsGeometry margin;
@@ -186,6 +241,10 @@ class AppDescriptions extends StatelessWidget {
     final effectiveDensity =
         density ?? local?.density ?? AppDescriptionsDensity.standard;
     final compact = effectiveDensity == AppDescriptionsDensity.compact;
+    final resolvedTitleStyle = TextStyle(
+      fontSize: compact ? 14 : 16,
+      fontWeight: FontWeight.w600,
+    ).merge(local?.titleStyle).merge(titleStyle);
     return AppDescriptionsTheme(
       density: effectiveDensity,
       labelStyle: TextStyle(
@@ -195,10 +254,12 @@ class AppDescriptions extends StatelessWidget {
       valueStyle: TextStyle(
         fontSize: compact ? 13 : 14,
       ).merge(local?.valueStyle).merge(valueStyle),
-      titleStyle: TextStyle(
-        fontSize: compact ? 14 : 16,
-        fontWeight: FontWeight.w600,
-      ).merge(local?.titleStyle).merge(titleStyle),
+      titleStyle: resolvedTitleStyle,
+      titleIconTheme: IconThemeData(
+        size: compact ? 18 : 20,
+        color: resolvedTitleStyle.color,
+      ).merge(local?.titleIconTheme).merge(titleIconTheme),
+      titleGap: titleGap ?? local?.titleGap ?? 8,
       labelIconTheme: IconThemeData(
         size: compact ? 14 : 16,
         color: shadTheme.colorScheme.mutedForeground,
@@ -207,16 +268,16 @@ class AppDescriptions extends StatelessWidget {
           labelAlignment ??
           local?.labelAlignment ??
           AlignmentDirectional.centerStart,
-      padding: padding ?? local?.padding ?? EdgeInsets.all(compact ? 8 : 12),
+      padding: _padding ?? local?.padding ?? EdgeInsets.all(compact ? 8 : 12),
       tableCellPadding:
-          tableCellPadding ??
+          _tableCellPadding ??
           local?.tableCellPadding ??
           EdgeInsets.symmetric(
             horizontal: compact ? 8 : 12,
             vertical: compact ? 0 : 8,
           ),
-      spacing: spacing ?? local?.spacing ?? 12,
-      runSpacing: runSpacing ?? local?.runSpacing ?? 8,
+      spacing: _spacing ?? local?.spacing ?? 12,
+      runSpacing: _runSpacing ?? local?.runSpacing ?? 8,
       labelGap: labelGap ?? local?.labelGap ?? (compact ? 4 : 8),
       contentGap: contentGap ?? local?.contentGap ?? (compact ? 2 : 4),
       headerPadding:
@@ -331,10 +392,13 @@ class AppDescriptions extends StatelessWidget {
       children: [
         for (final item in items)
           SizedBox(
-            width:
-                columnWidth * item.span.clamp(1, count) +
-                gap * (item.span.clamp(1, count) - 1),
-            child: _buildItem(context, item, style),
+            width: item._isDivider
+                ? available
+                : columnWidth * item.span.clamp(1, count) +
+                      gap * (item.span.clamp(1, count) - 1),
+            child: item._isDivider
+                ? item.value
+                : _buildItem(context, item, style),
           ),
       ],
     );
@@ -346,34 +410,68 @@ class AppDescriptions extends StatelessWidget {
     shad.ThemeData theme,
     AppDescriptionsTheme style,
   ) {
-    final rows = <TableRow>[];
-    for (var offset = 0; offset < items.length; offset += count) {
-      rows.add(
-        TableRow(
-          children: [
-            for (var column = 0; column < count; column++)
-              offset + column < items.length
-                  ? Padding(
-                      padding: style.tableCellPadding!,
-                      child: _buildItem(context, items[offset + column], style),
-                    )
-                  : const SizedBox.shrink(),
-          ],
+    final sections = <Widget>[];
+    final regularItems = <AppDescriptionItem>[];
+
+    void flushRegularItems() {
+      if (regularItems.isEmpty) return;
+      final rows = <TableRow>[];
+      for (var offset = 0; offset < regularItems.length; offset += count) {
+        rows.add(
+          TableRow(
+            children: [
+              for (var column = 0; column < count; column++)
+                offset + column < regularItems.length
+                    ? Padding(
+                        padding: style.tableCellPadding!,
+                        child: _buildItem(
+                          context,
+                          regularItems[offset + column],
+                          style,
+                        ),
+                      )
+                    : const SizedBox.shrink(),
+            ],
+          ),
+        );
+      }
+      sections.add(
+        Table(
+          defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+          border: TableBorder(
+            horizontalInside: BorderSide(color: theme.colorScheme.border),
+            verticalInside: BorderSide(color: theme.colorScheme.border),
+          ),
+          children: rows,
         ),
       );
+      regularItems.clear();
     }
-    return Table(
-      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-      border: TableBorder(
-        horizontalInside: BorderSide(color: theme.colorScheme.border),
-        verticalInside: BorderSide(color: theme.colorScheme.border),
-      ),
-      children: rows,
+
+    for (final item in items) {
+      if (item._isDivider) {
+        flushRegularItems();
+        sections.add(item.value);
+      } else {
+        regularItems.add(item);
+      }
+    }
+    flushRegularItems();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: sections,
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    assert(
+      type != AppDescriptionsType.table ||
+          items.every((item) => item._isDivider || item.span == 1),
+      'AppDescriptions table mode does not support item spans. '
+      'Use span: 1 or switch to standard mode.',
+    );
     final theme = shad.Theme.of(context);
     final style = _resolvedTheme(context);
     Widget content;
@@ -435,7 +533,19 @@ class AppDescriptions extends StatelessWidget {
                   Expanded(
                     child: DefaultTextStyle.merge(
                       style: style.titleStyle!,
-                      child: title!,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (titleIcon != null) ...[
+                            IconTheme.merge(
+                              data: style.titleIconTheme!,
+                              child: titleIcon!,
+                            ),
+                            SizedBox(width: style.titleGap),
+                          ],
+                          Flexible(child: title!),
+                        ],
+                      ),
                     ),
                   )
                 else

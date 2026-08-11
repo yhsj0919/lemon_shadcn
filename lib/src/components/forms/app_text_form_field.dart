@@ -3,7 +3,6 @@ import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
 import '../../foundation/app_control_box.dart';
-import '../../foundation/app_shadcn_scope.dart';
 import '../actions/app_button.dart';
 import 'app_field.dart';
 import 'app_form.dart';

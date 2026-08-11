@@ -134,6 +134,93 @@ void main() {
     );
   });
 
+  testWidgets('divider item occupies a complete responsive row', (
+    tester,
+  ) async {
+    const dividerKey = material.ValueKey('standard-divider');
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: const material.Align(
+          alignment: material.Alignment.topLeft,
+          child: material.SizedBox(
+            width: 500,
+            child: AppDescriptions(
+              columns: 2,
+              minColumnWidth: 100,
+              items: [
+                AppDescriptionItem(
+                  label: material.Text('First'),
+                  value: material.Text('One'),
+                ),
+                AppDescriptionItem.divider(
+                  divider: material.SizedBox(
+                    key: dividerKey,
+                    height: 1,
+                    child: material.ColoredBox(color: material.Colors.red),
+                  ),
+                ),
+                AppDescriptionItem(
+                  label: material.Text('Second'),
+                  value: material.Text('Two'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(tester.getSize(find.byKey(dividerKey)).width, 476);
+    expect(
+      tester.getTopLeft(find.byKey(dividerKey)).dy,
+      greaterThan(tester.getBottomLeft(find.text('One')).dy),
+    );
+    expect(
+      tester.getBottomLeft(find.byKey(dividerKey)).dy,
+      lessThan(tester.getTopLeft(find.text('Second')).dy),
+    );
+  });
+
+  testWidgets('divider item spans the full table width', (tester) async {
+    const dividerKey = material.ValueKey('table-divider');
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: const material.Align(
+          alignment: material.Alignment.topLeft,
+          child: material.SizedBox(
+            width: 500,
+            child: AppDescriptions(
+              type: AppDescriptionsType.table,
+              columns: 2,
+              items: [
+                AppDescriptionItem(
+                  label: material.Text('First'),
+                  value: material.Text('One'),
+                ),
+                AppDescriptionItem.divider(
+                  divider: material.SizedBox(
+                    key: dividerKey,
+                    height: 1,
+                    child: material.ColoredBox(color: material.Colors.red),
+                  ),
+                ),
+                AppDescriptionItem(
+                  label: material.Text('Second'),
+                  value: material.Text('Two'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(tester.getSize(find.byKey(dividerKey)).width, 500);
+    expect(find.byType(material.Table), findsNWidgets(2));
+  });
+
   testWidgets('layout defaults to 12 horizontal item spacing', (tester) async {
     await tester.pumpWidget(
       material.MaterialApp(
@@ -192,6 +279,39 @@ void main() {
     expect(find.text('Custom body'), findsOneWidget);
     expect(find.text('Menu body'), findsOneWidget);
     expect(find.byType(material.Wrap), findsNothing);
+  });
+
+  testWidgets('title icon renders before title with density-aware size', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: const AppDescriptions(
+          titleIcon: material.Icon(material.Icons.monitor),
+          title: material.Text('Device'),
+          items: [],
+        ),
+      ),
+    );
+
+    expect(find.byIcon(material.Icons.monitor), findsOneWidget);
+    expect(find.text('Device'), findsOneWidget);
+    expect(
+      tester.widget<material.Icon>(find.byIcon(material.Icons.monitor)).size,
+      isNull,
+    );
+    expect(
+      material.IconTheme.of(
+        tester.element(find.byIcon(material.Icons.monitor)),
+      ).size,
+      20,
+    );
+    expect(
+      tester.getTopLeft(find.text('Device')).dx -
+          tester.getTopRight(find.byIcon(material.Icons.monitor)).dx,
+      closeTo(8, 0.01),
+    );
   });
 
   testWidgets('item label alignment can be overridden directly', (
@@ -382,5 +502,24 @@ void main() {
     );
 
     expect(tester.getSize(find.byType(material.Table)).height, 48);
+  });
+
+  testWidgets('table mode rejects unsupported item spans', (tester) async {
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: const AppDescriptions(
+          type: AppDescriptionsType.table,
+          items: [
+            AppDescriptionItem(
+              span: 2,
+              label: material.Text('Wide'),
+              value: material.Text('Value'),
+            ),
+          ],
+        ),
+      ),
+    );
+    expect(tester.takeException(), isAssertionError);
   });
 }

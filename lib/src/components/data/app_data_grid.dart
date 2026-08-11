@@ -8,6 +8,7 @@ import 'package:trina_grid/trina_grid.dart';
 
 import '../../foundation/app_shadcn_scope.dart';
 import '../../foundation/app_theme_config.dart';
+import '../../foundation/app_control_box.dart';
 import '../actions/app_button.dart';
 import '../display/app_empty.dart';
 import '../forms/app_checkbox.dart';
@@ -999,13 +1000,15 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
       cellTextStyle: cellTextStyle.copyWith(
         color:
             widget.cellForegroundColor ??
-            cellTextStyle.color ??
+            widget.cellTextStyle?.color ??
+            widget.textStyle?.color ??
             colors.foreground,
       ),
       columnTextStyle: columnTextStyle.copyWith(
         color:
             widget.headerForegroundColor ??
-            columnTextStyle.color ??
+            widget.headerTextStyle?.color ??
+            widget.textStyle?.color ??
             colors.foreground,
       ),
       gridBorderRadius: BorderRadius.circular(theme.radiusMd),
@@ -2139,7 +2142,7 @@ class _AppDataGridFiltersDialogState extends State<_AppDataGridFiltersDialog> {
   Widget build(BuildContext context) {
     final theme = shad.Theme.of(context);
     final locale = widget.manager.configuration.localeText;
-    final controlHeight = AppTheme.maybeOf(context)?.controls.height;
+    final controlHeight = AppControlMetricsScope.resolve(context).height;
     final columnOptions = <AppOption<String>>[
       AppOption(value: _allColumnsField, label: _allColumnsLabel),
       for (final column in _filterColumns)
