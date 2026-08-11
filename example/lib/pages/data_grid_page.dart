@@ -136,13 +136,16 @@ class _DataGridPageState extends State<DataGridPage> {
           ),
         ),
         ComponentSection(
-          title: '无内部线与独立配色',
+          title: '完全无边框与统一字体',
           child: AppDataGrid<_GridUser>.local(
             columns: _columns,
             rows: _singleRows,
             rowKey: (row) => row.id,
             height: 300,
+            showBorder: false,
             showInternalDividers: false,
+            textStyle: const TextStyle(fontSize: 13),
+            headerTextStyle: const TextStyle(fontWeight: FontWeight.w600),
             headerBackgroundColor: colors.primary,
             headerForegroundColor: colors.primaryForeground,
             cellBackgroundColor: colors.card,

@@ -109,10 +109,44 @@ class AppDescriptions extends StatelessWidget {
     this.headerPadding,
     this.controlMetrics,
     this.margin = EdgeInsets.zero,
-  }) : assert(columns > 0),
+  }) : customChild = null,
+       assert(columns > 0),
        assert(minColumnWidth > 0);
 
+  /// A descriptions surface with a fully custom body.
+  ///
+  /// [title] and [actions] keep the standard header layout, while [child]
+  /// replaces the responsive label/value grid completely.
+  const AppDescriptions.custom({
+    super.key,
+    required Widget child,
+    this.title,
+    this.actions,
+    this.density,
+    this.valueStyle,
+    this.titleStyle,
+    this.padding,
+    this.headerPadding,
+    this.controlMetrics,
+    this.bordered = false,
+    this.margin = EdgeInsets.zero,
+  }) : items = const [],
+       customChild = child,
+       columns = 1,
+       minColumnWidth = 1,
+       layout = AppDescriptionLayout.vertical,
+       labelWidth = 96,
+       labelStyle = null,
+       labelIconTheme = null,
+       spacing = null,
+       runSpacing = null,
+       labelGap = null,
+       contentGap = null,
+       type = AppDescriptionsType.standard,
+       tableCellPadding = null;
+
   final List<AppDescriptionItem> items;
+  final Widget? customChild;
   final Widget? title;
   final Widget? actions;
   final int columns;
@@ -317,37 +351,52 @@ class AppDescriptions extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = shad.Theme.of(context);
     final style = _resolvedTheme(context);
-    Widget content = LayoutBuilder(
-      builder: (context, constraints) {
-        final available = constraints.hasBoundedWidth
-            ? constraints.maxWidth
-            : minColumnWidth * columns;
-        if (type == AppDescriptionsType.table) {
-          return _buildDividedContent(
-            context,
-            _resolveColumnCount(available, style.spacing!),
-            theme,
-            style,
+    Widget content;
+    if (customChild case final child?) {
+      Widget customContent = DefaultTextStyle.merge(
+        style: style.valueStyle!,
+        child: child,
+      );
+      if (style.controlMetrics case final metrics?) {
+        customContent = AppControlMetricsScope(
+          metrics: metrics,
+          child: customContent,
+        );
+      }
+      content = Padding(padding: style.padding!, child: customContent);
+    } else {
+      content = LayoutBuilder(
+        builder: (context, constraints) {
+          final available = constraints.hasBoundedWidth
+              ? constraints.maxWidth
+              : minColumnWidth * columns;
+          if (type == AppDescriptionsType.table) {
+            return _buildDividedContent(
+              context,
+              _resolveColumnCount(available, style.spacing!),
+              theme,
+              style,
+            );
+          }
+          final resolvedPadding = style.padding!.resolve(
+            Directionality.of(context),
           );
-        }
-        final resolvedPadding = style.padding!.resolve(
-          Directionality.of(context),
-        );
-        final contentWidth = (available - resolvedPadding.horizontal).clamp(
-          0.0,
-          available,
-        );
-        return Padding(
-          padding: style.padding!,
-          child: _buildPlainContent(
-            context,
-            contentWidth,
-            _resolveColumnCount(contentWidth, style.spacing!),
-            style,
-          ),
-        );
-      },
-    );
+          final contentWidth = (available - resolvedPadding.horizontal).clamp(
+            0.0,
+            available,
+          );
+          return Padding(
+            padding: style.padding!,
+            child: _buildPlainContent(
+              context,
+              contentWidth,
+              _resolveColumnCount(contentWidth, style.spacing!),
+              style,
+            ),
+          );
+        },
+      );
+    }
     if (title != null || actions != null) {
       content = Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

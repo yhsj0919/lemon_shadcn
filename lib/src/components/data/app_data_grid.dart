@@ -182,7 +182,11 @@ class AppDataGrid<T> extends StatefulWidget {
     this.reorderableColumns = false,
     this.columnMenuMode = AppDataGridColumnMenuMode.contextMenu,
     this.showFilters = false,
+    this.showBorder = true,
     this.showInternalDividers = true,
+    this.textStyle,
+    this.headerTextStyle,
+    this.cellTextStyle,
     this.headerBackgroundColor,
     this.headerForegroundColor,
     this.cellBackgroundColor,
@@ -214,7 +218,11 @@ class AppDataGrid<T> extends StatefulWidget {
     this.reorderableColumns = false,
     this.columnMenuMode = AppDataGridColumnMenuMode.contextMenu,
     this.showFilters = false,
+    this.showBorder = true,
     this.showInternalDividers = true,
+    this.textStyle,
+    this.headerTextStyle,
+    this.cellTextStyle,
     this.headerBackgroundColor,
     this.headerForegroundColor,
     this.cellBackgroundColor,
@@ -243,7 +251,11 @@ class AppDataGrid<T> extends StatefulWidget {
     this.reorderableColumns = false,
     this.columnMenuMode = AppDataGridColumnMenuMode.contextMenu,
     this.showFilters = false,
+    this.showBorder = true,
     this.showInternalDividers = true,
+    this.textStyle,
+    this.headerTextStyle,
+    this.cellTextStyle,
     this.headerBackgroundColor,
     this.headerForegroundColor,
     this.cellBackgroundColor,
@@ -281,9 +293,21 @@ class AppDataGrid<T> extends StatefulWidget {
   final AppDataGridColumnMenuMode columnMenuMode;
   final bool showFilters;
 
+  /// Whether the grid draws its outer border.
+  final bool showBorder;
+
   /// Whether horizontal and vertical separators are drawn inside the grid.
   /// The outer grid border is unaffected.
   final bool showInternalDividers;
+
+  /// Shared typography applied to both the header and body cells.
+  final TextStyle? textStyle;
+
+  /// Typography merged over [textStyle] for column titles.
+  final TextStyle? headerTextStyle;
+
+  /// Typography merged over [textStyle] for body cells.
+  final TextStyle? cellTextStyle;
 
   final Color? headerBackgroundColor;
   final Color? headerForegroundColor;
@@ -925,7 +949,11 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
         AppTheme.maybeOf(context)?.dataGrid ?? const AppDataGridMetrics();
     final textStyle = DefaultTextStyle.of(
       context,
-    ).style.copyWith(fontSize: metrics.fontSize);
+    ).style.copyWith(fontSize: metrics.fontSize).merge(widget.textStyle);
+    final cellTextStyle = textStyle.merge(widget.cellTextStyle);
+    final columnTextStyle = textStyle
+        .copyWith(fontWeight: FontWeight.w600)
+        .merge(widget.headerTextStyle);
     final style = TrinaGridStyleConfig(
       enableGridBorderShadow: false,
       enableColumnBorderVertical: widget.showInternalDividers,
@@ -952,7 +980,7 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
       cellReadonlyColor: null,
       cellDefaultColor: null,
       menuBackgroundColor: colors.popover,
-      gridBorderColor: colors.border,
+      gridBorderColor: widget.showBorder ? colors.border : Colors.transparent,
       borderColor: colors.border,
       activatedBorderColor: Colors.transparent,
       inactivatedBorderColor: Colors.transparent,
@@ -968,16 +996,21 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
       defaultColumnTitlePadding: EdgeInsets.symmetric(
         horizontal: metrics.horizontalPadding,
       ),
-      cellTextStyle: textStyle.copyWith(
-        color: widget.cellForegroundColor ?? colors.foreground,
+      cellTextStyle: cellTextStyle.copyWith(
+        color:
+            widget.cellForegroundColor ??
+            cellTextStyle.color ??
+            colors.foreground,
       ),
-      columnTextStyle: textStyle.copyWith(
-        color: widget.headerForegroundColor ?? colors.foreground,
-        fontWeight: FontWeight.w600,
+      columnTextStyle: columnTextStyle.copyWith(
+        color:
+            widget.headerForegroundColor ??
+            columnTextStyle.color ??
+            colors.foreground,
       ),
       gridBorderRadius: BorderRadius.circular(theme.radiusMd),
       gridPopupBorderRadius: BorderRadius.circular(theme.radiusMd),
-      gridBorderWidth: 1,
+      gridBorderWidth: widget.showBorder ? 1 : 0,
       cellVerticalBorderWidth: widget.showInternalDividers ? .5 : 0,
       cellHorizontalBorderWidth: widget.showInternalDividers ? .5 : 0,
       filterHeaderColor: widget.headerBackgroundColor,

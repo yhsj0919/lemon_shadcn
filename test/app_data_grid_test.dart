@@ -76,7 +76,7 @@ void main() {
     expect(surface.color, expected);
   });
 
-  testWidgets('data grid supports borderless internals and split colors', (
+  testWidgets('data grid supports fully borderless style and typography', (
     tester,
   ) async {
     const headerBackground = Color(0xff312e81);
@@ -95,7 +95,11 @@ void main() {
             width: 420,
             child: AppDataGrid<_Row>.local(
               height: 180,
+              showBorder: false,
               showInternalDividers: false,
+              textStyle: const TextStyle(fontSize: 13, letterSpacing: .2),
+              headerTextStyle: const TextStyle(fontWeight: FontWeight.w700),
+              cellTextStyle: const TextStyle(fontWeight: FontWeight.w500),
               headerBackgroundColor: headerBackground,
               headerForegroundColor: headerForeground,
               cellBackgroundColor: cellBackground,
@@ -124,10 +128,18 @@ void main() {
     expect(style.enableCellBorderHorizontal, isFalse);
     expect(style.cellVerticalBorderWidth, 0);
     expect(style.cellHorizontalBorderWidth, 0);
+    expect(style.gridBorderWidth, 0);
+    expect(style.gridBorderColor, material.Colors.transparent);
     expect(style.rowColor, cellBackground);
     expect(style.gridBackgroundColor, cellBackground);
     expect(style.columnTextStyle.color, headerForeground);
     expect(style.cellTextStyle.color, cellForeground);
+    expect(style.columnTextStyle.fontSize, 13);
+    expect(style.columnTextStyle.letterSpacing, .2);
+    expect(style.columnTextStyle.fontWeight, FontWeight.w700);
+    expect(style.cellTextStyle.fontSize, 13);
+    expect(style.cellTextStyle.letterSpacing, .2);
+    expect(style.cellTextStyle.fontWeight, FontWeight.w500);
     expect(grid.rowColorCallback, isNotNull);
     expect(resolvedRows, contains(1));
     expect(

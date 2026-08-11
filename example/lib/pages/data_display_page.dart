@@ -6,6 +6,26 @@ import 'actions_page.dart';
 
 void _noop() {}
 
+Widget _descriptionHeaderActions() => Row(
+  mainAxisSize: MainAxisSize.min,
+  children: [
+    AppIconButton(
+      icon: const Icon(LucideIcons.pencil),
+      tooltip: '编辑',
+      variant: AppButtonVariant.ghost,
+      onPressed: _noop,
+    ),
+    AppDropdownButton(
+      variant: AppDropdownButtonVariant.ghost,
+      items: [
+        AppMenuButton(onPressed: (_) {}, child: const Text('刷新数据')),
+        AppMenuButton(onPressed: (_) {}, child: const Text('复制信息')),
+      ],
+      child: const Icon(LucideIcons.ellipsis),
+    ),
+  ],
+);
+
 class DataDisplayPage extends StatelessWidget {
   const DataDisplayPage({
     super.key,
@@ -58,6 +78,7 @@ class DataDisplayPage extends StatelessWidget {
                 children: [
                   AppDescriptions(
                     title: const Text('纵向标签'),
+                    actions: _descriptionHeaderActions(),
                     bordered: true,
                     columns: 3,
                     items: [
@@ -76,8 +97,9 @@ class DataDisplayPage extends StatelessWidget {
                     ],
                   ),
                   const Gap(16),
-                  const AppDescriptions(
-                    title: Text('横向标签'),
+                  AppDescriptions(
+                    title: const Text('横向标签'),
+                    actions: _descriptionHeaderActions(),
                     bordered: true,
                     columns: 3,
                     minColumnWidth: 200,
@@ -168,8 +190,9 @@ class DataDisplayPage extends StatelessWidget {
                   const Gap(20),
                   const Text('详情描述变体').h4(),
                   const Gap(8),
-                  const AppDescriptions(
-                    title: Text('普通模式'),
+                  AppDescriptions(
+                    title: const Text('普通模式'),
+                    actions: _descriptionHeaderActions(),
                     bordered: true,
                     columns: 3,
                     items: [
@@ -185,8 +208,9 @@ class DataDisplayPage extends StatelessWidget {
                     ],
                   ),
                   const Gap(12),
-                  const AppDescriptions(
-                    title: Text('普通横向模式'),
+                  AppDescriptions(
+                    title: const Text('普通横向模式'),
+                    actions: _descriptionHeaderActions(),
                     layout: AppDescriptionLayout.horizontal,
                     labelWidth: 72,
                     bordered: true,
@@ -217,8 +241,9 @@ class DataDisplayPage extends StatelessWidget {
                     ],
                   ),
                   const Gap(12),
-                  const AppDescriptions(
-                    title: Text('普通垂直单列'),
+                  AppDescriptions(
+                    title: const Text('普通垂直单列'),
+                    actions: _descriptionHeaderActions(),
                     bordered: true,
                     columns: 1,
                     items: [
@@ -236,6 +261,7 @@ class DataDisplayPage extends StatelessWidget {
                   const Gap(12),
                   AppDescriptions(
                     title: Text('紧凑模式'),
+                    actions: _descriptionHeaderActions(),
                     density: AppDescriptionsDensity.compact,
                     bordered: true,
                     columns: 3,
@@ -264,8 +290,9 @@ class DataDisplayPage extends StatelessWidget {
                     ],
                   ),
                   const Gap(12),
-                  const AppDescriptions(
-                    title: Text('紧凑横向模式'),
+                  AppDescriptions(
+                    title: const Text('紧凑横向模式'),
+                    actions: _descriptionHeaderActions(),
                     density: AppDescriptionsDensity.compact,
                     layout: AppDescriptionLayout.horizontal,
                     labelWidth: 64,
@@ -309,6 +336,7 @@ class DataDisplayPage extends StatelessWidget {
                     ),
                     child: AppDescriptions(
                       title: const Text('紧凑模式内嵌控件'),
+                      actions: _descriptionHeaderActions(),
                       type: AppDescriptionsType.table,
                       columns: 3,
                       minColumnWidth: 220,
@@ -340,6 +368,155 @@ class DataDisplayPage extends StatelessWidget {
                         ),
                       ],
                     ),
+                  ),
+                  const Gap(12),
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      const gap = 12.0;
+                      final itemWidth = constraints.maxWidth >= 720
+                          ? (constraints.maxWidth - gap) / 2
+                          : constraints.maxWidth;
+                      return Wrap(
+                        spacing: gap,
+                        runSpacing: gap,
+                        children: [
+                          SizedBox(
+                            width: itemWidth,
+                            child: AppDescriptions.custom(
+                              title: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(LucideIcons.triangleAlert, size: 20),
+                                  Gap(8),
+                                  Text('告警数据'),
+                                ],
+                              ),
+                              actions: AppDropdownButton(
+                                variant: AppDropdownButtonVariant.ghost,
+                                items: [
+                                  AppMenuButton(
+                                    onPressed: (_) {},
+                                    child: const Text('查看全部告警'),
+                                  ),
+                                  AppMenuButton(
+                                    onPressed: (_) {},
+                                    child: const Text('导出记录'),
+                                  ),
+                                ],
+                                child: const Icon(LucideIcons.ellipsis),
+                              ),
+                              bordered: true,
+                              padding: const EdgeInsets.fromLTRB(
+                                16,
+                                16,
+                                16,
+                                18,
+                              ),
+                              child: const Column(
+                                children: [
+                                  _CustomDescriptionRow(
+                                    label: '异常次数',
+                                    child: Text('0'),
+                                  ),
+                                  _CustomDescriptionRow(
+                                    label: '最近离线',
+                                    child: Text('-'),
+                                  ),
+                                  _CustomDescriptionRow(
+                                    label: '告警记录',
+                                    child: Text(
+                                      '查看',
+                                      style: TextStyle(
+                                        color: Color(0xff6366f1),
+                                      ),
+                                    ),
+                                  ),
+                                  _CustomDescriptionRow(
+                                    label: '操作日志',
+                                    child: Text(
+                                      '查看',
+                                      style: TextStyle(
+                                        color: Color(0xff6366f1),
+                                      ),
+                                    ),
+                                  ),
+                                  _CustomDescriptionRow(
+                                    label: '运行历史',
+                                    bottomGap: 0,
+                                    child: Text(
+                                      '查看',
+                                      style: TextStyle(
+                                        color: Color(0xff6366f1),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          SizedBox(
+                            width: itemWidth,
+                            child: AppDescriptions.custom(
+                              title: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(LucideIcons.monitor, size: 20),
+                                  Gap(8),
+                                  Text('设备信息'),
+                                ],
+                              ),
+                              actions: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  AppIconButton(
+                                    icon: const Icon(LucideIcons.pencil),
+                                    tooltip: '编辑设备',
+                                    variant: AppButtonVariant.ghost,
+                                    onPressed: _noop,
+                                  ),
+                                  AppDropdownButton(
+                                    variant: AppDropdownButtonVariant.ghost,
+                                    items: [
+                                      AppMenuButton(
+                                        onPressed: (_) {},
+                                        child: const Text('复制设备编号'),
+                                      ),
+                                      AppMenuButton(
+                                        onPressed: (_) {},
+                                        child: const Text('设备设置'),
+                                      ),
+                                    ],
+                                    child: const Icon(LucideIcons.ellipsis),
+                                  ),
+                                ],
+                              ),
+                              bordered: true,
+                              child: Column(
+                                children: [
+                                  const _CustomDescriptionRow(
+                                    label: '设备序列号',
+                                    child: Text('site-shimano-01'),
+                                  ),
+                                  const _CustomDescriptionRow(
+                                    label: '所属项目',
+                                    child: Text('园区监控'),
+                                  ),
+                                  _CustomDescriptionRow(
+                                    label: '在线状态',
+                                    child: AppBadge.success(child: Text('在线')),
+                                  ),
+                                  const _CustomDescriptionRow(
+                                    label: '最后更新',
+                                    bottomGap: 0,
+                                    child: Text('2026-08-11 14:30'),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
                   ),
                 ],
               ),
@@ -728,6 +905,41 @@ class DataDisplayPage extends StatelessWidget {
           ].where((section) {
             return visibleSections?.contains(section.title) ?? true;
           }).toList(),
+    );
+  }
+}
+
+class _CustomDescriptionRow extends StatelessWidget {
+  const _CustomDescriptionRow({
+    required this.label,
+    required this.child,
+    this.bottomGap = 14,
+  });
+
+  final String label;
+  final Widget child;
+  final double bottomGap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: bottomGap),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: 96,
+            child: Text(
+              label,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.mutedForeground,
+              ),
+            ),
+          ),
+          const Gap(12),
+          Expanded(child: child),
+        ],
+      ),
     );
   }
 }

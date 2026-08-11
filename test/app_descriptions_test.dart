@@ -129,6 +129,36 @@ void main() {
     );
   });
 
+  testWidgets('custom variant renders arbitrary body and header actions', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: AppDescriptions.custom(
+          title: const material.Text('Device'),
+          actions: material.IconButton(
+            onPressed: () {},
+            icon: const material.Icon(material.Icons.more_horiz),
+          ),
+          padding: const material.EdgeInsets.all(18),
+          child: const material.Column(
+            children: [
+              material.Text('Custom body'),
+              material.Text('Menu body'),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Device'), findsOneWidget);
+    expect(find.byIcon(material.Icons.more_horiz), findsOneWidget);
+    expect(find.text('Custom body'), findsOneWidget);
+    expect(find.text('Menu body'), findsOneWidget);
+    expect(find.byType(material.Wrap), findsNothing);
+  });
+
   testWidgets('compact embedded controls and inline edit use local height', (
     tester,
   ) async {

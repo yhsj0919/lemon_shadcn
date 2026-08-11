@@ -259,11 +259,14 @@ AppDescriptions(
   reorderableColumns: true,
   onRowsReordered: (orderedKeys, orderedRows) {},
 );''',
-    '无内部线与独立配色': '''AppDataGrid<User>.local(
+    '完全无边框与统一字体': '''AppDataGrid<User>.local(
   columns: columns,
   rows: users,
   rowKey: (user) => user.id,
+  showBorder: false,
   showInternalDividers: false,
+  textStyle: const TextStyle(fontSize: 13),
+  headerTextStyle: const TextStyle(fontWeight: FontWeight.w600),
   headerBackgroundColor: colors.primary,
   headerForegroundColor: colors.primaryForeground,
   cellBackgroundColor: colors.card,
