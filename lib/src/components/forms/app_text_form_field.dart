@@ -313,6 +313,7 @@ class _AppTextFieldState extends State<AppTextField> {
   @override
   Widget build(BuildContext context) {
     final theme = shad.Theme.of(context);
+    final controlMetrics = AppControlMetricsScope.resolve(context);
     final grouped = AppWidgetGroup.isItemContext(context);
     final features = <shad.InputFeature>[
       if (widget.leading != null)
@@ -351,9 +352,11 @@ class _AppTextFieldState extends State<AppTextField> {
         controller: _controller,
         focusNode: widget.focusNode,
         padding: EdgeInsets.symmetric(
-          horizontal:
-              AppTheme.maybeOf(context)?.controls.horizontalPadding ?? 12,
+          horizontal: controlMetrics.horizontalPadding,
         ),
+        style: DefaultTextStyle.of(
+          context,
+        ).style.copyWith(fontSize: controlMetrics.fontSize),
         textAlignVertical: TextAlignVertical.center,
         hintText: widget.hintText,
         placeholder: widget.hintText == null ? null : Text(widget.hintText!),

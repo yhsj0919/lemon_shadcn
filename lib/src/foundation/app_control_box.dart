@@ -2,6 +2,30 @@ import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
 import 'app_shadcn_scope.dart';
+import 'app_theme_config.dart';
+
+/// Locally overrides control dimensions without replacing the application
+/// theme. Useful when standard controls are embedded in dense surfaces.
+class AppControlMetricsScope extends InheritedWidget {
+  const AppControlMetricsScope({
+    super.key,
+    required this.metrics,
+    required super.child,
+  });
+
+  final AppControlMetrics metrics;
+
+  static AppControlMetrics resolve(BuildContext context) =>
+      context
+          .dependOnInheritedWidgetOfExactType<AppControlMetricsScope>()
+          ?.metrics ??
+      AppTheme.maybeOf(context)?.controls ??
+      const AppControlMetrics();
+
+  @override
+  bool updateShouldNotify(AppControlMetricsScope oldWidget) =>
+      metrics != oldWidget.metrics;
+}
 
 /// Applies the globally configured default interactive-control height.
 class AppControlBox extends StatelessWidget {
@@ -26,7 +50,7 @@ class AppControlBox extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = shad.Theme.of(context);
     final resolvedHeight =
-        height ?? AppTheme.maybeOf(context)?.controls.height ?? 32;
+        height ?? AppControlMetricsScope.resolve(context).height;
     final control = SizedBox(
       height: resolvedHeight,
       width: square ? resolvedHeight : null,

@@ -28,12 +28,14 @@ class AppControlMetrics {
     this.height = 32,
     this.buttonHeight = 31,
     this.horizontalPadding = 12,
+    this.fontSize = 14,
     this.iconSize = 16,
     this.contentGap = 8,
     this.textAreaHeight = 100,
   }) : assert(height > 0),
        assert(buttonHeight > 0),
        assert(horizontalPadding >= 0),
+       assert(fontSize > 0),
        assert(iconSize > 0),
        assert(contentGap >= 0),
        assert(textAreaHeight > 0);
@@ -46,6 +48,7 @@ class AppControlMetrics {
   /// Other button sizes preserve the 44 / 52 / 60 / 68 ratio.
   final double buttonHeight;
   final double horizontalPadding;
+  final double fontSize;
   final double iconSize;
   final double contentGap;
   final double textAreaHeight;

@@ -803,8 +803,8 @@ class _AppAsyncButtonState extends State<_AppAsyncButton>
     );
     final enabled = widget.action != null || widget.onPressed != null;
     final onPressed = !enabled || _effectiveRunning ? null : _press;
-    final metrics = AppTheme.maybeOf(context)?.controls;
-    final baseHeight = metrics?.buttonHeight ?? 31;
+    final metrics = AppControlMetricsScope.resolve(context);
+    final baseHeight = metrics.buttonHeight;
     final sizeScale = _config.size.scale;
     final groupItem = _AppWidgetGroupItemScope.maybeOf(context);
 
@@ -822,15 +822,15 @@ class _AppAsyncButtonState extends State<_AppAsyncButton>
           ? EdgeInsets.zero
           : EdgeInsets.symmetric(
               horizontal:
-                  ((metrics?.horizontalPadding ?? 12) +
+                  (metrics.horizontalPadding +
                       (groupItem == null ? 0 : -2)) *
                   sizeScale,
               vertical: 2 * sizeScale,
             ),
       textStyle: (context, states, value) =>
-          value.copyWith(fontSize: 14 * sizeScale, height: 1.2),
+          value.copyWith(fontSize: metrics.fontSize * sizeScale, height: 1.2),
       iconTheme: (context, states, value) =>
-          value.copyWith(size: (metrics?.iconSize ?? 16) * sizeScale),
+          value.copyWith(size: metrics.iconSize * sizeScale),
     );
 
     shad.AbstractButtonStyle colorize(

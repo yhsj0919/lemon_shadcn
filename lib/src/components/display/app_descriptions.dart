@@ -1,9 +1,65 @@
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
+import '../../foundation/app_control_box.dart';
+import '../../foundation/app_theme_config.dart';
+
 enum AppDescriptionLayout { vertical, horizontal }
 
 enum AppDescriptionsType { standard, table }
+
+/// Controls the whitespace used by [AppDescriptions].
+enum AppDescriptionsDensity { standard, compact }
+
+/// Component-level visual overrides for [AppDescriptions].
+///
+/// Apply it to a subtree with `ComponentTheme<AppDescriptionsTheme>`.
+class AppDescriptionsTheme extends shad.ComponentThemeData {
+  const AppDescriptionsTheme({
+    this.density,
+    this.labelStyle,
+    this.valueStyle,
+    this.titleStyle,
+    this.labelIconTheme,
+    this.padding,
+    this.tableCellPadding,
+    this.spacing,
+    this.runSpacing,
+    this.labelGap,
+    this.contentGap,
+    this.headerPadding,
+    this.controlMetrics,
+  });
+
+  const AppDescriptionsTheme.compact({
+    this.labelStyle,
+    this.valueStyle,
+    this.titleStyle,
+    this.labelIconTheme,
+  }) : density = AppDescriptionsDensity.compact,
+       padding = null,
+       tableCellPadding = null,
+       spacing = null,
+       runSpacing = null,
+       labelGap = null,
+       contentGap = null,
+       headerPadding = null,
+       controlMetrics = null;
+
+  final AppDescriptionsDensity? density;
+  final TextStyle? labelStyle;
+  final TextStyle? valueStyle;
+  final TextStyle? titleStyle;
+  final IconThemeData? labelIconTheme;
+  final EdgeInsetsGeometry? padding;
+  final EdgeInsetsGeometry? tableCellPadding;
+  final double? spacing;
+  final double? runSpacing;
+  final double? labelGap;
+  final double? contentGap;
+  final EdgeInsetsGeometry? headerPadding;
+  final AppControlMetrics? controlMetrics;
+}
 
 class AppDescriptionItem {
   const AppDescriptionItem({
@@ -11,12 +67,19 @@ class AppDescriptionItem {
     required this.value,
     this.icon,
     this.span = 1,
-  }) : assert(span > 0);
+    this.valueWidth,
+    this.valueAlignment = AlignmentDirectional.topStart,
+  }) : assert(span > 0),
+       assert(valueWidth == null || valueWidth > 0);
 
   final Widget label;
   final Widget value;
   final Widget? icon;
   final int span;
+
+  /// Optional width for controls such as fields that would otherwise fill a cell.
+  final double? valueWidth;
+  final AlignmentGeometry valueAlignment;
 }
 
 /// Responsive key-value details for entity and record pages.
@@ -30,15 +93,21 @@ class AppDescriptions extends StatelessWidget {
     this.minColumnWidth = 220,
     this.layout = AppDescriptionLayout.vertical,
     this.labelWidth = 96,
-    this.spacing = 16,
-    this.runSpacing = 16,
+    this.density,
+    this.labelStyle,
+    this.valueStyle,
+    this.titleStyle,
+    this.labelIconTheme,
+    this.spacing,
+    this.runSpacing,
+    this.labelGap,
+    this.contentGap,
     this.bordered = false,
     this.type = AppDescriptionsType.standard,
-    this.padding = const EdgeInsets.all(12),
-    this.tableCellPadding = const EdgeInsets.symmetric(
-      horizontal: 12,
-      vertical: 8,
-    ),
+    this.padding,
+    this.tableCellPadding,
+    this.headerPadding,
+    this.controlMetrics,
     this.margin = EdgeInsets.zero,
   }) : assert(columns > 0),
        assert(minColumnWidth > 0);
@@ -50,42 +119,127 @@ class AppDescriptions extends StatelessWidget {
   final double minColumnWidth;
   final AppDescriptionLayout layout;
   final double labelWidth;
-  final double spacing;
-  final double runSpacing;
+  final AppDescriptionsDensity? density;
+  final TextStyle? labelStyle;
+  final TextStyle? valueStyle;
+  final TextStyle? titleStyle;
+  final IconThemeData? labelIconTheme;
+  final double? spacing;
+  final double? runSpacing;
+  final double? labelGap;
+  final double? contentGap;
   final bool bordered;
   final AppDescriptionsType type;
-  final EdgeInsetsGeometry padding;
-  final EdgeInsetsGeometry tableCellPadding;
+  final EdgeInsetsGeometry? padding;
+  final EdgeInsetsGeometry? tableCellPadding;
+  final EdgeInsetsGeometry? headerPadding;
+  final AppControlMetrics? controlMetrics;
   final EdgeInsetsGeometry margin;
 
-  Widget _buildItem(BuildContext context, AppDescriptionItem item) {
-    final theme = shad.Theme.of(context);
+  AppDescriptionsTheme _resolvedTheme(BuildContext context) {
+    final shadTheme = shad.Theme.of(context);
+    final local = shad.ComponentTheme.maybeOf<AppDescriptionsTheme>(context);
+    final effectiveDensity =
+        density ?? local?.density ?? AppDescriptionsDensity.standard;
+    final compact = effectiveDensity == AppDescriptionsDensity.compact;
+    return AppDescriptionsTheme(
+      density: effectiveDensity,
+      labelStyle: TextStyle(
+        fontSize: compact ? 12 : 13,
+        color: shadTheme.colorScheme.mutedForeground,
+      ).merge(local?.labelStyle).merge(labelStyle),
+      valueStyle: TextStyle(
+        fontSize: compact ? 13 : 14,
+      ).merge(local?.valueStyle).merge(valueStyle),
+      titleStyle: TextStyle(
+        fontSize: compact ? 14 : 16,
+        fontWeight: FontWeight.w600,
+      ).merge(local?.titleStyle).merge(titleStyle),
+      labelIconTheme: IconThemeData(
+        size: compact ? 14 : 16,
+        color: shadTheme.colorScheme.mutedForeground,
+      ).merge(local?.labelIconTheme).merge(labelIconTheme),
+      padding: padding ?? local?.padding ?? EdgeInsets.all(compact ? 8 : 12),
+      tableCellPadding:
+          tableCellPadding ??
+          local?.tableCellPadding ??
+          EdgeInsets.symmetric(
+            horizontal: compact ? 8 : 12,
+            vertical: compact ? 0 : 8,
+          ),
+      spacing: spacing ?? local?.spacing ?? (compact ? 10 : 16),
+      runSpacing: runSpacing ?? local?.runSpacing ?? 8,
+      labelGap: labelGap ?? local?.labelGap ?? (compact ? 4 : 8),
+      contentGap: contentGap ?? local?.contentGap ?? (compact ? 2 : 4),
+      headerPadding:
+          headerPadding ??
+          local?.headerPadding ??
+          EdgeInsets.fromLTRB(
+            compact ? 10 : 16,
+            compact ? 9 : 14,
+            compact ? 10 : 16,
+            0,
+          ),
+      controlMetrics:
+          controlMetrics ??
+          local?.controlMetrics ??
+          (compact
+              ? const AppControlMetrics(
+                  height: 26,
+                  buttonHeight: 26,
+                  horizontalPadding: 8,
+                  fontSize: 13,
+                  iconSize: 14,
+                  contentGap: 6,
+                )
+              : null),
+    );
+  }
+
+  Widget _buildItem(
+    BuildContext context,
+    AppDescriptionItem item,
+    AppDescriptionsTheme style,
+  ) {
     final label = IconTheme.merge(
-      data: IconThemeData(size: 16, color: theme.colorScheme.mutedForeground),
+      data: style.labelIconTheme!,
       child: DefaultTextStyle.merge(
-        style: TextStyle(
-          fontSize: 13,
-          color: theme.colorScheme.mutedForeground,
-        ),
+        style: style.labelStyle!,
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (item.icon != null) ...[item.icon!, const SizedBox(width: 6)],
+            if (item.icon != null) ...[
+              item.icon!,
+              SizedBox(width: style.contentGap),
+            ],
             Flexible(child: item.label),
           ],
         ),
       ),
     );
-    final value = DefaultTextStyle.merge(
-      style: const TextStyle(fontSize: 14),
+    Widget value = DefaultTextStyle.merge(
+      style: style.valueStyle!,
       child: item.value,
+    );
+    if (style.controlMetrics case final metrics?) {
+      value = AppControlMetricsScope(metrics: metrics, child: value);
+    }
+    if (item.valueWidth != null) {
+      value = SizedBox(width: item.valueWidth, child: value);
+    }
+    // Align supplies loose constraints to intrinsic controls (notably buttons),
+    // while the outer item can still occupy its responsive grid cell.
+    value = Align(
+      alignment: item.valueAlignment,
+      widthFactor: layout == AppDescriptionLayout.vertical ? 1 : null,
+      child: value,
     );
     if (layout == AppDescriptionLayout.horizontal) {
       return Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           SizedBox(width: labelWidth, child: label),
-          const SizedBox(width: 8),
+          SizedBox(width: style.labelGap),
           Expanded(child: value),
         ],
       );
@@ -93,28 +247,35 @@ class AppDescriptions extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
-      children: [label, const SizedBox(height: 4), value],
+      children: [
+        label,
+        SizedBox(height: style.contentGap),
+        value,
+      ],
     );
   }
 
-  int _resolveColumnCount(double available) {
-    final responsiveColumns =
-        ((available + spacing) / (minColumnWidth + spacing)).floor();
-    return responsiveColumns.clamp(1, columns);
-  }
+  int _resolveColumnCount(double available, double gap) =>
+      ((available + gap) / (minColumnWidth + gap)).floor().clamp(1, columns);
 
-  Widget _buildPlainContent(BuildContext context, double available, int count) {
-    final columnWidth = (available - spacing * (count - 1)) / count;
+  Widget _buildPlainContent(
+    BuildContext context,
+    double available,
+    int count,
+    AppDescriptionsTheme style,
+  ) {
+    final gap = style.spacing!;
+    final columnWidth = (available - gap * (count - 1)) / count;
     return Wrap(
-      spacing: spacing,
-      runSpacing: runSpacing,
+      spacing: gap,
+      runSpacing: style.runSpacing!,
       children: [
         for (final item in items)
           SizedBox(
             width:
                 columnWidth * item.span.clamp(1, count) +
-                spacing * (item.span.clamp(1, count) - 1),
-            child: _buildItem(context, item),
+                gap * (item.span.clamp(1, count) - 1),
+            child: _buildItem(context, item, style),
           ),
       ],
     );
@@ -124,28 +285,29 @@ class AppDescriptions extends StatelessWidget {
     BuildContext context,
     int count,
     shad.ThemeData theme,
+    AppDescriptionsTheme style,
   ) {
     final rows = <TableRow>[];
     for (var offset = 0; offset < items.length; offset += count) {
-      final cells = <Widget>[];
-      for (var column = 0; column < count; column++) {
-        final index = offset + column;
-        cells.add(
-          index < items.length
-              ? Padding(
-                  padding: tableCellPadding,
-                  child: _buildItem(context, items[index]),
-                )
-              : const SizedBox.shrink(),
-        );
-      }
-      rows.add(TableRow(children: cells));
+      rows.add(
+        TableRow(
+          children: [
+            for (var column = 0; column < count; column++)
+              offset + column < items.length
+                  ? Padding(
+                      padding: style.tableCellPadding!,
+                      child: _buildItem(context, items[offset + column], style),
+                    )
+                  : const SizedBox.shrink(),
+          ],
+        ),
+      );
     }
     return Table(
       defaultVerticalAlignment: TableCellVerticalAlignment.middle,
       border: TableBorder(
-        horizontalInside: BorderSide(color: theme.colorScheme.border, width: 1),
-        verticalInside: BorderSide(color: theme.colorScheme.border, width: 1),
+        horizontalInside: BorderSide(color: theme.colorScheme.border),
+        verticalInside: BorderSide(color: theme.colorScheme.border),
       ),
       children: rows,
     );
@@ -154,24 +316,35 @@ class AppDescriptions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = shad.Theme.of(context);
+    final style = _resolvedTheme(context);
     Widget content = LayoutBuilder(
       builder: (context, constraints) {
         final available = constraints.hasBoundedWidth
             ? constraints.maxWidth
             : minColumnWidth * columns;
         if (type == AppDescriptionsType.table) {
-          final count = _resolveColumnCount(available);
-          return _buildDividedContent(context, count, theme);
+          return _buildDividedContent(
+            context,
+            _resolveColumnCount(available, style.spacing!),
+            theme,
+            style,
+          );
         }
-        final resolvedPadding = padding.resolve(Directionality.of(context));
+        final resolvedPadding = style.padding!.resolve(
+          Directionality.of(context),
+        );
         final contentWidth = (available - resolvedPadding.horizontal).clamp(
           0.0,
           available,
         );
-        final count = _resolveColumnCount(contentWidth);
         return Padding(
-          padding: padding,
-          child: _buildPlainContent(context, contentWidth, count),
+          padding: style.padding!,
+          child: _buildPlainContent(
+            context,
+            contentWidth,
+            _resolveColumnCount(contentWidth, style.spacing!),
+            style,
+          ),
         );
       },
     );
@@ -181,16 +354,13 @@ class AppDescriptions extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+            padding: style.headerPadding!,
             child: Row(
               children: [
                 if (title != null)
                   Expanded(
                     child: DefaultTextStyle.merge(
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: style.titleStyle!,
                       child: title!,
                     ),
                   )
@@ -201,7 +371,9 @@ class AppDescriptions extends StatelessWidget {
             ),
           ),
           if (type == AppDescriptionsType.table) ...[
-            const SizedBox(height: 14),
+            SizedBox(
+              height: style.density == AppDescriptionsDensity.compact ? 8 : 14,
+            ),
             SizedBox(
               height: 1,
               child: ColoredBox(color: theme.colorScheme.border),
@@ -215,7 +387,7 @@ class AppDescriptions extends StatelessWidget {
     if (bordered || type == AppDescriptionsType.table) {
       result = DecoratedBox(
         decoration: BoxDecoration(
-          border: Border.all(color: theme.colorScheme.border, width: 1),
+          border: Border.all(color: theme.colorScheme.border),
           borderRadius: BorderRadius.circular(theme.radiusMd),
         ),
         child: content,

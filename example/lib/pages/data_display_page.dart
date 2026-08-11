@@ -63,7 +63,7 @@ class DataDisplayPage extends StatelessWidget {
                     items: [
                       const AppDescriptionItem(
                         label: Text('项目名称'),
-                        value: Text('Lemon Admin'),
+                        value: Text('柠檬管理后台'),
                       ),
                       const AppDescriptionItem(
                         label: Text('负责人'),
@@ -164,6 +164,182 @@ class DataDisplayPage extends StatelessWidget {
                         value: Text('1920 × 1080'),
                       ),
                     ],
+                  ),
+                  const Gap(20),
+                  const Text('详情描述变体').h4(),
+                  const Gap(8),
+                  const AppDescriptions(
+                    title: Text('普通模式'),
+                    bordered: true,
+                    columns: 3,
+                    items: [
+                      AppDescriptionItem(
+                        label: Text('项目名称'),
+                        value: Text('Lemon Admin'),
+                      ),
+                      AppDescriptionItem(label: Text('负责人'), value: Text('张明')),
+                      AppDescriptionItem(
+                        label: Text('更新时间'),
+                        value: Text('2026-08-11'),
+                      ),
+                    ],
+                  ),
+                  const Gap(12),
+                  const AppDescriptions(
+                    title: Text('普通横向模式'),
+                    layout: AppDescriptionLayout.horizontal,
+                    labelWidth: 72,
+                    bordered: true,
+                    columns: 3,
+                    minColumnWidth: 220,
+                    items: [
+                      AppDescriptionItem(
+                        label: Text('项目名称'),
+                        value: Text('柠檬管理后台'),
+                      ),
+                      AppDescriptionItem(label: Text('负责人'), value: Text('张明')),
+                      AppDescriptionItem(
+                        label: Text('当前状态'),
+                        value: Text('运行中'),
+                      ),
+                      AppDescriptionItem(
+                        label: Text('所属部门'),
+                        value: Text('研发中心'),
+                      ),
+                      AppDescriptionItem(
+                        label: Text('部署环境'),
+                        value: Text('生产环境'),
+                      ),
+                      AppDescriptionItem(
+                        label: Text('更新时间'),
+                        value: Text('2026-08-11'),
+                      ),
+                    ],
+                  ),
+                  const Gap(12),
+                  const AppDescriptions(
+                    title: Text('普通垂直单列'),
+                    bordered: true,
+                    columns: 1,
+                    items: [
+                      AppDescriptionItem(
+                        label: Text('项目名称'),
+                        value: Text('柠檬管理后台'),
+                      ),
+                      AppDescriptionItem(label: Text('负责人'), value: Text('张明')),
+                      AppDescriptionItem(
+                        label: Text('项目说明'),
+                        value: Text('用于管理后台页面、业务组件和主题配置。'),
+                      ),
+                    ],
+                  ),
+                  const Gap(12),
+                  AppDescriptions(
+                    title: Text('紧凑模式'),
+                    density: AppDescriptionsDensity.compact,
+                    bordered: true,
+                    columns: 3,
+                    items: [
+                      AppDescriptionItem(
+                        label: Text('项目名称'),
+                        value: Text('柠檬管理后台'),
+                      ),
+                      AppDescriptionItem(label: Text('负责人'), value: Text('张明')),
+                      AppDescriptionItem(
+                        label: Text('更新时间'),
+                        value: Text('2026-08-11'),
+                      ),
+                      AppDescriptionItem(
+                        label: Text('所属部门'),
+                        value: Text('研发中心'),
+                      ),
+                      AppDescriptionItem(
+                        label: Text('当前状态'),
+                        value: AppBadge.success(child: Text('运行中')),
+                      ),
+                      AppDescriptionItem(
+                        label: Text('部署环境'),
+                        value: Text('生产环境'),
+                      ),
+                    ],
+                  ),
+                  const Gap(12),
+                  const AppDescriptions(
+                    title: Text('紧凑横向模式'),
+                    density: AppDescriptionsDensity.compact,
+                    layout: AppDescriptionLayout.horizontal,
+                    labelWidth: 64,
+                    bordered: true,
+                    columns: 3,
+                    minColumnWidth: 220,
+                    items: [
+                      AppDescriptionItem(
+                        label: Text('项目名称'),
+                        value: Text('柠檬管理后台'),
+                      ),
+                      AppDescriptionItem(label: Text('负责人'), value: Text('张明')),
+                      AppDescriptionItem(label: Text('状态'), value: Text('运行中')),
+                      AppDescriptionItem(
+                        label: Text('部门'),
+                        value: Text('研发中心'),
+                      ),
+                      AppDescriptionItem(
+                        label: Text('环境'),
+                        value: Text('生产环境'),
+                      ),
+                      AppDescriptionItem(
+                        label: Text('更新时间'),
+                        value: Text('2026-08-11'),
+                      ),
+                    ],
+                  ),
+                  const Gap(12),
+                  ComponentTheme<AppDescriptionsTheme>(
+                    data: const AppDescriptionsTheme(
+                      density: AppDescriptionsDensity.compact,
+                      labelStyle: TextStyle(color: Color(0xff7c3aed)),
+                      valueStyle: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      tableCellPadding: EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 0,
+                      ),
+                    ),
+                    child: AppDescriptions(
+                      title: const Text('紧凑模式内嵌控件'),
+                      type: AppDescriptionsType.table,
+                      columns: 3,
+                      minColumnWidth: 220,
+                      layout: AppDescriptionLayout.horizontal,
+                      labelWidth: 72,
+                      items: [
+                        AppDescriptionItem(
+                          label: const Text('操作'),
+                          value: AppButton.outline(
+                            onPressed: _noop,
+                            child: const Text('编辑'),
+                          ),
+                        ),
+                        AppDescriptionItem(
+                          label: const Text('名称'),
+                          valueWidth: 200,
+                          value: AppTextFormField(
+                            name: 'descriptions-demo-name',
+                            initialValue: '柠檬管理后台',
+                          ),
+                        ),
+                        AppDescriptionItem(
+                          label: const Text('就地编辑'),
+                          valueWidth: 160,
+                          value: AppInlineEdit.text(
+                            value: '张明',
+                            onSaved: (_) {},
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),

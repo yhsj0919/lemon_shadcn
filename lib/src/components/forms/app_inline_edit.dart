@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
-import '../../foundation/app_shadcn_scope.dart';
+import '../../foundation/app_control_box.dart';
 import 'app_checkbox.dart';
 import 'app_date_picker.dart';
 import 'app_inline_edit_overlay_scope.dart';
@@ -697,7 +697,7 @@ class _AppInlineEditState<T> extends State<AppInlineEdit<T>> {
       return SizedBox(width: resolvedWidth, child: content);
     }
     final height =
-        widget.height ?? AppTheme.maybeOf(context)?.controls.height ?? 32;
+        widget.height ?? AppControlMetricsScope.resolve(context).height;
     return SizedBox(width: resolvedWidth, height: height, child: content);
   }
 }
