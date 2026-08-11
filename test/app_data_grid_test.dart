@@ -304,6 +304,47 @@ void main() {
     expect(style.activatedColor, isNot(style.rowHoveredColor));
   });
 
+  testWidgets('row context menu builder opens at the row click position', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: const Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(
+            width: 420,
+            child: AppDataGrid<_Row>.local(
+              height: 180,
+              rowContextMenuBuilder: _rowMenu,
+              columns: [
+                AppDataGridColumn(id: 'name', title: 'Name', value: _name),
+              ],
+              rows: [_Row(1, 'Ada')],
+              rowKey: _rowId,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final grid = tester.widget<TrinaGrid>(find.byType(TrinaGrid));
+    final row = grid.rows.first;
+    final cell = row.cells.values.first;
+    grid.onRowSecondaryTap!(
+      TrinaGridOnRowSecondaryTapEvent(
+        row: row,
+        rowIdx: 0,
+        cell: cell,
+        offset: const Offset(40, 40),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('编辑行 Ada'), findsOneWidget);
+  });
+
   testWidgets('reorderable rows use Trina drag-compatible runtime types', (
     tester,
   ) async {
@@ -532,7 +573,7 @@ void main() {
     );
     await tester.pump();
 
-    expect(tester.getSize(find.byType(TrinaGrid)).height, 169);
+    expect(tester.getSize(find.byType(TrinaGrid)).height, 173);
     expect(
       tester.getBottomLeft(find.text('Linus')).dy,
       lessThan(tester.getBottomLeft(find.byType(TrinaGrid)).dy),
@@ -571,6 +612,11 @@ void main() {
 }
 
 String _name(_Row row) => row.name;
+
+List<shad.MenuItem> _rowMenu(BuildContext context, _Row row, int rowIndex) => [
+  AppMenuButton(onPressed: (_) {}, child: Text('编辑行 ${row.name}')),
+  const AppMenuDivider(),
+];
 
 int _rowId(_Row row) => row.id;
 

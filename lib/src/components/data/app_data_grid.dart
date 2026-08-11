@@ -46,6 +46,9 @@ typedef AppDataGridCellChanged<T> =
 
 typedef AppDataGridRowColor<T> = Color? Function(T row);
 
+typedef AppDataGridRowContextMenuBuilder<T> =
+    List<shad.MenuItem> Function(BuildContext context, T row, int rowIndex);
+
 class AppDataGridColumn<T> {
   const AppDataGridColumn({
     required this.id,
@@ -210,6 +213,7 @@ class AppDataGrid<T> extends StatefulWidget {
     this.striped = false,
     this.stripeColor,
     this.selectedRowColor,
+    this.rowContextMenuBuilder,
     this.rowBackgroundColor,
     this.empty,
   }) : assert(height == null || height > 0),
@@ -252,6 +256,7 @@ class AppDataGrid<T> extends StatefulWidget {
     this.striped = false,
     this.stripeColor,
     this.selectedRowColor,
+    this.rowContextMenuBuilder,
     this.rowBackgroundColor,
     this.empty,
   }) : assert(height == null || height > 0),
@@ -291,6 +296,7 @@ class AppDataGrid<T> extends StatefulWidget {
     this.striped = false,
     this.stripeColor,
     this.selectedRowColor,
+    this.rowContextMenuBuilder,
     this.rowBackgroundColor,
     this.empty,
   }) : assert(height == null || height > 0),
@@ -368,6 +374,10 @@ class AppDataGrid<T> extends StatefulWidget {
   /// remains distinguishable even when the theme primary color is neutral.
   final Color? selectedRowColor;
 
+  /// Builds a context menu for a business row. Return an empty list to leave
+  /// the platform's default secondary-click behavior untouched.
+  final AppDataGridRowContextMenuBuilder<T>? rowContextMenuBuilder;
+
   /// Resolves a background for each business row independently. Returning
   /// null falls back to the configured stripe and then the cell background.
   final AppDataGridRowColor<T>? rowBackgroundColor;
@@ -388,6 +398,7 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
   var _wasEditing = false;
   var _allDataColumnsHidden = false;
   var _loadedRowCount = 0;
+  final _rowMenuController = shad.OverlayController();
 
   @override
   void initState() {
@@ -422,6 +433,7 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
   @override
   void dispose() {
     _stateManager?.removeListener(_onGridStateChanged);
+    _rowMenuController.dispose();
     widget.controller?._detach();
     super.dispose();
   }
@@ -512,14 +524,17 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
     final rowCount = widget._mode == _AppDataGridMode.local
         ? widget.rows.length
         : _loadedRowCount;
-    final borderAllowance = widget.showBorder ? 4.0 : 2.0;
+    // Accounts for Trina's header/body/footer divider lines, grid edge, and
+    // fractional pixel rounding. Without this chrome allowance, a grid that
+    // is exactly one row high can spuriously create a vertical scrollbar.
+    final chromeAllowance = widget.showBorder ? 8.0 : 6.0;
     final contentHeight =
         metrics.columnHeight +
         (widget.showFilters ? metrics.filterHeight : 0) +
         rowCount *
             (metrics.rowHeight + (widget.showInternalDividers ? .5 : 0)) +
         (widget._mode == _AppDataGridMode.local ? 0 : metrics.footerHeight) +
-        borderAllowance;
+        chromeAllowance;
     if (widget._mode == _AppDataGridMode.local) return contentHeight;
     // Trina constrains a custom footer to at most 40% of the grid height.
     return math.max(contentHeight, metrics.footerHeight / .4);
@@ -1074,6 +1089,33 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
     );
   }
 
+  void _onRowSecondaryTap(TrinaGridOnRowSecondaryTapEvent event) {
+    final builder = widget.rowContextMenuBuilder;
+    if (builder == null) return;
+    final row = event.row.data;
+    if (row is! T) return;
+    final items = builder(context, row, event.rowIdx);
+    if (items.isEmpty) return;
+    final theme = shad.Theme.of(context);
+    _rowMenuController.show(
+      context,
+      shad.PopoverConfiguration<void>(
+        position: event.offset + const Offset(8, 0),
+        alignment: Alignment.topLeft,
+        anchorAlignment: Alignment.topRight,
+        follow: false,
+        modal: true,
+        consumeOutsideTaps: false,
+        dismissBackdropFocus: false,
+        overlayBarrier: shad.OverlayBarrier(
+          borderRadius: BorderRadius.circular(theme.radiusMd),
+          barrierColor: const Color(0xB2000000),
+        ),
+        builder: (context) => AppDropdownMenu(children: items),
+      ),
+    );
+  }
+
   TrinaGridConfiguration _configuration(BuildContext context) {
     final theme = shad.Theme.of(context);
     final colors = theme.colorScheme;
@@ -1261,6 +1303,9 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
             ? _onSelected
             : null,
         onRowDoubleTap: _onRowDoubleTap,
+        onRowSecondaryTap: widget.rowContextMenuBuilder == null
+            ? null
+            : _onRowSecondaryTap,
         onRowChecked: _onRowChecked,
         onRowsMoved: _onRowsMoved,
         rowColorCallback: widget.rowBackgroundColor == null
