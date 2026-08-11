@@ -252,8 +252,11 @@ AppDescriptions(
   columns: columns, // name 列 editable: true
   rows: users,
   rowKey: (user) => user.id,
+  columnWidthMode: AppDataGridColumnWidthMode.fill,
+  shrinkWrap: true,
   sortable: true,
   selectionMode: AppDataGridSelectionMode.multiple,
+  selectedRowColor: const Color(0xffdbeafe),
   onCellChanged: (row, field, value, oldValue) {},
   reorderableRows: true,
   reorderableColumns: true,

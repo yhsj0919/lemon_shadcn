@@ -107,4 +107,81 @@ void main() {
     final foreground = container.foregroundDecoration! as BoxDecoration;
     expect(foreground.border, isNotNull);
   });
+
+  testWidgets('AppTable supports fixed, fill, and content heights', (
+    tester,
+  ) async {
+    const rows = [
+      AppTableRow(cells: [AppTableCell(child: Text('Cell'))]),
+    ];
+
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: const Align(
+          alignment: Alignment.topLeft,
+          child: AppTable(height: 180, rows: rows),
+        ),
+      ),
+    );
+    expect(tester.getSize(find.byType(AppTable)).height, 180);
+
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: const Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(
+            width: 300,
+            height: 220,
+            child: AppTable(fillHeight: true, rows: rows),
+          ),
+        ),
+      ),
+    );
+    expect(tester.getSize(find.byType(AppTable)).height, 220);
+
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: const Align(
+          alignment: Alignment.topLeft,
+          child: AppTable(rows: rows),
+        ),
+      ),
+    );
+    expect(tester.getSize(find.byType(AppTable)).height, 40);
+  });
+
+  testWidgets('AppTable stripeColor matches DataGrid row ordering', (
+    tester,
+  ) async {
+    const base = Color(0xffffffff);
+    const stripe = Color(0xffeef2ff);
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: const AppTable(
+          striped: true,
+          stripeColor: stripe,
+          backgroundColor: base,
+          rows: [
+            AppTableRow(cells: [AppTableCell(child: Text('First'))]),
+            AppTableRow(cells: [AppTableCell(child: Text('Second'))]),
+          ],
+        ),
+      ),
+    );
+
+    Color cellColor(String text) => tester
+        .widget<ColoredBox>(
+          find
+              .ancestor(of: find.text(text), matching: find.byType(ColoredBox))
+              .first,
+        )
+        .color;
+
+    expect(cellColor('First'), base);
+    expect(cellColor('Second'), stripe);
+  });
 }

@@ -71,6 +71,8 @@ class AppTable extends StatelessWidget {
     this.defaultVerticalAlignment = TableCellVerticalAlignment.middle,
     this.rowHeight,
     this.headerHeight,
+    this.height,
+    this.fillHeight = false,
     this.cellPadding,
     this.backgroundColor,
     this.foregroundColor,
@@ -81,11 +83,14 @@ class AppTable extends StatelessWidget {
     this.showOuterBorder = true,
     this.showInternalDividers = true,
     this.striped = false,
+    this.stripeColor,
     this.oddRowColor,
     this.evenRowColor,
     this.rowBackgroundColor,
     this.clipBehavior = Clip.antiAlias,
-  }) : rowCount = null,
+  }) : assert(height == null || height > 0),
+       assert(!fillHeight || height == null),
+       rowCount = null,
        rowBuilder = null,
        headerBuilder = null;
 
@@ -99,6 +104,8 @@ class AppTable extends StatelessWidget {
     this.defaultVerticalAlignment = TableCellVerticalAlignment.middle,
     this.rowHeight,
     this.headerHeight,
+    this.height,
+    this.fillHeight = false,
     this.cellPadding,
     this.backgroundColor,
     this.foregroundColor,
@@ -109,11 +116,14 @@ class AppTable extends StatelessWidget {
     this.showOuterBorder = true,
     this.showInternalDividers = true,
     this.striped = false,
+    this.stripeColor,
     this.oddRowColor,
     this.evenRowColor,
     this.rowBackgroundColor,
     this.clipBehavior = Clip.antiAlias,
   }) : assert(rowCount >= 0),
+       assert(height == null || height > 0),
+       assert(!fillHeight || height == null),
        rows = null,
        rowCount = rowCount,
        assert(rowBuilder != null);
@@ -127,6 +137,12 @@ class AppTable extends StatelessWidget {
   final TableCellVerticalAlignment defaultVerticalAlignment;
   final double? rowHeight;
   final double? headerHeight;
+
+  /// Fixed outer table height. Null keeps the table content-sized.
+  final double? height;
+
+  /// Expands the table surface to the bounded parent height.
+  final bool fillHeight;
   final EdgeInsetsGeometry? cellPadding;
   final Color? backgroundColor;
   final Color? foregroundColor;
@@ -137,6 +153,11 @@ class AppTable extends StatelessWidget {
   final bool showOuterBorder;
   final bool showInternalDividers;
   final bool striped;
+
+  /// Background used by every second body row when [striped] is true.
+  final Color? stripeColor;
+
+  /// Legacy explicit colors for zero-based even and odd row positions.
   final Color? oddRowColor;
   final Color? evenRowColor;
   final AppTableRowColor? rowBackgroundColor;
@@ -181,8 +202,10 @@ class AppTable extends StatelessWidget {
       final zebraColor = !striped || index < 0
           ? null
           : index.isEven
-          ? (oddRowColor ?? colors.muted.withValues(alpha: .45))
-          : (evenRowColor ?? backgroundColor ?? colors.background);
+          ? (oddRowColor ?? backgroundColor ?? colors.background)
+          : (evenRowColor ??
+                stripeColor ??
+                colors.muted.withValues(alpha: .45));
       final resolvedRowColor =
           row.backgroundColor ??
           (index >= 0 ? rowBackgroundColor?.call(index, row) : null) ??
@@ -246,7 +269,7 @@ class AppTable extends StatelessWidget {
       children: tableRows,
     );
 
-    return ClipRRect(
+    final result = ClipRRect(
       borderRadius: radius,
       clipBehavior: clipBehavior,
       child: Container(
@@ -264,5 +287,10 @@ class AppTable extends StatelessWidget {
         child: content,
       ),
     );
+    if (fillHeight) return SizedBox.expand(child: result);
+    if (height case final fixedHeight?) {
+      return SizedBox(height: fixedHeight, child: result);
+    }
+    return result;
   }
 }

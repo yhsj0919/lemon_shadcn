@@ -41,6 +41,7 @@ class _DataGridPageState extends State<DataGridPage> {
       type: AppDataGridColumnType.number,
       width: 90,
       minWidth: 72,
+      widthMode: AppDataGridColumnWidthMode.content,
       pin: AppDataGridColumnPin.start,
     ),
     AppDataGridColumn(
@@ -48,6 +49,7 @@ class _DataGridPageState extends State<DataGridPage> {
       title: '姓名',
       value: (row) => row.name,
       width: 150,
+      widthMode: AppDataGridColumnWidthMode.fill,
       editable: true,
     ),
     AppDataGridColumn(
@@ -55,6 +57,8 @@ class _DataGridPageState extends State<DataGridPage> {
       title: '部门',
       value: (row) => row.department,
       width: 180,
+      widthMode: AppDataGridColumnWidthMode.fill,
+      flex: 2,
     ),
     AppDataGridColumn(
       id: 'status',
@@ -120,9 +124,10 @@ class _DataGridPageState extends State<DataGridPage> {
                 columns: _columns,
                 rows: _localRows,
                 rowKey: (row) => row.id,
-                height: 410,
+                shrinkWrap: true,
                 sortable: true,
                 selectionMode: AppDataGridSelectionMode.multiple,
+                selectedRowColor: const Color(0xffdbeafe),
                 selectedKeys: {for (final row in _selectedRows) row.id},
                 onSelectionChanged: (rows) =>
                     setState(() => _selectedRows = rows),

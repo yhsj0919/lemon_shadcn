@@ -24,6 +24,8 @@ enum AppDataGridColumnType { text, number, boolean, date, time, dateTime }
 
 enum AppDataGridColumnPin { none, start, end }
 
+enum AppDataGridColumnWidthMode { fixed, content, fill }
+
 enum AppDataGridSelectionMode { none, single, multiple }
 
 enum AppDataGridColumnMenuMode { contextMenu, icon }
@@ -53,6 +55,8 @@ class AppDataGridColumn<T> {
     this.cellBuilder,
     this.width = 160,
     this.minWidth = 80,
+    this.widthMode,
+    this.flex = 1,
     this.pin = AppDataGridColumnPin.none,
     this.sortable = true,
     this.filterable = true,
@@ -62,7 +66,9 @@ class AppDataGridColumn<T> {
     this.hidden = false,
     this.alignment = Alignment.center,
     this.titleAlignment,
-  });
+  }) : assert(width > 0),
+       assert(minWidth > 0),
+       assert(flex > 0);
 
   final String id;
   final String title;
@@ -71,6 +77,13 @@ class AppDataGridColumn<T> {
   final AppDataGridCellBuilder<T>? cellBuilder;
   final double width;
   final double minWidth;
+
+  /// Overrides the grid-wide column width mode for this column.
+  final AppDataGridColumnWidthMode? widthMode;
+
+  /// Relative width used when the resolved [widthMode] is
+  /// [AppDataGridColumnWidthMode.fill].
+  final double flex;
   final AppDataGridColumnPin pin;
   final bool sortable;
   final bool filterable;
@@ -172,6 +185,7 @@ class AppDataGrid<T> extends StatefulWidget {
     required this.rowKey,
     this.controller,
     this.height = 420,
+    this.shrinkWrap = false,
     this.selectionMode = AppDataGridSelectionMode.none,
     this.selectedKeys = const {},
     this.autoSelectFirstRow = false,
@@ -183,6 +197,7 @@ class AppDataGrid<T> extends StatefulWidget {
     this.reorderableColumns = false,
     this.columnMenuMode = AppDataGridColumnMenuMode.contextMenu,
     this.showFilters = false,
+    this.columnWidthMode = AppDataGridColumnWidthMode.fixed,
     this.showBorder = true,
     this.showInternalDividers = true,
     this.textStyle,
@@ -194,9 +209,11 @@ class AppDataGrid<T> extends StatefulWidget {
     this.cellForegroundColor,
     this.striped = false,
     this.stripeColor,
+    this.selectedRowColor,
     this.rowBackgroundColor,
     this.empty,
-  }) : _mode = _AppDataGridMode.local,
+  }) : assert(height == null || height > 0),
+       _mode = _AppDataGridMode.local,
        loader = null,
        pageSize = 20,
        pageSizeOptions = const [10, 20, 50, 100];
@@ -208,6 +225,7 @@ class AppDataGrid<T> extends StatefulWidget {
     required this.rowKey,
     this.controller,
     this.height = 480,
+    this.shrinkWrap = false,
     this.pageSize = 20,
     this.pageSizeOptions = const [10, 20, 50, 100],
     this.selectionMode = AppDataGridSelectionMode.none,
@@ -221,6 +239,7 @@ class AppDataGrid<T> extends StatefulWidget {
     this.reorderableColumns = false,
     this.columnMenuMode = AppDataGridColumnMenuMode.contextMenu,
     this.showFilters = false,
+    this.columnWidthMode = AppDataGridColumnWidthMode.fixed,
     this.showBorder = true,
     this.showInternalDividers = true,
     this.textStyle,
@@ -232,9 +251,11 @@ class AppDataGrid<T> extends StatefulWidget {
     this.cellForegroundColor,
     this.striped = false,
     this.stripeColor,
+    this.selectedRowColor,
     this.rowBackgroundColor,
     this.empty,
-  }) : _mode = _AppDataGridMode.paginated,
+  }) : assert(height == null || height > 0),
+       _mode = _AppDataGridMode.paginated,
        rows = const [];
 
   const AppDataGrid.infinite({
@@ -244,6 +265,7 @@ class AppDataGrid<T> extends StatefulWidget {
     required this.rowKey,
     this.controller,
     this.height = 480,
+    this.shrinkWrap = false,
     this.pageSize = 30,
     this.selectionMode = AppDataGridSelectionMode.none,
     this.selectedKeys = const {},
@@ -256,6 +278,7 @@ class AppDataGrid<T> extends StatefulWidget {
     this.reorderableColumns = false,
     this.columnMenuMode = AppDataGridColumnMenuMode.contextMenu,
     this.showFilters = false,
+    this.columnWidthMode = AppDataGridColumnWidthMode.fixed,
     this.showBorder = true,
     this.showInternalDividers = true,
     this.textStyle,
@@ -267,9 +290,11 @@ class AppDataGrid<T> extends StatefulWidget {
     this.cellForegroundColor,
     this.striped = false,
     this.stripeColor,
+    this.selectedRowColor,
     this.rowBackgroundColor,
     this.empty,
-  }) : _mode = _AppDataGridMode.infinite,
+  }) : assert(height == null || height > 0),
+       _mode = _AppDataGridMode.infinite,
        rows = const [],
        pageSizeOptions = const [];
 
@@ -278,7 +303,13 @@ class AppDataGrid<T> extends StatefulWidget {
   final AppDataGridLoader<T>? loader;
   final Object Function(T row) rowKey;
   final AppDataGridController? controller;
-  final double height;
+
+  /// Fixed grid height. Set to null to fill the bounded parent height.
+  final double? height;
+
+  /// Sizes the grid from its header, optional filter/footer, and loaded rows.
+  /// When true this takes precedence over [height].
+  final bool shrinkWrap;
   final int pageSize;
   final List<int> pageSizeOptions;
   final AppDataGridSelectionMode selectionMode;
@@ -299,6 +330,10 @@ class AppDataGrid<T> extends StatefulWidget {
   final bool reorderableColumns;
   final AppDataGridColumnMenuMode columnMenuMode;
   final bool showFilters;
+
+  /// Default width strategy for columns that do not provide their own
+  /// [AppDataGridColumn.widthMode].
+  final AppDataGridColumnWidthMode columnWidthMode;
 
   /// Whether the grid draws its outer border.
   final bool showBorder;
@@ -328,6 +363,11 @@ class AppDataGrid<T> extends StatefulWidget {
   /// Defaults to a subtle variant of the current theme's muted color.
   final Color? stripeColor;
 
+  /// Background for the active single-selection row and checked
+  /// multiple-selection rows. Defaults to a semantic blue surface so it
+  /// remains distinguishable even when the theme primary color is neutral.
+  final Color? selectedRowColor;
+
   /// Resolves a background for each business row independently. Returning
   /// null falls back to the configured stripe and then the cell background.
   final AppDataGridRowColor<T>? rowBackgroundColor;
@@ -347,6 +387,7 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
   int _generation = 0;
   var _wasEditing = false;
   var _allDataColumnsHidden = false;
+  var _loadedRowCount = 0;
 
   @override
   void initState() {
@@ -428,6 +469,56 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
     if (manager == null) return;
     manager.removeAllRows(notify: false);
     manager.appendRows(_toTrinaRows(rows));
+    _scheduleColumnWidths();
+  }
+
+  AppDataGridColumnWidthMode _resolvedWidthMode(AppDataGridColumn<T> column) =>
+      column.widthMode ?? widget.columnWidthMode;
+
+  bool get _hasFillColumns => widget.columns.any(
+    (column) => _resolvedWidthMode(column) == AppDataGridColumnWidthMode.fill,
+  );
+
+  void _scheduleColumnWidths() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final manager = _stateManager;
+      if (manager == null) return;
+      for (final definition in widget.columns) {
+        if (_resolvedWidthMode(definition) !=
+            AppDataGridColumnWidthMode.content) {
+          continue;
+        }
+        final column = manager.refColumns.originalList
+            .where((column) => column.field == definition.id)
+            .firstOrNull;
+        if (column != null) manager.autoFitColumn(context, column);
+      }
+      if (_hasFillColumns) {
+        manager.activateColumnsAutoSize();
+        manager.updateVisibilityLayout(notify: true);
+      }
+    });
+  }
+
+  void _setLoadedRowCount(int count) {
+    if (!widget.shrinkWrap || count == _loadedRowCount || !mounted) return;
+    setState(() => _loadedRowCount = count);
+  }
+
+  double _remoteShrinkWrapHeight(BuildContext context) {
+    final metrics =
+        AppTheme.maybeOf(context)?.dataGrid ?? const AppDataGridMetrics();
+    final borderAllowance = widget.showBorder ? 4.0 : 2.0;
+    final contentHeight =
+        metrics.columnHeight +
+        (widget.showFilters ? metrics.filterHeight : 0) +
+        _loadedRowCount *
+            (metrics.rowHeight + (widget.showInternalDividers ? .5 : 0)) +
+        metrics.footerHeight +
+        borderAllowance;
+    // Trina constrains a custom footer to at most 40% of the grid height.
+    return math.max(contentHeight, metrics.footerHeight / .4);
   }
 
   void _syncSelectedKeys() {
@@ -494,6 +585,7 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
       enableDropToResize: false,
       enableColumnDrag: false,
       enableRowDrag: false,
+      suppressedAutoSize: true,
       titlePadding: EdgeInsets.zero,
       cellPadding: EdgeInsets.zero,
       textAlign: TrinaColumnTextAlign.center,
@@ -526,6 +618,7 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
       enableDropToResize: false,
       enableColumnDrag: false,
       enableRowChecked: false,
+      suppressedAutoSize: true,
       titlePadding: EdgeInsets.zero,
       cellPadding: EdgeInsets.zero,
       textAlign: TrinaColumnTextAlign.center,
@@ -545,6 +638,7 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
   }
 
   TrinaColumn _toTrinaColumn(AppDataGridColumn<T> column, int index) {
+    final widthMode = _resolvedWidthMode(column);
     return TrinaColumn(
       title: column.title,
       field: column.id,
@@ -556,8 +650,11 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
         AppDataGridColumnType.time => TrinaColumnType.time(),
         AppDataGridColumnType.dateTime => TrinaColumnType.dateTime(),
       },
-      width: column.width,
+      width: widthMode == AppDataGridColumnWidthMode.fill
+          ? math.max(column.minWidth, column.flex * 100)
+          : column.width,
       minWidth: column.minWidth,
+      suppressedAutoSize: widthMode != AppDataGridColumnWidthMode.fill,
       readOnly: !column.editable,
       // Keep tap-to-edit off; editable columns enter edit on double-tap only.
       enableEditingMode: false,
@@ -671,10 +768,13 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
     return TrinaColumnTextAlign.center;
   }
 
-  List<TrinaRow<T>> _toTrinaRows(List<T> rows) {
+  // Trina's row drag APIs operate on List<TrinaRow<dynamic>>. Keep the
+  // runtime row type unbound as well; TrinaRow<T> causes its internal
+  // FilteredList to reject dragged rows when it inserts them after a move.
+  List<TrinaRow> _toTrinaRows(List<T> rows) {
     return [
       for (final row in rows)
-        TrinaRow<T>(
+        TrinaRow(
           key: ValueKey(widget.rowKey(row)),
           data: row,
           checked: widget.selectedKeys.contains(widget.rowKey(row)),
@@ -749,6 +849,8 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
           ((request.page - 1) * request.pageSize +
               page.items.length +
               (page.hasMore ? request.pageSize : 0));
+      _setLoadedRowCount(page.items.length);
+      _scheduleColumnWidths();
       return TrinaLazyPaginationResponse(
         totalPage: math.max(1, (total / request.pageSize).ceil()),
         totalRecords: page.total,
@@ -780,7 +882,13 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
       );
       _infinitePage = nextPage;
       _nextCursor = page.nextCursor;
+      _setLoadedRowCount(
+        request.lastRow == null
+            ? page.items.length
+            : _loadedRowCount + page.items.length,
+      );
       if (mounted && _loadError != null) setState(() => _loadError = null);
+      _scheduleColumnWidths();
       return TrinaInfinityScrollRowsResponse(
         isLast: !page.hasMore,
         rows: _toTrinaRows(page.items),
@@ -796,6 +904,7 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
     _stateManager = event.stateManager;
     _wasEditing = event.stateManager.isEditing;
     _stateManager!.addListener(_onGridStateChanged);
+    _scheduleColumnWidths();
     // Wait until Trina's select-mode auto-select post-frame callback finishes.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -971,6 +1080,11 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
     final rowBackground = widget.cellBackgroundColor ?? colors.background;
     final stripeBackground =
         widget.stripeColor ?? colors.muted.withValues(alpha: .45);
+    final selectionBackground =
+        widget.selectedRowColor ??
+        (Theme.of(context).brightness == Brightness.dark
+            ? const Color(0xff1e3a5f)
+            : const Color(0xffdbeafe));
     final style = TrinaGridStyleConfig(
       enableGridBorderShadow: false,
       enableColumnBorderVertical: widget.showInternalDividers,
@@ -983,8 +1097,8 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
       oddRowColor: widget.striped ? rowBackground : null,
       evenRowColor: widget.striped ? stripeBackground : null,
       rowHoveredColor: colors.accent,
-      activatedColor: colors.accent,
-      rowCheckedColor: colors.accent,
+      activatedColor: selectionBackground,
+      rowCheckedColor: selectionBackground,
       columnUnselectedColor: colors.mutedForeground,
       columnActiveColor: colors.primary,
       columnCheckedColor: colors.primaryForeground,
@@ -1037,6 +1151,11 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
       filterHeaderColor: widget.headerBackgroundColor,
     );
     return TrinaGridConfiguration(
+      columnSize: TrinaGridColumnSizeConfig(
+        autoSizeMode: _hasFillColumns
+            ? TrinaAutoSizeMode.scale
+            : TrinaAutoSizeMode.none,
+      ),
       selectingMode: TrinaGridSelectingMode.row,
       enableAutoSelectFirstRow: widget.autoSelectFirstRow,
       rowSelectionCheckBoxBehavior: switch (widget.selectionMode) {
@@ -1053,6 +1172,9 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
   }
 
   Widget _buildFooter(TrinaGridStateManager manager) {
+    final metrics =
+        AppTheme.maybeOf(context)?.dataGrid ?? const AppDataGridMetrics();
+    manager.footerHeight = metrics.footerHeight;
     if (widget._mode == _AppDataGridMode.paginated) {
       return TrinaLazyPagination(
         key: _paginationKey,
@@ -1106,85 +1228,87 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
         widget.empty ??
         const AppEmpty(icon: Icon(shad.LucideIcons.inbox), title: Text('暂无数据'));
 
-    return SizedBox(
-      height: widget.height,
-      child: Stack(
-        children: [
+    final useNativeFitContent =
+        widget.shrinkWrap && widget._mode == _AppDataGridMode.local;
+    final grid = Theme(
+      data: checkboxTheme,
+      child: TrinaGrid(
+        key: ValueKey(_generation),
+        columns: columns,
+        rows: rows,
+        configuration: _configuration(context),
+        noRowsWidget: empty,
+        mode: widget.selectionMode == AppDataGridSelectionMode.single
+            ? TrinaGridMode.selectWithOneTap
+            : TrinaGridMode.normal,
+        onLoaded: _onLoaded,
+        onChanged: _onChanged,
+        onSelected: widget.selectionMode == AppDataGridSelectionMode.single
+            ? _onSelected
+            : null,
+        onRowDoubleTap: _onRowDoubleTap,
+        onRowChecked: _onRowChecked,
+        onRowsMoved: _onRowsMoved,
+        rowColorCallback: widget.rowBackgroundColor == null
+            ? null
+            : (rowContext) =>
+                  widget.rowBackgroundColor!(rowContext.row.data as T) ??
+                  (widget.striped && rowContext.rowIdx.isOdd
+                      ? widget.stripeColor ??
+                            appTheme.colorScheme.muted.withValues(alpha: .45)
+                      : widget.cellBackgroundColor ??
+                            appTheme.colorScheme.background),
+        createFooter: widget._mode == _AppDataGridMode.local
+            ? null
+            : _buildFooter,
+        fitContent: useNativeFitContent,
+      ),
+    );
+    final content = Stack(
+      children: [
+        if (useNativeFitContent) grid else Positioned.fill(child: grid),
+        if (_allDataColumnsHidden)
           Positioned.fill(
-            child: Theme(
-              data: checkboxTheme,
-              child: TrinaGrid(
-                key: ValueKey(_generation),
-                columns: columns,
-                rows: rows,
-                configuration: _configuration(context),
-                noRowsWidget: empty,
-                mode: widget.selectionMode == AppDataGridSelectionMode.single
-                    ? TrinaGridMode.selectWithOneTap
-                    : TrinaGridMode.normal,
-                onLoaded: _onLoaded,
-                onChanged: _onChanged,
-                onSelected:
-                    widget.selectionMode == AppDataGridSelectionMode.single
-                    ? _onSelected
-                    : null,
-                onRowDoubleTap: _onRowDoubleTap,
-                onRowChecked: _onRowChecked,
-                onRowsMoved: _onRowsMoved,
-                rowColorCallback: widget.rowBackgroundColor == null
-                    ? null
-                    : (rowContext) =>
-                          widget.rowBackgroundColor!(
-                            rowContext.row.data as T,
-                          ) ??
-                          (widget.striped && rowContext.rowIdx.isOdd
-                              ? widget.stripeColor ??
-                                    appTheme.colorScheme.muted.withValues(
-                                      alpha: .45,
-                                    )
-                              : widget.cellBackgroundColor ??
-                                    appTheme.colorScheme.background),
-                createFooter: widget._mode == _AppDataGridMode.local
-                    ? null
-                    : _buildFooter,
-              ),
-            ),
-          ),
-          if (_allDataColumnsHidden)
-            Positioned.fill(
-              child: ColoredBox(
-                color: shad.Theme.of(context).colorScheme.background,
-                child: Center(
-                  child: AppEmpty(
-                    icon: const Icon(shad.LucideIcons.columns3),
-                    title: const Text('列已全部隐藏'),
-                    description: const Text('请选择要显示的列，或一键恢复全部列。'),
-                    action: AppWidgetGroup(
-                      children: [
-                        AppButton.outline(
-                          onPressed: _showSetColumns,
-                          child: const Text('选择列'),
-                        ),
-                        AppButton.primary(
-                          onPressed: _restoreAllDataColumns,
-                          child: const Text('恢复全部列'),
-                        ),
-                      ],
-                    ),
+            child: ColoredBox(
+              color: shad.Theme.of(context).colorScheme.background,
+              child: Center(
+                child: AppEmpty(
+                  icon: const Icon(shad.LucideIcons.columns3),
+                  title: const Text('列已全部隐藏'),
+                  description: const Text('请选择要显示的列，或一键恢复全部列。'),
+                  action: AppWidgetGroup(
+                    children: [
+                      AppButton.outline(
+                        onPressed: _showSetColumns,
+                        child: const Text('选择列'),
+                      ),
+                      AppButton.primary(
+                        onPressed: _restoreAllDataColumns,
+                        child: const Text('恢复全部列'),
+                      ),
+                    ],
                   ),
                 ),
               ),
             ),
-          if (_loadError != null)
-            Positioned(
-              left: 12,
-              right: 12,
-              bottom: 12,
-              child: _AppDataGridError(onRetry: _refresh),
-            ),
-        ],
-      ),
+          ),
+        if (_loadError != null)
+          Positioned(
+            left: 12,
+            right: 12,
+            bottom: 12,
+            child: _AppDataGridError(onRetry: _refresh),
+          ),
+      ],
     );
+    if (widget.shrinkWrap) {
+      if (useNativeFitContent) return content;
+      return SizedBox(height: _remoteShrinkWrapHeight(context), child: content);
+    }
+    if (widget.height case final height?) {
+      return SizedBox(height: height, child: content);
+    }
+    return SizedBox.expand(child: content);
   }
 }
 

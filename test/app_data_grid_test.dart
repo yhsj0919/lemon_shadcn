@@ -228,6 +228,294 @@ void main() {
     expect(style.oddRowColor, baseColor);
     expect(style.evenRowColor, stripeColor);
   });
+
+  testWidgets('selected row color stays independent from zebra stripes', (
+    tester,
+  ) async {
+    const stripeColor = Color(0xfff1f5f9);
+    const selectedColor = Color(0xffdbeafe);
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: const Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(
+            width: 420,
+            child: AppDataGrid<_Row>.local(
+              height: 180,
+              striped: true,
+              stripeColor: stripeColor,
+              selectedRowColor: selectedColor,
+              selectionMode: AppDataGridSelectionMode.multiple,
+              columns: [
+                AppDataGridColumn(id: 'name', title: 'Name', value: _name),
+              ],
+              rows: [_Row(1, 'Ada'), _Row(2, 'Linus')],
+              rowKey: _rowId,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final style = tester
+        .widget<TrinaGrid>(find.byType(TrinaGrid))
+        .configuration
+        .style;
+    expect(style.evenRowColor, stripeColor);
+    expect(style.activatedColor, selectedColor);
+    expect(style.rowCheckedColor, selectedColor);
+    expect(style.activatedColor, isNot(style.evenRowColor));
+  });
+
+  testWidgets('neutral themes still get a distinct default selection color', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: const Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(
+            width: 420,
+            child: AppDataGrid<_Row>.local(
+              height: 180,
+              striped: true,
+              selectionMode: AppDataGridSelectionMode.single,
+              columns: [
+                AppDataGridColumn(id: 'name', title: 'Name', value: _name),
+              ],
+              rows: [_Row(1, 'Ada'), _Row(2, 'Linus')],
+              rowKey: _rowId,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final style = tester
+        .widget<TrinaGrid>(find.byType(TrinaGrid))
+        .configuration
+        .style;
+    expect(style.activatedColor, const Color(0xffdbeafe));
+    expect(style.activatedColor, isNot(style.evenRowColor));
+    expect(style.activatedColor, isNot(style.rowHoveredColor));
+  });
+
+  testWidgets('reorderable rows use Trina drag-compatible runtime types', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(
+            width: 420,
+            child: AppDataGrid<_Row>.local(
+              height: 180,
+              reorderableRows: true,
+              onRowsReordered: (_, _) {},
+              columns: const [
+                AppDataGridColumn(id: 'name', title: 'Name', value: _name),
+              ],
+              rows: const [_Row(1, 'Ada'), _Row(2, 'Linus')],
+              rowKey: _rowId,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final rows = tester.widget<TrinaGrid>(find.byType(TrinaGrid)).rows;
+    expect(rows, isA<List<TrinaRow<dynamic>>>());
+    expect(rows, everyElement(isA<TrinaRow<dynamic>>()));
+  });
+
+  testWidgets('grid-wide fill mode applies to every default column', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: const Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(
+            width: 500,
+            child: AppDataGrid<_Row>.local(
+              height: 180,
+              columnWidthMode: AppDataGridColumnWidthMode.fill,
+              columns: [
+                AppDataGridColumn(id: 'id', title: 'ID', value: _rowId),
+                AppDataGridColumn(id: 'name', title: 'Name', value: _name),
+              ],
+              rows: [_Row(1, 'Ada')],
+              rowKey: _rowId,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final grid = tester.widget<TrinaGrid>(find.byType(TrinaGrid));
+    expect(grid.configuration.columnSize.autoSizeMode, TrinaAutoSizeMode.scale);
+    expect(
+      grid.columns.map((column) => column.suppressedAutoSize),
+      everyElement(isFalse),
+    );
+  });
+
+  testWidgets('individual column width modes override the grid default', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: const Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(
+            width: 600,
+            child: AppDataGrid<_Row>.local(
+              height: 180,
+              columnWidthMode: AppDataGridColumnWidthMode.fixed,
+              columns: [
+                AppDataGridColumn(
+                  id: 'id',
+                  title: 'ID',
+                  value: _rowId,
+                  width: 100,
+                ),
+                AppDataGridColumn(
+                  id: 'name',
+                  title: 'Name',
+                  value: _name,
+                  widthMode: AppDataGridColumnWidthMode.content,
+                ),
+                AppDataGridColumn(
+                  id: 'notes',
+                  title: 'Notes',
+                  value: _name,
+                  widthMode: AppDataGridColumnWidthMode.fill,
+                  flex: 2,
+                ),
+              ],
+              rows: [_Row(1, 'A considerably longer cell value')],
+              rowKey: _rowId,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final columns = {
+      for (final column
+          in tester.widget<TrinaGrid>(find.byType(TrinaGrid)).columns)
+        column.field: column,
+    };
+    expect(columns['id']!.suppressedAutoSize, isTrue);
+    expect(columns['id']!.width, 100);
+    expect(columns['name']!.suppressedAutoSize, isTrue);
+    expect(columns['name']!.width, greaterThan(160));
+    expect(columns['notes']!.suppressedAutoSize, isFalse);
+  });
+
+  testWidgets('null height fills bounded parent constraints', (tester) async {
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: const Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(
+            width: 420,
+            height: 260,
+            child: AppDataGrid<_Row>.local(
+              height: null,
+              columns: [
+                AppDataGridColumn(id: 'name', title: 'Name', value: _name),
+              ],
+              rows: [_Row(1, 'Ada')],
+              rowKey: _rowId,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(tester.getSize(find.byType(TrinaGrid)).height, 260);
+  });
+
+  testWidgets('shrinkWrap derives height from rendered header and rows', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(
+          config: AppThemeConfig.standard(
+            dataGrid: const AppDataGridMetrics(
+              rowHeight: 38,
+              columnHeight: 42,
+              filterHeight: 46,
+            ),
+          ),
+        ),
+        home: const Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(
+            width: 420,
+            child: AppDataGrid<_Row>.local(
+              height: 999,
+              shrinkWrap: true,
+              showFilters: true,
+              columns: [
+                AppDataGridColumn(id: 'name', title: 'Name', value: _name),
+              ],
+              rows: [_Row(1, 'Ada'), _Row(2, 'Linus')],
+              rowKey: _rowId,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(tester.getSize(find.byType(TrinaGrid)).height, 124);
+  });
+
+  testWidgets('paginated shrinkWrap follows the loaded page row count', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(
+            width: 800,
+            child: AppDataGrid<_Row>.paginated(
+              shrinkWrap: true,
+              loader: (_) async => const AppDataGridPage(
+                items: [_Row(1, 'Ada'), _Row(2, 'Linus')],
+                total: 2,
+              ),
+              columns: const [
+                AppDataGridColumn(id: 'name', title: 'Name', value: _name),
+              ],
+              rowKey: _rowId,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(tester.getSize(find.byType(TrinaGrid)).height, greaterThan(150));
+  });
 }
 
 String _name(_Row row) => row.name;
