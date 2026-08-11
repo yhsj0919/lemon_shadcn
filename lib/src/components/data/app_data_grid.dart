@@ -192,6 +192,8 @@ class AppDataGrid<T> extends StatefulWidget {
     this.headerForegroundColor,
     this.cellBackgroundColor,
     this.cellForegroundColor,
+    this.striped = false,
+    this.stripeColor,
     this.rowBackgroundColor,
     this.empty,
   }) : _mode = _AppDataGridMode.local,
@@ -228,6 +230,8 @@ class AppDataGrid<T> extends StatefulWidget {
     this.headerForegroundColor,
     this.cellBackgroundColor,
     this.cellForegroundColor,
+    this.striped = false,
+    this.stripeColor,
     this.rowBackgroundColor,
     this.empty,
   }) : _mode = _AppDataGridMode.paginated,
@@ -261,6 +265,8 @@ class AppDataGrid<T> extends StatefulWidget {
     this.headerForegroundColor,
     this.cellBackgroundColor,
     this.cellForegroundColor,
+    this.striped = false,
+    this.stripeColor,
     this.rowBackgroundColor,
     this.empty,
   }) : _mode = _AppDataGridMode.infinite,
@@ -315,8 +321,15 @@ class AppDataGrid<T> extends StatefulWidget {
   final Color? cellBackgroundColor;
   final Color? cellForegroundColor;
 
+  /// Whether alternating business rows use a secondary background color.
+  final bool striped;
+
+  /// Background used by every second business row when [striped] is true.
+  /// Defaults to a subtle variant of the current theme's muted color.
+  final Color? stripeColor;
+
   /// Resolves a background for each business row independently. Returning
-  /// null falls back to [cellBackgroundColor] and then the theme background.
+  /// null falls back to the configured stripe and then the cell background.
   final AppDataGridRowColor<T>? rowBackgroundColor;
   final Widget? empty;
   final _AppDataGridMode _mode;
@@ -955,6 +968,9 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
     final columnTextStyle = textStyle
         .copyWith(fontWeight: FontWeight.w600)
         .merge(widget.headerTextStyle);
+    final rowBackground = widget.cellBackgroundColor ?? colors.background;
+    final stripeBackground =
+        widget.stripeColor ?? colors.muted.withValues(alpha: .45);
     final style = TrinaGridStyleConfig(
       enableGridBorderShadow: false,
       enableColumnBorderVertical: widget.showInternalDividers,
@@ -962,8 +978,10 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
       enableCellBorderVertical: widget.showInternalDividers,
       enableCellBorderHorizontal: widget.showInternalDividers,
       enableRowHoverColor: true,
-      gridBackgroundColor: widget.cellBackgroundColor ?? colors.background,
-      rowColor: widget.cellBackgroundColor ?? colors.background,
+      gridBackgroundColor: rowBackground,
+      rowColor: rowBackground,
+      oddRowColor: widget.striped ? rowBackground : null,
+      evenRowColor: widget.striped ? stripeBackground : null,
       rowHoveredColor: colors.accent,
       activatedColor: colors.accent,
       rowCheckedColor: colors.accent,
@@ -1119,8 +1137,13 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
                           widget.rowBackgroundColor!(
                             rowContext.row.data as T,
                           ) ??
-                          widget.cellBackgroundColor ??
-                          appTheme.colorScheme.background,
+                          (widget.striped && rowContext.rowIdx.isOdd
+                              ? widget.stripeColor ??
+                                    appTheme.colorScheme.muted.withValues(
+                                      alpha: .45,
+                                    )
+                              : widget.cellBackgroundColor ??
+                                    appTheme.colorScheme.background),
                 createFooter: widget._mode == _AppDataGridMode.local
                     ? null
                     : _buildFooter,

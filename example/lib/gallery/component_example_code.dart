@@ -271,6 +271,8 @@ AppDescriptions(
   headerForegroundColor: colors.primaryForeground,
   cellBackgroundColor: colors.card,
   cellForegroundColor: colors.cardForeground,
+  striped: true,
+  stripeColor: colors.primary.withValues(alpha: 0.06),
   rowBackgroundColor: (user) => user.disabled
       ? colors.destructive.withValues(alpha: 0.08)
       : null,

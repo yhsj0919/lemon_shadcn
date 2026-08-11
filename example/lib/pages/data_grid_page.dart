@@ -150,8 +150,8 @@ class _DataGridPageState extends State<DataGridPage> {
             headerForegroundColor: colors.primaryForeground,
             cellBackgroundColor: colors.card,
             cellForegroundColor: colors.cardForeground,
-            rowBackgroundColor: (row) =>
-                row.id.isEven ? colors.primary.withValues(alpha: 0.06) : null,
+            striped: true,
+            stripeColor: colors.primary.withValues(alpha: 0.06),
           ),
         ),
         ComponentSection(

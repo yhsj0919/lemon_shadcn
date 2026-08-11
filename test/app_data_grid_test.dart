@@ -193,6 +193,41 @@ void main() {
       isTrue,
     );
   });
+
+  testWidgets('data grid supports configurable zebra stripes', (tester) async {
+    const baseColor = Color(0xffffffff);
+    const stripeColor = Color(0xfff1f5f9);
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: const Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(
+            width: 420,
+            child: AppDataGrid<_Row>.local(
+              height: 180,
+              striped: true,
+              stripeColor: stripeColor,
+              cellBackgroundColor: baseColor,
+              columns: [
+                AppDataGridColumn(id: 'name', title: 'Name', value: _name),
+              ],
+              rows: [_Row(1, 'Ada'), _Row(2, 'Linus')],
+              rowKey: _rowId,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final style = tester
+        .widget<TrinaGrid>(find.byType(TrinaGrid))
+        .configuration
+        .style;
+    expect(style.oddRowColor, baseColor);
+    expect(style.evenRowColor, stripeColor);
+  });
 }
 
 String _name(_Row row) => row.name;
