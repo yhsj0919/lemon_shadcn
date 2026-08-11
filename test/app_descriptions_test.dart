@@ -221,6 +221,41 @@ void main() {
     expect(find.byType(material.Table), findsNWidgets(2));
   });
 
+  testWidgets('custom item replaces item layout and honors span', (
+    tester,
+  ) async {
+    const customKey = material.ValueKey('custom-item');
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: const material.Align(
+          alignment: material.Alignment.topLeft,
+          child: material.SizedBox(
+            width: 500,
+            child: AppDescriptions(
+              columns: 2,
+              minColumnWidth: 100,
+              items: [
+                AppDescriptionItem.custom(
+                  span: 2,
+                  child: material.SizedBox(
+                    key: customKey,
+                    width: double.infinity,
+                    child: material.Text('自定义操作区'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(tester.getSize(find.byKey(customKey)).width, 476);
+    expect(find.text('自定义操作区'), findsOneWidget);
+    expect(find.byType(material.Column), findsNothing);
+  });
+
   testWidgets('layout defaults to 12 horizontal item spacing', (tester) async {
     await tester.pumpWidget(
       material.MaterialApp(

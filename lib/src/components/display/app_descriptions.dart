@@ -84,8 +84,23 @@ class AppDescriptionItem {
     this.valueWidth,
     this.valueAlignment = AlignmentDirectional.topStart,
   }) : _isDivider = false,
+       _isCustom = false,
        assert(span > 0),
        assert(valueWidth == null || valueWidth > 0);
+
+  /// Creates an item whose content completely replaces the label/value layout.
+  ///
+  /// [span] follows the same responsive-column rules as a regular item.
+  const AppDescriptionItem.custom({required Widget child, this.span = 1})
+    : label = const SizedBox.shrink(),
+      value = child,
+      icon = null,
+      labelAlignment = null,
+      valueWidth = null,
+      valueAlignment = AlignmentDirectional.topStart,
+      _isDivider = false,
+      _isCustom = true,
+      assert(span > 0);
 
   /// Creates a full-row divider that participates in the item order.
   const AppDescriptionItem.divider({required Widget divider})
@@ -96,7 +111,8 @@ class AppDescriptionItem {
       labelAlignment = null,
       valueWidth = null,
       valueAlignment = AlignmentDirectional.topStart,
-      _isDivider = true;
+      _isDivider = true,
+      _isCustom = false;
 
   final Widget label;
   final Widget value;
@@ -113,6 +129,7 @@ class AppDescriptionItem {
   final double? valueWidth;
   final AlignmentGeometry valueAlignment;
   final bool _isDivider;
+  final bool _isCustom;
 }
 
 /// Responsive key-value details for entity and record pages.
@@ -310,6 +327,16 @@ class AppDescriptions extends StatelessWidget {
     AppDescriptionItem item,
     AppDescriptionsTheme style,
   ) {
+    if (item._isCustom) {
+      Widget custom = DefaultTextStyle.merge(
+        style: style.valueStyle!,
+        child: item.value,
+      );
+      if (style.controlMetrics case final metrics?) {
+        custom = AppControlMetricsScope(metrics: metrics, child: custom);
+      }
+      return custom;
+    }
     final resolvedLabelAlignment =
         (item.labelAlignment ?? style.labelAlignment!).resolve(
           Directionality.of(context),

@@ -370,6 +370,37 @@ class DataDisplayPage extends StatelessWidget {
                     ),
                   ),
                   const Gap(12),
+                  AppDescriptions(
+                    title: const Text('自定义 Item'),
+                    bordered: true,
+                    columns: 2,
+                    minColumnWidth: 220,
+                    items: [
+                      const AppDescriptionItem(
+                        label: Text('项目名称'),
+                        value: Text('柠檬管理后台'),
+                      ),
+                      AppDescriptionItem.custom(
+                        child: Row(
+                          children: [
+                            const Expanded(child: Text('自定义操作区域')),
+                            AppButton.outline(
+                              onPressed: _noop,
+                              child: const Text('查看详情'),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const AppDescriptionItem.divider(
+                        divider: Divider(height: 1),
+                      ),
+                      const AppDescriptionItem.custom(
+                        span: 2,
+                        child: Text('自定义 Item 可跨列展示任意内容。'),
+                      ),
+                    ],
+                  ),
+                  const Gap(12),
                   LayoutBuilder(
                     builder: (context, constraints) {
                       const gap = 12.0;
