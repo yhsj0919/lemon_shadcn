@@ -249,8 +249,12 @@ class AppDescriptions extends StatelessWidget {
     AppDescriptionItem item,
     AppDescriptionsTheme style,
   ) {
+    final resolvedLabelAlignment =
+        (item.labelAlignment ?? style.labelAlignment!).resolve(
+          Directionality.of(context),
+        );
     final label = Align(
-      alignment: item.labelAlignment ?? style.labelAlignment!,
+      alignment: resolvedLabelAlignment,
       child: IconTheme.merge(
         data: style.labelIconTheme!,
         child: DefaultTextStyle.merge(
@@ -287,7 +291,11 @@ class AppDescriptions extends StatelessWidget {
     );
     if (layout == AppDescriptionLayout.horizontal) {
       return Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: resolvedLabelAlignment.y <= -0.5
+            ? CrossAxisAlignment.start
+            : resolvedLabelAlignment.y >= 0.5
+            ? CrossAxisAlignment.end
+            : CrossAxisAlignment.center,
         children: [
           SizedBox(width: labelWidth, child: label),
           SizedBox(width: style.labelGap),

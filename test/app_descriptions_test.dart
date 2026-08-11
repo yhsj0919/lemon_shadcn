@@ -260,6 +260,39 @@ void main() {
     }
   });
 
+  testWidgets('topStart aligns label to top of a multiline value', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: const material.SizedBox(
+          width: 300,
+          child: AppDescriptions(
+            columns: 1,
+            layout: AppDescriptionLayout.horizontal,
+            labelAlignment: material.AlignmentDirectional.topStart,
+            padding: material.EdgeInsets.zero,
+            items: [
+              AppDescriptionItem(
+                label: material.Text('Boot time'),
+                value: material.Text('09:00-12:00\n09:00-12:00'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    expect(
+      tester.getTopLeft(find.text('Boot time')).dy,
+      closeTo(
+        tester.getTopLeft(find.text('09:00-12:00\n09:00-12:00')).dy,
+        0.01,
+      ),
+    );
+  });
+
   testWidgets('compact embedded controls and inline edit use local height', (
     tester,
   ) async {
