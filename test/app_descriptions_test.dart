@@ -23,6 +23,11 @@ void main() {
     expect(descriptions.margin, const material.EdgeInsets.all(20));
   });
 
+  test('AppDescriptions uses the standard label width by default', () {
+    const descriptions = AppDescriptions(items: []);
+    expect(descriptions.labelWidth, 80);
+  });
+
   testWidgets('compact theme changes typography and spacing', (tester) async {
     await tester.pumpWidget(
       material.MaterialApp(
@@ -129,6 +134,36 @@ void main() {
     );
   });
 
+  testWidgets('layout defaults to 12 horizontal item spacing', (tester) async {
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: const material.SizedBox(
+          width: 500,
+          child: AppDescriptions(
+            columns: 2,
+            minColumnWidth: 100,
+            items: [
+              AppDescriptionItem(
+                label: material.Text('First'),
+                value: material.Text('One'),
+              ),
+              AppDescriptionItem(
+                label: material.Text('Second'),
+                value: material.Text('Two'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    expect(
+      tester.widget<material.Wrap>(find.byType(material.Wrap)).spacing,
+      12,
+    );
+  });
+
   testWidgets('custom variant renders arbitrary body and header actions', (
     tester,
   ) async {
@@ -157,6 +192,72 @@ void main() {
     expect(find.text('Custom body'), findsOneWidget);
     expect(find.text('Menu body'), findsOneWidget);
     expect(find.byType(material.Wrap), findsNothing);
+  });
+
+  testWidgets('item label alignment can be overridden directly', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: const material.SizedBox(
+          width: 300,
+          child: AppDescriptions(
+            columns: 1,
+            layout: AppDescriptionLayout.horizontal,
+            labelWidth: 100,
+            padding: material.EdgeInsets.zero,
+            items: [
+              AppDescriptionItem(
+                labelAlignment: material.Alignment.centerRight,
+                label: material.Text('City'),
+                value: material.Text('Jinan'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    final labelRight = tester.getTopRight(find.text('City')).dx;
+    final valueLeft = tester.getTopLeft(find.text('Jinan')).dx;
+    expect(valueLeft - labelRight, closeTo(8, 0.01));
+  });
+
+  testWidgets('descriptions applies one label alignment to all items', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: const material.SizedBox(
+          width: 300,
+          child: AppDescriptions(
+            columns: 1,
+            layout: AppDescriptionLayout.horizontal,
+            labelWidth: 100,
+            labelAlignment: material.Alignment.centerRight,
+            padding: material.EdgeInsets.zero,
+            items: [
+              AppDescriptionItem(
+                label: material.Text('City'),
+                value: material.Text('Jinan'),
+              ),
+              AppDescriptionItem(
+                label: material.Text('Owner'),
+                value: material.Text('Zhang'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    for (final pair in [('City', 'Jinan'), ('Owner', 'Zhang')]) {
+      final labelRight = tester.getTopRight(find.text(pair.$1)).dx;
+      final valueLeft = tester.getTopLeft(find.text(pair.$2)).dx;
+      expect(valueLeft - labelRight, closeTo(8, 0.01));
+    }
   });
 
   testWidgets('compact embedded controls and inline edit use local height', (

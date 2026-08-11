@@ -21,6 +21,7 @@ class AppDescriptionsTheme extends shad.ComponentThemeData {
     this.valueStyle,
     this.titleStyle,
     this.labelIconTheme,
+    this.labelAlignment,
     this.padding,
     this.tableCellPadding,
     this.spacing,
@@ -36,6 +37,7 @@ class AppDescriptionsTheme extends shad.ComponentThemeData {
     this.valueStyle,
     this.titleStyle,
     this.labelIconTheme,
+    this.labelAlignment,
   }) : density = AppDescriptionsDensity.compact,
        padding = null,
        tableCellPadding = null,
@@ -51,6 +53,7 @@ class AppDescriptionsTheme extends shad.ComponentThemeData {
   final TextStyle? valueStyle;
   final TextStyle? titleStyle;
   final IconThemeData? labelIconTheme;
+  final AlignmentGeometry? labelAlignment;
   final EdgeInsetsGeometry? padding;
   final EdgeInsetsGeometry? tableCellPadding;
   final double? spacing;
@@ -67,6 +70,7 @@ class AppDescriptionItem {
     required this.value,
     this.icon,
     this.span = 1,
+    this.labelAlignment,
     this.valueWidth,
     this.valueAlignment = AlignmentDirectional.topStart,
   }) : assert(span > 0),
@@ -76,6 +80,9 @@ class AppDescriptionItem {
   final Widget value;
   final Widget? icon;
   final int span;
+
+  /// Alignment of this item's complete label, including its optional icon.
+  final AlignmentGeometry? labelAlignment;
 
   /// Optional width for controls such as fields that would otherwise fill a cell.
   final double? valueWidth;
@@ -92,12 +99,13 @@ class AppDescriptions extends StatelessWidget {
     this.columns = 3,
     this.minColumnWidth = 220,
     this.layout = AppDescriptionLayout.vertical,
-    this.labelWidth = 96,
+    this.labelWidth = 80,
     this.density,
     this.labelStyle,
     this.valueStyle,
     this.titleStyle,
     this.labelIconTheme,
+    this.labelAlignment,
     this.spacing,
     this.runSpacing,
     this.labelGap,
@@ -135,9 +143,10 @@ class AppDescriptions extends StatelessWidget {
        columns = 1,
        minColumnWidth = 1,
        layout = AppDescriptionLayout.vertical,
-       labelWidth = 96,
+       labelWidth = 80,
        labelStyle = null,
        labelIconTheme = null,
+       labelAlignment = null,
        spacing = null,
        runSpacing = null,
        labelGap = null,
@@ -158,6 +167,7 @@ class AppDescriptions extends StatelessWidget {
   final TextStyle? valueStyle;
   final TextStyle? titleStyle;
   final IconThemeData? labelIconTheme;
+  final AlignmentGeometry? labelAlignment;
   final double? spacing;
   final double? runSpacing;
   final double? labelGap;
@@ -193,6 +203,10 @@ class AppDescriptions extends StatelessWidget {
         size: compact ? 14 : 16,
         color: shadTheme.colorScheme.mutedForeground,
       ).merge(local?.labelIconTheme).merge(labelIconTheme),
+      labelAlignment:
+          labelAlignment ??
+          local?.labelAlignment ??
+          AlignmentDirectional.centerStart,
       padding: padding ?? local?.padding ?? EdgeInsets.all(compact ? 8 : 12),
       tableCellPadding:
           tableCellPadding ??
@@ -201,7 +215,7 @@ class AppDescriptions extends StatelessWidget {
             horizontal: compact ? 8 : 12,
             vertical: compact ? 0 : 8,
           ),
-      spacing: spacing ?? local?.spacing ?? (compact ? 10 : 16),
+      spacing: spacing ?? local?.spacing ?? 12,
       runSpacing: runSpacing ?? local?.runSpacing ?? 8,
       labelGap: labelGap ?? local?.labelGap ?? (compact ? 4 : 8),
       contentGap: contentGap ?? local?.contentGap ?? (compact ? 2 : 4),
@@ -235,19 +249,22 @@ class AppDescriptions extends StatelessWidget {
     AppDescriptionItem item,
     AppDescriptionsTheme style,
   ) {
-    final label = IconTheme.merge(
-      data: style.labelIconTheme!,
-      child: DefaultTextStyle.merge(
-        style: style.labelStyle!,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (item.icon != null) ...[
-              item.icon!,
-              SizedBox(width: style.contentGap),
+    final label = Align(
+      alignment: item.labelAlignment ?? style.labelAlignment!,
+      child: IconTheme.merge(
+        data: style.labelIconTheme!,
+        child: DefaultTextStyle.merge(
+          style: style.labelStyle!,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (item.icon != null) ...[
+                item.icon!,
+                SizedBox(width: style.contentGap),
+              ],
+              Flexible(child: item.label),
             ],
-            Flexible(child: item.label),
-          ],
+          ),
         ),
       ),
     );
