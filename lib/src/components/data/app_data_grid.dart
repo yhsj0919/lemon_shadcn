@@ -506,17 +506,21 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
     setState(() => _loadedRowCount = count);
   }
 
-  double _remoteShrinkWrapHeight(BuildContext context) {
+  double _shrinkWrapHeight(BuildContext context) {
     final metrics =
         AppTheme.maybeOf(context)?.dataGrid ?? const AppDataGridMetrics();
+    final rowCount = widget._mode == _AppDataGridMode.local
+        ? widget.rows.length
+        : _loadedRowCount;
     final borderAllowance = widget.showBorder ? 4.0 : 2.0;
     final contentHeight =
         metrics.columnHeight +
         (widget.showFilters ? metrics.filterHeight : 0) +
-        _loadedRowCount *
+        rowCount *
             (metrics.rowHeight + (widget.showInternalDividers ? .5 : 0)) +
-        metrics.footerHeight +
+        (widget._mode == _AppDataGridMode.local ? 0 : metrics.footerHeight) +
         borderAllowance;
+    if (widget._mode == _AppDataGridMode.local) return contentHeight;
     // Trina constrains a custom footer to at most 40% of the grid height.
     return math.max(contentHeight, metrics.footerHeight / .4);
   }
@@ -904,7 +908,12 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
     _stateManager = event.stateManager;
     _wasEditing = event.stateManager.isEditing;
     _stateManager!.addListener(_onGridStateChanged);
-    _scheduleColumnWidths();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && identical(_stateManager, event.stateManager)) {
+        setState(() {});
+        _scheduleColumnWidths();
+      }
+    });
     // Wait until Trina's select-mode auto-select post-frame callback finishes.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -1151,6 +1160,13 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
       filterHeaderColor: widget.headerBackgroundColor,
     );
     return TrinaGridConfiguration(
+      // AppDataGrid owns both scrollbars as overlays so neither axis consumes
+      // row height or column width inside Trina's layout.
+      scrollbar: const TrinaGridScrollbarConfig(
+        showHorizontal: false,
+        showVertical: false,
+        columnShowScrollWidth: false,
+      ),
       columnSize: TrinaGridColumnSizeConfig(
         autoSizeMode: _hasFillColumns
             ? TrinaAutoSizeMode.scale
@@ -1228,8 +1244,6 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
         widget.empty ??
         const AppEmpty(icon: Icon(shad.LucideIcons.inbox), title: Text('暂无数据'));
 
-    final useNativeFitContent =
-        widget.shrinkWrap && widget._mode == _AppDataGridMode.local;
     final grid = Theme(
       data: checkboxTheme,
       child: TrinaGrid(
@@ -1261,12 +1275,15 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
         createFooter: widget._mode == _AppDataGridMode.local
             ? null
             : _buildFooter,
-        fitContent: useNativeFitContent,
       ),
     );
     final content = Stack(
       children: [
-        if (useNativeFitContent) grid else Positioned.fill(child: grid),
+        Positioned.fill(child: grid),
+        if (_stateManager case final manager?)
+          Positioned.fill(
+            child: _AppDataGridOverlayScrollbars(manager: manager),
+          ),
         if (_allDataColumnsHidden)
           Positioned.fill(
             child: ColoredBox(
@@ -1302,13 +1319,74 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
       ],
     );
     if (widget.shrinkWrap) {
-      if (useNativeFitContent) return content;
-      return SizedBox(height: _remoteShrinkWrapHeight(context), child: content);
+      return SizedBox(height: _shrinkWrapHeight(context), child: content);
     }
     if (widget.height case final height?) {
       return SizedBox(height: height, child: content);
     }
     return SizedBox.expand(child: content);
+  }
+}
+
+class _AppDataGridOverlayScrollbars extends StatelessWidget {
+  const _AppDataGridOverlayScrollbars({required this.manager});
+
+  final TrinaGridStateManager manager;
+
+  @override
+  Widget build(BuildContext context) {
+    final horizontal = manager.scroll.bodyRowsHorizontal;
+    final vertical = manager.scroll.bodyRowsVertical;
+    final hasHorizontalOverflow =
+        horizontal?.hasClients == true &&
+        horizontal!.position.maxScrollExtent > 0;
+    final hasVerticalOverflow =
+        vertical?.hasClients == true && vertical!.position.maxScrollExtent > 0;
+    if (!hasHorizontalOverflow && !hasVerticalOverflow) {
+      return const SizedBox.shrink();
+    }
+    final colors = shad.Theme.of(context).colorScheme;
+    final thumbColor = colors.mutedForeground.withValues(alpha: .55);
+    const thickness = 8.0;
+    const inset = 2.0;
+    return Stack(
+      children: [
+        if (hasVerticalOverflow)
+          PositionedDirectional(
+            top: inset,
+            bottom: inset + thickness,
+            end: inset,
+            width: thickness,
+            child: RawScrollbar(
+              controller: vertical,
+              thumbVisibility: false,
+              interactive: true,
+              thickness: thickness,
+              radius: const Radius.circular(thickness / 2),
+              thumbColor: thumbColor,
+              scrollbarOrientation: ScrollbarOrientation.right,
+              child: const SizedBox.expand(),
+            ),
+          ),
+        if (hasHorizontalOverflow)
+          PositionedDirectional(
+            start: inset,
+            end: inset + thickness,
+            bottom: inset,
+            height: thickness,
+            child: RawScrollbar(
+              controller: horizontal,
+              thumbVisibility: false,
+              interactive: true,
+              thickness: thickness,
+              radius: const Radius.circular(thickness / 2),
+              thumbColor: thumbColor,
+              scrollbarOrientation: ScrollbarOrientation.bottom,
+              child: const SizedBox.expand(),
+            ),
+          ),
+      ],
+    );
   }
 }
 

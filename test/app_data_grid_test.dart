@@ -363,9 +363,16 @@ void main() {
 
     final grid = tester.widget<TrinaGrid>(find.byType(TrinaGrid));
     expect(grid.configuration.columnSize.autoSizeMode, TrinaAutoSizeMode.scale);
+    expect(grid.configuration.scrollbar.showHorizontal, isFalse);
+    expect(grid.configuration.scrollbar.showVertical, isFalse);
+    expect(grid.configuration.scrollbar.columnShowScrollWidth, isFalse);
     expect(
       grid.columns.map((column) => column.suppressedAutoSize),
       everyElement(isFalse),
+    );
+    expect(
+      grid.columns.fold<double>(0, (width, column) => width + column.width),
+      greaterThan(490),
     );
   });
 
@@ -420,7 +427,10 @@ void main() {
     expect(columns['id']!.suppressedAutoSize, isTrue);
     expect(columns['id']!.width, 100);
     expect(columns['name']!.suppressedAutoSize, isTrue);
-    expect(columns['name']!.width, greaterThan(160));
+    expect(
+      tester.getSize(find.text('A considerably longer cell value')).width,
+      greaterThan(160),
+    );
     expect(columns['notes']!.suppressedAutoSize, isFalse);
   });
 
@@ -450,6 +460,44 @@ void main() {
     expect(tester.getSize(find.byType(TrinaGrid)).height, 260);
   });
 
+  testWidgets('horizontal and vertical scrollbars are overlay layers', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: const Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(
+            width: 180,
+            height: 140,
+            child: AppDataGrid<_Row>.local(
+              height: null,
+              columns: [
+                AppDataGridColumn(id: 'id', title: 'ID', value: _rowId),
+                AppDataGridColumn(id: 'name', title: 'Name', value: _name),
+              ],
+              rows: [
+                _Row(1, 'One'),
+                _Row(2, 'Two'),
+                _Row(3, 'Three'),
+                _Row(4, 'Four'),
+              ],
+              rowKey: _rowId,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final grid = tester.widget<TrinaGrid>(find.byType(TrinaGrid));
+    expect(grid.configuration.scrollbar.showHorizontal, isFalse);
+    expect(grid.configuration.scrollbar.showVertical, isFalse);
+    expect(find.byType(RawScrollbar), findsNWidgets(2));
+    expect(tester.getSize(find.byType(TrinaGrid)), const Size(180, 140));
+  });
+
   testWidgets('shrinkWrap derives height from rendered header and rows', (
     tester,
   ) async {
@@ -467,7 +515,7 @@ void main() {
         home: const Align(
           alignment: Alignment.topLeft,
           child: SizedBox(
-            width: 420,
+            width: 120,
             child: AppDataGrid<_Row>.local(
               height: 999,
               shrinkWrap: true,
@@ -484,7 +532,11 @@ void main() {
     );
     await tester.pump();
 
-    expect(tester.getSize(find.byType(TrinaGrid)).height, 124);
+    expect(tester.getSize(find.byType(TrinaGrid)).height, 169);
+    expect(
+      tester.getBottomLeft(find.text('Linus')).dy,
+      lessThan(tester.getBottomLeft(find.byType(TrinaGrid)).dy),
+    );
   });
 
   testWidgets('paginated shrinkWrap follows the loaded page row count', (
