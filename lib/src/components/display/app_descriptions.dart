@@ -83,6 +83,9 @@ class AppDescriptionItem {
     required this.value,
     this.icon,
     this.span = 1,
+    this.width,
+    this.minWidth,
+    this.maxWidth,
     this.labelAlignment,
     this.valueWidth,
     this.expandValue = false,
@@ -91,22 +94,35 @@ class AppDescriptionItem {
        _isCustom = false,
        _valueAlignment = valueAlignment,
        assert(span > 0),
+       assert(width == null || width > 0),
+       assert(minWidth == null || minWidth > 0),
+       assert(maxWidth == null || maxWidth > 0),
+       assert(minWidth == null || maxWidth == null || minWidth <= maxWidth),
        assert(valueWidth == null || valueWidth > 0);
 
   /// Creates an item whose content completely replaces the label/value layout.
   ///
   /// [span] follows the same responsive-column rules as a regular item.
-  const AppDescriptionItem.custom({required Widget child, this.span = 1})
-    : label = const SizedBox.shrink(),
-      value = child,
-      icon = null,
-      labelAlignment = null,
-      valueWidth = null,
-      expandValue = false,
-      _valueAlignment = null,
-      _isDivider = false,
-      _isCustom = true,
-      assert(span > 0);
+  const AppDescriptionItem.custom({
+    required Widget child,
+    this.span = 1,
+    this.width,
+    this.minWidth,
+    this.maxWidth,
+  }) : label = const SizedBox.shrink(),
+       value = child,
+       icon = null,
+       labelAlignment = null,
+       valueWidth = null,
+       expandValue = false,
+       _valueAlignment = null,
+       _isDivider = false,
+       _isCustom = true,
+       assert(span > 0),
+       assert(width == null || width > 0),
+       assert(minWidth == null || minWidth > 0),
+       assert(maxWidth == null || maxWidth > 0),
+       assert(minWidth == null || maxWidth == null || minWidth <= maxWidth);
 
   /// Creates a full-row divider that participates in the item order.
   const AppDescriptionItem.divider({required Widget divider})
@@ -114,6 +130,9 @@ class AppDescriptionItem {
       value = divider,
       icon = null,
       span = 1,
+      width = null,
+      minWidth = null,
+      maxWidth = null,
       labelAlignment = null,
       valueWidth = null,
       expandValue = false,
@@ -128,6 +147,16 @@ class AppDescriptionItem {
   /// Number of responsive columns occupied in standard mode.
   /// Table mode requires every item to keep the default span of one.
   final int span;
+
+  /// Optional exact width for this complete item in standard Wrap layout.
+  /// This overrides the width calculated from [span].
+  final double? width;
+
+  /// Minimum width applied to the calculated item width.
+  final double? minWidth;
+
+  /// Maximum width applied to the calculated item width.
+  final double? maxWidth;
 
   /// Alignment of this item's complete label, including its optional icon.
   final AlignmentGeometry? labelAlignment;
@@ -155,6 +184,8 @@ class AppDescriptions extends StatelessWidget {
     this.actions,
     this.columns = 3,
     this.minColumnWidth = 220,
+    this.columnWidth,
+    this.maxColumnWidth,
     this.layout = AppDescriptionLayout.vertical,
     this.labelWidth = 80,
     this.density,
@@ -183,7 +214,13 @@ class AppDescriptions extends StatelessWidget {
        _tableCellPadding = tableCellPadding,
        customChild = null,
        assert(columns > 0),
-       assert(minColumnWidth > 0);
+       assert(minColumnWidth > 0),
+       assert(columnWidth == null || columnWidth > 0),
+       assert(maxColumnWidth == null || maxColumnWidth > 0),
+       assert(
+         maxColumnWidth == null || minColumnWidth <= maxColumnWidth,
+         'minColumnWidth must not exceed maxColumnWidth.',
+       );
 
   /// A descriptions surface with a fully custom body.
   ///
@@ -195,6 +232,8 @@ class AppDescriptions extends StatelessWidget {
     this.title,
     this.titleIcon,
     this.actions,
+    this.columnWidth,
+    this.maxColumnWidth,
     this.density,
     this.valueStyle,
     this.titleStyle,
@@ -230,6 +269,13 @@ class AppDescriptions extends StatelessWidget {
   final Widget? actions;
   final int columns;
   final double minColumnWidth;
+
+  /// Exact width of each responsive column. When set, it overrides the
+  /// calculated width and [minColumnWidth]/[maxColumnWidth] clamping.
+  final double? columnWidth;
+
+  /// Maximum width of a calculated responsive column.
+  final double? maxColumnWidth;
   final AppDescriptionLayout layout;
   final double labelWidth;
   final AppDescriptionsDensity? density;
@@ -424,8 +470,27 @@ class AppDescriptions extends StatelessWidget {
     );
   }
 
+  double get _minimumResponsiveColumnWidth => columnWidth ?? minColumnWidth;
+
   int _resolveColumnCount(double available, double gap) =>
-      ((available + gap) / (minColumnWidth + gap)).floor().clamp(1, columns);
+      ((available + gap) / (_minimumResponsiveColumnWidth + gap)).floor().clamp(
+        1,
+        columns,
+      );
+
+  double _resolveColumnWidth(double available, double gap, int count) {
+    if (columnWidth case final width?) return width;
+    final calculated = (available - gap * (count - 1)) / count;
+    return calculated.clamp(minColumnWidth, maxColumnWidth ?? double.infinity);
+  }
+
+  double _resolveItemWidth(AppDescriptionItem item, double calculatedWidth) {
+    if (item.width case final width?) return width;
+    return calculatedWidth.clamp(
+      item.minWidth ?? 0,
+      item.maxWidth ?? double.infinity,
+    );
+  }
 
   Widget _buildPlainContent(
     BuildContext context,
@@ -434,7 +499,7 @@ class AppDescriptions extends StatelessWidget {
     AppDescriptionsTheme style,
   ) {
     final gap = style.spacing!;
-    final columnWidth = (available - gap * (count - 1)) / count;
+    final columnWidth = _resolveColumnWidth(available, gap, count);
     return Wrap(
       spacing: gap,
       runSpacing: style.runSpacing!,
@@ -443,8 +508,11 @@ class AppDescriptions extends StatelessWidget {
           SizedBox(
             width: item._isDivider
                 ? available
-                : columnWidth * item.span.clamp(1, count) +
-                      gap * (item.span.clamp(1, count) - 1),
+                : _resolveItemWidth(
+                    item,
+                    columnWidth * item.span.clamp(1, count) +
+                        gap * (item.span.clamp(1, count) - 1),
+                  ),
             child: item._isDivider
                 ? item.value
                 : _buildItem(context, item, style),
@@ -517,9 +585,17 @@ class AppDescriptions extends StatelessWidget {
   Widget build(BuildContext context) {
     assert(
       type != AppDescriptionsType.table ||
-          items.every((item) => item._isDivider || item.span == 1),
-      'AppDescriptions table mode does not support item spans. '
-      'Use span: 1 or switch to standard mode.',
+          items.every(
+            (item) =>
+                item._isDivider ||
+                (item.span == 1 &&
+                    item.width == null &&
+                    item.minWidth == null &&
+                    item.maxWidth == null),
+          ),
+      'AppDescriptions table mode does not support item spans or width '
+      'constraints. Use span: 1 with null width constraints, or switch to '
+      'standard mode.',
     );
     final theme = shad.Theme.of(context);
     final style = _resolvedTheme(context);

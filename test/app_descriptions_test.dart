@@ -28,6 +28,17 @@ void main() {
     expect(descriptions.labelWidth, 80);
   });
 
+  test('AppDescriptions exposes fixed and maximum column widths', () {
+    const fixed = AppDescriptions(items: [], columnWidth: 240);
+    const limited = AppDescriptions(
+      items: [],
+      minColumnWidth: 180,
+      maxColumnWidth: 280,
+    );
+    expect(fixed.columnWidth, 240);
+    expect(limited.maxColumnWidth, 280);
+  });
+
   testWidgets('compact theme changes typography and spacing', (tester) async {
     await tester.pumpWidget(
       material.MaterialApp(
@@ -642,6 +653,37 @@ void main() {
           )
           .width,
       lessThan(500),
+    );
+  });
+
+  testWidgets('an item can enforce a minimum column width', (tester) async {
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: const material.SizedBox(
+          width: 600,
+          child: AppDescriptions(
+            columns: 3,
+            padding: material.EdgeInsets.zero,
+            items: [
+              AppDescriptionItem(
+                minWidth: 280,
+                label: material.Text('Custom width label'),
+                value: material.Text('Custom width value'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    final item = find.ancestor(
+      of: find.text('Custom width label'),
+      matching: find.byType(material.SizedBox),
+    );
+    expect(
+      tester.widgetList<material.SizedBox>(item).any((box) => box.width == 280),
+      isTrue,
     );
   });
 }
