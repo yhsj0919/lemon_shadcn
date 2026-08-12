@@ -219,7 +219,14 @@ class _AppFilePickerState extends State<AppFilePicker> {
     child: Text(
       _rejectionMessage!,
       textAlign: TextAlign.center,
-      style: TextStyle(fontSize: 13, color: theme.colorScheme.destructive),
+      style: TextStyle(
+        fontSize:
+            (theme.typography.xSmall.fontSize ?? 12) +
+            ((theme.typography.small.fontSize ?? 14) -
+                    (theme.typography.xSmall.fontSize ?? 12)) /
+                2,
+        color: theme.colorScheme.destructive,
+      ),
     ),
   );
 

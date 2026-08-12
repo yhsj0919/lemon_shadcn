@@ -42,14 +42,16 @@ class AppEmpty extends StatelessWidget {
               const SizedBox(height: 12),
             ],
             DefaultTextStyle.merge(
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              style: theme.typography.base.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
               child: title,
             ),
             if (description != null) ...[
               const SizedBox(height: 6),
               DefaultTextStyle.merge(
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: theme.typography.small.fontSize,
                   color: theme.colorScheme.mutedForeground,
                 ),
                 textAlign: TextAlign.center,

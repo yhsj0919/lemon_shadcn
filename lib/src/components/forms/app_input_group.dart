@@ -76,7 +76,7 @@ class AppInputGroupAddon extends StatelessWidget {
   @override
   Widget build(BuildContext context) => DefaultTextStyle.merge(
     style: TextStyle(
-      fontSize: 14,
+      fontSize: shad.Theme.of(context).typography.small.fontSize,
       color: shad.Theme.of(context).colorScheme.mutedForeground,
     ),
     child: IconTheme.merge(

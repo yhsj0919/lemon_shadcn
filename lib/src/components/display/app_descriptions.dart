@@ -320,18 +320,23 @@ class AppDescriptions extends StatelessWidget {
     final effectiveDensity =
         density ?? local?.density ?? AppDescriptionsDensity.standard;
     final compact = effectiveDensity == AppDescriptionsDensity.compact;
+    final typography = shadTheme.typography;
+    final xSmallSize = typography.xSmall.fontSize ?? 12;
+    final smallSize = typography.small.fontSize ?? 14;
+    final baseSize = typography.base.fontSize ?? 16;
+    final intermediateSize = (xSmallSize + smallSize) / 2;
     final resolvedTitleStyle = TextStyle(
-      fontSize: compact ? 14 : 16,
+      fontSize: compact ? smallSize : baseSize,
       fontWeight: FontWeight.w600,
     ).merge(local?.titleStyle).merge(titleStyle);
     return AppDescriptionsTheme(
       density: effectiveDensity,
       labelStyle: TextStyle(
-        fontSize: compact ? 12 : 13,
+        fontSize: compact ? xSmallSize : intermediateSize,
         color: shadTheme.colorScheme.mutedForeground,
       ).merge(local?.labelStyle).merge(labelStyle),
       valueStyle: TextStyle(
-        fontSize: compact ? 13 : 14,
+        fontSize: compact ? intermediateSize : smallSize,
       ).merge(local?.valueStyle).merge(valueStyle),
       titleStyle: resolvedTitleStyle,
       titleIconTheme: IconThemeData(
@@ -376,11 +381,11 @@ class AppDescriptions extends StatelessWidget {
           controlMetrics ??
           local?.controlMetrics ??
           (compact
-              ? const AppControlMetrics(
+              ? AppControlMetrics(
                   height: 26,
                   buttonHeight: 26,
                   horizontalPadding: 8,
-                  fontSize: 13,
+                  fontSize: intermediateSize,
                   iconSize: 14,
                   contentGap: 6,
                 )

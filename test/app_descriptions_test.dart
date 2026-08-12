@@ -686,4 +686,38 @@ void main() {
       isTrue,
     );
   });
+
+  testWidgets('descriptions follows globally scaled typography', (
+    tester,
+  ) async {
+    final base = AppThemeConfig.standard();
+    const scale = 12 / 14;
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(
+          config: base.copyWith(
+            lightTheme: base.lightTheme.copyWith(
+              typography: () => base.lightTheme.typography.scale(scale),
+            ),
+            darkTheme: base.darkTheme.copyWith(
+              typography: () => base.darkTheme.typography.scale(scale),
+            ),
+          ),
+        ),
+        home: const AppDescriptions(
+          items: [
+            AppDescriptionItem(
+              label: material.Text('Global label'),
+              value: material.Text('Global value'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    final style = material.DefaultTextStyle.of(
+      tester.element(find.text('Global value')),
+    ).style;
+    expect(style.fontSize, closeTo(12, 0.01));
+  });
 }

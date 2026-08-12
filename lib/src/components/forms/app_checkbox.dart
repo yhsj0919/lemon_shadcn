@@ -5,6 +5,7 @@ import '../../foundation/app_control_box.dart';
 import '../../foundation/app_visual_style.dart';
 import 'app_field.dart';
 import 'app_form.dart';
+import 'app_option.dart';
 
 /// Select-all style tristate clicks: checked ↔ unchecked, indeterminate → checked.
 /// Indeterminate is display-only and never emitted from user interaction.
@@ -162,6 +163,8 @@ class AppCheckboxFormField extends FormField<bool> {
     this.controlLabel,
     this.required = false,
     this.width,
+    this.layout,
+    this.labelWidth,
     this.onChanged,
     super.initialValue = false,
     super.onSaved,
@@ -183,6 +186,8 @@ class AppCheckboxFormField extends FormField<bool> {
                errorText: state.errorText ?? asyncError,
                required: field.required,
                width: field.width,
+               layout: field.layout,
+               labelWidth: field.labelWidth,
                child: AppCheckbox(
                  state: state.value == true
                      ? shad.CheckboxState.checked
@@ -206,6 +211,144 @@ class AppCheckboxFormField extends FormField<bool> {
   final Widget? controlLabel;
   final bool required;
   final double? width;
+  final AppFieldLayout? layout;
+  final double? labelWidth;
   final ValueChanged<bool>? onChanged;
   final AppAsyncFieldValidator<bool>? asyncValidator;
+}
+
+/// A controlled group of independently selectable checkbox options.
+class AppCheckboxGroup<V> extends StatelessWidget {
+  const AppCheckboxGroup({
+    super.key,
+    required this.options,
+    required this.value,
+    required this.onChanged,
+    this.enabled = true,
+    this.direction = Axis.horizontal,
+    this.spacing = 16,
+    this.runSpacing = 4,
+  });
+
+  final List<AppOption<V>> options;
+  final List<V> value;
+  final ValueChanged<List<V>>? onChanged;
+  final bool enabled;
+  final Axis direction;
+  final double spacing;
+  final double runSpacing;
+
+  void _toggle(AppOption<V> option, bool selected) {
+    final next = List<V>.of(value);
+    if (selected) {
+      if (!next.contains(option.value)) next.add(option.value);
+    } else {
+      next.remove(option.value);
+    }
+    onChanged?.call(next);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final items = [
+      for (final option in options)
+        AppCheckbox(
+          state: value.contains(option.value)
+              ? shad.CheckboxState.checked
+              : shad.CheckboxState.unchecked,
+          enabled: enabled && !option.disabled,
+          trailing: option.child ?? Text(option.label),
+          onChanged: enabled && !option.disabled && onChanged != null
+              ? (state) => _toggle(option, state == shad.CheckboxState.checked)
+              : null,
+        ),
+    ];
+    if (direction == Axis.horizontal) {
+      return Wrap(
+        spacing: spacing,
+        runSpacing: runSpacing,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: items,
+      );
+    }
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (var index = 0; index < items.length; index++) ...[
+          if (index > 0) SizedBox(height: spacing),
+          items[index],
+        ],
+      ],
+    );
+  }
+}
+
+class AppCheckboxGroupFormField<V> extends FormField<List<V>> {
+  AppCheckboxGroupFormField({
+    super.key,
+    required this.options,
+    this.name,
+    this.label,
+    this.description,
+    this.required = false,
+    this.width,
+    this.layout,
+    this.labelWidth,
+    this.direction = Axis.horizontal,
+    this.spacing = 16,
+    this.runSpacing = 4,
+    this.onChanged,
+    super.initialValue = const [],
+    super.onSaved,
+    super.validator,
+    this.asyncValidator,
+    super.enabled = true,
+    super.autovalidateMode = AutovalidateMode.onUserInteraction,
+    super.restorationId,
+  }) : super(
+         builder: (state) {
+           final field = state.widget as AppCheckboxGroupFormField<V>;
+           return AppFormFieldBinding<List<V>>(
+             name: field.name,
+             value: state.value,
+             asyncValidator: field.asyncValidator,
+             builder: (context, asyncError) => AppField(
+               label: field.label,
+               description: field.description,
+               errorText: state.errorText ?? asyncError,
+               required: field.required,
+               width: field.width,
+               layout: field.layout,
+               labelWidth: field.labelWidth,
+               child: AppCheckboxGroup<V>(
+                 options: field.options,
+                 value: state.value ?? const [],
+                 enabled: field.enabled,
+                 direction: field.direction,
+                 spacing: field.spacing,
+                 runSpacing: field.runSpacing,
+                 onChanged: (value) {
+                   state.didChange(value);
+                   field.onChanged?.call(value);
+                 },
+               ),
+             ),
+           );
+         },
+       );
+
+  final List<AppOption<V>> options;
+  final String? name;
+  final String? label;
+  final String? description;
+  final bool required;
+  final double? width;
+  final AppFieldLayout? layout;
+  final double? labelWidth;
+  final Axis direction;
+  final double spacing;
+  final double runSpacing;
+  final ValueChanged<List<V>>? onChanged;
+  final AppAsyncFieldValidator<List<V>>? asyncValidator;
 }

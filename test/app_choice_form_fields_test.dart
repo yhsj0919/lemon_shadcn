@@ -24,6 +24,15 @@ void main() {
                 name: 'terms',
                 controlLabel: const Text('Accept terms'),
               ),
+              AppCheckboxGroupFormField<String>(
+                name: 'times',
+                label: 'Time options',
+                layout: AppFieldLayout.horizontal,
+                options: const [
+                  AppOption(value: 'day', label: 'Day'),
+                  AppOption(value: 'night', label: 'Night'),
+                ],
+              ),
               AppSwitchFormField(
                 name: 'notifications',
                 controlLabel: const Text('Notifications'),
@@ -47,11 +56,14 @@ void main() {
     );
 
     await tester.tap(find.text('Accept terms'));
+    await tester.tap(find.text('Day'));
+    await tester.tap(find.text('Night'));
     await tester.tap(find.text('Notifications'));
     await tester.tap(find.text('Standard'));
     await tester.pump();
 
     expect(controller.value<bool>('terms'), isTrue);
+    expect(controller.value<List<String>>('times'), ['day', 'night']);
     expect(controller.value<bool>('notifications'), isTrue);
     expect(controller.value<String>('density'), 'standard');
     expect(controller.value<shad.SliderValue>('volume')!.value, 0.4);

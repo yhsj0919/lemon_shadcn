@@ -94,14 +94,14 @@ class AppItem extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 DefaultTextStyle.merge(
-                  style: const TextStyle(fontSize: 14),
+                  style: theme.typography.small,
                   child: title,
                 ),
                 if (description != null) ...[
                   const SizedBox(height: 2),
                   DefaultTextStyle.merge(
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: theme.typography.xSmall.fontSize,
                       color: theme.colorScheme.mutedForeground,
                     ),
                     child: description!,

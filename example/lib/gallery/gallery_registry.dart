@@ -156,7 +156,7 @@ abstract final class GalleryRegistry {
       builder: (_) => const FormsPage(
         title: 'AppCheckbox',
         description: '表单复选框。',
-        visibleSections: {'复选框'},
+        visibleSections: {'复选框', '多选复选框'},
       ),
     ),
     GalleryEntry(

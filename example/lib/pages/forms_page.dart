@@ -491,6 +491,44 @@ class _FormsPageState extends State<FormsPage> {
               ),
             ),
             ComponentSection(
+              title: '多选复选框',
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  AppCheckboxGroupFormField<String>(
+                    label: '时间选项',
+                    layout: AppFieldLayout.horizontal,
+                    labelWidth: 80,
+                    initialValue: const ['none'],
+                    options: const [
+                      AppOption(value: 'none', label: '无要求'),
+                      AppOption(value: 'day', label: '白天'),
+                      AppOption(value: 'evening', label: '傍晚'),
+                      AppOption(value: 'night', label: '夜间'),
+                    ],
+                  ),
+                  const Gap(12),
+                  AppCheckboxGroupFormField<String>(
+                    label: '垂直标题',
+                    layout: AppFieldLayout.vertical,
+                    initialValue: const ['read'],
+                    options: const [
+                      AppOption(value: 'read', label: '读取'),
+                      AppOption(value: 'write', label: '写入'),
+                    ],
+                  ),
+                  const Gap(12),
+                  AppCheckboxGroupFormField<String>(
+                    initialValue: const ['email'],
+                    options: const [
+                      AppOption(value: 'email', label: '邮件'),
+                      AppOption(value: 'sms', label: '短信'),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            ComponentSection(
               title: '开关',
               child: AppSwitchFormField(controlLabel: const Text('启用通知')),
             ),
