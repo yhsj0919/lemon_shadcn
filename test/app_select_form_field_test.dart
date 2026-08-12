@@ -42,6 +42,33 @@ void main() {
     expect(formKey.currentState!.validate(), isTrue);
     formKey.currentState!.save();
     expect(saved, 'admin');
+    expect(find.text('Administrator'), findsOneWidget);
+  });
+
+  testWidgets('selected option is rendered back into the form field', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: AppSelectFormField<String>(
+          hintText: '时间类型',
+          width: 140,
+          options: const [
+            AppOption(value: 'today', label: '今天'),
+            AppOption(value: 'month', label: '本月'),
+          ],
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('时间类型'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('本月').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('时间类型'), findsNothing);
+    expect(find.text('本月'), findsOneWidget);
   });
 
   testWidgets('async select loads formatted options only once on rebuild', (

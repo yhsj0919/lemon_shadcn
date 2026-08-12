@@ -255,10 +255,7 @@ class _FormsPageState extends State<FormsPage> {
       description: widget.description,
       sections:
           <ComponentSection>[
-            const ComponentSection(
-              title: '就地编辑',
-              child: _InlineEditDemo(),
-            ),
+            const ComponentSection(title: '就地编辑', child: _InlineEditDemo()),
             ComponentSection(
               title: '布局与装饰',
               child: Column(
@@ -423,9 +420,7 @@ class _FormsPageState extends State<FormsPage> {
                 optionConfig: FormsPage._assigneeConfig,
                 clearable: true,
                 searchOptions: (query) async {
-                  await Future<void>.delayed(
-                    const Duration(milliseconds: 350),
-                  );
+                  await Future<void>.delayed(const Duration(milliseconds: 350));
                   final normalized = query.trim().toLowerCase();
                   return FormsPage._assignees
                       .where(
@@ -624,6 +619,21 @@ class _FormsPageState extends State<FormsPage> {
                   AppOption(value: 'folder', label: '文件夹'),
                   AppOption(value: 'star', label: '星标'),
                   AppOption(value: 'archive', label: '归档'),
+                ],
+              ),
+            ),
+            ComponentSection(
+              title: '多选控件',
+              child: AppMultiSelectFormField<String>(
+                label: '已选方案',
+                initialValue: const ['finance', 'research', 'design', 'ops'],
+                maxVisibleOptions: 3,
+                options: [
+                  AppOption(value: 'finance', label: '金融'),
+                  AppOption(value: 'research', label: '研发'),
+                  AppOption(value: 'design', label: '设计'),
+                  AppOption(value: 'ops', label: '运营'),
+                  AppOption(value: 'product', label: '产品'),
                 ],
               ),
             ),

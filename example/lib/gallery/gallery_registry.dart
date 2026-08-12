@@ -299,7 +299,18 @@ abstract final class GalleryRegistry {
       builder: (_) => const FormsPage(
         title: 'AppMultipleChoice',
         description: '方案卡片式选择。',
-        visibleSections: {'多选方案'},
+        visibleSections: {'多选方案', '多选控件'},
+      ),
+    ),
+    GalleryEntry(
+      id: 'app-multi-select',
+      label: 'AppMultiSelectFormField',
+      subtitle: '多选表单控件（固定高度与 +N 溢出）',
+      group: '表单',
+      builder: (_) => const FormsPage(
+        title: '表单',
+        description: '表单控件示例。',
+        visibleSections: {'多选控件'},
       ),
     ),
     GalleryEntry(

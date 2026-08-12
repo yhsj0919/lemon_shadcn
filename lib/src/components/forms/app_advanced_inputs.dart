@@ -12,6 +12,10 @@ import 'app_field.dart';
 import 'app_form.dart';
 import 'app_prompt_control_frame.dart';
 import 'app_option.dart';
+import 'app_async_option_source.dart';
+import 'app_select_control_shell.dart';
+import 'app_chip_input.dart';
+import 'app_input_group.dart';
 
 typedef AppInput = shad.TextField;
 typedef AppFormattedInput = shad.FormattedInput;
@@ -28,6 +32,7 @@ typedef AppItemPicker<T> = shad.ItemPicker<T>;
 typedef AppItemList<T> = shad.ItemList<T>;
 typedef AppItemPickerLayout = shad.ItemPickerLayout;
 typedef AppMultipleChoiceController<T> = shad.MultipleChoiceController<T>;
+typedef AppMultipleAnswerController<T> = shad.MultipleAnswerController<T>;
 
 abstract final class AppFormattedParts {
   static shad.FormattedValuePart fixed(String text) =>
@@ -310,6 +315,7 @@ class AppMultipleChoice<V> extends StatelessWidget {
     this.allowUnselect = false,
     this.enabled = true,
     this.spacing = 8,
+    this.maxVisibleOptions,
   });
 
   final List<AppOption<V>> options;
@@ -319,6 +325,10 @@ class AppMultipleChoice<V> extends StatelessWidget {
   final bool enabled;
   final double spacing;
 
+  /// Limits the number of option buttons shown in the single fixed-height row.
+  /// Remaining options are represented by a compact `+N` indicator.
+  final int? maxVisibleOptions;
+
   @override
   Widget build(BuildContext context) {
     return shad.MultipleChoice<V>(
@@ -326,37 +336,51 @@ class AppMultipleChoice<V> extends StatelessWidget {
       onChanged: onChanged,
       enabled: enabled,
       allowUnselect: allowUnselect,
-      child: Wrap(
-        spacing: spacing,
-        runSpacing: spacing,
-        children: [
-          for (final option in options)
-            Builder(
-              builder: (context) {
-                final selected =
-                    shad.Choice.getValue<V>(context)?.contains(option.value) ??
-                    false;
-                final canChoose =
-                    enabled && !option.disabled && onChanged != null;
-                final button = selected
-                    ? AppButton.secondary(
-                        onPressed: canChoose
-                            ? () => shad.Choice.choose(context, option.value)
-                            : null,
-                        config: AppButtonConfig.plain,
-                        child: option.child ?? Text(option.label),
-                      )
-                    : AppButton.outline(
-                        onPressed: canChoose
-                            ? () => shad.Choice.choose(context, option.value)
-                            : null,
-                        config: AppButtonConfig.plain,
-                        child: option.child ?? Text(option.label),
-                      );
-                return button;
-              },
-            ),
-        ],
+      child: SizedBox(
+        height: 40,
+        child: Wrap(
+          spacing: spacing,
+          runSpacing: spacing,
+          children: [
+            for (final option in options.take(
+              maxVisibleOptions ?? options.length,
+            ))
+              Builder(
+                builder: (context) {
+                  final selected =
+                      shad.Choice.getValue<V>(
+                        context,
+                      )?.contains(option.value) ??
+                      false;
+                  final canChoose =
+                      enabled && !option.disabled && onChanged != null;
+                  final button = selected
+                      ? AppButton.secondary(
+                          onPressed: canChoose
+                              ? () => shad.Choice.choose(context, option.value)
+                              : null,
+                          config: AppButtonConfig.plain,
+                          child: option.child ?? Text(option.label),
+                        )
+                      : AppButton.outline(
+                          onPressed: canChoose
+                              ? () => shad.Choice.choose(context, option.value)
+                              : null,
+                          config: AppButtonConfig.plain,
+                          child: option.child ?? Text(option.label),
+                        );
+                  return button;
+                },
+              ),
+            if (maxVisibleOptions != null &&
+                options.length > maxVisibleOptions!)
+              AppButton.outline(
+                onPressed: null,
+                config: AppButtonConfig.plain,
+                child: Text('+${options.length - maxVisibleOptions!}'),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -417,6 +441,400 @@ class AppMultipleChoiceFormField<V> extends FormField<V> {
   final bool allowUnselect;
   final ValueChanged<V?>? onChanged;
   final AppAsyncFieldValidator<V>? asyncValidator;
+}
+
+/// Product-facing multi-select control that consumes formatted [AppOption]
+/// values and exposes all selected values.
+class AppMultiSelect<V> extends StatefulWidget {
+  const AppMultiSelect({
+    super.key,
+    required this.options,
+    required this.value,
+    required this.onChanged,
+    this.optionConfig = const AppOptionConfig(),
+    this.allowUnselect = true,
+    this.maxVisibleOptions,
+    this.enabled = true,
+    this.spacing = 8,
+  });
+
+  final List<AppOption<V>> options;
+  final Iterable<V>? value;
+  final ValueChanged<Iterable<V>?>? onChanged;
+  final AppOptionConfig<V> optionConfig;
+  final bool allowUnselect;
+  final bool enabled;
+  final double spacing;
+  final int? maxVisibleOptions;
+
+  @override
+  State<AppMultiSelect<V>> createState() => _AppMultiSelectState<V>();
+}
+
+class _AppMultiSelectState<V> extends State<AppMultiSelect<V>> {
+  late List<V> _selected;
+
+  @override
+  void initState() {
+    super.initState();
+    _selected = [...?widget.value];
+  }
+
+  @override
+  void didUpdateWidget(covariant AppMultiSelect<V> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.value != widget.value) _selected = [...?widget.value];
+  }
+
+  void _toggle(V value) {
+    final next = [..._selected];
+    if (next.contains(value)) {
+      if (!widget.allowUnselect) return;
+      next.remove(value);
+    } else {
+      next.add(value);
+    }
+    setState(() => _selected = next);
+    widget.onChanged?.call(next);
+  }
+
+  Future<void> _open(
+    BuildContext context,
+    Widget Function(Widget) popup,
+  ) async {
+    if (!widget.enabled) return;
+    shad.showDropdown<void>(
+      context: context,
+      anchorAlignment: Alignment.bottomLeft,
+      alignment: Alignment.topLeft,
+      widthConstraint: shad.PopoverConstraint.anchorFixedSize,
+      builder: (context) => popup(
+        StatefulBuilder(
+          builder: (context, setOverlayState) => shad.DropdownMenu(
+            children: [
+              for (final option in widget.options)
+                shad.MenuCheckbox(
+                  value: _selected.contains(option.value),
+                  enabled: !option.disabled,
+                  autoClose: false,
+                  onChanged: (_, _) {
+                    _toggle(option.value);
+                    setOverlayState(() {});
+                  },
+                  child: option.child ?? Text(option.label),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  int _visibleOptionCount(
+    BuildContext context,
+    List<AppOption<V>> options,
+    double availableWidth,
+  ) {
+    if (options.isEmpty || !availableWidth.isFinite) return options.length;
+    final style = DefaultTextStyle.of(context).style;
+    double tokenWidth(AppOption<V> option) {
+      final painter = TextPainter(
+        text: TextSpan(text: option.label, style: style),
+        textDirection: Directionality.of(context),
+        maxLines: 1,
+      )..layout();
+      return painter.width + (widget.allowUnselect ? 42 : 24);
+    }
+
+    final widths = options.map(tokenWidth).toList();
+    final total =
+        widths.fold<double>(0, (sum, width) => sum + width) +
+        widget.spacing * (options.length > 1 ? options.length - 1 : 0);
+    if (total <= availableWidth) return options.length;
+
+    final limit =
+        widget.maxVisibleOptions?.clamp(0, options.length) ?? options.length;
+    var used = 0.0;
+    var count = 0;
+    while (count < limit) {
+      final hidden = options.length - count - 1;
+      final overflowWidth = hidden > 0
+          ? 18.0 + hidden.toString().length * 8
+          : 0.0;
+      final next = used + widths[count] + widget.spacing;
+      if (next + overflowWidth > availableWidth) break;
+      used = next;
+      count++;
+    }
+    return count;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = shad.Theme.of(context);
+    final metrics = AppControlMetricsScope.resolve(context);
+    final selectedOptions = widget.options
+        .where((option) => _selected.contains(option.value))
+        .toList();
+    return AppSelectControlShell(
+      enabled: widget.enabled,
+      builder: (context, popup, focusNode) => LayoutBuilder(
+        builder: (context, controlConstraints) => shad.TextField(
+          readOnly: true,
+          enabled: widget.enabled,
+          focusNode: focusNode,
+          textAlignVertical: TextAlignVertical.center,
+          border: Border.all(
+            color: theme.colorScheme.border,
+            width: 1,
+            strokeAlign: BorderSide.strokeAlignInside,
+          ),
+          padding: EdgeInsets.symmetric(horizontal: metrics.horizontalPadding),
+          onTap: () => _open(context, popup),
+          features: [
+            shad.InputFeature.leading(
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final visibleCount = _visibleOptionCount(
+                    context,
+                    selectedOptions,
+                    controlConstraints.hasBoundedWidth
+                        ? (controlConstraints.maxWidth -
+                                  metrics.horizontalPadding * 2 -
+                                  32)
+                              .clamp(0.0, double.infinity)
+                        : double.infinity,
+                  );
+                  final visible = selectedOptions.take(visibleCount);
+                  final remaining = selectedOptions.length - visibleCount;
+                  return AppInputGroupAddon(
+                    child: Row(
+                      children: [
+                        for (final option in visible)
+                          Padding(
+                            padding: EdgeInsets.only(right: widget.spacing),
+                            child:
+                                widget.optionConfig.tokenBuilder?.call(
+                                  context,
+                                  option,
+                                  () => _toggle(option.value),
+                                ) ??
+                                AppInputChipTheme(
+                                  child: shad.Chip(
+                                    trailing: widget.allowUnselect
+                                        ? GestureDetector(
+                                            onTap: () => _toggle(option.value),
+                                            child: const Icon(
+                                              shad.LucideIcons.x,
+                                              size: 14,
+                                            ),
+                                          )
+                                        : null,
+                                    child: Text(option.label),
+                                  ),
+                                ),
+                          ),
+                        if (remaining > 0) Text('+$remaining'),
+                        if (visible.isEmpty && remaining == 0)
+                          const Text('请选择'),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+            const shad.InputFeature.trailing(
+              AppInputGroupAddon(child: shad.SelectExpandIcon()),
+            ),
+          ],
+        ),
+      ),
+    );
+    /*
+      child: GestureDetector(
+        onTap: () => _open(context),
+        child: SizedBox(
+          height: 40,
+          child: Row(
+            children: [
+              Expanded(
+                child: Row(
+                  children: [
+                    for (final option in visible)
+                      Padding(
+                        padding: EdgeInsets.only(right: widget.spacing),
+                        child: Text(option.label),
+                      ),
+                    if (remaining > 0) Text('+$remaining'),
+                    if (visible.isEmpty && remaining == 0) const Text('请选择'),
+                  ],
+                ),
+              ),
+              const Icon(shad.LucideIcons.chevronDown, size: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+*/
+  }
+}
+
+class AppMultiSelectFormField<V> extends FormField<List<V>> {
+  AppMultiSelectFormField({
+    super.key,
+    this.options = const [],
+    this.optionSource,
+    this.name,
+    this.label,
+    this.description,
+    this.required = false,
+    this.width,
+    this.allowUnselect = true,
+    this.optionConfig = const AppOptionConfig(),
+    this.maxVisibleOptions,
+    this.onChanged,
+    super.initialValue,
+    super.onSaved,
+    super.validator,
+    this.asyncValidator,
+    super.enabled = true,
+    super.autovalidateMode = AutovalidateMode.onUserInteraction,
+    super.restorationId,
+  }) : super(
+         builder: (state) {
+           final field = state.widget as AppMultiSelectFormField<V>;
+           return AppFormFieldBinding<List<V>>(
+             name: field.name,
+             value: state.value,
+             asyncValidator: field.asyncValidator,
+             builder: (context, asyncError) => AppField(
+               label: field.label,
+               description: field.description,
+               errorText: state.errorText ?? asyncError,
+               required: field.required,
+               width: field.width,
+               child: field.optionSource == null
+                   ? AppMultiSelect<V>(
+                       options: field.options,
+                       value: state.value,
+                       enabled: field.enabled,
+                       allowUnselect: field.allowUnselect,
+                       optionConfig: field.optionConfig,
+                       maxVisibleOptions: field.maxVisibleOptions,
+                       onChanged: (value) {
+                         state.didChange(value?.toList());
+                         field.onChanged?.call(value?.toList());
+                       },
+                     )
+                   : _AppAsyncMultiSelect<V>(
+                       optionSource: field.optionSource!,
+                       value: state.value,
+                       enabled: field.enabled,
+                       allowUnselect: field.allowUnselect,
+                       optionConfig: field.optionConfig,
+                       maxVisibleOptions: field.maxVisibleOptions,
+                       onChanged: (value) {
+                         state.didChange(value?.toList());
+                         field.onChanged?.call(value?.toList());
+                       },
+                     ),
+             ),
+           );
+         },
+       );
+
+  final List<AppOption<V>> options;
+  final AppAsyncOptionSource<V>? optionSource;
+  final String? name;
+  final String? label;
+  final String? description;
+  final bool required;
+  final double? width;
+  final bool allowUnselect;
+  final AppOptionConfig<V> optionConfig;
+  final int? maxVisibleOptions;
+  final ValueChanged<List<V>?>? onChanged;
+  final AppAsyncFieldValidator<List<V>>? asyncValidator;
+}
+
+class _AppAsyncMultiSelect<V> extends StatefulWidget {
+  const _AppAsyncMultiSelect({
+    required this.optionSource,
+    required this.value,
+    required this.onChanged,
+    required this.optionConfig,
+    required this.enabled,
+    required this.allowUnselect,
+    required this.maxVisibleOptions,
+  });
+
+  final AppAsyncOptionSource<V> optionSource;
+  final Iterable<V>? value;
+  final ValueChanged<Iterable<V>?> onChanged;
+  final AppOptionConfig<V> optionConfig;
+  final bool enabled;
+  final bool allowUnselect;
+  final int? maxVisibleOptions;
+
+  @override
+  State<_AppAsyncMultiSelect<V>> createState() =>
+      _AppAsyncMultiSelectState<V>();
+}
+
+class _AppAsyncMultiSelectState<V> extends State<_AppAsyncMultiSelect<V>> {
+  late Future<List<AppOption<V>>> _future;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = widget.optionSource.load('');
+  }
+
+  @override
+  void didUpdateWidget(covariant _AppAsyncMultiSelect<V> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.optionSource != widget.optionSource) {
+      _future = widget.optionSource.load('');
+    }
+  }
+
+  void _retry() => setState(() {
+    _future = widget.optionSource.retry('');
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<AppOption<V>>>(
+      future: _future,
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return AppControlBox(
+            child: AppButton.outline(
+              onPressed: _retry,
+              child: const Text('加载失败，点击重试'),
+            ),
+          );
+        }
+        if (!snapshot.hasData) {
+          return AppControlBox(
+            child: AppButton.outline(onPressed: null, child: Text('加载中…')),
+          );
+        }
+        return AppMultiSelect<V>(
+          options: snapshot.data!,
+          value: widget.value,
+          onChanged: widget.onChanged,
+          enabled: widget.enabled,
+          allowUnselect: widget.allowUnselect,
+          maxVisibleOptions: widget.maxVisibleOptions,
+        );
+      },
+    );
+  }
 }
 
 class AppItemPickerFormField<V> extends FormField<V> {
