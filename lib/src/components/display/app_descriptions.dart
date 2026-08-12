@@ -28,6 +28,7 @@ class AppDescriptionsTheme extends shad.ComponentThemeData {
     this.titleGap,
     this.labelIconTheme,
     this.labelAlignment,
+    this.valueAlignment,
     this.padding,
     this.tableCellPadding,
     this.spacing,
@@ -46,6 +47,7 @@ class AppDescriptionsTheme extends shad.ComponentThemeData {
     this.titleGap,
     this.labelIconTheme,
     this.labelAlignment,
+    this.valueAlignment,
   }) : density = AppDescriptionsDensity.compact,
        padding = null,
        tableCellPadding = null,
@@ -64,6 +66,7 @@ class AppDescriptionsTheme extends shad.ComponentThemeData {
   final double? titleGap;
   final IconThemeData? labelIconTheme;
   final AlignmentGeometry? labelAlignment;
+  final AlignmentGeometry? valueAlignment;
   final EdgeInsetsGeometry? padding;
   final EdgeInsetsGeometry? tableCellPadding;
   final double? spacing;
@@ -82,9 +85,10 @@ class AppDescriptionItem {
     this.span = 1,
     this.labelAlignment,
     this.valueWidth,
-    this.valueAlignment = AlignmentDirectional.topStart,
+    AlignmentGeometry? valueAlignment,
   }) : _isDivider = false,
        _isCustom = false,
+       _valueAlignment = valueAlignment,
        assert(span > 0),
        assert(valueWidth == null || valueWidth > 0);
 
@@ -97,7 +101,7 @@ class AppDescriptionItem {
       icon = null,
       labelAlignment = null,
       valueWidth = null,
-      valueAlignment = AlignmentDirectional.topStart,
+      _valueAlignment = null,
       _isDivider = false,
       _isCustom = true,
       assert(span > 0);
@@ -110,7 +114,7 @@ class AppDescriptionItem {
       span = 1,
       labelAlignment = null,
       valueWidth = null,
-      valueAlignment = AlignmentDirectional.topStart,
+      _valueAlignment = null,
       _isDivider = true,
       _isCustom = false;
 
@@ -127,7 +131,9 @@ class AppDescriptionItem {
 
   /// Optional width for controls such as fields that would otherwise fill a cell.
   final double? valueWidth;
-  final AlignmentGeometry valueAlignment;
+  final AlignmentGeometry? _valueAlignment;
+  AlignmentGeometry get valueAlignment =>
+      _valueAlignment ?? AlignmentDirectional.topStart;
   final bool _isDivider;
   final bool _isCustom;
 }
@@ -152,6 +158,7 @@ class AppDescriptions extends StatelessWidget {
     this.titleGap,
     this.labelIconTheme,
     this.labelAlignment,
+    this.valueAlignment,
     double? spacing,
     double? runSpacing,
     this.labelGap,
@@ -204,6 +211,7 @@ class AppDescriptions extends StatelessWidget {
        labelStyle = null,
        labelIconTheme = null,
        labelAlignment = null,
+       valueAlignment = null,
        labelGap = null,
        contentGap = null,
        type = AppDescriptionsType.standard;
@@ -225,6 +233,7 @@ class AppDescriptions extends StatelessWidget {
   final double? titleGap;
   final IconThemeData? labelIconTheme;
   final AlignmentGeometry? labelAlignment;
+  final AlignmentGeometry? valueAlignment;
   final double? _spacing;
   final double? _runSpacing;
 
@@ -285,6 +294,10 @@ class AppDescriptions extends StatelessWidget {
           labelAlignment ??
           local?.labelAlignment ??
           AlignmentDirectional.centerStart,
+      valueAlignment:
+          valueAlignment ??
+          local?.valueAlignment ??
+          AlignmentDirectional.topStart,
       padding: _padding ?? local?.padding ?? EdgeInsets.all(compact ? 8 : 12),
       tableCellPadding:
           _tableCellPadding ??
@@ -373,7 +386,7 @@ class AppDescriptions extends StatelessWidget {
     // Align supplies loose constraints to intrinsic controls (notably buttons),
     // while the outer item can still occupy its responsive grid cell.
     value = Align(
-      alignment: item.valueAlignment,
+      alignment: item._valueAlignment ?? style.valueAlignment!,
       widthFactor: layout == AppDescriptionLayout.vertical ? 1 : null,
       child: value,
     );
