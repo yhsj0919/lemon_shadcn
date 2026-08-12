@@ -85,6 +85,7 @@ class AppDescriptionItem {
     this.span = 1,
     this.labelAlignment,
     this.valueWidth,
+    this.expandValue = false,
     AlignmentGeometry? valueAlignment,
   }) : _isDivider = false,
        _isCustom = false,
@@ -101,6 +102,7 @@ class AppDescriptionItem {
       icon = null,
       labelAlignment = null,
       valueWidth = null,
+      expandValue = false,
       _valueAlignment = null,
       _isDivider = false,
       _isCustom = true,
@@ -114,6 +116,7 @@ class AppDescriptionItem {
       span = 1,
       labelAlignment = null,
       valueWidth = null,
+      expandValue = false,
       _valueAlignment = null,
       _isDivider = true,
       _isCustom = false;
@@ -131,6 +134,10 @@ class AppDescriptionItem {
 
   /// Optional width for controls such as fields that would otherwise fill a cell.
   final double? valueWidth;
+
+  /// Whether the value should consume the full value-area width.
+  /// Buttons, badges, and other controls remain content-sized by default.
+  final bool expandValue;
   final AlignmentGeometry? _valueAlignment;
   AlignmentGeometry get valueAlignment =>
       _valueAlignment ?? AlignmentDirectional.topStart;
@@ -314,9 +321,9 @@ class AppDescriptions extends StatelessWidget {
           headerPadding ??
           local?.headerPadding ??
           EdgeInsets.fromLTRB(
-            compact ? 10 : 16,
-            compact ? 9 : 14,
-            compact ? 10 : 16,
+            compact ? 8 : 12,
+            compact ? 7 : 10,
+            compact ? 8 : 12,
             0,
           ),
       controlMetrics:
@@ -354,24 +361,25 @@ class AppDescriptions extends StatelessWidget {
         (item.labelAlignment ?? style.labelAlignment!).resolve(
           Directionality.of(context),
         );
-    final label = Align(
-      alignment: resolvedLabelAlignment,
-      child: IconTheme.merge(
-        data: style.labelIconTheme!,
-        child: DefaultTextStyle.merge(
-          style: style.labelStyle!,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (item.icon != null) ...[
-                item.icon!,
-                SizedBox(width: style.contentGap),
-              ],
-              Flexible(child: item.label),
+    final labelContent = IconTheme.merge(
+      data: style.labelIconTheme!,
+      child: DefaultTextStyle.merge(
+        style: style.labelStyle!,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (item.icon != null) ...[
+              item.icon!,
+              SizedBox(width: style.contentGap),
             ],
-          ),
+            Flexible(child: item.label),
+          ],
         ),
       ),
+    );
+    final label = SizedBox(
+      width: double.infinity,
+      child: Align(alignment: resolvedLabelAlignment, child: labelContent),
     );
     Widget value = DefaultTextStyle.merge(
       style: style.valueStyle!,
@@ -382,12 +390,13 @@ class AppDescriptions extends StatelessWidget {
     }
     if (item.valueWidth != null) {
       value = SizedBox(width: item.valueWidth, child: value);
+    } else if (item.expandValue) {
+      value = SizedBox(width: double.infinity, child: value);
     }
     // Align supplies loose constraints to intrinsic controls (notably buttons),
     // while the outer item can still occupy its responsive grid cell.
     value = Align(
       alignment: item._valueAlignment ?? style.valueAlignment!,
-      widthFactor: layout == AppDescriptionLayout.vertical ? 1 : null,
       child: value,
     );
     if (layout == AppDescriptionLayout.horizontal) {

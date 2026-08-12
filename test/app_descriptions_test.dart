@@ -557,4 +557,91 @@ void main() {
     );
     expect(tester.takeException(), isAssertionError);
   });
+
+  testWidgets('vertical multi-column items honor individual alignments', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: const material.SizedBox(
+          width: 600,
+          child: AppDescriptions(
+            columns: 3,
+            minColumnWidth: 150,
+            padding: material.EdgeInsets.zero,
+            items: [
+              AppDescriptionItem(
+                label: material.Text('Left label'),
+                value: material.Text('Left value'),
+              ),
+              AppDescriptionItem(
+                label: material.Text('Center label'),
+                value: material.Text('Center value'),
+                labelAlignment: material.Alignment.center,
+                valueAlignment: material.Alignment.center,
+              ),
+              AppDescriptionItem(
+                label: material.Text('Right label'),
+                value: material.Text('Right value'),
+                labelAlignment: material.Alignment.centerRight,
+                valueAlignment: material.Alignment.centerRight,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    final centerLabel = tester.getCenter(find.text('Center label')).dx;
+    final centerValue = tester.getCenter(find.text('Center value')).dx;
+    expect(centerLabel, closeTo(300, 0.01));
+    expect(centerValue, closeTo(300, 0.01));
+
+    final rightLabel = tester.getTopRight(find.text('Right label')).dx;
+    final rightValue = tester.getTopRight(find.text('Right value')).dx;
+    expect(rightLabel, closeTo(600, 0.01));
+    expect(rightValue, closeTo(600, 0.01));
+  });
+
+  testWidgets('header aligns with body and value controls stay intrinsic', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: material.SizedBox(
+          width: 500,
+          child: AppDescriptions(
+            title: const material.Text('Device information'),
+            columns: 1,
+            items: [
+              AppDescriptionItem(
+                label: const material.Text('Status'),
+                value: AppBadge.success(child: const material.Text('Online')),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    expect(
+      tester.getTopLeft(find.text('Device information')).dx,
+      closeTo(tester.getTopLeft(find.text('Status')).dx, 0.01),
+    );
+    expect(
+      tester
+          .getSize(
+            find
+                .ancestor(
+                  of: find.text('Online'),
+                  matching: find.byType(material.IgnorePointer),
+                )
+                .first,
+          )
+          .width,
+      lessThan(500),
+    );
+  });
 }

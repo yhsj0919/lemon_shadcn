@@ -259,6 +259,33 @@ class DataDisplayPage extends StatelessWidget {
                     ],
                   ),
                   const Gap(12),
+                  const AppDescriptions(
+                    title: Text('垂直多列单项对齐'),
+                    bordered: true,
+                    columns: 3,
+                    minColumnWidth: 180,
+                    items: [
+                      AppDescriptionItem(
+                        label: Text('左对齐标签'),
+                        value: Text('左对齐内容'),
+                        labelAlignment: AlignmentDirectional.centerStart,
+                        valueAlignment: AlignmentDirectional.centerStart,
+                      ),
+                      AppDescriptionItem(
+                        label: Text('居中标签'),
+                        value: Text('居中内容'),
+                        labelAlignment: Alignment.center,
+                        valueAlignment: Alignment.center,
+                      ),
+                      AppDescriptionItem(
+                        label: Text('右对齐标签'),
+                        value: Text('右对齐内容'),
+                        labelAlignment: AlignmentDirectional.centerEnd,
+                        valueAlignment: AlignmentDirectional.centerEnd,
+                      ),
+                    ],
+                  ),
+                  const Gap(12),
                   AppDescriptions(
                     title: Text('紧凑模式'),
                     actions: _descriptionHeaderActions(),
