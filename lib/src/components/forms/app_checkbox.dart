@@ -92,6 +92,7 @@ class AppCheckbox extends StatelessWidget {
     this.activeColor,
     this.borderColor,
     this.borderRadius,
+    this.useControlHeight = true,
   });
 
   final shad.CheckboxState state;
@@ -106,6 +107,7 @@ class AppCheckbox extends StatelessWidget {
   final Color? activeColor;
   final Color? borderColor;
   final BorderRadiusGeometry? borderRadius;
+  final bool useControlHeight;
 
   @override
   Widget build(BuildContext context) {
@@ -118,39 +120,37 @@ class AppCheckbox extends StatelessWidget {
     Widget? label(Widget? child) => child == null
         ? null
         : DefaultTextStyle.merge(
-            style: theme.typography.base.copyWith(
+            style: theme.typography.small.copyWith(
               fontWeight: FontWeight.normal,
             ),
             child: child,
           );
-    return AppControlBox(
-      child: Align(
-        alignment: AlignmentDirectional.centerStart,
-        child: shad.Checkbox(
+    final checkbox = Align(
+      alignment: AlignmentDirectional.centerStart,
+      widthFactor: 1,
+      child: shad.Checkbox(
+        state: state,
+        onChanged: _appCheckboxOnChanged(
           state: state,
-          onChanged: _appCheckboxOnChanged(
-            state: state,
-            tristate: tristate,
-            onChanged: onChanged,
-          ),
-          leading: label(leading),
-          trailing: label(trailing),
           tristate: tristate,
-          enabled: enabled,
-          size: size ?? 18 * theme.scaling,
-          gap: gap,
-          backgroundColor:
-              backgroundColor ??
-              colors?.background ??
-              theme.colorScheme.background,
-          activeColor:
-              activeColor ?? colors?.accent ?? theme.colorScheme.primary,
-          borderColor:
-              borderColor ?? colors?.border ?? theme.colorScheme.border,
-          borderRadius: borderRadius,
+          onChanged: onChanged,
         ),
+        leading: label(leading),
+        trailing: label(trailing),
+        tristate: tristate,
+        enabled: enabled,
+        size: size ?? 18 * theme.scaling,
+        gap: gap,
+        backgroundColor:
+            backgroundColor ??
+            colors?.background ??
+            theme.colorScheme.background,
+        activeColor: activeColor ?? colors?.accent ?? theme.colorScheme.primary,
+        borderColor: borderColor ?? colors?.border ?? theme.colorScheme.border,
+        borderRadius: borderRadius,
       ),
     );
+    return useControlHeight ? AppControlBox(child: checkbox) : checkbox;
   }
 }
 
@@ -225,16 +225,18 @@ class AppCheckboxGroup<V> extends StatelessWidget {
     required this.value,
     required this.onChanged,
     this.enabled = true,
-    this.direction = Axis.horizontal,
+    this.valueDirection = Axis.horizontal,
     this.spacing = 16,
-    this.runSpacing = 4,
+    this.runSpacing = 8,
   });
 
   final List<AppOption<V>> options;
   final List<V> value;
   final ValueChanged<List<V>>? onChanged;
   final bool enabled;
-  final Axis direction;
+
+  /// Layout direction for option values.
+  final Axis valueDirection;
   final double spacing;
   final double runSpacing;
 
@@ -257,13 +259,14 @@ class AppCheckboxGroup<V> extends StatelessWidget {
               ? shad.CheckboxState.checked
               : shad.CheckboxState.unchecked,
           enabled: enabled && !option.disabled,
+          useControlHeight: false,
           trailing: option.child ?? Text(option.label),
           onChanged: enabled && !option.disabled && onChanged != null
               ? (state) => _toggle(option, state == shad.CheckboxState.checked)
               : null,
         ),
     ];
-    if (direction == Axis.horizontal) {
+    if (valueDirection == Axis.horizontal) {
       return Wrap(
         spacing: spacing,
         runSpacing: runSpacing,
@@ -276,7 +279,7 @@ class AppCheckboxGroup<V> extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         for (var index = 0; index < items.length; index++) ...[
-          if (index > 0) SizedBox(height: spacing),
+          if (index > 0) SizedBox(height: runSpacing),
           items[index],
         ],
       ],
@@ -295,9 +298,9 @@ class AppCheckboxGroupFormField<V> extends FormField<List<V>> {
     this.width,
     this.layout,
     this.labelWidth,
-    this.direction = Axis.horizontal,
+    this.valueDirection = Axis.horizontal,
     this.spacing = 16,
-    this.runSpacing = 4,
+    this.runSpacing = 8,
     this.onChanged,
     super.initialValue = const [],
     super.onSaved,
@@ -325,7 +328,7 @@ class AppCheckboxGroupFormField<V> extends FormField<List<V>> {
                  options: field.options,
                  value: state.value ?? const [],
                  enabled: field.enabled,
-                 direction: field.direction,
+                 valueDirection: field.valueDirection,
                  spacing: field.spacing,
                  runSpacing: field.runSpacing,
                  onChanged: (value) {
@@ -346,7 +349,7 @@ class AppCheckboxGroupFormField<V> extends FormField<List<V>> {
   final double? width;
   final AppFieldLayout? layout;
   final double? labelWidth;
-  final Axis direction;
+  final Axis valueDirection;
   final double spacing;
   final double runSpacing;
   final ValueChanged<List<V>>? onChanged;

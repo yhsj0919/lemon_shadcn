@@ -499,6 +499,7 @@ class _FormsPageState extends State<FormsPage> {
                     label: '时间选项',
                     layout: AppFieldLayout.horizontal,
                     labelWidth: 80,
+                    valueDirection: Axis.horizontal,
                     initialValue: const ['none'],
                     options: const [
                       AppOption(value: 'none', label: '无要求'),
@@ -511,6 +512,7 @@ class _FormsPageState extends State<FormsPage> {
                   AppCheckboxGroupFormField<String>(
                     label: '垂直标题',
                     layout: AppFieldLayout.vertical,
+                    valueDirection: Axis.vertical,
                     initialValue: const ['read'],
                     options: const [
                       AppOption(value: 'read', label: '读取'),

@@ -98,6 +98,68 @@ void main() {
     expect(await controller.validate(), isTrue);
   });
 
+  testWidgets('checkbox group supports value direction and unified font size', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: AppCheckboxGroupFormField<String>(
+          label: 'Time options',
+          layout: AppFieldLayout.horizontal,
+          valueDirection: Axis.vertical,
+          options: const [
+            AppOption(value: 'day', label: 'Day'),
+            AppOption(value: 'night', label: 'Night'),
+          ],
+        ),
+      ),
+    );
+
+    final labelStyle = DefaultTextStyle.of(
+      tester.element(find.text('Time options')),
+    ).style;
+    final optionStyle = DefaultTextStyle.of(
+      tester.element(find.text('Day')),
+    ).style;
+    expect(optionStyle.fontSize, labelStyle.fontSize);
+    expect(
+      tester.getTopLeft(find.text('Night')).dy,
+      greaterThan(tester.getTopLeft(find.text('Day')).dy),
+    );
+    final optionDelta =
+        tester.getTopLeft(find.text('Night')).dy -
+        tester.getTopLeft(find.text('Day')).dy;
+    expect(optionDelta, greaterThanOrEqualTo(18));
+    expect(optionDelta, lessThan(32));
+  });
+
+  testWidgets('checkbox group values are horizontal by default', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: const SizedBox(
+          width: 500,
+          child: AppCheckboxGroup<String>(
+            value: [],
+            onChanged: null,
+            options: [
+              AppOption(value: 'none', label: 'None'),
+              AppOption(value: 'day', label: 'Day'),
+              AppOption(value: 'night', label: 'Night'),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    final top = tester.getTopLeft(find.text('None')).dy;
+    expect(tester.getTopLeft(find.text('Day')).dy, closeTo(top, 0.01));
+    expect(tester.getTopLeft(find.text('Night')).dy, closeTo(top, 0.01));
+  });
+
   testWidgets('global control palette updates selected internal colors', (
     tester,
   ) async {
