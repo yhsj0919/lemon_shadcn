@@ -39,7 +39,7 @@ void main() {
               ),
               AppRadioGroupFormField<String>(
                 name: 'density',
-                direction: Axis.horizontal,
+                valueDirection: Axis.horizontal,
                 options: const [
                   AppOption(value: 'compact', label: 'Compact'),
                   AppOption(value: 'standard', label: 'Standard'),
@@ -158,6 +158,64 @@ void main() {
     final top = tester.getTopLeft(find.text('None')).dy;
     expect(tester.getTopLeft(find.text('Day')).dy, closeTo(top, 0.01));
     expect(tester.getTopLeft(find.text('Night')).dy, closeTo(top, 0.01));
+  });
+
+  testWidgets('radio group supports value direction and unified font size', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: AppRadioGroupFormField<String>(
+          label: 'Density',
+          layout: AppFieldLayout.horizontal,
+          valueDirection: Axis.vertical,
+          options: const [
+            AppOption(value: 'compact', label: 'Compact'),
+            AppOption(value: 'standard', label: 'Standard'),
+          ],
+        ),
+      ),
+    );
+
+    final labelStyle = DefaultTextStyle.of(
+      tester.element(find.text('Density')),
+    ).style;
+    final optionStyle = DefaultTextStyle.of(
+      tester.element(find.text('Compact')),
+    ).style;
+    expect(optionStyle.fontSize, labelStyle.fontSize);
+    expect(
+      tester.getTopLeft(find.text('Standard')).dy,
+      greaterThan(tester.getTopLeft(find.text('Compact')).dy),
+    );
+    final optionDelta =
+        tester.getTopLeft(find.text('Standard')).dy -
+        tester.getTopLeft(find.text('Compact')).dy;
+    expect(optionDelta, greaterThanOrEqualTo(18));
+    expect(optionDelta, lessThan(32));
+  });
+
+  testWidgets('radio group values are horizontal by default', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: const SizedBox(
+          width: 500,
+          child: AppRadioGroup<String>(
+            options: [
+              AppOption(value: 'compact', label: 'Compact'),
+              AppOption(value: 'standard', label: 'Standard'),
+              AppOption(value: 'comfortable', label: 'Comfortable'),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    final top = tester.getTopLeft(find.text('Compact')).dy;
+    expect(tester.getTopLeft(find.text('Standard')).dy, closeTo(top, 0.01));
+    expect(tester.getTopLeft(find.text('Comfortable')).dy, closeTo(top, 0.01));
   });
 
   testWidgets('global control palette updates selected internal colors', (

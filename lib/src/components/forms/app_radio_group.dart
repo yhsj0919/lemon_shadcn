@@ -1,12 +1,12 @@
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
-import '../../foundation/app_control_box.dart';
 import '../../foundation/app_visual_style.dart';
 import 'app_field.dart';
 import 'app_form.dart';
 import 'app_option.dart';
 
+/// A controlled group of mutually exclusive radio options.
 class AppRadioGroup<V> extends StatelessWidget {
   const AppRadioGroup({
     super.key,
@@ -14,16 +14,20 @@ class AppRadioGroup<V> extends StatelessWidget {
     this.value,
     this.onChanged,
     this.enabled = true,
-    this.direction = Axis.vertical,
-    this.spacing = 4,
+    this.valueDirection = Axis.horizontal,
+    this.spacing = 16,
+    this.runSpacing = 8,
   });
 
   final List<AppOption<V>> options;
   final V? value;
   final ValueChanged<V>? onChanged;
   final bool enabled;
-  final Axis direction;
+
+  /// Layout direction for option values.
+  final Axis valueDirection;
   final double spacing;
+  final double runSpacing;
 
   @override
   Widget build(BuildContext context) {
@@ -49,38 +53,42 @@ class AppRadioGroup<V> extends StatelessWidget {
                   colors?.background ?? theme.colorScheme.background,
             );
             final optionLabel = DefaultTextStyle.merge(
-              style: theme.typography.base.copyWith(
+              style: theme.typography.small.copyWith(
                 fontWeight: FontWeight.normal,
               ),
               child: option.child ?? Text(option.label),
             );
             return shad.ComponentTheme<shad.RadioTheme>(
               data: radioTheme,
-              child: AppControlBox(
-                child: Align(
-                  alignment: AlignmentDirectional.centerStart,
-                  child: shad.RadioItem<V>(
-                    value: option.value,
-                    enabled: optionEnabled,
-                    trailing: optionLabel,
-                  ),
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                widthFactor: 1,
+                child: shad.RadioItem<V>(
+                  value: option.value,
+                  enabled: optionEnabled,
+                  trailing: optionLabel,
                 ),
               ),
             );
           },
         ),
     ];
-    final content = direction == Axis.horizontal
+    final content = valueDirection == Axis.horizontal
         ? Wrap(
             spacing: spacing,
-            runSpacing: spacing,
+            runSpacing: runSpacing,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: items,
           )
         : Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: _withVerticalSpacing(items),
+            children: [
+              for (var index = 0; index < items.length; index++) ...[
+                if (index > 0) SizedBox(height: runSpacing),
+                items[index],
+              ],
+            ],
           );
     return shad.RadioGroup<V>(
       value: value,
@@ -88,18 +96,6 @@ class AppRadioGroup<V> extends StatelessWidget {
       onChanged: onChanged,
       child: content,
     );
-  }
-
-  List<Widget> _withVerticalSpacing(List<Widget> children) {
-    if (children.length < 2 || spacing == 0) return children;
-    final result = <Widget>[];
-    for (var index = 0; index < children.length; index++) {
-      if (index > 0) {
-        result.add(SizedBox(height: spacing));
-      }
-      result.add(children[index]);
-    }
-    return result;
   }
 }
 
@@ -112,8 +108,11 @@ class AppRadioGroupFormField<V> extends FormField<V> {
     this.description,
     this.required = false,
     this.width,
-    this.direction = Axis.vertical,
-    this.spacing = 4,
+    this.layout,
+    this.labelWidth,
+    this.valueDirection = Axis.horizontal,
+    this.spacing = 16,
+    this.runSpacing = 8,
     this.onChanged,
     super.initialValue,
     super.onSaved,
@@ -135,12 +134,15 @@ class AppRadioGroupFormField<V> extends FormField<V> {
                errorText: state.errorText ?? asyncError,
                required: field.required,
                width: field.width,
+               layout: field.layout,
+               labelWidth: field.labelWidth,
                child: AppRadioGroup<V>(
                  options: field.options,
                  value: state.value,
                  enabled: field.enabled,
-                 direction: field.direction,
+                 valueDirection: field.valueDirection,
                  spacing: field.spacing,
+                 runSpacing: field.runSpacing,
                  onChanged: (value) {
                    state.didChange(value);
                    field.onChanged?.call(value);
@@ -157,8 +159,11 @@ class AppRadioGroupFormField<V> extends FormField<V> {
   final String? description;
   final bool required;
   final double? width;
-  final Axis direction;
+  final AppFieldLayout? layout;
+  final double? labelWidth;
+  final Axis valueDirection;
   final double spacing;
+  final double runSpacing;
   final ValueChanged<V>? onChanged;
   final AppAsyncFieldValidator<V>? asyncValidator;
 }

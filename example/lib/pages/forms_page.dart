@@ -536,13 +536,40 @@ class _FormsPageState extends State<FormsPage> {
             ),
             ComponentSection(
               title: '单选组',
-              child: AppRadioGroupFormField<String>(
-                label: '密度',
-                direction: Axis.horizontal,
-                options: const [
-                  AppOption(value: 'compact', label: '紧凑'),
-                  AppOption(value: 'standard', label: '标准'),
-                  AppOption(value: 'comfortable', label: '宽松'),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  AppRadioGroupFormField<String>(
+                    label: '密度',
+                    layout: AppFieldLayout.horizontal,
+                    labelWidth: 80,
+                    valueDirection: Axis.horizontal,
+                    initialValue: 'standard',
+                    options: const [
+                      AppOption(value: 'compact', label: '紧凑'),
+                      AppOption(value: 'standard', label: '标准'),
+                      AppOption(value: 'comfortable', label: '宽松'),
+                    ],
+                  ),
+                  const Gap(12),
+                  AppRadioGroupFormField<String>(
+                    label: '垂直标题',
+                    layout: AppFieldLayout.vertical,
+                    valueDirection: Axis.vertical,
+                    initialValue: 'read',
+                    options: const [
+                      AppOption(value: 'read', label: '读取'),
+                      AppOption(value: 'write', label: '写入'),
+                    ],
+                  ),
+                  const Gap(12),
+                  AppRadioGroupFormField<String>(
+                    initialValue: 'email',
+                    options: const [
+                      AppOption(value: 'email', label: '邮件'),
+                      AppOption(value: 'sms', label: '短信'),
+                    ],
+                  ),
                 ],
               ),
             ),

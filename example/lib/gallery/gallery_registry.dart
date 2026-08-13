@@ -177,7 +177,7 @@ abstract final class GalleryRegistry {
       group: '表单',
       builder: (_) => const FormsPage(
         title: 'AppRadioGroup',
-        description: '单选组表单字段。',
+        description: '单选组表单字段，支持横纵向选项布局。',
         visibleSections: {'单选组'},
       ),
     ),
