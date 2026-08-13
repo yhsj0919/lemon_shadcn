@@ -71,6 +71,69 @@ void main() {
     expect(find.text('本月'), findsOneWidget);
   });
 
+  testWidgets('expand icon follows available content width', (tester) async {
+    Future<void> pumpSelect(String label) => tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(
+            width: 119,
+            child: AppSelect<String>(
+              value: label,
+              onChanged: _ignoreSelection,
+              minWidth: 0,
+              options: [AppOption(value: label, label: label)],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await pumpSelect('TOP10');
+    expect(
+      tester
+          .widget<shad.Select<String>>(find.byType(shad.Select<String>))
+          .expandIcon,
+      isNotNull,
+    );
+
+    await pumpSelect('A very long selected option');
+    expect(
+      tester
+          .widget<shad.Select<String>>(find.byType(shad.Select<String>))
+          .expandIcon,
+      isNull,
+    );
+  });
+
+  testWidgets('select ellipsizes content after hiding the expand icon', (
+    tester,
+  ) async {
+    const value = 'A very long value outside the option list';
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: const Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(
+            width: 70,
+            child: AppSelect<String>(value: value, minWidth: 0, options: []),
+          ),
+        ),
+      ),
+    );
+
+    final select = tester.widget<shad.Select<String>>(
+      find.byType(shad.Select<String>),
+    );
+    final text = tester.widget<Text>(find.text(value));
+    expect(select.expandIcon, isNull);
+    expect(text.maxLines, 1);
+    expect(text.overflow, TextOverflow.ellipsis);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('async select loads formatted options only once on rebuild', (
     tester,
   ) async {

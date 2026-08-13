@@ -131,8 +131,6 @@ class AppSelect<V> extends StatefulWidget {
 }
 
 class _AppSelectState<V> extends State<AppSelect<V>> {
-  static const double _expandIconBreakpoint = 120;
-
   bool _equals(V left, V right) => widget.optionConfig.isEqual(left, right);
 
   AppOption<V>? _optionFor(V value) {
@@ -141,6 +139,26 @@ class _AppSelectState<V> extends State<AppSelect<V>> {
     }
     final initial = widget.initialOption;
     return initial != null && _equals(initial.value, value) ? initial : null;
+  }
+
+  bool _hasRoomForExpandIcon(BuildContext context, double? width) {
+    if (width == null) return true;
+    final option = widget.value == null ? null : _optionFor(widget.value as V);
+    final label = option?.label ?? widget.value?.toString() ?? widget.hintText;
+    final metrics = AppControlMetricsScope.resolve(context);
+    final painter = TextPainter(
+      text: TextSpan(
+        text: label,
+        style: DefaultTextStyle.of(
+          context,
+        ).style.copyWith(fontSize: metrics.fontSize),
+      ),
+      textDirection: Directionality.of(context),
+      textScaler: MediaQuery.textScalerOf(context),
+      maxLines: 1,
+    )..layout();
+    final requiredWidth = painter.width + metrics.contentGap + metrics.iconSize;
+    return width >= requiredWidth;
   }
 
   @override
@@ -172,8 +190,7 @@ class _AppSelectState<V> extends State<AppSelect<V>> {
               ? constraints.maxWidth
               : null;
           final minimumPopupWidth = widget.popupMinWidth;
-          final showExpandIcon =
-              anchorWidth == null || anchorWidth >= _expandIconBreakpoint;
+          final showExpandIcon = _hasRoomForExpandIcon(context, anchorWidth);
           final popupWidth = minimumPopupWidth == null
               ? null
               : anchorWidth == null
@@ -211,7 +228,11 @@ class _AppSelectState<V> extends State<AppSelect<V>> {
               itemBuilder: (context, selected) {
                 final option = _optionFor(selected);
                 return option == null
-                    ? Text(selected.toString())
+                    ? Text(
+                        selected.toString(),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      )
                     : widget.optionConfig.buildSelected(context, option);
               },
               popup: (context) => popup(
