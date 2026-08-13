@@ -520,7 +520,7 @@ class AppThemeConfig {
   /// different control size, not as a required setup step.
   factory AppThemeConfig.standard({
     Color? primary,
-    Color primaryForeground = const Color(0xffffffff),
+    Color? primaryForeground,
     double radius = 0.5,
     AppThemeMode themeMode = AppThemeMode.system,
     AppMotionTheme motion = const AppMotionTheme(),
@@ -533,13 +533,20 @@ class AppThemeConfig {
     AppTextTheme? textTheme,
     AppErrorPresenter? errorPresenter,
   }) {
+    final resolvedPrimaryForeground =
+        primaryForeground ??
+        (primary != null
+            ? (primary.computeLuminance() > 0.48
+                  ? const Color(0xff000000)
+                  : const Color(0xffffffff))
+            : const Color(0xffffffff));
     AppColorScheme scheme(AppThemeMode mode) {
       final base = AppColorSchemes.zinc(mode);
       final branded = primary == null
           ? base
           : base.copyWith(
               primary: () => primary,
-              primaryForeground: () => primaryForeground,
+              primaryForeground: () => resolvedPrimaryForeground,
               ring: () => primary,
             );
       return _flatInputScheme(branded);

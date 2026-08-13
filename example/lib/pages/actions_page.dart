@@ -220,6 +220,8 @@ class ActionsPage extends StatelessWidget {
                 ],
               ),
               AppWidgetGroup.horizontal(
+                mode: AppWidgetGroupMode.plain,
+                spacing: 12,
                 children: [
                   AppButton.secondary(
                     onPressed: () {},
@@ -419,6 +421,10 @@ class _ToggleDemoState extends State<_ToggleDemo> {
         AppToggleGroup<String>.single(
           value: _alignment,
           onChanged: (value) => setState(() => _alignment = value),
+          mode: AppWidgetGroupMode.plain,
+          spacing: 12,
+          selectedColor: const Color(0xff6366f1),
+          unselectedColor: const Color(0xff64748b),
           items: const [
             AppToggleGroupItem(value: 'left', child: Text('左对齐')),
             AppToggleGroupItem(value: 'center', child: Text('居中')),

@@ -5,6 +5,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lemon_shadcn/lemon_shadcn.dart';
+import 'package:lemon_shadcn/shadcn.dart' as shad;
 
 void main() {
   testWidgets('works inside MaterialApp without ShadcnApp', (tester) async {
@@ -178,6 +179,109 @@ void main() {
 
     expect(find.text('Link'), findsOneWidget);
     expect(find.text('Text'), findsOneWidget);
+  });
+
+  testWidgets('AppToggle switches between primary and outline', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: Builder(
+          builder: (context) => Row(
+            children: [
+              AppToggle(
+                value: true,
+                onChanged: (_) {},
+                child: const Text('Selected'),
+              ),
+              AppToggle(
+                value: false,
+                onChanged: (_) {},
+                child: const Text('Unselected'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    shad.Button buttonFor(String label) => tester.widget<shad.Button>(
+      find.ancestor(of: find.text(label), matching: find.byType(shad.Button)),
+    );
+    BuildContext contextFor(String label) => tester.element(
+      find.ancestor(of: find.text(label), matching: find.byType(shad.Button)),
+    );
+
+    final selectedDecoration = buttonFor(
+      'Selected',
+    ).style.decoration(contextFor('Selected'), const {});
+    final unselectedDecoration = buttonFor(
+      'Unselected',
+    ).style.decoration(contextFor('Unselected'), const {});
+
+    final selectedBox = selectedDecoration as BoxDecoration;
+    final unselectedBox = unselectedDecoration as BoxDecoration;
+    expect(selectedBox.color, isNot(unselectedBox.color));
+    expect(unselectedBox.border, isNotNull);
+  });
+
+  testWidgets('AppToggleGroup supports plain spaced layout', (tester) async {
+    const selectedColor = Color(0xff7c3aed);
+    const unselectedColor = Color(0xff475569);
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: Align(
+          alignment: Alignment.topLeft,
+          child: AppToggleGroup<String>.single(
+            value: 'all',
+            onChanged: (_) {},
+            mode: AppWidgetGroupMode.plain,
+            spacing: 10,
+            selectedColor: selectedColor,
+            unselectedColor: unselectedColor,
+            items: const [
+              AppToggleGroupItem(value: 'all', child: Text('All')),
+              AppToggleGroupItem(value: 'year', child: Text('Year')),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    final first = tester.getRect(find.text('All'));
+    final second = tester.getRect(find.text('Year'));
+    expect(second.left - first.right, greaterThanOrEqualTo(10));
+
+    final selectedButton = tester.widget<shad.Button>(
+      find.ancestor(of: find.text('All'), matching: find.byType(shad.Button)),
+    );
+    final selectedContext = tester.element(
+      find.ancestor(of: find.text('All'), matching: find.byType(shad.Button)),
+    );
+    final selectedDecoration = selectedButton.style.decoration(
+      selectedContext,
+      const {},
+    );
+    expect((selectedDecoration as BoxDecoration).color, selectedColor);
+    expect(
+      selectedButton.style.textStyle(selectedContext, const {}).color,
+      Colors.white,
+    );
+
+    final unselectedButton = tester.widget<shad.Button>(
+      find.ancestor(of: find.text('Year'), matching: find.byType(shad.Button)),
+    );
+    final unselectedContext = tester.element(
+      find.ancestor(of: find.text('Year'), matching: find.byType(shad.Button)),
+    );
+    final unselectedDecoration = unselectedButton.style.decoration(
+      unselectedContext,
+      const {},
+    );
+    expect(
+      (unselectedDecoration as BoxDecoration).border,
+      Border.all(color: unselectedColor),
+    );
   });
 
   testWidgets('default AppButton stays on hover and sinks on press', (

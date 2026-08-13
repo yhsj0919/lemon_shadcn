@@ -16,24 +16,32 @@ typedef AppButtonCallback = FutureOr<void> Function();
 typedef AppWidgetGroupItem = shad.ButtonGroupItem;
 typedef AppWidgetGroupFlexible = shad.ButtonGroupFlexible;
 
+enum AppWidgetGroupMode { compact, plain }
+
 class AppWidgetGroup extends StatelessWidget {
   const AppWidgetGroup({
     super.key,
     this.direction = Axis.horizontal,
+    this.mode = AppWidgetGroupMode.compact,
+    this.spacing = 8,
     this.expands = false,
     this.flexes,
     required this.children,
-  }) : assert(
+  }) : assert(spacing >= 0),
+       assert(
          flexes == null || flexes.length == children.length,
          'flexes length must match children length',
        );
 
   const AppWidgetGroup.horizontal({
     super.key,
+    this.mode = AppWidgetGroupMode.compact,
+    this.spacing = 8,
     this.expands = false,
     this.flexes,
     required this.children,
   }) : direction = Axis.horizontal,
+       assert(spacing >= 0),
        assert(
          flexes == null || flexes.length == children.length,
          'flexes length must match children length',
@@ -41,16 +49,23 @@ class AppWidgetGroup extends StatelessWidget {
 
   const AppWidgetGroup.vertical({
     super.key,
+    this.mode = AppWidgetGroupMode.compact,
+    this.spacing = 8,
     this.expands = false,
     this.flexes,
     required this.children,
   }) : direction = Axis.vertical,
+       assert(spacing >= 0),
        assert(
          flexes == null || flexes.length == children.length,
          'flexes length must match children length',
        );
 
   final Axis direction;
+  final AppWidgetGroupMode mode;
+
+  /// Gap between untouched children in [AppWidgetGroupMode.plain].
+  final double spacing;
   final bool expands;
 
   /// Per-child flex factors used when [expands] is true. Defaults to `1`.
@@ -71,6 +86,12 @@ class AppWidgetGroup extends StatelessWidget {
     final side = BorderSide(color: theme.colorScheme.border, width: 1);
     final lastIndex = children.length - 1;
     Widget buildItem(int index) {
+      if (mode == AppWidgetGroupMode.plain) {
+        final item = children[index];
+        return expands
+            ? Expanded(flex: flexes?[index] ?? 1, child: item)
+            : item;
+      }
       final item = Builder(
         builder: (context) {
           final first = index == 0;
@@ -116,9 +137,18 @@ class AppWidgetGroup extends StatelessWidget {
       return expands ? Expanded(flex: flexes?[index] ?? 1, child: item) : item;
     }
 
-    final items = <Widget>[
-      for (var index = 0; index < children.length; index++) buildItem(index),
-    ];
+    final items = <Widget>[];
+    for (var index = 0; index < children.length; index++) {
+      if (mode == AppWidgetGroupMode.plain && index > 0 && spacing > 0) {
+        items.add(
+          SizedBox(
+            width: direction == Axis.horizontal ? spacing : 0,
+            height: direction == Axis.vertical ? spacing : 0,
+          ),
+        );
+      }
+      items.add(buildItem(index));
+    }
     Widget group = Flex(
       direction: direction,
       mainAxisSize: expands && direction == Axis.horizontal
@@ -822,8 +852,7 @@ class _AppAsyncButtonState extends State<_AppAsyncButton>
           ? EdgeInsets.zero
           : EdgeInsets.symmetric(
               horizontal:
-                  (metrics.horizontalPadding +
-                      (groupItem == null ? 0 : -2)) *
+                  (metrics.horizontalPadding + (groupItem == null ? 0 : -2)) *
                   sizeScale,
               vertical: 2 * sizeScale,
             ),
@@ -845,25 +874,28 @@ class _AppAsyncButtonState extends State<_AppAsyncButton>
           if (value is! BoxDecoration) return value;
           return value.copyWith(
             color: solid ? palette.solid : const Color(0x00000000),
-            border: solid ? value.border : Border.all(color: palette.foreground),
+            border: solid
+                ? value.border
+                : Border.all(color: palette.foreground),
           );
         },
-        textStyle: (context, states, value) => value.copyWith(
-          color: solid ? palette.onSolid : palette.foreground,
-        ),
-        iconTheme: (context, states, value) => value.copyWith(
-          color: solid ? palette.onSolid : palette.foreground,
-        ),
+        textStyle: (context, states, value) =>
+            value.copyWith(color: solid ? palette.onSolid : palette.foreground),
+        iconTheme: (context, states, value) =>
+            value.copyWith(color: solid ? palette.onSolid : palette.foreground),
       );
     }
 
-    final primaryStyle = colorize(sized(
-      shad.ButtonStyle.primary(
-        size: _config.size,
-        density: widget.iconOnly ? shad.ButtonDensity.icon : _config.density,
-        shape: widget.shapeOverride ?? _config.shape,
+    final primaryStyle = colorize(
+      sized(
+        shad.ButtonStyle.primary(
+          size: _config.size,
+          density: widget.iconOnly ? shad.ButtonDensity.icon : _config.density,
+          shape: widget.shapeOverride ?? _config.shape,
+        ),
       ),
-    ), solid: true);
+      solid: true,
+    );
     final destructiveStyle = sized(
       shad.ButtonStyle.destructive(
         size: _config.size,
@@ -896,13 +928,16 @@ class _AppAsyncButtonState extends State<_AppAsyncButton>
         ),
       ),
     );
-    final secondaryStyle = colorize(sized(
-      shad.ButtonStyle.secondary(
-        size: _config.size,
-        density: widget.iconOnly ? shad.ButtonDensity.icon : _config.density,
-        shape: widget.shapeOverride ?? _config.shape,
+    final secondaryStyle = colorize(
+      sized(
+        shad.ButtonStyle.secondary(
+          size: _config.size,
+          density: widget.iconOnly ? shad.ButtonDensity.icon : _config.density,
+          shape: widget.shapeOverride ?? _config.shape,
+        ),
       ),
-    ), solid: true);
+      solid: true,
+    );
     final selectedStyle = secondaryStyle.copyWith(
       decoration: (context, states, value) {
         if (value is! BoxDecoration) return value;
@@ -950,20 +985,26 @@ class _AppAsyncButtonState extends State<_AppAsyncButton>
         );
       },
     );
-    final outlineStyle = colorize(sized(
-      shad.ButtonStyle.outline(
-        size: _config.size,
-        density: widget.iconOnly ? shad.ButtonDensity.icon : _config.density,
-        shape: widget.shapeOverride ?? _config.shape,
+    final outlineStyle = colorize(
+      sized(
+        shad.ButtonStyle.outline(
+          size: _config.size,
+          density: widget.iconOnly ? shad.ButtonDensity.icon : _config.density,
+          shape: widget.shapeOverride ?? _config.shape,
+        ),
       ),
-    ), solid: false);
-    final ghostStyle = colorize(sized(
-      shad.ButtonStyle.ghost(
-        size: _config.size,
-        density: widget.iconOnly ? shad.ButtonDensity.icon : _config.density,
-        shape: widget.shapeOverride ?? _config.shape,
+      solid: false,
+    );
+    final ghostStyle = colorize(
+      sized(
+        shad.ButtonStyle.ghost(
+          size: _config.size,
+          density: widget.iconOnly ? shad.ButtonDensity.icon : _config.density,
+          shape: widget.shapeOverride ?? _config.shape,
+        ),
       ),
-    ), solid: false);
+      solid: false,
+    );
     final linkStyle = sized(
       shad.ButtonStyle.link(
         size: _config.size,

@@ -56,6 +56,25 @@ void main() {
     expect(config.controls.height, 34);
   });
 
+  test('custom primary derives a contrasting foreground by default', () {
+    final light = AppThemeConfig.standard(primary: const Color(0xffffe066));
+    final brand = AppThemeConfig.standard(primary: const Color(0xff6366f1));
+    final dark = AppThemeConfig.standard(primary: const Color(0xff312e81));
+    final explicit = AppThemeConfig.standard(
+      primary: const Color(0xffffe066),
+      primaryForeground: const Color(0xff123456),
+    );
+
+    expect(light.lightTheme.colorScheme.primaryForeground, Colors.black);
+    expect(light.darkTheme.colorScheme.primaryForeground, Colors.black);
+    expect(brand.lightTheme.colorScheme.primaryForeground, Colors.white);
+    expect(dark.lightTheme.colorScheme.primaryForeground, Colors.white);
+    expect(
+      explicit.lightTheme.colorScheme.primaryForeground,
+      const Color(0xff123456),
+    );
+  });
+
   testWidgets('scope supplies a non-fallback default text style', (
     tester,
   ) async {
@@ -107,7 +126,10 @@ void main() {
     );
 
     expect(materialTheme.colorScheme.primary, brand);
-    expect(materialTheme.colorScheme.onPrimary, shadTheme.colorScheme.primaryForeground);
+    expect(
+      materialTheme.colorScheme.onPrimary,
+      shadTheme.colorScheme.primaryForeground,
+    );
     final expectedFamily =
         shadTheme.typography.sans.fontFamily ??
         shadTheme.typography.sans.fontFamilyFallback?.first;
@@ -179,7 +201,9 @@ void main() {
         home: Builder(
           builder: (context) {
             themedContext = context;
-            buttonTheme = shad.ComponentTheme.maybeOf<shad.PrimaryButtonTheme>(context);
+            buttonTheme = shad.ComponentTheme.maybeOf<shad.PrimaryButtonTheme>(
+              context,
+            );
             return AppButton.primary(
               onPressed: () {},
               child: const Text('Metrics'),

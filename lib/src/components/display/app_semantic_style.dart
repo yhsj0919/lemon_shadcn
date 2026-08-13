@@ -131,7 +131,7 @@ class AppSemanticPalette {
   static AppSemanticPalette custom(shad.ThemeData theme, Color color) {
     return AppSemanticPalette(
       solid: color,
-      onSolid: color.computeLuminance() > 0.179
+      onSolid: color.computeLuminance() > 0.48
           ? const Color(0xff000000)
           : const Color(0xffffffff),
       softBackground: AppSoftColor.background(theme, color),

@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import 'app_button.dart';
+import 'app_toggle.dart';
 
 class AppToggleGroupItem<T> {
   const AppToggleGroupItem({
@@ -21,16 +22,24 @@ class AppToggleGroup<T> extends StatelessWidget {
     required ValueChanged<T?> onChanged,
     required List<AppToggleGroupItem<T>> items,
     Axis direction = Axis.horizontal,
+    AppWidgetGroupMode mode = AppWidgetGroupMode.compact,
+    double spacing = 8,
     bool allowEmpty = false,
     AppButtonSize? size,
+    Color? selectedColor,
+    Color? unselectedColor,
   }) => AppToggleGroup._(
     key: key,
     values: value == null ? const {} : {value},
     items: items,
     direction: direction,
+    mode: mode,
+    spacing: spacing,
     allowEmpty: allowEmpty,
     multiple: false,
     size: size,
+    selectedColor: selectedColor,
+    unselectedColor: unselectedColor,
     onSingleChanged: onChanged,
   );
 
@@ -40,15 +49,23 @@ class AppToggleGroup<T> extends StatelessWidget {
     required ValueChanged<Set<T>> onChanged,
     required List<AppToggleGroupItem<T>> items,
     Axis direction = Axis.horizontal,
+    AppWidgetGroupMode mode = AppWidgetGroupMode.compact,
+    double spacing = 8,
     AppButtonSize? size,
+    Color? selectedColor,
+    Color? unselectedColor,
   }) => AppToggleGroup._(
     key: key,
     values: values,
     items: items,
     direction: direction,
+    mode: mode,
+    spacing: spacing,
     allowEmpty: true,
     multiple: true,
     size: size,
+    selectedColor: selectedColor,
+    unselectedColor: unselectedColor,
     onMultipleChanged: onChanged,
   );
 
@@ -57,9 +74,13 @@ class AppToggleGroup<T> extends StatelessWidget {
     required this.values,
     required this.items,
     required this.direction,
+    required this.mode,
+    required this.spacing,
     required this.allowEmpty,
     required this.multiple,
     required this.size,
+    required this.selectedColor,
+    required this.unselectedColor,
     this._onSingleChanged,
     this._onMultipleChanged,
   });
@@ -67,9 +88,13 @@ class AppToggleGroup<T> extends StatelessWidget {
   final Set<T> values;
   final List<AppToggleGroupItem<T>> items;
   final Axis direction;
+  final AppWidgetGroupMode mode;
+  final double spacing;
   final bool allowEmpty;
   final bool multiple;
   final AppButtonSize? size;
+  final Color? selectedColor;
+  final Color? unselectedColor;
   final ValueChanged<T?>? _onSingleChanged;
   final ValueChanged<Set<T>>? _onMultipleChanged;
 
@@ -91,21 +116,18 @@ class AppToggleGroup<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) => AppWidgetGroup(
     direction: direction,
+    mode: mode,
+    spacing: spacing,
     children: [
       for (final item in items)
-        values.contains(item.value)
-            ? AppButton.selected(
-                size: size,
-                onPressed: item.enabled ? () => _toggle(item) : null,
-                config: AppButtonConfig.plain,
-                child: item.child,
-              )
-            : AppButton.text(
-                size: size,
-                onPressed: item.enabled ? () => _toggle(item) : null,
-                config: AppButtonConfig.plain,
-                child: item.child,
-              ),
+        AppToggle(
+          value: values.contains(item.value),
+          onChanged: item.enabled ? (_) => _toggle(item) : null,
+          size: size,
+          selectedColor: selectedColor,
+          unselectedColor: unselectedColor,
+          child: item.child,
+        ),
     ],
   );
 }

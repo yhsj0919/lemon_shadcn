@@ -12,12 +12,18 @@ class AppToggle extends StatelessWidget {
     required this.onChanged,
     required this.child,
     this.enabled = true,
+    this.size,
+    this.selectedColor,
+    this.unselectedColor,
   });
 
   final bool value;
   final ValueChanged<bool>? onChanged;
   final Widget child;
   final bool enabled;
+  final AppButtonSize? size;
+  final Color? selectedColor;
+  final Color? unselectedColor;
 
   @override
   Widget build(BuildContext context) {
@@ -26,12 +32,16 @@ class AppToggle extends StatelessWidget {
     return Semantics(
       toggled: value,
       child: value
-          ? AppButton.selected(
+          ? AppButton.primary(
+              size: size,
+              color: selectedColor,
               onPressed: onPressed,
               config: AppButtonConfig.plain,
               child: child,
             )
-          : AppButton.text(
+          : AppButton.outline(
+              size: size,
+              color: unselectedColor,
               onPressed: onPressed,
               config: AppButtonConfig.plain,
               child: child,
