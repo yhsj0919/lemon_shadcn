@@ -44,7 +44,7 @@ class AppInkWell extends StatefulWidget {
   const AppInkWell({
     super.key,
     required this.child,
-    required this.onPressed,
+    this.onPressed,
     this.onDoubleTap,
     this.enabled = true,
     this.borderRadius,
@@ -53,7 +53,7 @@ class AppInkWell extends StatefulWidget {
   });
 
   final Widget child;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final VoidCallback? onDoubleTap;
   final bool enabled;
   final BorderRadiusGeometry? borderRadius;
@@ -70,7 +70,7 @@ class _AppInkWellState extends State<AppInkWell> {
   bool _focused = false;
 
   void _activate() {
-    if (widget.enabled) widget.onPressed();
+    if (widget.enabled) widget.onPressed?.call();
   }
 
   @override
@@ -110,7 +110,7 @@ class _AppInkWellState extends State<AppInkWell> {
         },
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
-          onTap: widget.enabled ? _activate : null,
+          onTap: widget.enabled && widget.onPressed != null ? _activate : null,
           onDoubleTap: widget.enabled ? widget.onDoubleTap : null,
           onTapDown: widget.enabled
               ? (_) => setState(() => _pressed = true)
