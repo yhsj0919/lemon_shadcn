@@ -193,6 +193,7 @@ class AppDataGrid<T> extends StatefulWidget {
     this.selectedKeys = const {},
     this.autoSelectFirstRow = false,
     this.onSelectionChanged,
+    this.onRowDoubleTap,
     this.onCellChanged,
     this.sortable = false,
     this.reorderableRows = false,
@@ -210,7 +211,7 @@ class AppDataGrid<T> extends StatefulWidget {
     this.headerForegroundColor,
     this.cellBackgroundColor,
     this.cellForegroundColor,
-    this.striped = false,
+    this.striped = true,
     this.stripeColor,
     this.selectedRowColor,
     this.rowContextMenuBuilder,
@@ -236,6 +237,7 @@ class AppDataGrid<T> extends StatefulWidget {
     this.selectedKeys = const {},
     this.autoSelectFirstRow = false,
     this.onSelectionChanged,
+    this.onRowDoubleTap,
     this.onCellChanged,
     this.sortable = false,
     this.reorderableRows = false,
@@ -253,7 +255,7 @@ class AppDataGrid<T> extends StatefulWidget {
     this.headerForegroundColor,
     this.cellBackgroundColor,
     this.cellForegroundColor,
-    this.striped = false,
+    this.striped = true,
     this.stripeColor,
     this.selectedRowColor,
     this.rowContextMenuBuilder,
@@ -276,6 +278,7 @@ class AppDataGrid<T> extends StatefulWidget {
     this.selectedKeys = const {},
     this.autoSelectFirstRow = false,
     this.onSelectionChanged,
+    this.onRowDoubleTap,
     this.onCellChanged,
     this.sortable = false,
     this.reorderableRows = false,
@@ -293,7 +296,7 @@ class AppDataGrid<T> extends StatefulWidget {
     this.headerForegroundColor,
     this.cellBackgroundColor,
     this.cellForegroundColor,
-    this.striped = false,
+    this.striped = true,
     this.stripeColor,
     this.selectedRowColor,
     this.rowContextMenuBuilder,
@@ -326,6 +329,10 @@ class AppDataGrid<T> extends StatefulWidget {
   /// Ignored when [selectedKeys] is non-empty.
   final bool autoSelectFirstRow;
   final ValueChanged<List<T>>? onSelectionChanged;
+
+  /// Called when a business row is double-clicked or double-tapped.
+  final ValueChanged<T>? onRowDoubleTap;
+
   final AppDataGridCellChanged<T>? onCellChanged;
 
   /// Enables column sorting. Per-column [AppDataGridColumn.sortable] still
@@ -366,7 +373,7 @@ class AppDataGrid<T> extends StatefulWidget {
   final bool striped;
 
   /// Background used by every second business row when [striped] is true.
-  /// Defaults to a subtle variant of the current theme's muted color.
+  /// Defaults to the current theme's muted color.
   final Color? stripeColor;
 
   /// Background for the active single-selection row and checked
@@ -1039,6 +1046,9 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
   }
 
   void _onRowDoubleTap(TrinaGridOnRowDoubleTapEvent event) {
+    final data = event.row.data;
+    if (data is T) widget.onRowDoubleTap?.call(data);
+
     if (!_isFieldEditable(event.cell.column.field)) return;
     final manager = _stateManager;
     if (manager == null || !manager.mode.isEditableMode) return;
@@ -1129,8 +1139,7 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
         .copyWith(fontWeight: FontWeight.w600)
         .merge(widget.headerTextStyle);
     final rowBackground = widget.cellBackgroundColor ?? colors.background;
-    final stripeBackground =
-        widget.stripeColor ?? colors.muted.withValues(alpha: .45);
+    final stripeBackground = widget.stripeColor ?? colors.muted;
     final selectionBackground =
         widget.selectedRowColor ??
         (Theme.of(context).brightness == Brightness.dark
@@ -1159,7 +1168,9 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
       cellCheckedColor: colors.primaryForeground,
       cellCheckedSide: BorderSide(color: colors.border, width: 1),
       cellColorInEditState: widget.cellBackgroundColor ?? colors.background,
-      cellColorInReadOnlyState: widget.cellBackgroundColor ?? colors.background,
+      cellColorInReadOnlyState: widget.striped
+          ? Colors.transparent
+          : widget.cellBackgroundColor ?? colors.background,
       // Keep cell fills transparent so row selection/hover colors show through.
       cellReadonlyColor: null,
       cellDefaultColor: null,
@@ -1313,8 +1324,7 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
             : (rowContext) =>
                   widget.rowBackgroundColor!(rowContext.row.data as T) ??
                   (widget.striped && rowContext.rowIdx.isOdd
-                      ? widget.stripeColor ??
-                            appTheme.colorScheme.muted.withValues(alpha: .45)
+                      ? widget.stripeColor ?? appTheme.colorScheme.muted
                       : widget.cellBackgroundColor ??
                             appTheme.colorScheme.background),
         createFooter: widget._mode == _AppDataGridMode.local

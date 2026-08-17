@@ -227,6 +227,38 @@ void main() {
         .style;
     expect(style.oddRowColor, baseColor);
     expect(style.evenRowColor, stripeColor);
+    expect(style.cellColorInReadOnlyState, Colors.transparent);
+    expect(style.cellColorInEditState, baseColor);
+  });
+
+  testWidgets('data grid shows zebra stripes by default', (tester) async {
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: const Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(
+            width: 420,
+            child: AppDataGrid<_Row>.local(
+              height: 180,
+              columns: [
+                AppDataGridColumn(id: 'name', title: 'Name', value: _name),
+              ],
+              rows: [_Row(1, 'Ada'), _Row(2, 'Linus')],
+              rowKey: _rowId,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final grid = tester.widget<TrinaGrid>(find.byType(TrinaGrid));
+    final style = grid.configuration.style;
+    expect(style.oddRowColor, isNotNull);
+    expect(style.evenRowColor, isNotNull);
+    expect(style.evenRowColor, isNot(style.oddRowColor));
+    expect(style.cellColorInReadOnlyState, Colors.transparent);
   });
 
   testWidgets('selected row color stays independent from zebra stripes', (
@@ -343,6 +375,44 @@ void main() {
     await tester.pump();
 
     expect(find.text('编辑行 Ada'), findsOneWidget);
+  });
+
+  testWidgets('row double tap exposes the business row', (tester) async {
+    _Row? doubleTappedRow;
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(
+            width: 420,
+            child: AppDataGrid<_Row>.local(
+              height: 180,
+              onRowDoubleTap: (row) => doubleTappedRow = row,
+              columns: const [
+                AppDataGridColumn(id: 'name', title: 'Name', value: _name),
+              ],
+              rows: const [_Row(1, 'Ada')],
+              rowKey: _rowId,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final grid = tester.widget<TrinaGrid>(find.byType(TrinaGrid));
+    final row = grid.rows.first;
+    final cell = row.cells.values.first;
+    grid.onRowDoubleTap!(
+      TrinaGridOnRowDoubleTapEvent(
+        row: row,
+        rowIdx: 0,
+        cell: cell,
+      ),
+    );
+
+    expect(doubleTappedRow?.name, 'Ada');
   });
 
   testWidgets('reorderable rows use Trina drag-compatible runtime types', (
