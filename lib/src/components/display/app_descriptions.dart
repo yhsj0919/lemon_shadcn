@@ -3,6 +3,7 @@ import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
 import '../../foundation/app_control_box.dart';
 import '../../foundation/app_theme_config.dart';
+import '../forms/app_inline_edit.dart';
 
 // Public constructor names intentionally differ from the nullable internal
 // override slots so the legacy non-null getters remain source-compatible.
@@ -95,8 +96,10 @@ class AppDescriptionsTheme extends shad.ComponentThemeData {
 
   /// Minimum height of each item's value slot.
   ///
-  /// - Omitted: inherit / fall back to the active control height (32 / 26).
-  /// - `null`: content-sized, no minimum height.
+  /// - Omitted: when the surface contains [AppInlineEdit], fall back to the
+  ///   active control height so plain text lines up with editors; otherwise
+  ///   keep the value content-sized.
+  /// - `null`: always content-sized, no minimum height.
   /// - `double`: use that minimum height.
   double? get valueHeight => _readValueHeight(_valueHeight);
 
@@ -211,7 +214,8 @@ class AppDescriptionItem {
 
   /// Minimum height for this item's value slot.
   ///
-  /// - Omitted: inherit from [AppDescriptions.valueHeight] / theme / control height.
+  /// - Omitted: inherit from [AppDescriptions.valueHeight] / theme, or sync to
+  ///   the control height only when the surface mixes in [AppInlineEdit].
   /// - `null`: content-sized, no minimum height.
   /// - `double`: use that minimum height.
   double? get valueHeight => _readValueHeight(_valueHeight);
@@ -229,6 +233,10 @@ class AppDescriptionItem {
 }
 
 /// Responsive key-value details for entity and record pages.
+///
+/// When any item embeds [AppInlineEdit], omitted [valueHeight] syncs every
+/// value slot to the control height so plain text aligns with editors without
+/// per-row wrappers. Surfaces without inline edit stay content-sized.
 class AppDescriptions extends StatelessWidget {
   const AppDescriptions({
     super.key,
@@ -353,8 +361,9 @@ class AppDescriptions extends StatelessWidget {
 
   /// Minimum height of each item's value slot.
   ///
-  /// - Omitted: fall back to theme, then the active control height (32 / 26).
-  /// - `null`: content-sized, no minimum height.
+  /// - Omitted: sync to the control height only when items include
+  ///   [AppInlineEdit]; otherwise content-sized.
+  /// - `null`: always content-sized, no minimum height.
   /// - `double`: use that minimum height.
   double? get valueHeight => _readValueHeight(_valueHeight);
 
@@ -472,8 +481,9 @@ class AppDescriptions extends StatelessWidget {
   Widget _buildItem(
     BuildContext context,
     AppDescriptionItem item,
-    AppDescriptionsTheme style,
-  ) {
+    AppDescriptionsTheme style, {
+    required bool syncValueHeightWithInlineEdit,
+  }) {
     if (item._isCustom) {
       Widget custom = DefaultTextStyle.merge(
         style: style.valueStyle!,
@@ -520,17 +530,19 @@ class AppDescriptions extends StatelessWidget {
     } else if (item.expandValue) {
       value = SizedBox(width: double.infinity, child: value);
     }
-    // Match the form control slot by default (32 / compact 26). Explicit null
-    // disables the minimum so the value stays content-sized.
+    // Sync plain text to the control slot only when this surface mixes in
+    // AppInlineEdit. Explicit valueHeight / null still win.
     final double? valueHeight;
     if (item._hasValueHeight) {
       valueHeight = item.valueHeight;
     } else if (style._hasValueHeight) {
       valueHeight = style.valueHeight;
-    } else {
+    } else if (syncValueHeightWithInlineEdit) {
       valueHeight =
           style.controlMetrics?.height ??
           AppControlMetricsScope.resolve(context).height;
+    } else {
+      valueHeight = null;
     }
     // Align supplies loose constraints to intrinsic controls (notably buttons),
     // while the outer item can still occupy its responsive grid cell.
@@ -540,9 +552,12 @@ class AppDescriptions extends StatelessWidget {
     );
     value = valueHeight == null
         ? aligned
-        : ConstrainedBox(
-            constraints: BoxConstraints(minHeight: valueHeight),
-            child: aligned,
+        : SizedBox(
+            width: double.infinity,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: valueHeight),
+              child: aligned,
+            ),
           );
     if (layout == AppDescriptionLayout.horizontal) {
       return Row(
@@ -567,6 +582,24 @@ class AppDescriptions extends StatelessWidget {
         value,
       ],
     );
+  }
+
+  bool get _syncValueHeightWithInlineEdit =>
+      items.any((item) => !item._isDivider && _containsInlineEdit(item.value));
+
+  static bool _containsInlineEdit(Widget widget) {
+    if (widget is AppInlineEdit) return true;
+    if (widget is ProxyWidget) return _containsInlineEdit(widget.child);
+    if (widget is SingleChildRenderObjectWidget) {
+      final child = widget.child;
+      return child != null && _containsInlineEdit(child);
+    }
+    if (widget is MultiChildRenderObjectWidget) {
+      for (final child in widget.children) {
+        if (_containsInlineEdit(child)) return true;
+      }
+    }
+    return false;
   }
 
   double get _minimumResponsiveColumnWidth => columnWidth ?? minColumnWidth;
@@ -599,6 +632,7 @@ class AppDescriptions extends StatelessWidget {
   ) {
     final gap = style.spacing!;
     final columnWidth = _resolveColumnWidth(available, gap, count);
+    final syncValueHeight = _syncValueHeightWithInlineEdit;
     return Wrap(
       spacing: gap,
       runSpacing: style.runSpacing!,
@@ -614,7 +648,12 @@ class AppDescriptions extends StatelessWidget {
                   ),
             child: item._isDivider
                 ? item.value
-                : _buildItem(context, item, style),
+                : _buildItem(
+                    context,
+                    item,
+                    style,
+                    syncValueHeightWithInlineEdit: syncValueHeight,
+                  ),
           ),
       ],
     );
@@ -628,6 +667,7 @@ class AppDescriptions extends StatelessWidget {
   ) {
     final sections = <Widget>[];
     final regularItems = <AppDescriptionItem>[];
+    final syncValueHeight = _syncValueHeightWithInlineEdit;
 
     void flushRegularItems() {
       if (regularItems.isEmpty) return;
@@ -644,6 +684,7 @@ class AppDescriptions extends StatelessWidget {
                           context,
                           regularItems[offset + column],
                           style,
+                          syncValueHeightWithInlineEdit: syncValueHeight,
                         ),
                       )
                     : const SizedBox.shrink(),

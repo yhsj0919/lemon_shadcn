@@ -524,7 +524,9 @@ void main() {
     expect(labelCenter, closeTo(controlCenter, 0.01));
   });
 
-  testWidgets('default value slot matches form control height', (tester) async {
+  testWidgets('plain text stays content-sized without AppInlineEdit', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       material.MaterialApp(
         builder: AppShadcnScope.builder(),
@@ -544,11 +546,46 @@ void main() {
       ),
     );
 
-    final valueTop = tester.getTopLeft(find.text('柠檬管理后台')).dy;
-    final valueBottom = tester.getBottomLeft(find.text('柠檬管理后台')).dy;
-    // Text itself is shorter than the control slot; the value area is padded
-    // to AppControlMetrics.height (32).
+    expect(
+      find.ancestor(
+        of: find.text('柠檬管理后台'),
+        matching: find.byWidgetPredicate(
+          (widget) =>
+              widget is material.ConstrainedBox &&
+              widget.constraints.minHeight == 32,
+        ),
+      ),
+      findsNothing,
+    );
     expect(tester.getSize(find.text('柠檬管理后台')).height, lessThan(32));
+  });
+
+  testWidgets('mixed AppInlineEdit syncs plain text to control height', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: material.Align(
+          alignment: material.Alignment.topLeft,
+          child: AppDescriptions(
+            columns: 1,
+            padding: material.EdgeInsets.zero,
+            items: [
+              const AppDescriptionItem(
+                label: material.Text('名称'),
+                value: material.Text('柠檬管理后台'),
+              ),
+              AppDescriptionItem(
+                label: const material.Text('负责人'),
+                value: AppInlineEdit.text(value: '张明', onSaved: (_) {}),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
     final valueArea = find.ancestor(
       of: find.text('柠檬管理后台'),
       matching: find.byWidgetPredicate(
@@ -558,7 +595,7 @@ void main() {
       ),
     );
     expect(tester.getSize(valueArea).height, 32);
-    expect(valueBottom - valueTop, lessThan(32));
+    expect(tester.getSize(find.byType(AppInlineEdit<String>)).height, 32);
   });
 
   testWidgets('valueHeight can be overridden on the surface and item', (
