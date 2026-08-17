@@ -243,7 +243,9 @@ class AppShell extends StatelessWidget {
                           ],
                         ),
                       ),
-                    Expanded(child: _content()),
+                    // Keep route content in its own layer so page changes do
+                    // not invalidate the shell's sidebar/header paint layer.
+                    Expanded(child: RepaintBoundary(child: _content())),
                   ],
                 ),
               ),
