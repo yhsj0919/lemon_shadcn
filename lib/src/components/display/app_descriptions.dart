@@ -399,6 +399,7 @@ class AppDescriptions extends StatelessWidget {
     final effectiveDensity =
         density ?? local?.density ?? AppDensity.standard;
     final compact = effectiveDensity == AppDensity.compact;
+    final inlineEdit = _syncValueHeightWithInlineEdit;
     final typography = shadTheme.typography;
     final xSmallSize = typography.xSmall.fontSize ?? 12;
     final smallSize = typography.small.fontSize ?? 14;
@@ -440,7 +441,14 @@ class AppDescriptions extends StatelessWidget {
           : local != null && local._hasValueHeight
           ? local._valueHeight
           : _valueHeightUnset,
-      padding: _padding ?? local?.padding ?? EdgeInsets.all(compact ? 8 : 12),
+      padding:
+          _padding ??
+          local?.padding ??
+          (compact
+              ? const EdgeInsets.all(8)
+              : inlineEdit
+              ? const EdgeInsets.symmetric(horizontal: 12, vertical: 6)
+              : const EdgeInsets.all(12)),
       tableCellPadding:
           _tableCellPadding ??
           local?.tableCellPadding ??
@@ -449,9 +457,11 @@ class AppDescriptions extends StatelessWidget {
             vertical: compact ? 0 : 8,
           ),
       spacing: _spacing ?? local?.spacing ?? 12,
-      runSpacing: _runSpacing ?? local?.runSpacing ?? 8,
+      runSpacing:
+          _runSpacing ?? local?.runSpacing ?? (inlineEdit ? 0 : 8),
       labelGap: labelGap ?? local?.labelGap ?? (compact ? 4 : 8),
-      contentGap: contentGap ?? local?.contentGap ?? (compact ? 2 : 4),
+      contentGap:
+          contentGap ?? local?.contentGap ?? (compact ? 2 : inlineEdit ? 0 : 4),
       headerPadding:
           headerPadding ??
           local?.headerPadding ??

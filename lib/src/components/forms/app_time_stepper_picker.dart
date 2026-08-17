@@ -642,6 +642,7 @@ class _TimeValueBoxState extends State<_TimeValueBox> {
   Widget build(BuildContext context) {
     final theme = shad.Theme.of(context);
     final compact = widget.variant == AppNumberInputVariant.compact;
+    final controlMetrics = AppControlMetricsScope.resolve(context);
     final content = Stack(
       children: [
         Positioned.fill(
@@ -664,7 +665,9 @@ class _TimeValueBoxState extends State<_TimeValueBox> {
               left: compact ? 0 : 12,
               right: compact ? 18 : 34,
             ),
-            style: compact ? theme.typography.x2Large : theme.typography.base,
+            style: DefaultTextStyle.of(context).style.copyWith(
+              fontSize: controlMetrics.fontSize,
+            ),
             onChanged: (text) {
               if (compact) {
                 if (text.length == widget.digits) _submit(text);

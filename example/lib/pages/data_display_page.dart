@@ -440,7 +440,10 @@ class DataDisplayPage extends StatelessWidget {
                         children: [
                           SizedBox(
                             width: itemWidth,
-                            child: AppDescriptions.custom(
+                            child: AppDescriptions(
+                              layout: AppDescriptionLayout.horizontal,
+                              labelWidth: 96,
+                              columns: 1,
                               titleIcon: const Icon(LucideIcons.triangleAlert),
                               title: const Text('告警数据'),
                               actions: AppDropdownButton(
@@ -458,50 +461,21 @@ class DataDisplayPage extends StatelessWidget {
                                 child: const Icon(LucideIcons.ellipsis),
                               ),
                               bordered: true,
-                              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                              child: Column(
-                                children: [
-                                  _CustomDescriptionRow(
-                                    label: '异常次数',
-                                    child: AppInlineEdit.text(
-                                      value: '0', onSaved: (_) async {},
-                                    ),
-                                  ),
-                                  _CustomDescriptionRow(
-                                    label: '最近离线',
-                                    child: AppInlineEdit.text(
-                                      value: '-', onSaved: (_) async {},
-                                    ),
-                                  ),
-                                  _CustomDescriptionRow(
-                                    label: '告警记录',
-                                    child: AppInlineEdit.text(
-                                      value: '查看', onSaved: (_) async {},
-                                      displayBuilder: (_, value) => Text(value, style: const TextStyle(color: Color(0xff6366f1))),
-                                    ),
-                                  ),
-                                  _CustomDescriptionRow(
-                                    label: '操作日志',
-                                    child: AppInlineEdit.text(
-                                      value: '查看', onSaved: (_) async {},
-                                      displayBuilder: (_, value) => Text(value, style: const TextStyle(color: Color(0xff6366f1))),
-                                    ),
-                                  ),
-                                  _CustomDescriptionRow(
-                                    label: '运行历史',
-                                    bottomGap: 0,
-                                    child: AppInlineEdit.text(
-                                      value: '查看', onSaved: (_) async {},
-                                      displayBuilder: (_, value) => Text(value, style: const TextStyle(color: Color(0xff6366f1))),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                              items: [
+                                AppDescriptionItem(label: const Text('异常次数'), value: AppInlineEdit.text(value: '0', onSaved: (_) async {})),
+                                AppDescriptionItem(label: const Text('最近离线'), value: AppInlineEdit.text(value: '-', onSaved: (_) async {})),
+                                AppDescriptionItem(label: const Text('告警记录'), value: AppInlineEdit.text(value: '查看', onSaved: (_) async {})),
+                                AppDescriptionItem(label: const Text('操作日志'), value: AppInlineEdit.text(value: '查看', onSaved: (_) async {})),
+                                AppDescriptionItem(label: const Text('运行历史'), value: AppInlineEdit.text(value: '查看', onSaved: (_) async {})),
+                              ],
                             ),
                           ),
                           SizedBox(
                             width: itemWidth,
-                            child: AppDescriptions.custom(
+                            child: AppDescriptions(
+                              layout: AppDescriptionLayout.horizontal,
+                              labelWidth: 96,
+                              columns: 1,
                               titleIcon: const Icon(LucideIcons.monitor),
                               title: const Text('设备信息'),
                               actions: Row(
@@ -530,37 +504,12 @@ class DataDisplayPage extends StatelessWidget {
                                 ],
                               ),
                               bordered: true,
-                              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                              child: Column(
-                                children: [
-                                  _CustomDescriptionRow(
-                                    label: '设备序列号',
-                                    child: AppInlineEdit.text(
-                                      value: 'site-shimano-01', onSaved: (_) async {},
-                                    ),
-                                  ),
-                                  _CustomDescriptionRow(
-                                    label: '所属项目',
-                                    child: AppInlineEdit.text(
-                                      value: '园区监控', onSaved: (_) async {},
-                                    ),
-                                  ),
-                                  _CustomDescriptionRow(
-                                    label: '在线状态',
-                                    child: AppInlineEdit.text(
-                                      value: '在线', onSaved: (_) async {},
-                                      displayBuilder: (_, value) => AppBadge.success(child: Text(value)),
-                                    ),
-                                  ),
-                                  _CustomDescriptionRow(
-                                    label: '最后更新',
-                                    bottomGap: 0,
-                                    child: AppInlineEdit.text(
-                                      value: '2026-08-11 14:30', onSaved: (_) async {},
-                                    ),
-                                  ),
-                                ],
-                              ),
+                              items: [
+                                AppDescriptionItem(label: const Text('设备序列号'), value: AppInlineEdit.text(value: 'site-shimano-01', onSaved: (_) async {})),
+                                AppDescriptionItem(label: const Text('所属项目'), value: AppInlineEdit.text(value: '园区监控', onSaved: (_) async {})),
+                                AppDescriptionItem(label: const Text('在线状态'), value: AppInlineEdit.text(value: '在线', onSaved: (_) async {}, displayBuilder: (_, value) => AppBadge.success(child: Text(value)))),
+                                AppDescriptionItem(label: const Text('最后更新'), value: AppInlineEdit.text(value: '2026-08-11 14:30', onSaved: (_) async {})),
+                              ],
                             ),
                           ),
                         ],
