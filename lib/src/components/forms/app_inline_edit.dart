@@ -8,6 +8,8 @@ import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 import '../../foundation/app_control_box.dart';
 import 'app_checkbox.dart';
 import 'app_date_picker.dart';
+import 'app_advanced_inputs.dart';
+import 'app_auto_complete.dart';
 import 'app_field.dart';
 import 'app_inline_edit_overlay_scope.dart';
 import 'app_option.dart';
@@ -367,6 +369,115 @@ class AppInlineEdit<T> extends StatefulWidget {
         onChanged: details.saving
             ? null
             : (state) => details.onChanged(state == shad.CheckboxState.checked),
+      ),
+    );
+  }
+
+  static AppInlineEdit<List<V>> checkboxGroup<V>({
+    Key? key,
+    required List<V> value,
+    required List<AppOption<V>> options,
+    required AppInlineEditSaver<List<V>> onSaved,
+    AppInlineEditDisplayBuilder<List<V>>? displayBuilder,
+    bool enabled = true,
+    Axis valueDirection = Axis.horizontal,
+    double spacing = 16,
+    double runSpacing = 8,
+  }) {
+    Widget defaultDisplay(BuildContext context, List<V> value) {
+      final labels = [
+        for (final option in options)
+          if (value.contains(option.value)) option.label,
+      ];
+      return Text(labels.isEmpty ? '-' : labels.join(', '));
+    }
+
+    return AppInlineEdit<List<V>>(
+      key: key,
+      value: List<V>.of(value),
+      displayBuilder: displayBuilder ?? defaultDisplay,
+      enabled: enabled,
+      saveOnBlur: true,
+      commitOnChanged: true,
+      onSaved: onSaved,
+      editorBuilder: (context, details) => AppCheckboxGroup<V>(
+        options: options,
+        value: details.value,
+        enabled: !details.saving,
+        valueDirection: valueDirection,
+        spacing: spacing,
+        runSpacing: runSpacing,
+        onChanged: details.onChanged,
+      ),
+    );
+  }
+
+  static AppInlineEdit<List<V>> multiSelect<V>({
+    Key? key,
+    required List<V> value,
+    required List<AppOption<V>> options,
+    required AppInlineEditSaver<List<V>> onSaved,
+    AppInlineEditDisplayBuilder<List<V>>? displayBuilder,
+    bool enabled = true,
+    bool allowUnselect = true,
+    int? maxVisibleOptions,
+  }) {
+    Widget defaultDisplay(BuildContext context, List<V> value) {
+      final labels = [
+        for (final option in options)
+          if (value.contains(option.value)) option.label,
+      ];
+      return Text(labels.isEmpty ? '-' : labels.join(', '));
+    }
+
+    return AppInlineEdit<List<V>>(
+      key: key,
+      value: List<V>.of(value),
+      displayBuilder: displayBuilder ?? defaultDisplay,
+      enabled: enabled,
+      saveOnBlur: true,
+      commitOnChanged: true,
+      onSaved: onSaved,
+      editorBuilder: (context, details) => AppMultiSelect<V>(
+        options: options,
+        value: details.value,
+        enabled: !details.saving,
+        allowUnselect: allowUnselect,
+        maxVisibleOptions: maxVisibleOptions,
+        onChanged: (value) => details.onChanged([...?value]),
+      ),
+    );
+  }
+
+  static AppInlineEdit<V?> autoComplete<V>({
+    Key? key,
+    required V? value,
+    required AppOptionSearcher<V> searchOptions,
+    required AppInlineEditSaver<V?> onSaved,
+    AppInlineEditDisplayBuilder<V?>? displayBuilder,
+    AppOption<V>? initialOption,
+    String hintText = 'Search and select',
+    String searchHintText = 'Search',
+    bool clearable = false,
+    bool enabled = true,
+  }) {
+    return AppInlineEdit<V?>(
+      key: key,
+      value: value,
+      displayBuilder: displayBuilder ?? (_, value) => Text('$value'),
+      enabled: enabled,
+      saveOnBlur: true,
+      commitOnChanged: true,
+      onSaved: onSaved,
+      editorBuilder: (context, details) => AppAutoComplete<V>(
+        searchOptions: searchOptions,
+        value: details.value,
+        initialOption: initialOption,
+        hintText: hintText,
+        searchHintText: searchHintText,
+        clearable: clearable,
+        enabled: !details.saving,
+        onChanged: details.onChanged,
       ),
     );
   }

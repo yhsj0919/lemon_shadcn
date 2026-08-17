@@ -18,6 +18,62 @@ typedef AppAutoCompleteErrorBuilder<V> =
       Future<List<AppOption<V>>> Function() retry,
     );
 
+class AppAutoComplete<V> extends StatelessWidget {
+  const AppAutoComplete({
+    super.key,
+    required this.searchOptions,
+    required this.value,
+    required this.onChanged,
+    this.initialOption,
+    this.hintText = 'Search and select',
+    this.searchHintText = 'Search',
+    this.clearable = false,
+    this.minWidth = 160,
+    this.debounce = const Duration(milliseconds: 300),
+    this.optionConfig = const AppOptionConfig(),
+    this.loadingBuilder,
+    this.emptyBuilder,
+    this.loadErrorBuilder,
+    this.enabled = true,
+  });
+
+  final AppOptionSearcher<V> searchOptions;
+  final V? value;
+  final ValueChanged<V?> onChanged;
+  final AppOption<V>? initialOption;
+  final String hintText;
+  final String searchHintText;
+  final bool clearable;
+  final double minWidth;
+  final Duration debounce;
+  final AppOptionConfig<V> optionConfig;
+  final WidgetBuilder? loadingBuilder;
+  final WidgetBuilder? emptyBuilder;
+  final AppAutoCompleteErrorBuilder<V>? loadErrorBuilder;
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) => _AppAutoCompleteControl<V>(
+    searchOptions: searchOptions,
+    optionSource: null,
+    pagedOptionSource: null,
+    cacheDuration: Duration.zero,
+    initialOption: initialOption,
+    value: value,
+    onChanged: onChanged,
+    enabled: enabled,
+    hintText: hintText,
+    searchHintText: searchHintText,
+    clearable: clearable,
+    minWidth: minWidth,
+    debounce: debounce,
+    optionConfig: optionConfig,
+    loadingBuilder: loadingBuilder,
+    emptyBuilder: emptyBuilder,
+    loadErrorBuilder: loadErrorBuilder,
+  );
+}
+
 class AppAutoCompleteFormField<V> extends FormField<V> {
   const AppAutoCompleteFormField.async({
     super.key,
