@@ -15,6 +15,17 @@ enum AppDescriptionsType { standard, table }
 /// Controls the whitespace used by [AppDescriptions].
 enum AppDescriptionsDensity { standard, compact }
 
+/// Sentinel for an omitted [valueHeight] so explicit `null` can mean
+/// content-sized (no minimum height).
+const Object _valueHeightUnset = Object();
+
+bool _isValueHeightSet(Object? value) => !identical(value, _valueHeightUnset);
+
+double? _readValueHeight(Object? value) {
+  if (!_isValueHeightSet(value) || value == null) return null;
+  return (value as num).toDouble();
+}
+
 /// Component-level visual overrides for [AppDescriptions].
 ///
 /// Apply it to a subtree with `ComponentTheme<AppDescriptionsTheme>`.
@@ -29,6 +40,7 @@ class AppDescriptionsTheme extends shad.ComponentThemeData {
     this.labelIconTheme,
     this.labelAlignment,
     this.valueAlignment,
+    Object? valueHeight = _valueHeightUnset,
     this.padding,
     this.tableCellPadding,
     this.spacing,
@@ -37,7 +49,12 @@ class AppDescriptionsTheme extends shad.ComponentThemeData {
     this.contentGap,
     this.headerPadding,
     this.controlMetrics,
-  });
+  }) : _valueHeight = valueHeight,
+       assert(
+         identical(valueHeight, _valueHeightUnset) ||
+             valueHeight == null ||
+             (valueHeight is num && valueHeight > 0),
+       );
 
   const AppDescriptionsTheme.compact({
     this.labelStyle,
@@ -48,7 +65,9 @@ class AppDescriptionsTheme extends shad.ComponentThemeData {
     this.labelIconTheme,
     this.labelAlignment,
     this.valueAlignment,
+    Object? valueHeight = _valueHeightUnset,
   }) : density = AppDescriptionsDensity.compact,
+       _valueHeight = valueHeight,
        padding = null,
        tableCellPadding = null,
        spacing = null,
@@ -56,7 +75,12 @@ class AppDescriptionsTheme extends shad.ComponentThemeData {
        labelGap = null,
        contentGap = null,
        headerPadding = null,
-       controlMetrics = null;
+       controlMetrics = null,
+       assert(
+         identical(valueHeight, _valueHeightUnset) ||
+             valueHeight == null ||
+             (valueHeight is num && valueHeight > 0),
+       );
 
   final AppDescriptionsDensity? density;
   final TextStyle? labelStyle;
@@ -67,6 +91,16 @@ class AppDescriptionsTheme extends shad.ComponentThemeData {
   final IconThemeData? labelIconTheme;
   final AlignmentGeometry? labelAlignment;
   final AlignmentGeometry? valueAlignment;
+  final Object? _valueHeight;
+
+  /// Minimum height of each item's value slot.
+  ///
+  /// - Omitted: inherit / fall back to the active control height (32 / 26).
+  /// - `null`: content-sized, no minimum height.
+  /// - `double`: use that minimum height.
+  double? get valueHeight => _readValueHeight(_valueHeight);
+
+  bool get _hasValueHeight => _isValueHeightSet(_valueHeight);
   final EdgeInsetsGeometry? padding;
   final EdgeInsetsGeometry? tableCellPadding;
   final double? spacing;
@@ -88,17 +122,24 @@ class AppDescriptionItem {
     this.maxWidth,
     this.labelAlignment,
     this.valueWidth,
+    Object? valueHeight = _valueHeightUnset,
     this.expandValue = false,
     AlignmentGeometry? valueAlignment,
   }) : _isDivider = false,
        _isCustom = false,
        _valueAlignment = valueAlignment,
+       _valueHeight = valueHeight,
        assert(span > 0),
        assert(width == null || width > 0),
        assert(minWidth == null || minWidth > 0),
        assert(maxWidth == null || maxWidth > 0),
        assert(minWidth == null || maxWidth == null || minWidth <= maxWidth),
-       assert(valueWidth == null || valueWidth > 0);
+       assert(valueWidth == null || valueWidth > 0),
+       assert(
+         identical(valueHeight, _valueHeightUnset) ||
+             valueHeight == null ||
+             (valueHeight is num && valueHeight > 0),
+       );
 
   /// Creates an item whose content completely replaces the label/value layout.
   ///
@@ -114,6 +155,7 @@ class AppDescriptionItem {
        icon = null,
        labelAlignment = null,
        valueWidth = null,
+       _valueHeight = _valueHeightUnset,
        expandValue = false,
        _valueAlignment = null,
        _isDivider = false,
@@ -135,6 +177,7 @@ class AppDescriptionItem {
       maxWidth = null,
       labelAlignment = null,
       valueWidth = null,
+      _valueHeight = _valueHeightUnset,
       expandValue = false,
       _valueAlignment = null,
       _isDivider = true,
@@ -164,12 +207,23 @@ class AppDescriptionItem {
   /// Optional width for controls such as fields that would otherwise fill a cell.
   final double? valueWidth;
 
+  final Object? _valueHeight;
+
+  /// Minimum height for this item's value slot.
+  ///
+  /// - Omitted: inherit from [AppDescriptions.valueHeight] / theme / control height.
+  /// - `null`: content-sized, no minimum height.
+  /// - `double`: use that minimum height.
+  double? get valueHeight => _readValueHeight(_valueHeight);
+
+  bool get _hasValueHeight => _isValueHeightSet(_valueHeight);
+
   /// Whether the value should consume the full value-area width.
   /// Buttons, badges, and other controls remain content-sized by default.
   final bool expandValue;
   final AlignmentGeometry? _valueAlignment;
   AlignmentGeometry get valueAlignment =>
-      _valueAlignment ?? AlignmentDirectional.topStart;
+      _valueAlignment ?? AlignmentDirectional.centerStart;
   final bool _isDivider;
   final bool _isCustom;
 }
@@ -197,6 +251,7 @@ class AppDescriptions extends StatelessWidget {
     this.labelIconTheme,
     this.labelAlignment,
     this.valueAlignment,
+    Object? valueHeight = _valueHeightUnset,
     double? spacing,
     double? runSpacing,
     this.labelGap,
@@ -212,11 +267,17 @@ class AppDescriptions extends StatelessWidget {
        _runSpacing = runSpacing,
        _padding = padding,
        _tableCellPadding = tableCellPadding,
+       _valueHeight = valueHeight,
        customChild = null,
        assert(columns > 0),
        assert(minColumnWidth > 0),
        assert(columnWidth == null || columnWidth > 0),
        assert(maxColumnWidth == null || maxColumnWidth > 0),
+       assert(
+         identical(valueHeight, _valueHeightUnset) ||
+             valueHeight == null ||
+             (valueHeight is num && valueHeight > 0),
+       ),
        assert(
          maxColumnWidth == null || minColumnWidth <= maxColumnWidth,
          'minColumnWidth must not exceed maxColumnWidth.',
@@ -248,6 +309,7 @@ class AppDescriptions extends StatelessWidget {
        _spacing = null,
        _runSpacing = null,
        _tableCellPadding = null,
+       _valueHeight = _valueHeightUnset,
        items = const [],
        customChild = child,
        columns = 1,
@@ -287,6 +349,15 @@ class AppDescriptions extends StatelessWidget {
   final IconThemeData? labelIconTheme;
   final AlignmentGeometry? labelAlignment;
   final AlignmentGeometry? valueAlignment;
+  final Object? _valueHeight;
+
+  /// Minimum height of each item's value slot.
+  ///
+  /// - Omitted: fall back to theme, then the active control height (32 / 26).
+  /// - `null`: content-sized, no minimum height.
+  /// - `double`: use that minimum height.
+  double? get valueHeight => _readValueHeight(_valueHeight);
+
   final double? _spacing;
   final double? _runSpacing;
 
@@ -355,7 +426,12 @@ class AppDescriptions extends StatelessWidget {
       valueAlignment:
           valueAlignment ??
           local?.valueAlignment ??
-          AlignmentDirectional.topStart,
+          AlignmentDirectional.centerStart,
+      valueHeight: _isValueHeightSet(_valueHeight)
+          ? _valueHeight
+          : local != null && local._hasValueHeight
+          ? local._valueHeight
+          : _valueHeightUnset,
       padding: _padding ?? local?.padding ?? EdgeInsets.all(compact ? 8 : 12),
       tableCellPadding:
           _tableCellPadding ??
@@ -444,12 +520,30 @@ class AppDescriptions extends StatelessWidget {
     } else if (item.expandValue) {
       value = SizedBox(width: double.infinity, child: value);
     }
+    // Match the form control slot by default (32 / compact 26). Explicit null
+    // disables the minimum so the value stays content-sized.
+    final double? valueHeight;
+    if (item._hasValueHeight) {
+      valueHeight = item.valueHeight;
+    } else if (style._hasValueHeight) {
+      valueHeight = style.valueHeight;
+    } else {
+      valueHeight =
+          style.controlMetrics?.height ??
+          AppControlMetricsScope.resolve(context).height;
+    }
     // Align supplies loose constraints to intrinsic controls (notably buttons),
     // while the outer item can still occupy its responsive grid cell.
-    value = Align(
+    final aligned = Align(
       alignment: item._valueAlignment ?? style.valueAlignment!,
       child: value,
     );
+    value = valueHeight == null
+        ? aligned
+        : ConstrainedBox(
+            constraints: BoxConstraints(minHeight: valueHeight),
+            child: aligned,
+          );
     if (layout == AppDescriptionLayout.horizontal) {
       return Row(
         crossAxisAlignment: resolvedLabelAlignment.y <= -0.5
