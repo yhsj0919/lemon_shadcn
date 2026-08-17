@@ -2,11 +2,13 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'package:lemon_shadcn/lemon_shadcn.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
 import '../../foundation/app_control_box.dart';
 import 'app_checkbox.dart';
 import 'app_date_picker.dart';
+import 'app_field.dart';
 import 'app_inline_edit_overlay_scope.dart';
 import 'app_option.dart';
 import 'app_radio_group.dart';
@@ -748,7 +750,9 @@ class _InlineTextEditorState extends State<_InlineTextEditor> {
       autofocus: true,
       hintText: widget.hintText,
       obscureText: widget.obscureText,
-      maxLength: widget.maxLength,
+        maxLength: widget.maxLength,
+        density: AppDensity.compact,
+        chrome: AppFieldChrome.bare,
       enabled: !widget.details.saving,
       onChanged: widget.details.onChanged,
       onSubmitted: (_) => widget.details.submit(),

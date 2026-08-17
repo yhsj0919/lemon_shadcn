@@ -289,7 +289,7 @@ class DataDisplayPage extends StatelessWidget {
                   AppDescriptions(
                     title: Text('紧凑模式'),
                     actions: _descriptionHeaderActions(),
-                    density: AppDescriptionsDensity.compact,
+                    density: AppDensity.compact,
                     bordered: true,
                     columns: 3,
                     items: [
@@ -320,7 +320,7 @@ class DataDisplayPage extends StatelessWidget {
                   AppDescriptions(
                     title: const Text('紧凑横向模式'),
                     actions: _descriptionHeaderActions(),
-                    density: AppDescriptionsDensity.compact,
+                    density: AppDensity.compact,
                     layout: AppDescriptionLayout.horizontal,
                     labelWidth: 64,
                     bordered: true,
@@ -350,7 +350,7 @@ class DataDisplayPage extends StatelessWidget {
                   const Gap(12),
                   ComponentTheme<AppDescriptionsTheme>(
                     data: const AppDescriptionsTheme(
-                      density: AppDescriptionsDensity.compact,
+                      density: AppDensity.compact,
                       labelStyle: TextStyle(color: Color(0xff7c3aed)),
                       valueStyle: TextStyle(
                         fontSize: 13,
@@ -458,48 +458,41 @@ class DataDisplayPage extends StatelessWidget {
                                 child: const Icon(LucideIcons.ellipsis),
                               ),
                               bordered: true,
-                              padding: const EdgeInsets.fromLTRB(
-                                16,
-                                16,
-                                16,
-                                18,
-                              ),
-                              child: const Column(
+                              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                              child: Column(
                                 children: [
                                   _CustomDescriptionRow(
                                     label: '异常次数',
-                                    child: Text('0'),
+                                    child: AppInlineEdit.text(
+                                      value: '0', onSaved: (_) async {},
+                                    ),
                                   ),
                                   _CustomDescriptionRow(
                                     label: '最近离线',
-                                    child: Text('-'),
+                                    child: AppInlineEdit.text(
+                                      value: '-', onSaved: (_) async {},
+                                    ),
                                   ),
                                   _CustomDescriptionRow(
                                     label: '告警记录',
-                                    child: Text(
-                                      '查看',
-                                      style: TextStyle(
-                                        color: Color(0xff6366f1),
-                                      ),
+                                    child: AppInlineEdit.text(
+                                      value: '查看', onSaved: (_) async {},
+                                      displayBuilder: (_, value) => Text(value, style: const TextStyle(color: Color(0xff6366f1))),
                                     ),
                                   ),
                                   _CustomDescriptionRow(
                                     label: '操作日志',
-                                    child: Text(
-                                      '查看',
-                                      style: TextStyle(
-                                        color: Color(0xff6366f1),
-                                      ),
+                                    child: AppInlineEdit.text(
+                                      value: '查看', onSaved: (_) async {},
+                                      displayBuilder: (_, value) => Text(value, style: const TextStyle(color: Color(0xff6366f1))),
                                     ),
                                   ),
                                   _CustomDescriptionRow(
                                     label: '运行历史',
                                     bottomGap: 0,
-                                    child: Text(
-                                      '查看',
-                                      style: TextStyle(
-                                        color: Color(0xff6366f1),
-                                      ),
+                                    child: AppInlineEdit.text(
+                                      value: '查看', onSaved: (_) async {},
+                                      displayBuilder: (_, value) => Text(value, style: const TextStyle(color: Color(0xff6366f1))),
                                     ),
                                   ),
                                 ],
@@ -537,24 +530,34 @@ class DataDisplayPage extends StatelessWidget {
                                 ],
                               ),
                               bordered: true,
+                              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                               child: Column(
                                 children: [
-                                  const _CustomDescriptionRow(
+                                  _CustomDescriptionRow(
                                     label: '设备序列号',
-                                    child: Text('site-shimano-01'),
+                                    child: AppInlineEdit.text(
+                                      value: 'site-shimano-01', onSaved: (_) async {},
+                                    ),
                                   ),
-                                  const _CustomDescriptionRow(
+                                  _CustomDescriptionRow(
                                     label: '所属项目',
-                                    child: Text('园区监控'),
+                                    child: AppInlineEdit.text(
+                                      value: '园区监控', onSaved: (_) async {},
+                                    ),
                                   ),
                                   _CustomDescriptionRow(
                                     label: '在线状态',
-                                    child: AppBadge.success(child: Text('在线')),
+                                    child: AppInlineEdit.text(
+                                      value: '在线', onSaved: (_) async {},
+                                      displayBuilder: (_, value) => AppBadge.success(child: Text(value)),
+                                    ),
                                   ),
-                                  const _CustomDescriptionRow(
+                                  _CustomDescriptionRow(
                                     label: '最后更新',
                                     bottomGap: 0,
-                                    child: Text('2026-08-11 14:30'),
+                                    child: AppInlineEdit.text(
+                                      value: '2026-08-11 14:30', onSaved: (_) async {},
+                                    ),
                                   ),
                                 ],
                               ),
@@ -959,7 +962,7 @@ class _CustomDescriptionRow extends StatelessWidget {
   const _CustomDescriptionRow({
     required this.label,
     required this.child,
-    this.bottomGap = 14,
+    this.bottomGap = 0,
   });
 
   final String label;

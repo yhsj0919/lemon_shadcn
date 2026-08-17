@@ -1,5 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'package:lemon_shadcn/lemon_shadcn.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
 import '../../foundation/app_control_box.dart';
@@ -20,6 +21,8 @@ class AppTextFormField extends FormField<String> {
     this.controller,
     this.focusNode,
     this.required = false,
+    this.density = AppDensity.normal,
+    this.chrome = AppFieldChrome.normal,
     this.width,
     this.obscureText = false,
     this.showObscureToggle = false,
@@ -60,6 +63,8 @@ class AppTextFormField extends FormField<String> {
     this.controller,
     this.focusNode,
     this.required = false,
+    this.density = AppDensity.normal,
+    this.chrome = AppFieldChrome.normal,
     this.width,
     this.autofocus = false,
     this.leading,
@@ -110,6 +115,8 @@ class AppTextFormField extends FormField<String> {
     this.controller,
     this.focusNode,
     this.required = false,
+    this.density = AppDensity.normal,
+    this.chrome = AppFieldChrome.normal,
     this.width,
     this.autofocus = false,
     this.showObscureToggle = true,
@@ -154,6 +161,8 @@ class AppTextFormField extends FormField<String> {
   final TextEditingController? controller;
   final FocusNode? focusNode;
   final bool required;
+  final AppDensity density;
+  final AppFieldChrome chrome;
   final double? width;
   final bool obscureText;
   final bool showObscureToggle;
@@ -184,6 +193,8 @@ class AppTextFormField extends FormField<String> {
         description: field.description,
         errorText: state.errorText ?? asyncError,
         required: field.required,
+        density: field.density,
+        chrome: field.chrome,
         width: field.width,
         child: AppTextField(
           value: state.value ?? field.controller?.text ?? '',
@@ -237,6 +248,8 @@ class AppTextField extends StatefulWidget {
     this.trailing,
     this.features,
     this.enabled = true,
+    this.density = AppDensity.normal,
+    this.chrome = AppFieldChrome.normal,
     this.readOnly = false,
     this.inputFormatters,
     this.onSubmitted,
@@ -259,6 +272,8 @@ class AppTextField extends StatefulWidget {
   final Widget? trailing;
   final List<shad.InputFeature>? features;
   final bool enabled;
+  final AppDensity density;
+  final AppFieldChrome chrome;
   final bool readOnly;
   final List<TextInputFormatter>? inputFormatters;
   final ValueChanged<String> onChanged;
@@ -338,10 +353,14 @@ class _AppTextFieldState extends State<AppTextField> {
           ),
         ),
     ];
+    final compact = widget.density == AppDensity.compact;
     return AppControlBox(
-      showFocusOutline: !grouped,
+      height: compact ? 24 : null,
+      showFocusOutline: !grouped && widget.chrome == AppFieldChrome.normal,
       child: shad.TextField(
-        border: grouped
+        border: widget.chrome == AppFieldChrome.bare
+            ? Border.all(color: const Color(0x00000000), width: 0)
+            : grouped
             ? AppWidgetGroup.clearItemBorder
             : Border.all(
                 color: theme.colorScheme.border,
@@ -351,7 +370,7 @@ class _AppTextFieldState extends State<AppTextField> {
         controller: _controller,
         focusNode: widget.focusNode,
         padding: EdgeInsets.symmetric(
-          horizontal: controlMetrics.horizontalPadding,
+          horizontal: compact ? 4 : controlMetrics.horizontalPadding,
         ),
         style: DefaultTextStyle.of(
           context,

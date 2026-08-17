@@ -2,7 +2,11 @@ import 'package:flutter/material.dart' show Tooltip;
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
+import '../../foundation/app_density.dart';
+
 enum AppFieldLayout { vertical, horizontal }
+
+enum AppFieldChrome { normal, bare }
 
 enum AppFieldErrorDisplay { auto, inline, trailingIcon, below }
 
@@ -10,12 +14,16 @@ enum AppFieldErrorDisplay { auto, inline, trailingIcon, below }
 class AppFieldConfig {
   const AppFieldConfig({
     this.layout = AppFieldLayout.vertical,
+    this.density = AppDensity.normal,
+    this.chrome = AppFieldChrome.normal,
     this.errorDisplay = AppFieldErrorDisplay.auto,
     this.labelWidth = 120,
     this.gap = 8,
   });
 
   final AppFieldLayout layout;
+  final AppDensity density;
+  final AppFieldChrome chrome;
   final AppFieldErrorDisplay errorDisplay;
   final double labelWidth;
   final double gap;
@@ -52,11 +60,15 @@ class AppFieldScope extends InheritedWidget {
 extension on AppFieldConfig {
   AppFieldConfig copyWith({
     AppFieldLayout? layout,
+    AppDensity? density,
+    AppFieldChrome? chrome,
     AppFieldErrorDisplay? errorDisplay,
     double? labelWidth,
     double? gap,
   }) => AppFieldConfig(
     layout: layout ?? this.layout,
+    density: density ?? this.density,
+    chrome: chrome ?? this.chrome,
     errorDisplay: errorDisplay ?? this.errorDisplay,
     labelWidth: labelWidth ?? this.labelWidth,
     gap: gap ?? this.gap,
@@ -73,6 +85,8 @@ class AppField extends StatelessWidget {
     this.required = false,
     this.width,
     this.layout,
+    this.density,
+    this.chrome,
     this.errorDisplay,
     this.labelWidth,
   });
@@ -84,6 +98,8 @@ class AppField extends StatelessWidget {
   final bool required;
   final double? width;
   final AppFieldLayout? layout;
+  final AppDensity? density;
+  final AppFieldChrome? chrome;
   final AppFieldErrorDisplay? errorDisplay;
   final double? labelWidth;
 
@@ -92,6 +108,8 @@ class AppField extends StatelessWidget {
     final inherited = AppFieldScope.of(context);
     final config = inherited.copyWith(
       layout: layout,
+      density: density,
+      chrome: chrome,
       errorDisplay: errorDisplay,
       labelWidth: labelWidth,
     );
@@ -144,7 +162,8 @@ class AppField extends StatelessWidget {
               ? errorText
               : null,
         ),
-        SizedBox(height: config.gap - 2),
+        if (config.density == AppDensity.normal)
+          SizedBox(height: config.gap - 2),
       ],
       control,
       ..._footer(context, config),
@@ -187,11 +206,11 @@ class AppField extends StatelessWidget {
   );
 
   List<Widget> _footer(BuildContext context, AppFieldConfig config) => [
-    if (description != null) ...[
+    if (config.density == AppDensity.normal && description != null) ...[
       SizedBox(height: config.gap - 2),
       Text(description!).small().muted(),
     ],
-    if (errorText != null &&
+    if (config.density == AppDensity.normal && errorText != null &&
         config.errorDisplay == AppFieldErrorDisplay.below) ...[
       SizedBox(height: config.gap - 2),
       _FieldErrorText(errorText!),

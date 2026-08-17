@@ -33,6 +33,7 @@ export 'src/components/display/app_empty.dart';
 export 'src/components/display/app_item.dart';
 export 'src/components/display/app_result.dart';
 export 'src/components/display/app_utility_components.dart';
+export 'src/foundation/app_density.dart';
 export 'src/components/forms/app_field.dart';
 export 'src/components/forms/app_file_picker.dart';
 export 'src/components/forms/app_input_group.dart';

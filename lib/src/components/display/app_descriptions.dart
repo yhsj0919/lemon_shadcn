@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
 import '../../foundation/app_control_box.dart';
+import '../../foundation/app_density.dart';
 import '../../foundation/app_theme_config.dart';
 import '../forms/app_inline_edit.dart';
 
@@ -14,8 +15,6 @@ enum AppDescriptionLayout { vertical, horizontal }
 enum AppDescriptionsType { standard, table }
 
 /// Controls the whitespace used by [AppDescriptions].
-enum AppDescriptionsDensity { standard, compact }
-
 /// Sentinel for an omitted [valueHeight] so explicit `null` can mean
 /// content-sized (no minimum height).
 const Object _valueHeightUnset = Object();
@@ -67,7 +66,7 @@ class AppDescriptionsTheme extends shad.ComponentThemeData {
     this.labelAlignment,
     this.valueAlignment,
     Object? valueHeight = _valueHeightUnset,
-  }) : density = AppDescriptionsDensity.compact,
+  }) : density = AppDensity.compact,
        _valueHeight = valueHeight,
        padding = null,
        tableCellPadding = null,
@@ -83,7 +82,7 @@ class AppDescriptionsTheme extends shad.ComponentThemeData {
              (valueHeight is num && valueHeight > 0),
        );
 
-  final AppDescriptionsDensity? density;
+  final AppDensity? density;
   final TextStyle? labelStyle;
   final TextStyle? valueStyle;
   final TextStyle? titleStyle;
@@ -348,7 +347,7 @@ class AppDescriptions extends StatelessWidget {
   final double? maxColumnWidth;
   final AppDescriptionLayout layout;
   final double labelWidth;
-  final AppDescriptionsDensity? density;
+  final AppDensity? density;
   final TextStyle? labelStyle;
   final TextStyle? valueStyle;
   final TextStyle? titleStyle;
@@ -398,8 +397,8 @@ class AppDescriptions extends StatelessWidget {
     final shadTheme = shad.Theme.of(context);
     final local = shad.ComponentTheme.maybeOf<AppDescriptionsTheme>(context);
     final effectiveDensity =
-        density ?? local?.density ?? AppDescriptionsDensity.standard;
-    final compact = effectiveDensity == AppDescriptionsDensity.compact;
+        density ?? local?.density ?? AppDensity.standard;
+    final compact = effectiveDensity == AppDensity.compact;
     final typography = shadTheme.typography;
     final xSmallSize = typography.xSmall.fontSize ?? 12;
     final smallSize = typography.small.fontSize ?? 14;
@@ -821,7 +820,7 @@ class AppDescriptions extends StatelessWidget {
           ),
           if (type == AppDescriptionsType.table) ...[
             SizedBox(
-              height: style.density == AppDescriptionsDensity.compact ? 8 : 14,
+              height: style.density == AppDensity.compact ? 8 : 14,
             ),
             SizedBox(
               height: 1,

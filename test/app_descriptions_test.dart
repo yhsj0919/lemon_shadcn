@@ -468,7 +468,7 @@ void main() {
         home: material.SizedBox(
           width: 600,
           child: AppDescriptions(
-            density: AppDescriptionsDensity.compact,
+            density: AppDensity.compact,
             type: AppDescriptionsType.table,
             columns: 2,
             layout: AppDescriptionLayout.horizontal,
