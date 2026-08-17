@@ -236,7 +236,7 @@ void main() {
 
   testWidgets('AppShell selects a destination', (tester) async {
     var selected = 'actions';
-    // Default surface (~800) is compact; force expanded so child labels are visible.
+    // Expanded is the stable admin-shell default.
     await tester.binding.setSurfaceSize(const Size(1200, 800));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
@@ -287,6 +287,7 @@ void main() {
     await tester.pumpWidget(
       _host(
         AppShell(
+          sidebarMode: AppSidebarType.auto,
           sidebarContent: const AppSidebarContent(
             items: [
               AppSidebarMenuItem(

@@ -9,7 +9,7 @@ import '../../foundation/app_shadow_types.dart';
 import '../../motion/app_page_transition.dart';
 
 /// Responsive admin shell with expanded, compact, drawer, and auto sidebar modes.
-class AppShell extends StatelessWidget {
+class AppShell extends StatefulWidget {
   const AppShell({
     super.key,
     required this.sidebarContent,
@@ -27,7 +27,7 @@ class AppShell extends StatelessWidget {
     this.compactSidebarWidth = 64,
     this.expandedBreakpoint = 1080,
     this.compactBreakpoint = 720,
-    this.sidebarMode = AppSidebarType.auto,
+    this.sidebarMode = AppSidebarType.expanded,
     this.onSidebarModeChanged,
     this.contentTransitionDuration,
     this.contentTransitionCurve = Curves.easeOutCubic,
@@ -61,6 +61,36 @@ class AppShell extends StatelessWidget {
   final Curve contentTransitionCurve;
   final AppShadowQuality transitionShadowQuality;
   final Color? selectedColor;
+
+  @override
+  State<AppShell> createState() => _AppShellState();
+}
+
+class _AppShellState extends State<AppShell> {
+  AppSidebarContent get sidebarContent => widget.sidebarContent;
+  String get selectedId => widget.selectedId;
+  ValueChanged<String> get onDestinationSelected =>
+      widget.onDestinationSelected;
+  Widget get child => widget.child;
+  String get brandTitle => widget.brandTitle;
+  String? get brandSubtitle => widget.brandSubtitle;
+  String? get pageTitle => widget.pageTitle;
+  String? get pageSubtitle => widget.pageSubtitle;
+  List<Widget> get headerActions => widget.headerActions;
+  Widget? get sidebarFooter => widget.sidebarFooter;
+  Widget Function(Widget sidebar)? get sidebarFrame => widget.sidebarFrame;
+  double get sidebarWidth => widget.sidebarWidth;
+  double get compactSidebarWidth => widget.compactSidebarWidth;
+  double get expandedBreakpoint => widget.expandedBreakpoint;
+  double get compactBreakpoint => widget.compactBreakpoint;
+  AppSidebarType get sidebarMode => widget.sidebarMode;
+  ValueChanged<AppSidebarType>? get onSidebarModeChanged =>
+      widget.onSidebarModeChanged;
+  Duration? get contentTransitionDuration => widget.contentTransitionDuration;
+  Curve get contentTransitionCurve => widget.contentTransitionCurve;
+  AppShadowQuality get transitionShadowQuality =>
+      widget.transitionShadowQuality;
+  Color? get selectedColor => widget.selectedColor;
 
   AppSidebarType _responsiveType(double width) {
     if (width >= expandedBreakpoint) return AppSidebarType.expanded;
@@ -158,101 +188,105 @@ class AppShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (sidebarMode != AppSidebarType.auto) {
+      return _buildShell(context, sidebarMode);
+    }
     return LayoutBuilder(
-      builder: (context, constraints) {
-        final effectiveType = _effectiveType(constraints.maxWidth);
-        final drawer = effectiveType == AppSidebarType.drawer;
-        final mode = effectiveType == AppSidebarType.compact
-            ? AppSidebarMode.compact
-            : AppSidebarMode.expanded;
-        return shad.Scaffold(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (!drawer)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 12, 0, 12),
-                  child: _frame(
-                    AppSidebar(
-                      content: sidebarContent,
-                      selectedId: selectedId,
-                      onDestinationSelected: onDestinationSelected,
-                      mode: mode,
-                      header: AppSidebarHeader(
-                        child: _brand(compact: mode == AppSidebarMode.compact),
-                      ),
-                      footer: mode == AppSidebarMode.expanded
-                          ? sidebarFooter == null
-                                ? null
-                                : AppSidebarFooter(child: sidebarFooter!)
-                          : null,
-                      expandedWidth: sidebarWidth,
-                      compactWidth: compactSidebarWidth,
-                      selectedColor: selectedColor,
-                    ),
+      builder: (context, constraints) =>
+          _buildShell(context, _effectiveType(constraints.maxWidth)),
+    );
+  }
+
+  Widget _buildShell(BuildContext context, AppSidebarType effectiveType) {
+    final drawer = effectiveType == AppSidebarType.drawer;
+    final mode = effectiveType == AppSidebarType.compact
+        ? AppSidebarMode.compact
+        : AppSidebarMode.expanded;
+    return shad.Scaffold(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (!drawer)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 12, 0, 12),
+              child: _frame(
+                AppSidebar(
+                  key: const ValueKey('app-shell-sidebar'),
+                  content: sidebarContent,
+                  selectedId: selectedId,
+                  onDestinationSelected: onDestinationSelected,
+                  mode: mode,
+                  header: AppSidebarHeader(
+                    child: _brand(compact: mode == AppSidebarMode.compact),
                   ),
-                ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    if (drawer ||
-                        pageTitle != null ||
-                        headerActions.isNotEmpty ||
-                        onSidebarModeChanged != null)
-                      Padding(
-                        padding: EdgeInsets.fromLTRB(
-                          drawer ? 12 : 24,
-                          14,
-                          drawer ? 12 : 24,
-                          10,
-                        ),
-                        child: Row(
-                          children: [
-                            if (drawer) ...[
-                              AppIconButton(
-                                tooltip: '打开菜单',
-                                config: AppButtonConfig.plain,
-                                icon: const Icon(shad.LucideIcons.menu),
-                                onPressed: () => _showDrawer(context),
-                              ),
-                              const SizedBox(width: 12),
-                            ],
-                            if (onSidebarModeChanged != null) ...[
-                              _modeButton(sidebarMode),
-                              const SizedBox(width: 12),
-                            ],
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  if (pageTitle != null) AppText.h3(pageTitle!),
-                                  if (pageSubtitle != null)
-                                    AppText.muted(pageSubtitle!),
-                                ],
-                              ),
-                            ),
-                            for (
-                              var index = 0;
-                              index < headerActions.length;
-                              index++
-                            ) ...[
-                              if (index > 0) const SizedBox(width: 12),
-                              headerActions[index],
-                            ],
-                          ],
-                        ),
-                      ),
-                    // Keep route content in its own layer so page changes do
-                    // not invalidate the shell's sidebar/header paint layer.
-                    Expanded(child: RepaintBoundary(child: _content())),
-                  ],
+                  footer: mode == AppSidebarMode.expanded
+                      ? sidebarFooter == null
+                            ? null
+                            : AppSidebarFooter(child: sidebarFooter!)
+                      : null,
+                  expandedWidth: sidebarWidth,
+                  compactWidth: compactSidebarWidth,
+                  selectedColor: selectedColor,
                 ),
               ),
-            ],
+            ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (drawer ||
+                    pageTitle != null ||
+                    headerActions.isNotEmpty ||
+                    onSidebarModeChanged != null)
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      drawer ? 12 : 24,
+                      14,
+                      drawer ? 12 : 24,
+                      10,
+                    ),
+                    child: Row(
+                      children: [
+                        if (drawer) ...[
+                          AppIconButton(
+                            tooltip: '打开菜单',
+                            config: AppButtonConfig.plain,
+                            icon: const Icon(shad.LucideIcons.menu),
+                            onPressed: () => _showDrawer(context),
+                          ),
+                          const SizedBox(width: 12),
+                        ],
+                        if (onSidebarModeChanged != null) ...[
+                          _modeButton(sidebarMode),
+                          const SizedBox(width: 12),
+                        ],
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (pageTitle != null) AppText.h3(pageTitle!),
+                              if (pageSubtitle != null)
+                                AppText.muted(pageSubtitle!),
+                            ],
+                          ),
+                        ),
+                        for (
+                          var index = 0;
+                          index < headerActions.length;
+                          index++
+                        ) ...[
+                          if (index > 0) const SizedBox(width: 12),
+                          headerActions[index],
+                        ],
+                      ],
+                    ),
+                  ),
+                Expanded(child: RepaintBoundary(child: _content())),
+              ],
+            ),
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 }
