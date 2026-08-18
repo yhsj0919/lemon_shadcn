@@ -659,42 +659,130 @@ class _AppTreeItemState extends State<AppTreeItem> {
   @override
   Widget build(BuildContext context) {
     final theme = shad.Theme.of(context);
+    final data = shad.Data.of<shad.TreeNodeData>(context);
+    final gap = theme.density.baseGap * theme.scaling;
     final selection = _AppTreeSelectionScope.maybeOf(context);
-    final selected = widget.selected || (selection?.selected ?? false);
+    final selected =
+        widget.selected || (selection?.selected ?? false) || data.node.selected;
     final selectionExtent = selection?.extent ?? widget.selectionExtent;
-    final currentItemSelection =
-        selected && selectionExtent == AppTreeSelectionExtent.currentItem;
-    return shad.TreeItem(
-      leading: widget.leading,
-      trailing: widget.trailing,
-      onPressed: widget.onPressed,
-      onDoublePressed: widget.onDoublePressed,
-      onExpand: widget.onExpand == null
-          ? null
-          : (expanded) {
-              _focusNode.requestFocus();
-              widget.onExpand!(expanded);
-            },
-      expandable: widget.expandable,
-      focusNode: _focusNode,
-      child: currentItemSelection
-          ? ClipRRect(
-              borderRadius: BorderRadius.circular(theme.radiusMd),
-              child: Stack(
-                fit: StackFit.passthrough,
-                children: [
-                  widget.child,
-                  Positioned.fill(
-                    child: IgnorePointer(
-                      child: ColoredBox(
-                        color: theme.colorScheme.primary.scaleAlpha(0.05),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            )
-          : widget.child,
+    final decoration = BoxDecoration(
+      color: selected ? theme.colorScheme.primary.scaleAlpha(0.05) : null,
+      borderRadius: BorderRadius.circular(theme.radiusMd),
+    );
+
+    final itemContent = DecoratedBox(
+      decoration: selectionExtent == AppTreeSelectionExtent.currentItem
+          ? decoration
+          : const BoxDecoration(),
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: gap, vertical: gap * 0.5),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (widget.leading != null) ...[
+              widget.leading!,
+              SizedBox(width: gap),
+            ],
+            Expanded(child: widget.child),
+            if (widget.trailing != null) ...[
+              SizedBox(width: gap),
+              widget.trailing!,
+            ],
+          ],
+        ),
+      ),
+    );
+
+    final rowChildren = <Widget>[];
+    if (data.expandIcon) rowChildren.add(SizedBox(width: gap));
+    for (var index = 1; index < data.depth.length; index++) {
+      if (!data.expandIcon) rowChildren.add(SizedBox(width: gap));
+      rowChildren.add(
+        SizedBox(
+          width: gap * 2,
+          child: data.indentGuide.build(context, data.depth, index),
+        ),
+      );
+    }
+    if (data.expandIcon) {
+      final expandable = widget.expandable ?? data.node.children.isNotEmpty;
+      if (expandable) {
+        rowChildren.add(
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: widget.onExpand == null
+                ? null
+                : () => widget.onExpand!(!data.node.expanded),
+            child: AnimatedRotation(
+              duration: const Duration(milliseconds: 150),
+              turns: data.node.expanded ? 0.25 : 0,
+              child: const Icon(shad.LucideIcons.chevronRight, size: 16),
+            ),
+          ),
+        );
+      } else {
+        rowChildren.add(
+          data.depth.length > 1
+              ? SizedBox(
+                  width: gap * 2,
+                  child: data.indentGuide.build(context, data.depth, -1),
+                )
+              : SizedBox(width: gap * 2),
+        );
+      }
+    }
+    rowChildren.add(Expanded(child: itemContent));
+
+    Widget row = Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: rowChildren,
+    );
+    if (selectionExtent == AppTreeSelectionExtent.parent) {
+      row = DecoratedBox(decoration: decoration, child: row);
+    }
+
+    final enabled =
+        widget.onPressed != null ||
+        widget.onDoublePressed != null ||
+        widget.onExpand != null;
+    final content = IntrinsicHeight(
+      child: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: enabled
+            ? () {
+                widget.onPressed?.call();
+                _focusNode.requestFocus();
+                data.onFocusChanged?.call(shad.FocusChangeReason.userInteraction);
+              }
+            : null,
+        onDoubleTap: widget.onDoublePressed == null
+            ? null
+            : () {
+                widget.onDoublePressed!();
+                _focusNode.requestFocus();
+              },
+        child: MouseRegion(
+          cursor: enabled
+              ? SystemMouseCursors.click
+              : SystemMouseCursors.basic,
+          child: Focus(focusNode: _focusNode, child: row),
+        ),
+      ),
+    );
+    return ExcludeFocus(
+      excluding: !data.expanded && !data.node.expanded,
+      child: DefaultTextStyle.merge(
+        overflow: TextOverflow.ellipsis,
+        maxLines: 1,
+        child: AnimatedCrossFade(
+          duration: const Duration(milliseconds: 150),
+          crossFadeState: data.expanded
+              ? CrossFadeState.showFirst
+              : CrossFadeState.showSecond,
+          firstChild: content,
+          secondChild: const SizedBox.shrink(),
+        ),
+      ),
     );
   }
 }
