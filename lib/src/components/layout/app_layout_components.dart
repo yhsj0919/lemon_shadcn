@@ -666,7 +666,12 @@ class _AppTreeItemState extends State<AppTreeItem> {
         widget.selected || (selection?.selected ?? false) || data.node.selected;
     final selectionExtent = selection?.extent ?? widget.selectionExtent;
     final decoration = BoxDecoration(
-      color: selected ? theme.colorScheme.primary.scaleAlpha(0.05) : null,
+      color: selected
+          ? AppSoftColor.selectionBackground(
+              theme,
+              theme.colorScheme.primary,
+            )
+          : null,
       borderRadius: BorderRadius.circular(theme.radiusMd),
     );
 
