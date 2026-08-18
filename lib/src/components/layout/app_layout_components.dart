@@ -183,6 +183,7 @@ class AppAsyncTree<T> extends StatefulWidget {
     this.initialExpandedIds = const <Object>{},
     this.shrinkWrap = false,
     this.controller,
+    this.itemSpacing = 0,
     this.padding = const EdgeInsets.all(8),
     this.branchLine = shad.BranchLine.line,
     this.emptyBuilder,
@@ -202,6 +203,7 @@ class AppAsyncTree<T> extends StatefulWidget {
     this.initialExpandedIds = const <Object>{},
     this.shrinkWrap = false,
     this.controller,
+    this.itemSpacing = 0,
     this.padding = const EdgeInsets.all(8),
     this.branchLine = shad.BranchLine.line,
     this.emptyBuilder,
@@ -221,6 +223,7 @@ class AppAsyncTree<T> extends StatefulWidget {
   final Set<Object> initialExpandedIds;
   final bool shrinkWrap;
   final ScrollController? controller;
+  final double itemSpacing;
   final EdgeInsetsGeometry padding;
   final shad.BranchLine branchLine;
   final WidgetBuilder? emptyBuilder;
@@ -384,6 +387,7 @@ class _AppAsyncTreeState<T> extends State<AppAsyncTree<T>> {
       controller: widget.controller,
       shrinkWrap: widget.shrinkWrap,
       padding: widget.padding,
+      itemSpacing: widget.itemSpacing,
       branchLine: widget.branchLine,
       allowMultiSelect: false,
       recursiveSelection: false,
