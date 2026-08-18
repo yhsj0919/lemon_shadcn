@@ -685,17 +685,25 @@ class _AppTreeItemState extends State<AppTreeItem> {
       expandable: widget.expandable,
       focusNode: _focusNode,
       child: currentItemSelection
-          ? DecoratedBox(
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.scaleAlpha(0.05),
-                borderRadius: BorderRadius.circular(theme.radiusMd),
-              ),
-              child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: gap,
-                  vertical: gap * 0.5,
-                ),
-                child: content,
+          ? ClipRRect(
+              borderRadius: BorderRadius.circular(theme.radiusMd),
+              child: Stack(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: gap,
+                      vertical: gap * 0.5,
+                    ),
+                    child: content,
+                  ),
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: ColoredBox(
+                        color: theme.colorScheme.primary.scaleAlpha(0.05),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             )
           : widget.child,
