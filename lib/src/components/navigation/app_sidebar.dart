@@ -12,6 +12,15 @@ enum AppSidebarMode { expanded, compact }
 /// while the other values pin the sidebar to a fixed presentation.
 enum AppSidebarType { auto, expanded, compact, drawer }
 
+/// How a selected sidebar item is highlighted.
+enum AppSidebarSelectionStyle {
+  /// Accent-colored label and icon with a soft tinted background.
+  text,
+
+  /// Solid accent-colored item background with contrasting foreground.
+  fill,
+}
+
 @immutable
 class AppSidebarMenuItem {
   const AppSidebarMenuItem({
@@ -80,6 +89,8 @@ class AppSidebar extends StatefulWidget {
     this.expandedWidth = 248,
     this.compactWidth = 64,
     this.selectedColor,
+    this.selectionStyle = AppSidebarSelectionStyle.text,
+    this.selectParentWhenChildSelected = true,
   });
 
   final AppSidebarContent content;
@@ -90,7 +101,17 @@ class AppSidebar extends StatefulWidget {
   final Widget? footer;
   final double expandedWidth;
   final double compactWidth;
+
+  /// Accent color for the selected item. Defaults to the theme primary.
   final Color? selectedColor;
+
+  /// [text] tints the item and colors label/icon with the accent.
+  /// [fill] uses a solid accent-colored item background.
+  final AppSidebarSelectionStyle selectionStyle;
+
+  /// Whether a parent item is highlighted when one of its descendants is
+  /// selected.
+  final bool selectParentWhenChildSelected;
 
   @override
   State<AppSidebar> createState() => _AppSidebarState();
@@ -143,6 +164,8 @@ class _AppSidebarState extends State<AppSidebar> {
     final switchWidth = (widget.compactWidth + widget.expandedWidth) / 2;
     return _SidebarSelectionScope(
       color: widget.selectedColor,
+      selectionStyle: widget.selectionStyle,
+      selectParentWhenChildSelected: widget.selectParentWhenChildSelected,
       child: TweenAnimationBuilder<double>(
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeOutCubic,
@@ -181,12 +204,16 @@ class _AppSidebarState extends State<AppSidebar> {
                               ? _CompactDestination(
                                   destination: destination,
                                   selectedId: widget.selectedId,
+                                  selectParentWhenChildSelected:
+                                      widget.selectParentWhenChildSelected,
                                   onSelected: widget.onDestinationSelected,
                                 )
                               : _ExpandedDestination(
                                   destination: destination,
                                   selectedId: widget.selectedId,
                                   expandedIds: _expanded,
+                                  selectParentWhenChildSelected:
+                                      widget.selectParentWhenChildSelected,
                                   onToggle: (id) => setState(() {
                                     if (!_expanded.remove(id)) {
                                       _expanded.add(id);
@@ -232,6 +259,7 @@ class _ExpandedDestination extends StatelessWidget {
     required this.destination,
     required this.selectedId,
     required this.expandedIds,
+    required this.selectParentWhenChildSelected,
     required this.onToggle,
     required this.onSelected,
     this.depth = 0,
@@ -240,6 +268,7 @@ class _ExpandedDestination extends StatelessWidget {
   final AppSidebarMenuItem destination;
   final String selectedId;
   final Set<String> expandedIds;
+  final bool selectParentWhenChildSelected;
   final ValueChanged<String> onToggle;
   final ValueChanged<String> onSelected;
   final int depth;
@@ -247,7 +276,11 @@ class _ExpandedDestination extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasChildren = destination.children.isNotEmpty;
-    final selected = destination.id == selectedId;
+    final selected = _SidebarSelectionScope.isSelected(
+      destination,
+      selectedId,
+      selectParentWhenChildSelected: selectParentWhenChildSelected,
+    );
     final expanded = expandedIds.contains(destination.id);
     return Padding(
       padding: EdgeInsets.only(left: depth == 0 ? 0 : 14, bottom: 4),
@@ -256,7 +289,7 @@ class _ExpandedDestination extends StatelessWidget {
         children: [
           _SidebarButton(
             destination: destination,
-            selected: selected || destination.contains(selectedId),
+            selected: selected,
             trailing: hasChildren
                 ? AnimatedRotation(
                     turns: expanded ? .25 : 0,
@@ -283,6 +316,8 @@ class _ExpandedDestination extends StatelessWidget {
                               destination: child,
                               selectedId: selectedId,
                               expandedIds: expandedIds,
+                              selectParentWhenChildSelected:
+                                  selectParentWhenChildSelected,
                               onToggle: onToggle,
                               onSelected: onSelected,
                               depth: depth + 1,
@@ -302,25 +337,29 @@ class _CompactDestination extends StatelessWidget {
   const _CompactDestination({
     required this.destination,
     required this.selectedId,
+    required this.selectParentWhenChildSelected,
     required this.onSelected,
   });
 
   final AppSidebarMenuItem destination;
   final String selectedId;
+  final bool selectParentWhenChildSelected;
   final ValueChanged<String> onSelected;
 
   @override
   Widget build(BuildContext context) {
-    final selected = destination.contains(selectedId);
+    final selected = _SidebarSelectionScope.isSelected(
+      destination,
+      selectedId,
+      selectParentWhenChildSelected: selectParentWhenChildSelected,
+    );
     final trigger = SizedBox.square(
       dimension: 46,
       child: selected
-          ? AppButton.selected(
+          ? _CompactSelectedButton(
               onPressed: destination.children.isEmpty
                   ? () => onSelected(destination.id)
                   : () {},
-              color: _SidebarSelectionScope.colorOf(context),
-              config: AppButtonConfig.plain,
               child: Icon(destination.icon, size: 19),
             )
           : AppButton.ghost(
@@ -463,14 +502,14 @@ class _SidebarButton extends StatelessWidget {
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
     );
+    final config = const AppButtonConfig(
+      alignment: Alignment.centerLeft,
+      pressEffect: AppButtonPressEffect.none,
+    );
     final button = selected
-        ? AppButton.selected(
+        ? _SidebarSelectedButton(
             onPressed: onPressed,
-            color: _SidebarSelectionScope.colorOf(context),
-            config: const AppButtonConfig(
-              alignment: Alignment.centerLeft,
-              pressEffect: AppButtonPressEffect.none,
-            ),
+            config: config,
             child: Row(
               children: [
                 Icon(destination.icon, size: 18),
@@ -484,26 +523,122 @@ class _SidebarButton extends StatelessWidget {
             onPressed: onPressed,
             leading: Icon(destination.icon, size: 18),
             trailing: trailing,
-            config: const AppButtonConfig(
-              alignment: Alignment.centerLeft,
-              pressEffect: AppButtonPressEffect.none,
-            ),
+            config: config,
             child: label,
           );
     return Padding(padding: const EdgeInsets.only(bottom: 4), child: button);
   }
 }
 
+class _SidebarSelectedButton extends StatelessWidget {
+  const _SidebarSelectedButton({
+    required this.child,
+    this.onPressed,
+    this.config,
+  });
+
+  final Widget child;
+  final VoidCallback? onPressed;
+  final AppButtonConfig? config;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _SidebarSelectionScope.colorOf(context);
+    final style = _SidebarSelectionScope.selectionStyleOf(context);
+    switch (style) {
+      case AppSidebarSelectionStyle.fill:
+        return AppButton.primary(
+          onPressed: onPressed,
+          color: color,
+          config: config,
+          child: child,
+        );
+      case AppSidebarSelectionStyle.text:
+        return AppButton.selected(
+          onPressed: onPressed,
+          color: color,
+          config: config,
+          child: child,
+        );
+    }
+  }
+}
+
+class _CompactSelectedButton extends StatelessWidget {
+  const _CompactSelectedButton({
+    required this.child,
+    this.onPressed,
+  });
+
+  final Widget child;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _SidebarSelectionScope.colorOf(context);
+    final style = _SidebarSelectionScope.selectionStyleOf(context);
+    final config = AppButtonConfig.plain;
+    switch (style) {
+      case AppSidebarSelectionStyle.fill:
+        return AppButton.primary(
+          onPressed: onPressed,
+          color: color,
+          config: config,
+          child: child,
+        );
+      case AppSidebarSelectionStyle.text:
+        return AppButton.selected(
+          onPressed: onPressed,
+          color: color,
+          config: config,
+          child: child,
+        );
+    }
+  }
+}
+
 class _SidebarSelectionScope extends InheritedWidget {
-  const _SidebarSelectionScope({required this.color, required super.child});
+  const _SidebarSelectionScope({
+    required this.color,
+    required this.selectionStyle,
+    required this.selectParentWhenChildSelected,
+    required super.child,
+  });
 
   final Color? color;
+  final AppSidebarSelectionStyle selectionStyle;
+  final bool selectParentWhenChildSelected;
 
   static Color? colorOf(BuildContext context) => context
       .dependOnInheritedWidgetOfExactType<_SidebarSelectionScope>()
       ?.color;
 
+  static AppSidebarSelectionStyle selectionStyleOf(BuildContext context) =>
+      context
+          .dependOnInheritedWidgetOfExactType<_SidebarSelectionScope>()
+          ?.selectionStyle ??
+      AppSidebarSelectionStyle.text;
+
+  static bool selectParentWhenChildSelectedOf(BuildContext context) =>
+      context
+          .dependOnInheritedWidgetOfExactType<_SidebarSelectionScope>()
+          ?.selectParentWhenChildSelected ??
+      true;
+
+  static bool isSelected(
+    AppSidebarMenuItem destination,
+    String selectedId, {
+    required bool selectParentWhenChildSelected,
+  }) {
+    if (destination.id == selectedId) return true;
+    if (!selectParentWhenChildSelected) return false;
+    return destination.children.isNotEmpty &&
+        destination.children.any((child) => child.contains(selectedId));
+  }
+
   @override
   bool updateShouldNotify(_SidebarSelectionScope oldWidget) =>
-      color != oldWidget.color;
+      color != oldWidget.color ||
+      selectionStyle != oldWidget.selectionStyle ||
+      selectParentWhenChildSelected != oldWidget.selectParentWhenChildSelected;
 }

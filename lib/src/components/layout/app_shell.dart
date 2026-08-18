@@ -33,6 +33,8 @@ class AppShell extends StatefulWidget {
     this.contentTransitionCurve = Curves.easeOutCubic,
     this.transitionShadowQuality = AppShadowQuality.reduced,
     this.selectedColor,
+    this.sidebarSelectionStyle = AppSidebarSelectionStyle.text,
+    this.selectParentWhenChildSelected = true,
   });
 
   final AppSidebarContent sidebarContent;
@@ -61,6 +63,8 @@ class AppShell extends StatefulWidget {
   final Curve contentTransitionCurve;
   final AppShadowQuality transitionShadowQuality;
   final Color? selectedColor;
+  final AppSidebarSelectionStyle sidebarSelectionStyle;
+  final bool selectParentWhenChildSelected;
 
   @override
   State<AppShell> createState() => _AppShellState();
@@ -91,6 +95,10 @@ class _AppShellState extends State<AppShell> {
   AppShadowQuality get transitionShadowQuality =>
       widget.transitionShadowQuality;
   Color? get selectedColor => widget.selectedColor;
+  AppSidebarSelectionStyle get sidebarSelectionStyle =>
+      widget.sidebarSelectionStyle;
+  bool get selectParentWhenChildSelected =>
+      widget.selectParentWhenChildSelected;
 
   AppSidebarType _responsiveType(double width) {
     if (width >= expandedBreakpoint) return AppSidebarType.expanded;
@@ -180,6 +188,8 @@ class _AppShellState extends State<AppShell> {
                 : AppSidebarFooter(child: sidebarFooter!),
             expandedWidth: sidebarWidth,
             selectedColor: selectedColor,
+            selectionStyle: sidebarSelectionStyle,
+            selectParentWhenChildSelected: selectParentWhenChildSelected,
           ),
         ),
       ),
@@ -227,6 +237,8 @@ class _AppShellState extends State<AppShell> {
                   expandedWidth: sidebarWidth,
                   compactWidth: compactSidebarWidth,
                   selectedColor: selectedColor,
+                  selectionStyle: sidebarSelectionStyle,
+                  selectParentWhenChildSelected: selectParentWhenChildSelected,
                 ),
               ),
             ),
