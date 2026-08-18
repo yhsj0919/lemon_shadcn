@@ -17,13 +17,7 @@ import 'app_input_group.dart';
 
 @immutable
 class AppFileSelection {
-  const AppFileSelection({
-    required this.name,
-    this.path,
-    this.size,
-    this.extension,
-    this.data,
-  });
+  const AppFileSelection({required this.name, this.path, this.size, this.extension, this.data});
 
   final String name;
   final String? path;
@@ -37,8 +31,7 @@ class AppFileSelection {
 
 typedef AppFilePickCallback = FutureOr<List<AppFileSelection>> Function();
 typedef AppFileRejectedCallback = void Function(String message);
-typedef AppFileTrailingBuilder =
-    Widget? Function(BuildContext context, AppFileSelection file, int index);
+typedef AppFileTrailingBuilder = Widget? Function(BuildContext context, AppFileSelection file, int index);
 
 enum AppFilePickerVariant { dropzone, simple }
 
@@ -99,17 +92,13 @@ class _AppFilePickerState extends State<AppFilePicker> {
   Set<String>? get _normalizedExtensions {
     final extensions = widget.allowedExtensions;
     if (extensions == null || extensions.isEmpty) return null;
-    return extensions
-        .map((value) => value.replaceFirst('.', '').toLowerCase())
-        .toSet();
+    return extensions.map((value) => value.replaceFirst('.', '').toLowerCase()).toSet();
   }
 
   Future<void> _pick() async {
     try {
       final customPick = widget.pick;
-      final selected = customPick == null
-          ? await _pickNativeFiles()
-          : await customPick();
+      final selected = customPick == null ? await _pickNativeFiles() : await customPick();
       if (!mounted) return;
       _accept(selected);
     } catch (_) {
@@ -119,14 +108,15 @@ class _AppFilePickerState extends State<AppFilePicker> {
 
   Future<List<AppFileSelection>> _pickNativeFiles() async {
     final extensions = _normalizedExtensions;
-    final result = await FilePicker.pickFiles(
-      allowMultiple: widget.multiple,
-      allowedExtensions: extensions?.toList(),
-      dialogTitle: widget.dialogTitle,
-      type: extensions == null ? FileType.any : FileType.custom,
-    );
-    if (result == null) return const [];
-    return [for (final file in result.files) _fromPlatformFile(file)];
+    final type = extensions == null ? FileType.any : FileType.custom;
+    final allowedExtensions = extensions?.toList();
+    if (widget.multiple) {
+      final files = await FilePicker.pickFiles(allowedExtensions: allowedExtensions, dialogTitle: widget.dialogTitle, type: type);
+      return [for (final file in files) await _fromPlatformFile(file)];
+    }
+    final file = await FilePicker.pickFile(allowedExtensions: allowedExtensions, dialogTitle: widget.dialogTitle, type: type);
+    if (file == null) return const [];
+    return [await _fromPlatformFile(file)];
   }
 
   Future<void> _drop(List<XFile> files) async {
@@ -134,15 +124,7 @@ class _AppFilePickerState extends State<AppFilePicker> {
     String? rejection;
     for (final file in files) {
       try {
-        selected.add(
-          AppFileSelection(
-            name: file.name,
-            path: file.path,
-            size: await file.length(),
-            extension: _extensionOf(file.name),
-            data: file,
-          ),
-        );
+        selected.add(AppFileSelection(name: file.name, path: file.path, size: await file.length(), extension: _extensionOf(file.name), data: file));
       } catch (_) {
         rejection ??= '无法读取文件 ${file.name}';
       }
@@ -153,8 +135,7 @@ class _AppFilePickerState extends State<AppFilePicker> {
 
   String? _validateFile(AppFileSelection file) {
     final extensions = _normalizedExtensions;
-    final extension = (file.extension ?? _extensionOf(file.name))
-        ?.toLowerCase();
+    final extension = (file.extension ?? _extensionOf(file.name))?.toLowerCase();
     if (extensions != null && !extensions.contains(extension)) {
       return '不支持文件 ${file.name} 的格式';
     }
@@ -184,9 +165,7 @@ class _AppFilePickerState extends State<AppFilePicker> {
       if (rejection != null) _reject(rejection);
       return;
     }
-    final next = widget.multiple
-        ? <AppFileSelection>[...widget.files, ...accepted]
-        : <AppFileSelection>[accepted.first];
+    final next = widget.multiple ? <AppFileSelection>[...widget.files, ...accepted] : <AppFileSelection>[accepted.first];
     final maxFiles = widget.maxFiles;
     if (maxFiles != null && next.length > maxFiles) {
       _reject('最多只能选择 $maxFiles 个文件');
@@ -220,11 +199,7 @@ class _AppFilePickerState extends State<AppFilePicker> {
       _rejectionMessage!,
       textAlign: TextAlign.center,
       style: TextStyle(
-        fontSize:
-            (theme.typography.xSmall.fontSize ?? 12) +
-            ((theme.typography.small.fontSize ?? 14) -
-                    (theme.typography.xSmall.fontSize ?? 12)) /
-                2,
+        fontSize: (theme.typography.xSmall.fontSize ?? 12) + ((theme.typography.small.fontSize ?? 14) - (theme.typography.xSmall.fontSize ?? 12)) / 2,
         color: theme.colorScheme.destructive,
       ),
     ),
@@ -237,11 +212,7 @@ class _AppFilePickerState extends State<AppFilePicker> {
   }
 
   Widget? _buildTrailing(BuildContext context, int index) {
-    final custom = widget.trailingBuilder?.call(
-      context,
-      widget.files[index],
-      index,
-    );
+    final custom = widget.trailingBuilder?.call(context, widget.files[index], index);
     final remove = !widget.allowRemove
         ? null
         : widget.variant == AppFilePickerVariant.simple
@@ -254,10 +225,7 @@ class _AppFilePickerState extends State<AppFilePicker> {
                 density: shad.ButtonDensity.compact,
                 enabled: widget.enabled,
                 onPressed: widget.enabled ? () => _remove(index) : null,
-                icon: Icon(
-                  shad.LucideIcons.x,
-                  color: shad.Theme.of(context).colorScheme.foreground,
-                ),
+                icon: Icon(shad.LucideIcons.x, color: shad.Theme.of(context).colorScheme.foreground),
               ),
             ),
           )
@@ -270,10 +238,7 @@ class _AppFilePickerState extends State<AppFilePicker> {
           );
     if (custom == null) return remove;
     if (remove == null) return custom;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [custom, const SizedBox(width: 6), remove],
-    );
+    return Row(mainAxisSize: MainAxisSize.min, children: [custom, const SizedBox(width: 6), remove]);
   }
 
   Widget _buildSimple(BuildContext context, shad.ThemeData theme) {
@@ -298,10 +263,7 @@ class _AppFilePickerState extends State<AppFilePicker> {
         pressedOpacity: 0,
         child: Text(
           widget.pickLabel,
-          style: TextStyle(
-            color: theme.colorScheme.foreground,
-            fontWeight: FontWeight.w600,
-          ),
+          style: TextStyle(color: theme.colorScheme.foreground, fontWeight: FontWeight.w600),
         ),
       ),
       trailing: selected ? _buildTrailing(context, 0) : null,
@@ -309,11 +271,7 @@ class _AppFilePickerState extends State<AppFilePicker> {
         fileName,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: TextStyle(
-          color: selected
-              ? theme.colorScheme.foreground
-              : theme.colorScheme.mutedForeground,
-        ),
+        style: TextStyle(color: selected ? theme.colorScheme.foreground : theme.colorScheme.mutedForeground),
       ),
     );
     if (_rejectionMessage == null) return control;
@@ -336,12 +294,7 @@ class _AppFilePickerState extends State<AppFilePicker> {
             : _dragging
             ? theme.colorScheme.muted
             : null,
-        border: Border.all(
-          color: _dragging
-              ? theme.colorScheme.primary
-              : theme.colorScheme.border,
-          width: 1,
-        ),
+        border: Border.all(color: _dragging ? theme.colorScheme.primary : theme.colorScheme.border, width: 1),
         borderRadius: BorderRadius.circular(theme.radiusMd),
       ),
       child: Column(
@@ -352,13 +305,8 @@ class _AppFilePickerState extends State<AppFilePicker> {
             AppEmpty(
               icon: const Icon(shad.LucideIcons.paperclip),
               title: Text(_dragging ? widget.dropTitle : widget.emptyTitle),
-              description: _rejectionMessage == null
-                  ? null
-                  : _buildRejection(theme),
-              action: AppButton.outline(
-                onPressed: widget.enabled ? _pick : null,
-                child: Text(widget.pickLabel),
-              ),
+              description: _rejectionMessage == null ? null : _buildRejection(theme),
+              action: AppButton.outline(onPressed: widget.enabled ? _pick : null, child: Text(widget.pickLabel)),
             )
           else ...[
             AppItemGroup(
@@ -368,9 +316,7 @@ class _AppFilePickerState extends State<AppFilePicker> {
                   AppItem(
                     leading: const Icon(shad.LucideIcons.file),
                     title: Text(widget.files[index].name),
-                    description: widget.files[index].size == null
-                        ? null
-                        : Text(_formatBytes(widget.files[index].size!)),
+                    description: widget.files[index].size == null ? null : Text(_formatBytes(widget.files[index].size!)),
                     trailing: _buildTrailing(context, index),
                   ),
               ],
@@ -378,19 +324,13 @@ class _AppFilePickerState extends State<AppFilePicker> {
             if (_rejectionMessage != null)
               Padding(
                 padding: const EdgeInsets.fromLTRB(10, 6, 10, 0),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: _buildRejection(theme),
-                ),
+                child: Align(alignment: Alignment.centerLeft, child: _buildRejection(theme)),
               ),
             Padding(
               padding: const EdgeInsets.all(10),
               child: Align(
                 alignment: Alignment.centerLeft,
-                child: AppButton.outline(
-                  onPressed: widget.enabled ? _pick : null,
-                  child: Text(widget.pickLabel),
-                ),
+                child: AppButton.outline(onPressed: widget.enabled ? _pick : null, child: Text(widget.pickLabel)),
               ),
             ),
           ],
@@ -570,13 +510,8 @@ class AppImageInputFormField extends AppFilePickerFormField {
   });
 }
 
-AppFileSelection _fromPlatformFile(PlatformFile file) => AppFileSelection(
-  name: file.name,
-  path: file.path,
-  size: file.size,
-  extension: file.extension,
-  data: file.xFile,
-);
+Future<AppFileSelection> _fromPlatformFile(PlatformFile file) async =>
+    AppFileSelection(name: file.name, path: file.path, size: await file.length(), extension: _extensionOf(file.name), data: file.xFile);
 
 String? _extensionOf(String name) {
   final separator = name.lastIndexOf('.');
