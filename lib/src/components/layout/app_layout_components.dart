@@ -438,12 +438,13 @@ class _AppAsyncTreeState<T> extends State<AppAsyncTree<T>> {
       onExpand: node.expandable ? setExpanded : null,
       child: widget.builder?.call(context, node) ?? const SizedBox.shrink(),
     );
-    return widget.itemBuilder?.call(
+    final selected = _selectedId == node.id;
+    final item = widget.itemBuilder?.call(
           context,
           AppAsyncTreeItemDetails<T>(
             node: node,
             expanded: _expanded.contains(node.id),
-            selected: _selectedId == node.id,
+            selected: selected,
             loading: loading,
             error: error,
             select: select,
@@ -453,6 +454,11 @@ class _AppAsyncTreeState<T> extends State<AppAsyncTree<T>> {
           ),
         ) ??
         defaultItem;
+    return _AppTreeSelectionScope(
+      selected: selected,
+      extent: widget.selectionExtent,
+      child: item,
+    );
   }
 
   void _select(AppAsyncTreeNode<T> node) {
@@ -654,9 +660,11 @@ class _AppTreeItemState extends State<AppTreeItem> {
   Widget build(BuildContext context) {
     final theme = shad.Theme.of(context);
     final gap = theme.density.baseGap * theme.scaling;
+    final selection = _AppTreeSelectionScope.maybeOf(context);
+    final selected = widget.selected || (selection?.selected ?? false);
+    final selectionExtent = selection?.extent ?? widget.selectionExtent;
     final currentItemSelection =
-        widget.selected &&
-        widget.selectionExtent == AppTreeSelectionExtent.currentItem;
+        selected && selectionExtent == AppTreeSelectionExtent.currentItem;
     final content = Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -709,6 +717,24 @@ class _AppTreeItemState extends State<AppTreeItem> {
           : widget.child,
     );
   }
+}
+
+class _AppTreeSelectionScope extends InheritedWidget {
+  const _AppTreeSelectionScope({
+    required this.selected,
+    required this.extent,
+    required super.child,
+  });
+
+  final bool selected;
+  final AppTreeSelectionExtent extent;
+
+  static _AppTreeSelectionScope? maybeOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<_AppTreeSelectionScope>();
+
+  @override
+  bool updateShouldNotify(_AppTreeSelectionScope oldWidget) =>
+      selected != oldWidget.selected || extent != oldWidget.extent;
 }
 
 typedef AppResizablePanel = AppResizable;
