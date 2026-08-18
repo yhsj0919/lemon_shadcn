@@ -12,6 +12,7 @@ class AppTabs extends StatefulWidget {
     this.expand = false,
     this.selectedColor,
     this.selectedTextColor,
+    this.unselectedColor,
     this.duration = const Duration(milliseconds: 220),
     this.curve = Curves.easeOutCubic,
   });
@@ -26,6 +27,8 @@ class AppTabs extends StatefulWidget {
   /// Text and icon color of the selected tab. Defaults to an automatic
   /// contrast color for [selectedColor].
   final Color? selectedTextColor;
+  /// Background color of unselected tabs. Defaults to transparent.
+  final Color? unselectedColor;
   final Duration duration;
   final Curve curve;
 
@@ -117,9 +120,31 @@ class _AppTabsState extends State<AppTabs> {
     final selected = data.index == widget.index;
     final selectedColor = widget.selectedColor ?? theme.colorScheme.primary;
     final selectedForeground = widget.selectedTextColor ??
-        (selectedColor.computeLuminance() > 0.179
-        ? const Color(0xff000000)
-        : const Color(0xffffffff));
+        (widget.selectedColor == null
+            ? theme.colorScheme.primaryForeground
+            : (selectedColor.computeLuminance() > 0.179
+                  ? const Color(0xff000000)
+                  : const Color(0xffffffff)));
+    final unselectedColor = widget.unselectedColor;
+    final unselectedForeground = unselectedColor == null
+        ? null
+        : (unselectedColor.computeLuminance() > 0.179
+              ? const Color(0xff000000)
+              : const Color(0xffffffff));
+    final unselectedChild = child.muted().small().medium();
+
+    Widget applyForeground(Widget content, Color color) {
+      return IconTheme.merge(
+        data: IconThemeData(color: color),
+        child: DefaultTextStyle.merge(
+          style: TextStyle(color: color),
+          child: ColorFiltered(
+            colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+            child: content,
+          ),
+        ),
+      );
+    }
 
     return KeyedSubtree(
       key: _tabKeys[data.index],
@@ -129,19 +154,21 @@ class _AppTabsState extends State<AppTabs> {
         child: MouseRegion(
           hitTestBehavior: HitTestBehavior.translucent,
           cursor: SystemMouseCursors.click,
-          child: Padding(
-            padding: tabPadding,
-            child: Align(
-              alignment: Alignment.center,
-              child: selected
-                  ? ColorFiltered(
-                      colorFilter: ColorFilter.mode(
+          child: DecoratedBox(
+            decoration: BoxDecoration(color: selected ? null : unselectedColor),
+            child: Padding(
+              padding: tabPadding,
+              child: Align(
+                alignment: Alignment.center,
+                child: selected
+                    ? applyForeground(
+                        child.foreground().small().medium(),
                         selectedForeground,
-                        BlendMode.srcIn,
-                      ),
-                      child: child.foreground().small().medium(),
-                    )
-                  : child.muted().small().medium(),
+                      )
+                    : unselectedForeground == null
+                        ? unselectedChild
+                        : applyForeground(unselectedChild, unselectedForeground),
+              ),
             ),
           ),
         ),
