@@ -27,7 +27,8 @@ class AppTabs extends StatefulWidget {
   /// Text and icon color of the selected tab. Defaults to an automatic
   /// contrast color for [selectedColor].
   final Color? selectedTextColor;
-  /// Background color of unselected tabs. Defaults to transparent.
+  /// Background color of the unselected area. Defaults to the theme muted
+  /// color.
   final Color? unselectedColor;
   final Duration duration;
   final Curve curve;
@@ -125,10 +126,9 @@ class _AppTabsState extends State<AppTabs> {
             : (selectedColor.computeLuminance() > 0.179
                   ? const Color(0xff000000)
                   : const Color(0xffffffff)));
-    final unselectedColor = widget.unselectedColor;
-    final unselectedForeground = unselectedColor == null
+    final unselectedForeground = widget.unselectedColor == null
         ? null
-        : (unselectedColor.computeLuminance() > 0.179
+        : (widget.unselectedColor!.computeLuminance() > 0.179
               ? const Color(0xff000000)
               : const Color(0xffffffff));
     final unselectedChild = child.muted().small().medium();
@@ -154,21 +154,18 @@ class _AppTabsState extends State<AppTabs> {
         child: MouseRegion(
           hitTestBehavior: HitTestBehavior.translucent,
           cursor: SystemMouseCursors.click,
-          child: DecoratedBox(
-            decoration: BoxDecoration(color: selected ? null : unselectedColor),
-            child: Padding(
-              padding: tabPadding,
-              child: Align(
-                alignment: Alignment.center,
-                child: selected
-                    ? applyForeground(
-                        child.foreground().small().medium(),
-                        selectedForeground,
-                      )
-                    : unselectedForeground == null
-                        ? unselectedChild
-                        : applyForeground(unselectedChild, unselectedForeground),
-              ),
+          child: Padding(
+            padding: tabPadding,
+            child: Align(
+              alignment: Alignment.center,
+              child: selected
+                  ? applyForeground(
+                      child.foreground().small().medium(),
+                      selectedForeground,
+                    )
+                  : unselectedForeground == null
+                      ? unselectedChild
+                      : applyForeground(unselectedChild, unselectedForeground),
             ),
           ),
         ),
@@ -186,10 +183,11 @@ class _AppTabsState extends State<AppTabs> {
       defaultValue: EdgeInsets.all(densityGap * 0.5),
       themeValue: compTheme?.containerPadding,
     );
-    final backgroundColor = shad.styleValue(
-      defaultValue: theme.colorScheme.muted,
-      themeValue: compTheme?.backgroundColor,
-    );
+    final backgroundColor = widget.unselectedColor ??
+        shad.styleValue(
+          defaultValue: theme.colorScheme.muted,
+          themeValue: compTheme?.backgroundColor,
+        );
     final borderRadius = shad.styleValue(
       defaultValue: BorderRadius.circular(theme.radiusLg),
       themeValue: compTheme?.borderRadius,
