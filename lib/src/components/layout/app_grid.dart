@@ -43,7 +43,8 @@ class AppGrid extends StatelessWidget {
             : minItemWidth;
         final columns = (availableWidth / (minItemWidth + spacing))
             .floor()
-            .clamp(1, maxColumns ?? 0x7fffffff);
+            .clamp(1, maxColumns ?? 0x7fffffff)
+            .toInt();
         final itemWidth =
             (availableWidth - spacing * (columns - 1)) / columns;
 

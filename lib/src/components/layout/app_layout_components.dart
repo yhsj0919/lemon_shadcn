@@ -58,7 +58,7 @@ class AppTree<T> extends StatelessWidget {
   final EdgeInsetsGeometry? padding;
   final bool? expandIcon;
   final bool? allowMultiSelect;
-  final FocusNode? focusNode;
+  final FocusScopeNode? focusNode;
   final shad.TreeNodeSelectionChanged<T>? onSelectionChanged;
   final bool? recursiveSelection;
 
