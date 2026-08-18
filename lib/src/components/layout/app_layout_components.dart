@@ -76,30 +76,7 @@ class AppTree<T> extends StatelessWidget {
       onSelectionChanged: onSelectionChanged,
       recursiveSelection: recursiveSelection,
       builder: (context, item) {
-        Widget child = builder(context, item);
-        if (selectionExtent == AppTreeSelectionExtent.parent &&
-            item.selected) {
-          final theme = shad.Theme.of(context);
-          final indent = theme.density.baseGap * theme.scaling * 3;
-          child = Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Positioned(
-                left: -indent,
-                right: 0,
-                top: 0,
-                bottom: 0,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.scaleAlpha(0.05),
-                    borderRadius: BorderRadius.circular(theme.radiusMd),
-                  ),
-                ),
-              ),
-              child,
-            ],
-          );
-        }
+        final child = builder(context, item);
         return itemSpacing == 0
             ? child
             : Padding(
@@ -403,7 +380,9 @@ class _AppAsyncTreeState<T> extends State<AppAsyncTree<T>> {
       AppTreeItemNode<_AppAsyncTreeEntry<T>>(
         data: _AppAsyncTreeEntry<T>(node),
         expanded: _expanded.contains(node.id),
-        selected: _selectedId == node.id,
+        selected:
+            widget.selectionExtent == AppTreeSelectionExtent.parent &&
+            _selectedId == node.id,
         children: <AppTreeNode<_AppAsyncTreeEntry<T>>>[
           for (final child
               in _children[node.id] ?? List<AppAsyncTreeNode<T>>.empty())
@@ -425,6 +404,8 @@ class _AppAsyncTreeState<T> extends State<AppAsyncTree<T>> {
     }
 
     final defaultItem = AppTreeItem(
+      selected: _selectedId == node.id,
+      selectionExtent: widget.selectionExtent,
       expandable: node.expandable,
       trailing: loading
           ? const Center(
@@ -626,6 +607,8 @@ class AppTreeItem extends StatefulWidget {
     this.onExpand,
     this.expandable,
     this.focusNode,
+    this.selected = false,
+    this.selectionExtent = AppTreeSelectionExtent.parent,
   });
 
   final Widget child;
@@ -636,6 +619,8 @@ class AppTreeItem extends StatefulWidget {
   final ValueChanged<bool>? onExpand;
   final bool? expandable;
   final FocusNode? focusNode;
+  final bool selected;
+  final AppTreeSelectionExtent selectionExtent;
 
   @override
   State<AppTreeItem> createState() => _AppTreeItemState();
@@ -667,9 +652,28 @@ class _AppTreeItemState extends State<AppTreeItem> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = shad.Theme.of(context);
+    final gap = theme.density.baseGap * theme.scaling;
+    final currentItemSelection =
+        widget.selected &&
+        widget.selectionExtent == AppTreeSelectionExtent.currentItem;
+    final content = Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (widget.leading != null) ...[
+          widget.leading!,
+          SizedBox(width: gap),
+        ],
+        Expanded(child: widget.child),
+        if (widget.trailing != null) ...[
+          SizedBox(width: gap),
+          widget.trailing!,
+        ],
+      ],
+    );
     return shad.TreeItem(
-      leading: widget.leading,
-      trailing: widget.trailing,
+      leading: currentItemSelection ? null : widget.leading,
+      trailing: currentItemSelection ? null : widget.trailing,
       onPressed: widget.onPressed,
       onDoublePressed: widget.onDoublePressed,
       onExpand: widget.onExpand == null
@@ -680,7 +684,21 @@ class _AppTreeItemState extends State<AppTreeItem> {
             },
       expandable: widget.expandable,
       focusNode: _focusNode,
-      child: widget.child,
+      child: currentItemSelection
+          ? DecoratedBox(
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.scaleAlpha(0.05),
+                borderRadius: BorderRadius.circular(theme.radiusMd),
+              ),
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: gap,
+                  vertical: gap * 0.5,
+                ),
+                child: content,
+              ),
+            )
+          : widget.child,
     );
   }
 }
