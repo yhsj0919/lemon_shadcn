@@ -24,9 +24,92 @@ typedef AppCarouselFractionalConstraint = shad.CarouselFractionalConstraint;
 typedef AppStepperController = shad.StepperController;
 typedef AppStepperValue = shad.StepperValue;
 typedef AppStep = shad.Step;
-typedef AppTree<T> = shad.Tree<T>;
 typedef AppTreeNode<T> = shad.TreeNode<T>;
 typedef AppTreeItemNode<T> = shad.TreeItemNode<T>;
+
+enum AppTreeSelectionExtent { currentItem, parent }
+
+/// App tree with optional spacing between visible items.
+class AppTree<T> extends StatelessWidget {
+  const AppTree({
+    super.key,
+    required this.nodes,
+    required this.builder,
+    this.itemSpacing = 0,
+    this.selectionExtent = AppTreeSelectionExtent.currentItem,
+    this.shrinkWrap = false,
+    this.controller,
+    this.branchLine,
+    this.padding,
+    this.expandIcon,
+    this.allowMultiSelect,
+    this.focusNode,
+    this.onSelectionChanged,
+    this.recursiveSelection,
+  });
+
+  final List<shad.TreeNode<T>> nodes;
+  final Widget Function(BuildContext, shad.TreeItemNode<T>) builder;
+  final double itemSpacing;
+  final AppTreeSelectionExtent selectionExtent;
+  final bool shrinkWrap;
+  final ScrollController? controller;
+  final shad.BranchLine? branchLine;
+  final EdgeInsetsGeometry? padding;
+  final bool? expandIcon;
+  final bool? allowMultiSelect;
+  final FocusNode? focusNode;
+  final shad.TreeNodeSelectionChanged<T>? onSelectionChanged;
+  final bool? recursiveSelection;
+
+  @override
+  Widget build(BuildContext context) {
+    return shad.Tree<T>(
+      nodes: nodes,
+      shrinkWrap: shrinkWrap,
+      controller: controller,
+      branchLine: branchLine,
+      padding: padding,
+      expandIcon: expandIcon,
+      allowMultiSelect: allowMultiSelect,
+      focusNode: focusNode,
+      onSelectionChanged: onSelectionChanged,
+      recursiveSelection: recursiveSelection,
+      builder: (context, item) {
+        Widget child = builder(context, item);
+        if (selectionExtent == AppTreeSelectionExtent.parent &&
+            item.selected) {
+          final theme = shad.Theme.of(context);
+          final indent = theme.density.baseGap * theme.scaling * 3;
+          child = Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Positioned(
+                left: -indent,
+                right: 0,
+                top: 0,
+                bottom: 0,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.scaleAlpha(0.05),
+                    borderRadius: BorderRadius.circular(theme.radiusMd),
+                  ),
+                ),
+              ),
+              child,
+            ],
+          );
+        }
+        return itemSpacing == 0
+            ? child
+            : Padding(
+                padding: EdgeInsets.only(bottom: itemSpacing),
+                child: child,
+              );
+      },
+    );
+  }
+}
 typedef AppScaffold = shad.Scaffold;
 typedef AppAppBar = shad.AppBar;
 typedef AppDashedLine = shad.DashedLine;

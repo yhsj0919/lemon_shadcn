@@ -144,7 +144,8 @@ class AppCard extends StatelessWidget {
       filled: filled ?? (tintColor == null ? null : true),
       fillColor: resolvedFillColor,
       borderRadius: borderRadius,
-      clipBehavior: clipBehavior,
+      // Keep child content inside the card's rounded surface by default.
+      clipBehavior: clipBehavior ?? Clip.antiAlias,
       borderColor: resolvedBorderColor,
       borderWidth: borderWidth,
       boxShadow: resolvedShadows,
