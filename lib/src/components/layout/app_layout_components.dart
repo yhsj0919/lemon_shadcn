@@ -659,29 +659,14 @@ class _AppTreeItemState extends State<AppTreeItem> {
   @override
   Widget build(BuildContext context) {
     final theme = shad.Theme.of(context);
-    final gap = theme.density.baseGap * theme.scaling;
     final selection = _AppTreeSelectionScope.maybeOf(context);
     final selected = widget.selected || (selection?.selected ?? false);
     final selectionExtent = selection?.extent ?? widget.selectionExtent;
     final currentItemSelection =
         selected && selectionExtent == AppTreeSelectionExtent.currentItem;
-    final content = Row(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (widget.leading != null) ...[
-          widget.leading!,
-          SizedBox(width: gap),
-        ],
-        Expanded(child: widget.child),
-        if (widget.trailing != null) ...[
-          SizedBox(width: gap),
-          widget.trailing!,
-        ],
-      ],
-    );
     return shad.TreeItem(
-      leading: currentItemSelection ? null : widget.leading,
-      trailing: currentItemSelection ? null : widget.trailing,
+      leading: widget.leading,
+      trailing: widget.trailing,
       onPressed: widget.onPressed,
       onDoublePressed: widget.onDoublePressed,
       onExpand: widget.onExpand == null
@@ -696,14 +681,9 @@ class _AppTreeItemState extends State<AppTreeItem> {
           ? ClipRRect(
               borderRadius: BorderRadius.circular(theme.radiusMd),
               child: Stack(
+                fit: StackFit.passthrough,
                 children: [
-                  Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: gap,
-                      vertical: gap * 0.5,
-                    ),
-                    child: content,
-                  ),
+                  widget.child,
                   Positioned.fill(
                     child: IgnorePointer(
                       child: ColoredBox(
