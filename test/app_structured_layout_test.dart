@@ -69,6 +69,39 @@ void main() {
     expect(find.byType(AppTable), findsOneWidget);
   });
 
+  testWidgets('tree item spacing collapses with hidden descendants', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: SizedBox(
+          width: 320,
+          height: 240,
+          child: AppTree<String>(
+            itemSpacing: 8,
+            nodes: [
+              AppTreeItemNode(
+                data: 'Root',
+                children: [
+                  AppTreeItemNode(data: 'Child 1'),
+                  AppTreeItemNode(data: 'Child 2'),
+                ],
+              ),
+            ],
+            builder: (context, item) => Text(item.data),
+          ),
+        ),
+      ),
+    );
+
+    final paddings = tester
+        .widgetList<AnimatedPadding>(find.byType(AnimatedPadding))
+        .map((widget) => widget.padding.resolve(TextDirection.ltr).bottom)
+        .toList();
+    expect(paddings, [8, 0, 0]);
+  });
+
   testWidgets('async tree loads children once when a node expands', (
     tester,
   ) async {

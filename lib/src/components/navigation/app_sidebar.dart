@@ -306,7 +306,6 @@ class _ExpandedDestination extends StatelessWidget {
               duration: const Duration(milliseconds: 180),
               curve: Curves.easeOutCubic,
               alignment: Alignment.topCenter,
-              clipBehavior: Clip.hardEdge,
               child: expanded
                   ? Padding(
                       padding: const EdgeInsets.only(top: 4),
@@ -326,7 +325,7 @@ class _ExpandedDestination extends StatelessWidget {
                         ],
                       ),
                     )
-                  : const SizedBox.shrink(),
+                  : const SizedBox(width: double.infinity),
             ),
         ],
       ),

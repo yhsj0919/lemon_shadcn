@@ -77,10 +77,16 @@ class AppTree<T> extends StatelessWidget {
       recursiveSelection: recursiveSelection,
       builder: (context, item) {
         final child = builder(context, item);
+        final visible =
+            shad.Data.maybeOf<shad.TreeNodeData<T>>(context)?.expanded ?? true;
         return itemSpacing == 0
             ? child
-            : Padding(
-                padding: EdgeInsets.only(bottom: itemSpacing),
+            : AnimatedPadding(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeInOut,
+                padding: EdgeInsets.only(
+                  bottom: visible ? itemSpacing : 0,
+                ),
                 child: child,
               );
       },
