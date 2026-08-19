@@ -770,10 +770,17 @@ class _AppTreeItemState extends State<AppTreeItem> {
                 data.onFocusChanged?.call(shad.FocusChangeReason.userInteraction);
               }
             : null,
-        onDoubleTap: widget.onDoublePressed == null
+        onDoubleTap:
+            widget.onDoublePressed == null &&
+                (widget.onExpand == null ||
+                    !(widget.expandable ?? data.node.children.isNotEmpty))
             ? null
             : () {
-                widget.onDoublePressed!();
+                widget.onDoublePressed?.call();
+                if (widget.onExpand != null &&
+                    (widget.expandable ?? data.node.children.isNotEmpty)) {
+                  widget.onExpand!(!data.node.expanded);
+                }
                 _focusNode.requestFocus();
               },
         child: MouseRegion(

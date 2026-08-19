@@ -131,8 +131,7 @@ void main() {
     );
     await tester.pump();
 
-    var item = tester.widget<AppTreeItem>(find.byType(AppTreeItem).first);
-    item.onExpand!(true);
+    await tester.doubleTap(find.text('Root'));
     await tester.pump();
     await tester.pump();
 
@@ -140,7 +139,7 @@ void main() {
     expect(loads, 1);
     expect(selected, 'Root');
 
-    item = tester.widget<AppTreeItem>(find.byType(AppTreeItem).first);
+    var item = tester.widget<AppTreeItem>(find.byType(AppTreeItem).first);
     item.onExpand!(false);
     await tester.pump();
     item = tester.widget<AppTreeItem>(find.byType(AppTreeItem).first);
