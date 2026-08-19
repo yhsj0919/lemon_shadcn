@@ -95,11 +95,11 @@ void main() {
       ),
     );
 
-    final paddings = tester
-        .widgetList<AnimatedPadding>(find.byType(AnimatedPadding))
-        .map((widget) => widget.padding.resolve(TextDirection.ltr).bottom)
-        .toList();
-    expect(paddings, [8, 0, 0]);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Root'), findsOneWidget);
+    expect(find.text('Child 1'), findsNothing);
+    expect(find.text('Child 2'), findsNothing);
   });
 
   testWidgets('async tree loads children once when a node expands', (

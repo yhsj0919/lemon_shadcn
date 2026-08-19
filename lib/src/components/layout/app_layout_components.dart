@@ -79,16 +79,18 @@ class AppTree<T> extends StatelessWidget {
         final child = builder(context, item);
         final visible =
             shad.Data.maybeOf<shad.TreeNodeData<T>>(context)?.expanded ?? true;
-        return itemSpacing == 0
-            ? child
-            : AnimatedPadding(
-                duration: const Duration(milliseconds: 200),
-                curve: Curves.easeInOut,
-                padding: EdgeInsets.only(
-                  bottom: visible ? itemSpacing : 0,
-                ),
-                child: child,
-              );
+        return AnimatedSize(
+          duration: const Duration(milliseconds: 150),
+          curve: Curves.easeInOut,
+          alignment: Alignment.topCenter,
+          clipBehavior: Clip.hardEdge,
+          child: visible
+              ? Padding(
+                  padding: EdgeInsets.only(bottom: itemSpacing),
+                  child: child,
+                )
+              : const SizedBox.shrink(),
+        );
       },
     );
   }
