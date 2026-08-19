@@ -77,8 +77,10 @@ class AppTree<T> extends StatelessWidget {
       recursiveSelection: recursiveSelection,
       builder: (context, item) {
         final child = builder(context, item);
-        final visible =
-            shad.Data.maybeOf<shad.TreeNodeData<T>>(context)?.expanded ?? true;
+        // shadcn_flutter publishes this inherited value as raw TreeNodeData.
+        // Looking it up as TreeNodeData<T> does not match and makes every
+        // flattened descendant appear visible, leaving itemSpacing behind.
+        final visible = shad.Data.of<shad.TreeNodeData>(context).expanded;
         return AnimatedSize(
           duration: const Duration(milliseconds: 150),
           curve: Curves.easeInOut,
