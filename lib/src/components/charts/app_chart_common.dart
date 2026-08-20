@@ -25,8 +25,15 @@ double appChartNiceMaximum(
 }) {
   assert(targetTicks > 0);
   if (max <= min) return min + (interval ?? 1);
-  final step = interval ?? _appChartNiceStep((max - min) / targetTicks);
+  final step =
+      interval ?? appChartNiceInterval(min, max, targetTicks: targetTicks);
   return (max / step).ceilToDouble() * step;
+}
+
+/// Returns an even, readable 1/2/5-based interval for a numeric axis.
+double appChartNiceInterval(double min, double max, {int targetTicks = 5}) {
+  assert(targetTicks > 0);
+  return _appChartNiceStep((max - min).abs() / targetTicks);
 }
 
 double _appChartNiceStep(double roughStep) {

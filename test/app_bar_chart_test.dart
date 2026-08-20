@@ -419,6 +419,48 @@ void main() {
     );
   });
 
+  testWidgets('horizontal chart thins categories but keeps even x ticks', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: const AppBarChart.horizontal(
+          height: 180,
+          xAxis: AppChartAxis(min: 0, max: 100),
+          groups: <AppBarGroup>[
+            AppBarGroup(
+              label: '区域一',
+              values: <AppBarValue>[AppBarValue(value: 80)],
+            ),
+            AppBarGroup(
+              label: '区域二',
+              values: <AppBarValue>[AppBarValue(value: 70)],
+            ),
+            AppBarGroup(
+              label: '区域三',
+              values: <AppBarValue>[AppBarValue(value: 60)],
+            ),
+            AppBarGroup(
+              label: '区域四',
+              values: <AppBarValue>[AppBarValue(value: 50)],
+            ),
+            AppBarGroup(
+              label: '区域五',
+              values: <AppBarValue>[AppBarValue(value: 40)],
+            ),
+          ],
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final data = tester.widget<BarChart>(find.byType(BarChart)).data;
+    expect(data.titlesData.rightTitles.sideTitles.interval, 20);
+    expect(data.gridData.horizontalInterval, 20);
+    expect(data.titlesData.bottomTitles.sideTitles.interval, isNull);
+  });
+
   testWidgets('horizontal label supports a value near the axis maximum', (
     tester,
   ) async {

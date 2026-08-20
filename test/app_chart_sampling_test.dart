@@ -42,6 +42,7 @@ void main() {
     expect(appChartNiceMaximum(0, 46), 50);
     expect(appChartNiceMaximum(0, 58), 60);
     expect(appChartNiceMaximum(0, 46, interval: 20), 60);
+    expect(appChartNiceInterval(0, 100), 20);
   });
 
   testWidgets('line chart shows an empty state when every value is null', (

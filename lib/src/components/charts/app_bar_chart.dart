@@ -459,6 +459,8 @@ class _AppBarChartState extends State<AppBarChart> {
           math.max(0.0, maxValue),
           interval: _valueAxis.interval,
         );
+    final valueInterval =
+        _valueAxis.interval ?? appChartNiceInterval(minY, maxY);
     final axisStyle = theme.typography.xSmall.copyWith(
       fontSize: chart.labelFontSize,
       color: theme.colorScheme.mutedForeground,
@@ -568,7 +570,7 @@ class _AppBarChartState extends State<AppBarChart> {
       gridData: FlGridData(
         show: widget.showGrid,
         drawVerticalLine: false,
-        horizontalInterval: _valueAxis.interval,
+        horizontalInterval: valueInterval,
         getDrawingHorizontalLine: (_) => FlLine(
           color: theme.colorScheme.border.withValues(alpha: chart.gridOpacity),
           strokeWidth: 1,
@@ -579,7 +581,7 @@ class _AppBarChartState extends State<AppBarChart> {
         // right edge. Reserve this side for positive labels in both layouts.
         topTitles: _reservedTitles(positiveLabelSpace),
         rightTitles: _horizontal
-            ? _leftTitles(axisStyle, chart, minY, maxY, 0)
+            ? _leftTitles(axisStyle, chart, minY, maxY, valueInterval, 0)
             : const AxisTitles(sideTitles: SideTitles(showTitles: false)),
         bottomTitles: _bottomTitles(
           axisStyle,
@@ -589,7 +591,7 @@ class _AppBarChartState extends State<AppBarChart> {
         ),
         leftTitles: _horizontal
             ? const AxisTitles(sideTitles: SideTitles(showTitles: false))
-            : _leftTitles(axisStyle, chart, minY, maxY, 0),
+            : _leftTitles(axisStyle, chart, minY, maxY, valueInterval, 0),
       ),
       extraLinesData: ExtraLinesData(
         horizontalLines: <HorizontalLine>[
@@ -811,6 +813,7 @@ class _AppBarChartState extends State<AppBarChart> {
     AppChartTheme chart,
     double min,
     double max,
+    double valueInterval,
     double boundaryLabelSpace,
   ) => AxisTitles(
     axisNameWidget: !_valueAxis.show || _valueAxis.title == null
@@ -837,7 +840,7 @@ class _AppBarChartState extends State<AppBarChart> {
                   )),
         boundaryLabelSpace,
       ),
-      interval: _valueAxis.interval,
+      interval: valueInterval,
       getTitlesWidget: (value, meta) => SideTitleWidget(
         meta: meta,
         space: 6,
