@@ -54,13 +54,71 @@ class _ChartsPageState extends State<ChartsPage> {
           ),
         ),
         ComponentSection(
+          title: 'X 轴标签自动抽稀',
+          code: '''AppBarChart.simple(
+  labels: List.generate(24, (index) => '第\${index + 1}周'),
+  values: values,
+  xAxis: const AppChartAxis(
+    autoLabelInterval: true,
+    minLabelSpacing: 12,
+  ),
+)''',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text('缩放窗口宽度时，X 轴会按等步长自动减少标签，末尾无法对齐时会隐藏。'),
+              const Gap(8),
+              AppBarChart.simple(
+                labels: List<String>.generate(24, (index) => '第${index + 1}周'),
+                values: List<AppBarValue>.generate(
+                  24,
+                  (index) =>
+                      AppBarValue(value: 24 + ((index * 13) % 37).toDouble()),
+                ),
+                xAxis: const AppChartAxis(
+                  autoLabelInterval: true,
+                  minLabelSpacing: 12,
+                ),
+                yAxis: const AppChartAxis(title: '访问量'),
+                showValues: false,
+              ),
+              const Gap(20),
+              AppLineChart(
+                showLegend: false,
+                xAxis: const AppChartAxis(
+                  autoLabelInterval: true,
+                  minLabelSpacing: 12,
+                ),
+                series: [
+                  AppLineSeries(
+                    name: '趋势',
+                    points: [
+                      for (var index = 0; index < 24; index++)
+                        AppLinePoint(
+                          x: index.toDouble(),
+                          y: 18 + ((index * 11) % 29).toDouble(),
+                          label: '第${index + 1}周',
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        ComponentSection(
           title: '多系列、参考线与受控选中',
           code: '''AppBarChart(
   series: const [
     AppBarSeries(name: '收入'),
     AppBarSeries(name: '支出', color: Color(0xfff59e0b)),
   ],
-  groups: groups,
+  groups: const [
+    AppBarGroup(
+      label: '华东',
+      values: [AppBarValue(value: 99)],
+    ),
+  ],
   referenceLines: const [
     AppChartReferenceLine(value: 50, label: '目标'),
   ],
@@ -166,7 +224,6 @@ class _ChartsPageState extends State<ChartsPage> {
             ],
             yAxis: AppChartAxis(
               min: 0,
-              max: 70,
               interval: 10,
               formatter: (value) => '${value.toInt()}次',
             ),
@@ -278,7 +335,7 @@ class _ChartsPageState extends State<ChartsPage> {
             groups: const <AppBarGroup>[
               AppBarGroup(
                 label: '华东',
-                values: <AppBarValue>[AppBarValue(value: 82)],
+                values: <AppBarValue>[AppBarValue(value: 99)],
               ),
               AppBarGroup(
                 label: '华南',
@@ -306,6 +363,109 @@ class _ChartsPageState extends State<ChartsPage> {
             onBarTap: (hit) => setState(
               () => _lastAction =
                   '${hit.group.label}：${hit.value.value?.toInt()}%',
+            ),
+          ),
+        ),
+        ComponentSection(
+          title: '横向堆叠图与隐藏 X 轴',
+          code: '''AppBarChart.horizontalStacked(
+  xAxis: const AppChartAxis(show: false),
+  series: const [
+    AppBarSeries(name: '已完成'),
+    AppBarSeries(name: '进行中'),
+  ],
+  groups: groups,
+)''',
+          child: AppBarChart.horizontalStacked(
+            height: 280,
+            xAxis: const AppChartAxis(show: false),
+            yAxis: const AppChartAxis(title: '团队'),
+            series: const <AppBarSeries>[
+              AppBarSeries(name: '已完成'),
+              AppBarSeries(name: '进行中', color: Color(0xff10b981)),
+              AppBarSeries(name: '待处理', color: Color(0xfff59e0b)),
+            ],
+            groups: const <AppBarGroup>[
+              AppBarGroup(
+                label: '研发部',
+                values: <AppBarValue>[
+                  AppBarValue(value: 38),
+                  AppBarValue(value: 22),
+                  AppBarValue(value: 9),
+                ],
+              ),
+              AppBarGroup(
+                label: '产品部',
+                values: <AppBarValue>[
+                  AppBarValue(value: 31),
+                  AppBarValue(value: 18),
+                  AppBarValue(value: 12),
+                ],
+              ),
+              AppBarGroup(
+                label: '运营部',
+                values: <AppBarValue>[
+                  AppBarValue(value: 27),
+                  AppBarValue(value: 25),
+                  AppBarValue(value: 7),
+                ],
+              ),
+            ],
+            onBarTap: (hit) => setState(
+              () => _lastAction =
+                  '${hit.group.label} · ${hit.series?.name}：${hit.value.value}',
+            ),
+          ),
+        ),
+        ComponentSection(
+          title: '排行条形图（单色）',
+          code: '''AppRankBarChart(
+  header: const AppRankBarHeader(
+    rank: '序号',
+    label: '城市区域',
+    value: '设备数量',
+  ),
+  color: const Color(0xff2563eb),
+  valueFormatter: (value) => value.toInt().toString(),
+  items: items,
+)''',
+          child: AppRankBarChart(
+            header: const AppRankBarHeader(
+              rank: '序号',
+              label: '城市区域',
+              value: '设备数量',
+              padding: EdgeInsets.symmetric(horizontal: 12),
+              margin: EdgeInsets.symmetric(horizontal: 4),
+            ),
+            rowSpacing: 4,
+            color: const Color(0xff2563eb),
+            valueFormatter: (value) => value.toInt().toString(),
+            rankBuilder: (context, rank) => Center(
+              child: Container(
+                width: 28,
+                height: 28,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: rank <= 3
+                      ? const Color(0xffffb020)
+                      : const Color(0xffeef1f5),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text('$rank'),
+              ),
+            ),
+            items: const <AppRankBarItem>[
+              AppRankBarItem(label: '济南 · 历下区', value: 1562),
+              AppRankBarItem(label: '济南 · 市中区', value: 1468),
+              AppRankBarItem(label: '济南 · 天桥区', value: 1332),
+              AppRankBarItem(label: '济南 · 槐荫区', value: 1256),
+              AppRankBarItem(label: '济南 · 历城区', value: 1186),
+              AppRankBarItem(label: '济南 · 高新区', value: 1152),
+              AppRankBarItem(label: '济南 · 长清区', value: 898),
+              AppRankBarItem(label: '济南 · 商河县', value: 0),
+            ],
+            onItemTap: (item) => setState(
+              () => _lastAction = '${item.label}：${item.value.toInt()}',
             ),
           ),
         ),

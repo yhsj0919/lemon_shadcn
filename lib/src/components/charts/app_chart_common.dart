@@ -16,6 +16,33 @@ int appChartLoopIndex(int current, int delta, int length) {
   return (current + delta + length) % length;
 }
 
+/// Rounds an automatic value-axis maximum up to a readable 1/2/5-based tick.
+double appChartNiceMaximum(
+  double min,
+  double max, {
+  double? interval,
+  int targetTicks = 5,
+}) {
+  assert(targetTicks > 0);
+  if (max <= min) return min + (interval ?? 1);
+  final step = interval ?? _appChartNiceStep((max - min) / targetTicks);
+  return (max / step).ceilToDouble() * step;
+}
+
+double _appChartNiceStep(double roughStep) {
+  if (!roughStep.isFinite || roughStep <= 0) return 1;
+  final magnitude = math.pow(10, (math.log(roughStep) / math.ln10).floor());
+  final normalized = roughStep / magnitude;
+  final factor = normalized <= 1
+      ? 1
+      : normalized <= 2
+      ? 2
+      : normalized <= 5
+      ? 5
+      : 10;
+  return factor * magnitude.toDouble();
+}
+
 /// Returns source indices selected with Largest-Triangle-Three-Buckets (LTTB).
 /// The first and last values are always retained, and callbacks continue to
 /// address the original data because no replacement points are synthesized.
@@ -94,7 +121,9 @@ class AppChartAxis {
     this.interval,
     this.reservedSize,
     this.formatter,
-  });
+    this.autoLabelInterval = true,
+    this.minLabelSpacing = 8,
+  }) : assert(minLabelSpacing >= 0);
 
   final bool show;
   final String? title;
@@ -103,6 +132,14 @@ class AppChartAxis {
   final double? interval;
   final double? reservedSize;
   final AppChartValueFormatter? formatter;
+
+  /// Automatically hides overlapping category labels when [interval] is not
+  /// specified. Labels are retained at a uniform stride; a trailing label
+  /// that does not align with that stride is omitted.
+  final bool autoLabelInterval;
+
+  /// Minimum horizontal space between automatically sampled labels.
+  final double minLabelSpacing;
 }
 
 @immutable
@@ -179,10 +216,38 @@ double appChartAxisReservedWidth(
     widest = math.max(widest, painter.width);
   }
   painter.dispose();
-  return (widest + 16).clamp(
+  return (widest + 12).clamp(
     chart.axisMinReservedSize,
     chart.axisMaxReservedSize,
   );
+}
+
+int appChartLabelStride(
+  Iterable<String> labels,
+  double availableExtent,
+  TextStyle style, {
+  double minSpacing = 8,
+}) {
+  final values = labels.toList(growable: false);
+  if (values.length < 2 || !availableExtent.isFinite || availableExtent <= 0) {
+    return 1;
+  }
+  var widest = 0.0;
+  final painter = TextPainter(maxLines: 1, textDirection: TextDirection.ltr);
+  for (final label in values) {
+    painter.text = TextSpan(text: label, style: style);
+    painter.layout();
+    widest = math.max(widest, painter.width);
+  }
+  painter.dispose();
+  final slot = availableExtent / values.length;
+  return math.max(1, ((widest + minSpacing) / slot).ceil());
+}
+
+bool appChartShowSampledLabel(int index, int count, int stride) {
+  if (index < 0 || index >= count || count <= 0) return false;
+  if (stride <= 1) return true;
+  return index % stride == 0;
 }
 
 List<String> appChartValueAxisLabels(

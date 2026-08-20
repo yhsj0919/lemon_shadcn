@@ -46,8 +46,15 @@ typedef AppDataGridCellChanged<T> =
 
 typedef AppDataGridRowColor<T> = Color? Function(T row);
 
+typedef AppDataGridTreeRowColor<T> =
+    Color? Function(T row, int depth, bool isParent);
+
 typedef AppDataGridRowContextMenuBuilder<T> =
     List<shad.MenuItem> Function(BuildContext context, T row, int rowIndex);
+
+typedef AppDataGridChildrenBuilder<T> = List<T> Function(T row);
+typedef AppDataGridHasChildren<T> = bool Function(T row);
+typedef AppDataGridChildrenLoader<T> = Future<List<T>> Function(T row);
 
 class AppDataGridColumn<T> {
   const AppDataGridColumn({
@@ -217,6 +224,15 @@ class AppDataGrid<T> extends StatefulWidget {
     this.rowContextMenuBuilder,
     this.rowBackgroundColor,
     this.empty,
+    this.buildChildren,
+    this.hasChildren,
+    this.childrenLoader,
+    this.treeColumnId,
+    this.defaultExpandedDepth = 0,
+    this.expandedKeys,
+    this.onExpandedKeysChanged,
+    this.treeIndent = 0,
+    this.treeRowBackgroundColor,
   }) : assert(height == null || height > 0),
        _mode = _AppDataGridMode.local,
        loader = null,
@@ -261,6 +277,15 @@ class AppDataGrid<T> extends StatefulWidget {
     this.rowContextMenuBuilder,
     this.rowBackgroundColor,
     this.empty,
+    this.buildChildren,
+    this.hasChildren,
+    this.childrenLoader,
+    this.treeColumnId,
+    this.defaultExpandedDepth = 0,
+    this.expandedKeys,
+    this.onExpandedKeysChanged,
+    this.treeIndent = 0,
+    this.treeRowBackgroundColor,
   }) : assert(height == null || height > 0),
        _mode = _AppDataGridMode.paginated,
        rows = const [];
@@ -302,6 +327,15 @@ class AppDataGrid<T> extends StatefulWidget {
     this.rowContextMenuBuilder,
     this.rowBackgroundColor,
     this.empty,
+    this.buildChildren,
+    this.hasChildren,
+    this.childrenLoader,
+    this.treeColumnId,
+    this.defaultExpandedDepth = 0,
+    this.expandedKeys,
+    this.onExpandedKeysChanged,
+    this.treeIndent = 0,
+    this.treeRowBackgroundColor,
   }) : assert(height == null || height > 0),
        _mode = _AppDataGridMode.infinite,
        rows = const [],
@@ -389,6 +423,37 @@ class AppDataGrid<T> extends StatefulWidget {
   /// null falls back to the configured stripe and then the cell background.
   final AppDataGridRowColor<T>? rowBackgroundColor;
   final Widget? empty;
+
+  /// Returns children that are already available in memory.
+  final AppDataGridChildrenBuilder<T>? buildChildren;
+
+  /// Reports whether a row can have children. Required with
+  /// [childrenLoader] so an unloaded parent can be distinguished from a leaf.
+  final AppDataGridHasChildren<T>? hasChildren;
+
+  /// Loads a parent's children the first time that parent is expanded.
+  final AppDataGridChildrenLoader<T>? childrenLoader;
+
+  /// Column that displays tree indentation and the disclosure control.
+  /// Defaults to the first data column when tree rows are enabled.
+  final String? treeColumnId;
+
+  /// Number of levels expanded initially in uncontrolled mode. Zero keeps all
+  /// parents collapsed; one expands root parents.
+  final int defaultExpandedDepth;
+
+  /// Controlled expanded row keys. When null the grid owns expansion state.
+  final Set<Object>? expandedKeys;
+  final ValueChanged<Set<Object>>? onExpandedKeysChanged;
+
+  /// Horizontal indentation per tree level. Defaults to zero so parent and
+  /// child values stay aligned; set to a positive value for classic nesting.
+  final double treeIndent;
+
+  /// Resolves a tree row background with access to its depth and parent state.
+  /// Returning null falls back to [rowBackgroundColor], stripes, then the base
+  /// cell background.
+  final AppDataGridTreeRowColor<T>? treeRowBackgroundColor;
   final _AppDataGridMode _mode;
 
   @override
@@ -406,6 +471,19 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
   var _allDataColumnsHidden = false;
   var _loadedRowCount = 0;
   final _rowMenuController = shad.OverlayController();
+  final Set<Object> _expandedKeys = {};
+  final Map<Object, List<T>> _loadedChildren = {};
+  final Set<Object> _loadingChildren = {};
+  final Set<Object> _initializedExpansionKeys = {};
+  List<T> _currentRootRows = const [];
+
+  bool get _treeEnabled =>
+      widget.buildChildren != null || widget.hasChildren != null;
+
+  String get _treeColumnId => widget.treeColumnId ?? widget.columns.first.id;
+
+  Set<Object> get _effectiveExpandedKeys =>
+      widget.expandedKeys ?? _expandedKeys;
 
   @override
   void initState() {
@@ -418,6 +496,21 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
       widget.pageSizeOptions.isEmpty ||
           widget.pageSizeOptions.contains(widget.pageSize),
       'pageSizeOptions must contain pageSize.',
+    );
+    assert(widget.defaultExpandedDepth >= 0);
+    assert(widget.treeIndent >= 0);
+    assert(
+      widget.childrenLoader == null || widget.hasChildren != null,
+      'hasChildren is required when childrenLoader is provided.',
+    );
+    assert(
+      widget.treeColumnId == null ||
+          widget.columns.any((column) => column.id == widget.treeColumnId),
+      'treeColumnId must match a data column id.',
+    );
+    assert(
+      !_treeEnabled || !widget.reorderableRows,
+      'reorderableRows is not supported with tree rows.',
     );
     _attachController();
   }
@@ -432,6 +525,9 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
     if (widget._mode == _AppDataGridMode.local &&
         oldWidget.rows != widget.rows) {
       _replaceRows(widget.rows);
+    } else if (!setEquals(oldWidget.expandedKeys, widget.expandedKeys) &&
+        _treeEnabled) {
+      _replaceVisibleTreeRows();
     } else if (!setEquals(oldWidget.selectedKeys, widget.selectedKeys)) {
       _syncSelectedKeys();
     }
@@ -491,6 +587,19 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
     _scheduleColumnWidths();
   }
 
+  void _replaceVisibleTreeRows() {
+    final manager = _stateManager;
+    if (manager == null) return;
+    final source = widget._mode == _AppDataGridMode.local
+        ? widget.rows
+        : _currentRootRows;
+    manager.removeAllRows(notify: false);
+    manager.appendRows(_toTrinaRows(source));
+    _configureTree(manager);
+    _applyTreeExpansion(manager);
+    manager.notifyListeners();
+  }
+
   AppDataGridColumnWidthMode _resolvedWidthMode(AppDataGridColumn<T> column) =>
       column.widthMode ?? widget.columnWidthMode;
 
@@ -528,7 +637,13 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
   double _shrinkWrapHeight(BuildContext context) {
     final metrics =
         AppTheme.maybeOf(context)?.dataGrid ?? const AppDataGridMetrics();
-    final rowCount = widget._mode == _AppDataGridMode.local
+    final rowCount = _treeEnabled
+        ? _visibleTreeRowCount(
+            widget._mode == _AppDataGridMode.local
+                ? widget.rows
+                : _currentRootRows,
+          )
+        : widget._mode == _AppDataGridMode.local
         ? widget.rows.length
         : _loadedRowCount;
     // Accounts for Trina's header/body/footer divider lines, grid edge, and
@@ -547,6 +662,19 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
     return math.max(contentHeight, metrics.footerHeight / .4);
   }
 
+  int _visibleTreeRowCount(List<T> rows) {
+    var count = 0;
+    for (final row in rows) {
+      count++;
+      final key = widget.rowKey(row);
+      if (!_effectiveExpandedKeys.contains(key)) continue;
+      final children =
+          _loadedChildren[key] ?? widget.buildChildren?.call(row) ?? [];
+      count += _visibleTreeRowCount(children);
+    }
+    return count;
+  }
+
   void _syncSelectedKeys() {
     final manager = _stateManager;
     if (manager == null ||
@@ -555,10 +683,18 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
     }
 
     var changed = false;
-    for (final row in manager.refRows) {
+    for (final row in _allTreeRows(manager.refRows.originalList)) {
       final data = row.data;
       if (data is! T) continue;
-      final shouldCheck = widget.selectedKeys.contains(widget.rowKey(data));
+      var shouldCheck = widget.selectedKeys.contains(widget.rowKey(data));
+      var ancestor = row.parent;
+      while (!shouldCheck && ancestor != null) {
+        final ancestorData = ancestor.data;
+        shouldCheck =
+            ancestorData is T &&
+            widget.selectedKeys.contains(widget.rowKey(ancestorData));
+        ancestor = ancestor.parent;
+      }
       if (row.checked == shouldCheck) continue;
       manager.setRowChecked(row, shouldCheck, notify: false);
       changed = true;
@@ -711,7 +847,30 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
           rendererContext.column,
         ),
       ),
-      renderer: column.cellBuilder == null
+      renderer: _treeEnabled && column.id == _treeColumnId
+          ? (rendererContext) {
+              final data = rendererContext.row.data as T;
+              return _AppDataGridTreeCell(
+                depth: rendererContext.row.depth,
+                indent: widget.treeIndent,
+                expandable: rendererContext.row.type.isGroup,
+                expanded:
+                    rendererContext.row.type.isGroup &&
+                    rendererContext.row.type.group.expanded,
+                loading: _loadingChildren.contains(widget.rowKey(data)),
+                onToggle: () => _toggleTreeRow(rendererContext.row),
+                child: Builder(
+                  builder: (context) =>
+                      column.cellBuilder?.call(
+                        context,
+                        data,
+                        rendererContext.cell.value,
+                      ) ??
+                      Text('${rendererContext.cell.value ?? ''}'),
+                ),
+              );
+            }
+          : column.cellBuilder == null
           ? null
           : (rendererContext) {
               final row = rendererContext.row.data as T;
@@ -798,22 +957,169 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
   // runtime row type unbound as well; TrinaRow<T> causes its internal
   // FilteredList to reject dragged rows when it inserts them after a move.
   List<TrinaRow> _toTrinaRows(List<T> rows) {
-    return [
-      for (final row in rows)
-        TrinaRow(
-          key: ValueKey(widget.rowKey(row)),
-          data: row,
-          checked: widget.selectedKeys.contains(widget.rowKey(row)),
-          cells: {
-            if (widget.reorderableRows)
-              _appDataGridDragField: TrinaCell(value: ''),
-            if (widget.selectionMode == AppDataGridSelectionMode.multiple)
-              _appDataGridSelectionField: TrinaCell(value: ''),
-            for (final column in widget.columns)
-              column.id: TrinaCell(value: column.value(row)),
-          },
-        ),
+    _currentRootRows = List<T>.of(rows);
+    return [for (final row in rows) _toTrinaRow(row, depth: 0)];
+  }
+
+  TrinaRow _toTrinaRow(
+    T row, {
+    required int depth,
+    bool ancestorSelected = false,
+  }) {
+    final key = widget.rowKey(row);
+    final provided =
+        widget.buildChildren?.call(row) ?? List<T>.empty(growable: false);
+    final children = _loadedChildren[key] ?? provided;
+    final expandable =
+        children.isNotEmpty || (widget.hasChildren?.call(row) ?? false);
+    if (widget.expandedKeys == null &&
+        expandable &&
+        depth < widget.defaultExpandedDepth &&
+        _initializedExpansionKeys.add(key)) {
+      _expandedKeys.add(key);
+    }
+    final checked = ancestorSelected || widget.selectedKeys.contains(key);
+    final childRows = [
+      for (final child in children)
+        _toTrinaRow(child, depth: depth + 1, ancestorSelected: checked),
     ];
+    return TrinaRow(
+      key: ValueKey(key),
+      data: row,
+      checked: checked,
+      type: expandable
+          ? TrinaRowType.group(
+              children: FilteredList(initialList: childRows),
+              expanded: false,
+            )
+          : null,
+      cells: {
+        if (widget.reorderableRows) _appDataGridDragField: TrinaCell(value: ''),
+        if (widget.selectionMode == AppDataGridSelectionMode.multiple)
+          _appDataGridSelectionField: TrinaCell(value: ''),
+        for (final column in widget.columns)
+          column.id: TrinaCell(value: column.value(row)),
+      },
+    );
+  }
+
+  void _configureTree(TrinaGridStateManager manager) {
+    if (!_treeEnabled) return;
+    final allRows = _allTreeRows(manager.refRows.originalList).toList();
+    TrinaGridStateManager.initializeRows(
+      manager.refColumns.originalList,
+      allRows,
+      forceApplySortIdx: false,
+    );
+    manager.setRowGroup(
+      TrinaRowGroupTreeDelegate(
+        showFirstExpandableIcon: true,
+        showCount: false,
+        // AppDataGrid renders its own disclosure control so it can show the
+        // async loading state and use App styling. Returning no expandable
+        // column prevents Trina's default arrow from being drawn as well.
+        resolveColumnDepth: (_) => null,
+        showText: (_) => true,
+        onToggled: ({required row, required expanded}) {
+          final data = row.data;
+          if (data is T) _recordExpanded(widget.rowKey(data), expanded);
+        },
+      ),
+      notify: false,
+    );
+  }
+
+  void _applyTreeExpansion(TrinaGridStateManager manager) {
+    if (!_treeEnabled) return;
+    final groups =
+        _allTreeRows(
+            manager.refRows.originalList,
+          ).where((row) => row.type.isGroup).toList()
+          ..sort((left, right) => left.depth.compareTo(right.depth));
+    for (final row in groups) {
+      final data = row.data;
+      if (data is! T) continue;
+      final expanded = _effectiveExpandedKeys.contains(widget.rowKey(data));
+      if (row.type.group.expanded == expanded) continue;
+      manager.toggleExpandedRowGroup(
+        rowGroup: row,
+        expanded: expanded,
+        notify: false,
+      );
+    }
+    manager.notifyListeners();
+  }
+
+  void _recordExpanded(Object key, bool expanded) {
+    final next = Set<Object>.of(_effectiveExpandedKeys);
+    expanded ? next.add(key) : next.remove(key);
+    if (widget.expandedKeys == null) {
+      _expandedKeys
+        ..clear()
+        ..addAll(next);
+    }
+    widget.onExpandedKeysChanged?.call(Set<Object>.unmodifiable(next));
+  }
+
+  Future<void> _toggleTreeRow(TrinaRow row) async {
+    if (!row.type.isGroup) return;
+    final data = row.data;
+    if (data is! T) return;
+    final key = widget.rowKey(data);
+    final willExpand = !row.type.group.expanded;
+    if (willExpand &&
+        row.type.group.children.originalList.isEmpty &&
+        widget.childrenLoader != null &&
+        !_loadedChildren.containsKey(key)) {
+      if (!_loadingChildren.add(key)) return;
+      setState(() {});
+      try {
+        _loadedChildren[key] = await widget.childrenLoader!(data);
+      } catch (error) {
+        if (mounted) setState(() => _loadError = error);
+        return;
+      } finally {
+        _loadingChildren.remove(key);
+      }
+      if (!mounted) return;
+      _recordExpanded(key, true);
+      final manager = _stateManager;
+      if (manager != null) {
+        final childRows = [
+          for (final child in _loadedChildren[key]!)
+            _toTrinaRow(
+              child,
+              depth: row.depth + 1,
+              ancestorSelected: row.checked == true,
+            ),
+        ];
+        TrinaGridStateManager.initializeRows(
+          manager.refColumns.originalList,
+          childRows,
+        );
+        for (final child in childRows) {
+          child.setParent(row);
+        }
+        row.type.group.children.addAll(childRows);
+        if (widget.expandedKeys == null) {
+          manager.toggleExpandedRowGroup(rowGroup: row);
+          if (mounted && widget.shrinkWrap) setState(() {});
+        } else {
+          setState(() {});
+        }
+      }
+      return;
+    }
+    final manager = _stateManager;
+    if (manager != null && willExpand) {
+      TrinaGridStateManager.initializeRows(
+        manager.refColumns.originalList,
+        _allTreeRows(row.type.group.children.originalList).toList(),
+        forceApplySortIdx: false,
+      );
+    }
+    manager?.toggleExpandedRowGroup(rowGroup: row);
+    if (mounted && widget.shrinkWrap) setState(() {});
   }
 
   AppDataGridQuery _query({
@@ -928,6 +1234,7 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
   void _onLoaded(TrinaGridOnLoadedEvent event) {
     _stateManager?.removeListener(_onGridStateChanged);
     _stateManager = event.stateManager;
+    _configureTree(event.stateManager);
     _wasEditing = event.stateManager.isEditing;
     _stateManager!.addListener(_onGridStateChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -940,7 +1247,9 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _applyInitialSelection();
+        if (!mounted) return;
+        _applyTreeExpansion(event.stateManager);
+        _applyInitialSelection();
       });
     });
   }
@@ -1047,6 +1356,10 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
 
   void _onRowDoubleTap(TrinaGridOnRowDoubleTapEvent event) {
     final data = event.row.data;
+    if (_treeEnabled && event.row.type.isGroup) {
+      unawaited(_toggleTreeRow(event.row));
+      return;
+    }
     if (data is T) widget.onRowDoubleTap?.call(data);
 
     if (!_isFieldEditable(event.cell.column.field)) return;
@@ -1077,13 +1390,23 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
   }
 
   void _onRowChecked(TrinaGridOnRowCheckedEvent event) {
-    final rows =
-        _stateManager?.checkedRows
-            .map((row) => row.data)
-            .whereType<T>()
-            .toList(growable: false) ??
-        List<T>.empty();
+    final rows = _stateManager == null
+        ? List<T>.empty()
+        : _allTreeRows(_stateManager!.refRows.originalList)
+              .where((row) => row.checked == true)
+              .map((row) => row.data)
+              .whereType<T>()
+              .toList(growable: false);
     widget.onSelectionChanged?.call(rows);
+  }
+
+  Iterable<TrinaRow> _allTreeRows(Iterable<TrinaRow> rows) sync* {
+    for (final row in rows) {
+      yield row;
+      if (row.type.isGroup) {
+        yield* _allTreeRows(row.type.group.children.originalList);
+      }
+    }
   }
 
   Future<void> _onRowsMoved(TrinaGridOnRowsMovedEvent event) async {
@@ -1319,14 +1642,24 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
             : _onRowSecondaryTap,
         onRowChecked: _onRowChecked,
         onRowsMoved: _onRowsMoved,
-        rowColorCallback: widget.rowBackgroundColor == null
+        rowColorCallback:
+            widget.rowBackgroundColor == null &&
+                widget.treeRowBackgroundColor == null
             ? null
-            : (rowContext) =>
-                  widget.rowBackgroundColor!(rowContext.row.data as T) ??
-                  (widget.striped && rowContext.rowIdx.isOdd
-                      ? widget.stripeColor ?? appTheme.colorScheme.muted
-                      : widget.cellBackgroundColor ??
-                            appTheme.colorScheme.background),
+            : (rowContext) {
+                final row = rowContext.row;
+                final data = row.data as T;
+                return widget.treeRowBackgroundColor?.call(
+                      data,
+                      row.depth,
+                      row.type.isGroup,
+                    ) ??
+                    widget.rowBackgroundColor?.call(data) ??
+                    (widget.striped && rowContext.rowIdx.isOdd
+                        ? widget.stripeColor ?? appTheme.colorScheme.muted
+                        : widget.cellBackgroundColor ??
+                              appTheme.colorScheme.background);
+              },
         createFooter: widget._mode == _AppDataGridMode.local
             ? null
             : _buildFooter,
@@ -1380,6 +1713,69 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
       return SizedBox(height: height, child: content);
     }
     return SizedBox.expand(child: content);
+  }
+}
+
+class _AppDataGridTreeCell extends StatelessWidget {
+  const _AppDataGridTreeCell({
+    required this.depth,
+    required this.indent,
+    required this.expandable,
+    required this.expanded,
+    required this.loading,
+    required this.onToggle,
+    required this.child,
+  });
+
+  final int depth;
+  final double indent;
+  final bool expandable;
+  final bool expanded;
+  final bool loading;
+  final VoidCallback onToggle;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = shad.Theme.of(context);
+    return Row(
+      children: [
+        SizedBox(width: depth * indent),
+        SizedBox(
+          width: 24,
+          height: 24,
+          child: loading
+              ? Padding(
+                  padding: const EdgeInsets.all(5),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: theme.colorScheme.mutedForeground,
+                  ),
+                )
+              : expandable
+              ? Semantics(
+                  button: true,
+                  expanded: expanded,
+                  label: expanded ? '折叠' : '展开',
+                  child: IconButton(
+                    padding: EdgeInsets.zero,
+                    iconSize: 16,
+                    splashRadius: 12,
+                    onPressed: onToggle,
+                    icon: Icon(
+                      expanded
+                          ? shad.LucideIcons.chevronDown
+                          : shad.LucideIcons.chevronRight,
+                      color: theme.colorScheme.mutedForeground,
+                    ),
+                  ),
+                )
+              : null,
+        ),
+        const SizedBox(width: 4),
+        Expanded(child: child),
+      ],
+    );
   }
 }
 

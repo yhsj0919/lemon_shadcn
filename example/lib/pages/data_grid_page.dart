@@ -14,6 +14,7 @@ class _DataGridPageState extends State<DataGridPage> {
   late List<_GridUser> _localRows;
   late List<_GridUser> _singleRows;
   List<_GridUser> _selectedRows = const [];
+  List<_TreeGridRow> _selectedTreeRows = const [];
   _GridUser? _selectedRow;
 
   static final _allRows = List.generate(
@@ -25,6 +26,46 @@ class _DataGridPageState extends State<DataGridPage> {
       status: index % 4 == 0 ? '停用' : '正常',
     ),
   );
+
+  static const _treeRows = [
+    _TreeGridRow(
+      id: 'product',
+      name: '产品中心',
+      children: [
+        _TreeGridRow(
+          id: 'product-design',
+          name: '产品设计组',
+          type: '团队',
+          owner: '王芳',
+          budget: 128000,
+          status: '进行中',
+        ),
+        _TreeGridRow(
+          id: 'product-research',
+          name: '用户研究组',
+          type: '团队',
+          owner: '陈静',
+          budget: 86000,
+          status: '已完成',
+        ),
+      ],
+    ),
+    _TreeGridRow(id: 'engineering', name: '研发中心（异步）', canLoadChildren: true),
+    _TreeGridRow(
+      id: 'operations',
+      name: '运营中心',
+      children: [
+        _TreeGridRow(
+          id: 'operations-growth',
+          name: '增长运营组',
+          type: '团队',
+          owner: '李华',
+          budget: 96000,
+          status: '进行中',
+        ),
+      ],
+    ),
+  ];
 
   @override
   void initState() {
@@ -106,6 +147,29 @@ class _DataGridPageState extends State<DataGridPage> {
     );
   }
 
+  Future<List<_TreeGridRow>> _loadTreeChildren(_TreeGridRow row) async {
+    await Future<void>.delayed(const Duration(milliseconds: 700));
+    if (row.id != 'engineering') return const [];
+    return const [
+      _TreeGridRow(
+        id: 'engineering-client',
+        name: '客户端研发组',
+        type: '团队',
+        owner: '赵磊',
+        budget: 240000,
+        status: '进行中',
+      ),
+      _TreeGridRow(
+        id: 'engineering-platform',
+        name: '平台研发组',
+        type: '团队',
+        owner: '张明',
+        budget: 310000,
+        status: '待开始',
+      ),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = ShadcnTheme.of(context).colorScheme;
@@ -157,6 +221,78 @@ class _DataGridPageState extends State<DataGridPage> {
             cellForegroundColor: colors.cardForeground,
             striped: true,
             stripeColor: colors.primary.withValues(alpha: 0.06),
+          ),
+        ),
+        ComponentSection(
+          title: '树形行与异步子级',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                '父子行使用相同列且不缩进；灰色行为父级。点击小三角展开，双击“研发中心”异步加载。'
+                ' 已选 ${_selectedTreeRows.length} 行。',
+              ),
+              const Gap(8),
+              AppDataGrid<_TreeGridRow>.local(
+                height: 300,
+                rows: _treeRows,
+                rowKey: (row) => row.id,
+                treeColumnId: 'name',
+                treeIndent: 0,
+                buildChildren: (row) => row.children,
+                hasChildren: (row) =>
+                    row.children.isNotEmpty || row.canLoadChildren,
+                childrenLoader: _loadTreeChildren,
+                selectionMode: AppDataGridSelectionMode.multiple,
+                selectedKeys: {for (final row in _selectedTreeRows) row.id},
+                onSelectionChanged: (rows) =>
+                    setState(() => _selectedTreeRows = rows),
+                treeRowBackgroundColor: (row, depth, isParent) => isParent
+                    ? colors.muted.withValues(alpha: .72)
+                    : colors.background,
+                columns: [
+                  const AppDataGridColumn(
+                    id: 'name',
+                    title: '组织 / 团队',
+                    value: _treeName,
+                    width: 220,
+                    widthMode: AppDataGridColumnWidthMode.fill,
+                    flex: 2,
+                  ),
+                  const AppDataGridColumn(
+                    id: 'type',
+                    title: '类型',
+                    value: _treeType,
+                    width: 100,
+                  ),
+                  const AppDataGridColumn(
+                    id: 'owner',
+                    title: '负责人',
+                    value: _treeOwner,
+                    width: 120,
+                  ),
+                  const AppDataGridColumn(
+                    id: 'budget',
+                    title: '预算',
+                    value: _treeBudget,
+                    type: AppDataGridColumnType.number,
+                    width: 120,
+                  ),
+                  AppDataGridColumn(
+                    id: 'status',
+                    title: '状态',
+                    value: _treeStatus,
+                    width: 110,
+                    cellBuilder: (context, row, value) => value == null
+                        ? const SizedBox.shrink()
+                        : Align(
+                            alignment: Alignment.center,
+                            child: AppBadge.secondary(child: Text('$value')),
+                          ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
         ComponentSection(
@@ -223,4 +359,32 @@ class _GridUser {
 
   _GridUser copy() =>
       _GridUser(id: id, name: name, department: department, status: status);
+}
+
+String _treeName(_TreeGridRow row) => row.name;
+String? _treeType(_TreeGridRow row) => row.type;
+String? _treeOwner(_TreeGridRow row) => row.owner;
+num? _treeBudget(_TreeGridRow row) => row.budget;
+String? _treeStatus(_TreeGridRow row) => row.status;
+
+class _TreeGridRow {
+  const _TreeGridRow({
+    required this.id,
+    required this.name,
+    this.type,
+    this.owner,
+    this.budget,
+    this.status,
+    this.children = const [],
+    this.canLoadChildren = false,
+  });
+
+  final String id;
+  final String name;
+  final String? type;
+  final String? owner;
+  final num? budget;
+  final String? status;
+  final List<_TreeGridRow> children;
+  final bool canLoadChildren;
 }

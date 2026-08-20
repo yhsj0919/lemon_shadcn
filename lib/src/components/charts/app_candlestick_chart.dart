@@ -42,6 +42,7 @@ class AppCandlestickChart extends StatefulWidget {
   const AppCandlestickChart({
     super.key,
     required this.data,
+    this.xAxis = const AppChartAxis(),
     this.yAxis = const AppChartAxis(),
     this.height,
     this.risingColor,
@@ -60,6 +61,7 @@ class AppCandlestickChart extends StatefulWidget {
   });
 
   final List<AppCandlestickData> data;
+  final AppChartAxis xAxis;
   final AppChartAxis yAxis;
   final double? height;
   final Color? risingColor;
@@ -159,6 +161,8 @@ class _AppCandlestickChartState extends State<AppCandlestickChart> {
                               fallingColor: falling,
                               hoveredIndex: _hoveredIndex,
                               showGrid: widget.showGrid,
+                              showXAxis: widget.xAxis.show,
+                              showYAxis: widget.yAxis.show,
                               showValues: widget.showValues,
                               valueFormatter: _formatValue,
                               labelFormatter: _formatLabel,
@@ -205,6 +209,7 @@ class _AppCandlestickChartState extends State<AppCandlestickChart> {
       min: min,
       max: max == min ? min + 1 : max,
       left: widget.yAxis.show ? reserved : 10,
+      bottom: widget.xAxis.show ? 26 : 8,
     );
   }
 
@@ -280,6 +285,7 @@ class _CandlestickGeometry {
     required this.min,
     required this.max,
     required this.left,
+    required this.bottom,
   });
 
   final Size size;
@@ -287,8 +293,9 @@ class _CandlestickGeometry {
   final double min;
   final double max;
   final double left;
+  final double bottom;
 
-  Rect get plot => Rect.fromLTRB(left, 8, size.width - 8, size.height - 30);
+  Rect get plot => Rect.fromLTRB(left, 8, size.width - 8, size.height - bottom);
   double get slot => plot.width / count;
   double x(int index) => plot.left + slot * (index + .5);
   double y(double value) =>
@@ -310,6 +317,8 @@ class _CandlestickPainter extends CustomPainter {
     required this.fallingColor,
     required this.hoveredIndex,
     required this.showGrid,
+    required this.showXAxis,
+    required this.showYAxis,
     required this.showValues,
     required this.valueFormatter,
     required this.labelFormatter,
@@ -324,6 +333,8 @@ class _CandlestickPainter extends CustomPainter {
   final Color fallingColor;
   final int? hoveredIndex;
   final bool showGrid;
+  final bool showXAxis;
+  final bool showYAxis;
   final bool showValues;
   final String Function(double) valueFormatter;
   final String Function(int, AppCandlestickData) labelFormatter;
@@ -345,7 +356,7 @@ class _CandlestickPainter extends CustomPainter {
           gridPaint,
         );
       }
-      if (theme.colorScheme.mutedForeground.a > 0) {
+      if (showYAxis && theme.colorScheme.mutedForeground.a > 0) {
         _text(
           canvas,
           valueFormatter(value),
@@ -399,7 +410,7 @@ class _CandlestickPainter extends CustomPainter {
             ..strokeWidth = 2,
         );
       }
-      if (index % labelStep == 0 || index == data.length - 1) {
+      if (showXAxis && (index % labelStep == 0 || index == data.length - 1)) {
         _text(
           canvas,
           labelFormatter(index, candle),

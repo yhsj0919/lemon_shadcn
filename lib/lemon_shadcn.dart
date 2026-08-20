@@ -18,6 +18,7 @@ export 'src/components/charts/app_chart_export.dart';
 export 'src/components/charts/app_line_chart.dart';
 export 'src/components/charts/app_pie_chart.dart';
 export 'src/components/charts/app_radar_chart.dart';
+export 'src/components/charts/app_rank_bar_chart.dart';
 export 'src/components/charts/app_scatter_chart.dart';
 export 'src/components/data/app_data_grid.dart';
 export 'src/components/display/app_badge.dart';

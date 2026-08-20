@@ -131,7 +131,7 @@ void main() {
     );
     await tester.pump();
 
-    await tester.doubleTap(find.text('Root'));
+    await _doubleTap(tester, find.text('Root'));
     await tester.pump();
     await tester.pump();
 
@@ -271,4 +271,11 @@ void main() {
     expect(find.text('Ready'), findsOneWidget);
     expect(attempts, 2);
   });
+}
+
+Future<void> _doubleTap(WidgetTester tester, Finder finder) async {
+  await tester.tap(finder);
+  await tester.pump(const Duration(milliseconds: 40));
+  await tester.tap(finder);
+  await tester.pump(const Duration(milliseconds: 400));
 }

@@ -345,10 +345,10 @@ class _AppScatterChartState extends State<AppScatterChart> {
     double min,
     double max,
   ) => AxisTitles(
-    axisNameWidget: axis.title == null
+    axisNameWidget: !axis.show || axis.title == null
         ? null
         : Text(axis.title!, style: style, maxLines: 1),
-    axisNameSize: axis.title == null ? 0 : 22,
+    axisNameSize: !axis.show || axis.title == null ? 0 : 20,
     sideTitles: SideTitles(
       showTitles: axis.show,
       minIncluded: axis.min != null,
@@ -361,11 +361,11 @@ class _AppScatterChartState extends State<AppScatterChart> {
                   style,
                   chart,
                 )
-              : 30),
+              : 26),
       interval: axis.interval,
       getTitlesWidget: (value, meta) => SideTitleWidget(
         meta: meta,
-        fitInside: SideTitleFitInsideData.fromTitleMeta(meta),
+        space: 6,
         child: Text(
           axis.formatter?.call(value) ?? appChartNumber(value),
           style: style,

@@ -194,7 +194,6 @@ class _AppLineChartState extends State<AppLineChart> {
     final empty = widget.series.every(
       (series) => series.points.every((point) => point.y == null),
     );
-    final data = empty ? null : _data(theme, chart, palette);
     return AppChartKeyboardRegion(
       enabled: widget.keyboardNavigation && !empty,
       autofocus: widget.autofocus,
@@ -239,21 +238,31 @@ class _AppLineChartState extends State<AppLineChart> {
                     SizedBox(height: chart.legendSpacing),
                   ],
                   Expanded(
-                    child: AppPointerTooltipArea(
-                      position: _tooltipPosition,
-                      message: _tooltipMessage,
-                      onExit: _clearPointerHover,
-                      child: LineChart(
-                        widget.dataBuilder?.call(data!) ?? data!,
-                        duration:
-                            config?.motion.enabled == false ||
-                                MediaQuery.maybeOf(
-                                      context,
-                                    )?.disableAnimations ==
-                                    true
-                            ? Duration.zero
-                            : chart.animationDuration,
-                      ),
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final data = _data(
+                          theme,
+                          chart,
+                          palette,
+                          constraints.maxWidth,
+                        );
+                        return AppPointerTooltipArea(
+                          position: _tooltipPosition,
+                          message: _tooltipMessage,
+                          onExit: _clearPointerHover,
+                          child: LineChart(
+                            widget.dataBuilder?.call(data) ?? data,
+                            duration:
+                                config?.motion.enabled == false ||
+                                    MediaQuery.maybeOf(
+                                          context,
+                                        )?.disableAnimations ==
+                                        true
+                                ? Duration.zero
+                                : chart.animationDuration,
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ],
@@ -266,6 +275,7 @@ class _AppLineChartState extends State<AppLineChart> {
     AppThemeData theme,
     AppChartTheme chart,
     List<Color> palette,
+    double availableWidth,
   ) {
     final points = widget.series.expand((series) => series.points);
     final valid = points.where((point) => point.y != null).toList();
@@ -274,8 +284,32 @@ class _AppLineChartState extends State<AppLineChart> {
     final rawMinY = valid.map((e) => e.y!).reduce(math.min);
     final rawMaxY = valid.map((e) => e.y!).reduce(math.max);
     final minY = widget.yAxis.min ?? math.min(0, rawMinY * 1.08);
-    final maxY = widget.yAxis.max ?? math.max(0, rawMaxY * 1.08);
+    final automaticMinY = math.min(0.0, rawMinY);
+    final maxY =
+        widget.yAxis.max ??
+        appChartNiceMaximum(
+          widget.yAxis.min ?? automaticMinY,
+          math.max(0.0, rawMaxY),
+          interval: widget.yAxis.interval,
+        );
     final axisStyle = appChartAxisStyle(theme, chart);
+    final xLabelExtent = math.max(
+      0.0,
+      availableWidth -
+          (widget.yAxis.show
+              ? widget.yAxis.reservedSize ??
+                    appChartAxisReservedWidth(
+                      appChartValueAxisLabels(
+                        minY,
+                        maxY,
+                        widget.yAxis.formatter,
+                      ),
+                      axisStyle,
+                      chart,
+                    )
+              : 0) -
+          16,
+    );
 
     return LineChartData(
       minX: minX,
@@ -304,6 +338,7 @@ class _AppLineChartState extends State<AppLineChart> {
           chart,
           minX,
           maxX,
+          availableExtent: xLabelExtent,
         ),
         leftTitles: _axisTitles(
           widget.yAxis,
@@ -425,9 +460,10 @@ class _AppLineChartState extends State<AppLineChart> {
     bool vertical,
     AppChartTheme chart,
     double min,
-    double max,
-  ) => AxisTitles(
-    axisNameWidget: axis.title == null
+    double max, {
+    double? availableExtent,
+  }) => AxisTitles(
+    axisNameWidget: !axis.show || axis.title == null
         ? null
         : Text(
             axis.title!,
@@ -436,11 +472,11 @@ class _AppLineChartState extends State<AppLineChart> {
             softWrap: false,
             overflow: TextOverflow.ellipsis,
           ),
-    axisNameSize: axis.title == null ? 0 : 22,
+    axisNameSize: !axis.show || axis.title == null ? 0 : 20,
     sideTitles: SideTitles(
       showTitles: axis.show,
       minIncluded: vertical ? axis.min != null : true,
-      maxIncluded: vertical ? axis.max != null : true,
+      maxIncluded: true,
       reservedSize:
           axis.reservedSize ??
           (vertical
@@ -449,7 +485,7 @@ class _AppLineChartState extends State<AppLineChart> {
                   style,
                   chart,
                 )
-              : 30),
+              : 26),
       interval: axis.interval ?? (vertical ? null : _xPointInterval()),
       getTitlesWidget: (value, meta) {
         final pointLabel = vertical ? null : _pointLabel(value);
@@ -459,10 +495,21 @@ class _AppLineChartState extends State<AppLineChart> {
             pointLabel == null) {
           return const SizedBox.shrink();
         }
+        if (!vertical &&
+            axis.interval == null &&
+            axis.autoLabelInterval &&
+            pointLabel != null &&
+            !_showAutomaticXLabel(
+              value,
+              availableExtent ?? double.infinity,
+              style,
+              axis,
+            )) {
+          return const SizedBox.shrink();
+        }
         return SideTitleWidget(
           meta: meta,
-          space: 8,
-          fitInside: SideTitleFitInsideData.fromTitleMeta(meta),
+          space: 6,
           child: Text(
             axis.formatter?.call(value) ?? pointLabel ?? appChartNumber(value),
             style: style,
@@ -478,6 +525,37 @@ class _AppLineChartState extends State<AppLineChart> {
   bool get _hasPointLabels => widget.series.any(
     (series) => series.points.any((point) => point.label != null),
   );
+
+  bool _showAutomaticXLabel(
+    double value,
+    double availableWidth,
+    TextStyle style,
+    AppChartAxis axis,
+  ) {
+    final values = _xLabelValues();
+    final index = values.indexWhere((entry) => entry.$1 == value);
+    if (index < 0) return false;
+    final stride = appChartLabelStride(
+      values.map((entry) => entry.$2),
+      availableWidth,
+      style,
+      minSpacing: axis.minLabelSpacing,
+    );
+    return appChartShowSampledLabel(index, values.length, stride);
+  }
+
+  List<(double, String)> _xLabelValues() {
+    final labels = <double, String>{};
+    for (final series in widget.series) {
+      for (final point in series.points) {
+        if (point.label != null) {
+          labels.putIfAbsent(point.x, () => point.label!);
+        }
+      }
+    }
+    return labels.entries.map((entry) => (entry.key, entry.value)).toList()
+      ..sort((left, right) => left.$1.compareTo(right.$1));
+  }
 
   double? _xPointInterval() {
     final values =

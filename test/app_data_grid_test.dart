@@ -406,14 +406,166 @@ void main() {
     final row = grid.rows.first;
     final cell = row.cells.values.first;
     grid.onRowDoubleTap!(
-      TrinaGridOnRowDoubleTapEvent(
-        row: row,
-        rowIdx: 0,
-        cell: cell,
-      ),
+      TrinaGridOnRowDoubleTapEvent(row: row, rowIdx: 0, cell: cell),
     );
 
     expect(doubleTappedRow?.name, 'Ada');
+  });
+
+  testWidgets('tree rows expand nested children and cascade selection', (
+    tester,
+  ) async {
+    List<_TreeRow> selected = const [];
+    const child = _TreeRow(2, 'Child');
+    const parent = _TreeRow(1, 'Parent', children: [child]);
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(
+            width: 420,
+            child: AppDataGrid<_TreeRow>.local(
+              height: 180,
+              selectionMode: AppDataGridSelectionMode.multiple,
+              treeColumnId: 'name',
+              buildChildren: _treeChildren,
+              hasChildren: _treeHasChildren,
+              onSelectionChanged: (rows) => selected = rows,
+              columns: const [
+                AppDataGridColumn(id: 'name', title: 'Name', value: _treeName),
+              ],
+              rows: const [parent],
+              rowKey: _treeId,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    var grid = tester.widget<TrinaGrid>(find.byType(TrinaGrid));
+    expect(find.text('Child'), findsNothing);
+    expect(find.byIcon(AppLucideIcons.chevronRight), findsOneWidget);
+    expect(find.byIcon(material.Icons.keyboard_arrow_right), findsNothing);
+    grid.onRowDoubleTap!(
+      TrinaGridOnRowDoubleTapEvent(
+        row: grid.rows.first,
+        rowIdx: 0,
+        cell: grid.rows.first.cells['name']!,
+      ),
+    );
+    await tester.pump();
+    expect(find.text('Child'), findsOneWidget);
+
+    tester
+        .widget<AppCheckboxIndicator>(find.byType(AppCheckboxIndicator).at(1))
+        .onChanged!(shad.CheckboxState.checked);
+    await tester.pump();
+    expect(selected.map(_treeId), containsAll([1, 2]));
+  });
+
+  testWidgets('tree rows load children once when a parent is double tapped', (
+    tester,
+  ) async {
+    var loads = 0;
+    const parent = _TreeRow(1, 'Async parent', canLoadChildren: true);
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(
+            width: 420,
+            child: AppDataGrid<_TreeRow>.local(
+              height: 180,
+              treeColumnId: 'name',
+              buildChildren: _treeChildren,
+              hasChildren: _treeHasChildren,
+              childrenLoader: (row) async {
+                loads++;
+                return const [_TreeRow(2, 'Loaded child')];
+              },
+              columns: const [
+                AppDataGridColumn(id: 'name', title: 'Name', value: _treeName),
+              ],
+              rows: const [parent],
+              rowKey: _treeId,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    Future<void> doubleTapParent() async {
+      final grid = tester.widget<TrinaGrid>(find.byType(TrinaGrid));
+      grid.onRowDoubleTap!(
+        TrinaGridOnRowDoubleTapEvent(
+          row: grid.rows.first,
+          rowIdx: 0,
+          cell: grid.rows.first.cells['name']!,
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    await doubleTapParent();
+    expect(loads, 1);
+    expect(find.text('Loaded child'), findsOneWidget);
+    await doubleTapParent();
+    await doubleTapParent();
+    expect(loads, 1);
+  });
+
+  testWidgets('tree rows can align levels and style parents separately', (
+    tester,
+  ) async {
+    final styledRows = <String>[];
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(
+            width: 420,
+            child: AppDataGrid<_TreeRow>.local(
+              height: 180,
+              treeIndent: 0,
+              treeRowBackgroundColor: (row, depth, isParent) {
+                styledRows.add('${row.name}:$depth:$isParent');
+                return isParent
+                    ? const Color(0xffeeeeee)
+                    : const Color(0xffffffff);
+              },
+              buildChildren: _treeChildren,
+              hasChildren: _treeHasChildren,
+              columns: const [
+                AppDataGridColumn(id: 'name', title: 'Name', value: _treeName),
+              ],
+              rows: const [
+                _TreeRow(1, 'Parent', children: [_TreeRow(2, 'Child')]),
+              ],
+              rowKey: _treeId,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    final treeGrid = tester.widget<TrinaGrid>(find.byType(TrinaGrid));
+    treeGrid.onRowDoubleTap!(
+      TrinaGridOnRowDoubleTapEvent(
+        row: treeGrid.rows.first,
+        rowIdx: 0,
+        cell: treeGrid.rows.first.cells['name']!,
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('Child'), findsOneWidget);
+    expect(styledRows, contains('Parent:0:true'));
+    expect(styledRows, contains('Child:1:false'));
   });
 
   testWidgets('reorderable rows use Trina drag-compatible runtime types', (
@@ -696,4 +848,24 @@ class _Row {
 
   final int id;
   final String name;
+}
+
+String _treeName(_TreeRow row) => row.name;
+int _treeId(_TreeRow row) => row.id;
+List<_TreeRow> _treeChildren(_TreeRow row) => row.children;
+bool _treeHasChildren(_TreeRow row) =>
+    row.children.isNotEmpty || row.canLoadChildren;
+
+class _TreeRow {
+  const _TreeRow(
+    this.id,
+    this.name, {
+    this.children = const [],
+    this.canLoadChildren = false,
+  });
+
+  final int id;
+  final String name;
+  final List<_TreeRow> children;
+  final bool canLoadChildren;
 }

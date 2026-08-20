@@ -13,7 +13,7 @@ typedef AppBarChartTapCallback = void Function(AppBarChartHit hit);
 typedef AppBarChartColorResolver = Color Function(AppBarChartStyleContext data);
 typedef AppBarChartDataBuilder = BarChartData Function(BarChartData data);
 
-enum _AppBarChartVariant { grouped, stacked, horizontal }
+enum _AppBarChartVariant { grouped, stacked, horizontal, horizontalStacked }
 
 @immutable
 class AppBarValue {
@@ -154,11 +154,41 @@ class AppBarChart extends StatefulWidget {
     this.dataBuilder,
   }) : _variant = _AppBarChartVariant.horizontal;
 
+  /// Horizontal stacked business chart. [xAxis] is the numeric value axis and
+  /// can be hidden with `AppChartAxis(show: false)`.
+  const AppBarChart.horizontalStacked({
+    super.key,
+    required this.groups,
+    this.series = const <AppBarSeries>[],
+    this.xAxis = const AppChartAxis(),
+    this.yAxis = const AppChartAxis(),
+    this.referenceLines = const <AppChartReferenceLine>[],
+    this.nullPolicy = AppChartNullPolicy.gap,
+    this.height,
+    this.palette,
+    this.showGrid = true,
+    this.showTooltip = true,
+    this.showLegend = true,
+    this.showValues = false,
+    this.interactive = true,
+    this.selectionEnabled = false,
+    this.keyboardNavigation = true,
+    this.autofocus = false,
+    this.semanticLabel = '横向堆叠柱状图，使用方向键浏览数据',
+    this.selected = const <AppChartSelection>{},
+    this.onSelectionChanged,
+    this.onBarTap,
+    this.colorResolver,
+    this.dataBuilder,
+  }) : _variant = _AppBarChartVariant.horizontalStacked;
+
   factory AppBarChart.simple({
     Key? key,
     required List<AppBarValue> values,
     required List<String> labels,
+    AppChartAxis xAxis = const AppChartAxis(),
     AppChartAxis yAxis = const AppChartAxis(),
+    bool showValues = false,
     AppBarChartTapCallback? onBarTap,
     double? height,
   }) {
@@ -169,7 +199,9 @@ class AppBarChart extends StatefulWidget {
         for (var i = 0; i < values.length; i++)
           AppBarGroup(label: labels[i], values: <AppBarValue>[values[i]]),
       ],
+      xAxis: xAxis,
       yAxis: yAxis,
+      showValues: showValues,
       onBarTap: onBarTap,
       height: height,
     );
@@ -215,7 +247,12 @@ class _AppBarChartState extends State<AppBarChart> {
   Set<AppChartSelection> get _selected => widget.selectionEnabled
       ? (_selectionIsControlled ? widget.selected : _internalSelected)
       : const <AppChartSelection>{};
-  bool get _horizontal => widget._variant == _AppBarChartVariant.horizontal;
+  bool get _horizontal =>
+      widget._variant == _AppBarChartVariant.horizontal ||
+      widget._variant == _AppBarChartVariant.horizontalStacked;
+  bool get _stacked =>
+      widget._variant == _AppBarChartVariant.stacked ||
+      widget._variant == _AppBarChartVariant.horizontalStacked;
   AppChartAxis get _categoryAxis => _horizontal ? widget.yAxis : widget.xAxis;
   AppChartAxis get _valueAxis => _horizontal ? widget.xAxis : widget.yAxis;
 
@@ -246,12 +283,8 @@ class _AppBarChartState extends State<AppBarChart> {
       semanticLabel: widget.semanticLabel,
       onPrevious: () => _moveKeyboard(-1),
       onNext: () => _moveKeyboard(1),
-      onUp: widget._variant == _AppBarChartVariant.stacked
-          ? () => _moveKeyboard(1)
-          : null,
-      onDown: widget._variant == _AppBarChartVariant.stacked
-          ? () => _moveKeyboard(-1)
-          : null,
+      onUp: _stacked ? () => _moveKeyboard(1) : null,
+      onDown: _stacked ? () => _moveKeyboard(-1) : null,
       onActivate: _activateCurrent,
       onClear: _clearKeyboard,
       child: SizedBox(
@@ -268,11 +301,32 @@ class _AppBarChartState extends State<AppBarChart> {
             : LayoutBuilder(
                 builder: (context, constraints) {
                   final labelLayout = _labelLayout(constraints, chartTheme);
+                  final categoryLabelStride =
+                      _categoryAxis.interval == null &&
+                          _categoryAxis.autoLabelInterval
+                      ? appChartLabelStride(
+                          widget.groups.map((group) => group.label),
+                          _horizontal
+                              ? constraints.maxHeight
+                              : math.max(
+                                  0,
+                                  constraints.maxWidth -
+                                      (_valueAxis.show
+                                          ? _valueAxis.reservedSize ??
+                                                chartTheme.axisMinReservedSize
+                                          : 0) -
+                                      16,
+                                ),
+                          appChartAxisStyle(theme, chartTheme),
+                          minSpacing: _categoryAxis.minLabelSpacing,
+                        )
+                      : 1;
                   final data = _buildData(
                     theme,
                     chartTheme,
                     palette,
                     labelLayout,
+                    categoryLabelStride,
                   );
                   final chart = BarChart(
                     widget.dataBuilder?.call(data) ?? data,
@@ -341,7 +395,7 @@ class _AppBarChartState extends State<AppBarChart> {
     final groupSlot = extent / widget.groups.length;
     if (groupSlot <= 0) return const _AppBarLabelLayout.hidden();
     final stride = math.max(1, (chart.dataLabelMinSpacing / groupSlot).ceil());
-    final maxSeries = widget._variant == _AppBarChartVariant.stacked
+    final maxSeries = _stacked
         ? 1
         : widget.groups.fold<int>(
             1,
@@ -350,8 +404,7 @@ class _AppBarChartState extends State<AppBarChart> {
     return _AppBarLabelLayout(
       stride: stride,
       singlePerGroup:
-          widget._variant != _AppBarChartVariant.stacked &&
-          groupSlot / maxSeries < chart.dataLabelMinSpacing,
+          !_stacked && groupSlot / maxSeries < chart.dataLabelMinSpacing,
     );
   }
 
@@ -376,8 +429,9 @@ class _AppBarChartState extends State<AppBarChart> {
     AppChartTheme chart,
     List<Color> palette,
     _AppBarLabelLayout labelLayout,
+    int categoryLabelStride,
   ) {
-    final values = widget._variant == _AppBarChartVariant.stacked
+    final values = _stacked
         ? <double>[
             for (final group in widget.groups) ...<double>[
               group.values
@@ -400,7 +454,11 @@ class _AppBarChartState extends State<AppBarChart> {
     final minY = _valueAxis.min ?? math.min(0, minValue * 1.12);
     final maxY =
         _valueAxis.max ??
-        (maxValue == minY ? minY + 1 : math.max(0, maxValue * 1.12));
+        appChartNiceMaximum(
+          minY,
+          math.max(0.0, maxValue),
+          interval: _valueAxis.interval,
+        );
     final axisStyle = theme.typography.xSmall.copyWith(
       fontSize: chart.labelFontSize,
       color: theme.colorScheme.mutedForeground,
@@ -410,7 +468,7 @@ class _AppBarChartState extends State<AppBarChart> {
     for (var groupIndex = 0; groupIndex < widget.groups.length; groupIndex++) {
       final group = widget.groups[groupIndex];
       final rods = <BarChartRodData>[];
-      if (widget._variant == _AppBarChartVariant.stacked) {
+      if (_stacked) {
         rods.add(
           _stackedRod(
             groupIndex,
@@ -466,11 +524,11 @@ class _AppBarChartState extends State<AppBarChart> {
                     )
                   : null,
               gradient: hidden || suppressNull ? null : value.gradient,
-              width: chart.barWidth * (isHovered ? chart.hoverScale : 1),
-              borderRadius: BorderRadius.vertical(
-                top: Radius.circular(numeric >= 0 ? chart.radius : 0),
-                bottom: Radius.circular(numeric < 0 ? chart.radius : 0),
-              ),
+              // Keep plot geometry stable while the pointer moves. Changing
+              // rod width here makes fl_chart relayout and animate axis labels
+              // on every hover update.
+              width: chart.barWidth,
+              borderRadius: BorderRadius.circular(chart.radius),
               label: BarChartRodLabel(
                 show:
                     _showLabel(labelLayout, groupIndex, seriesIndex) &&
@@ -494,6 +552,12 @@ class _AppBarChartState extends State<AppBarChart> {
       );
     }
 
+    final boundaryLabelSpace = widget.showValues
+        ? _valueLabelExtent(axisStyle) + 8
+        : 0.0;
+    final positiveLabelSpace = maxValue > 0 ? boundaryLabelSpace : 0.0;
+    final negativeLabelSpace = minValue < 0 ? boundaryLabelSpace : 0.0;
+
     return BarChartData(
       barGroups: groups,
       groupsSpace: chart.groupSpacing,
@@ -511,14 +575,21 @@ class _AppBarChartState extends State<AppBarChart> {
         ),
       ),
       titlesData: FlTitlesData(
-        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        // With a quarter-turn, the logical top side becomes the physical
+        // right edge. Reserve this side for positive labels in both layouts.
+        topTitles: _reservedTitles(positiveLabelSpace),
         rightTitles: _horizontal
-            ? _leftTitles(axisStyle, chart, minY, maxY)
+            ? _leftTitles(axisStyle, chart, minY, maxY, 0)
             : const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-        bottomTitles: _bottomTitles(axisStyle, chart),
+        bottomTitles: _bottomTitles(
+          axisStyle,
+          chart,
+          categoryLabelStride,
+          negativeLabelSpace,
+        ),
         leftTitles: _horizontal
             ? const AxisTitles(sideTitles: SideTitles(showTitles: false))
-            : _leftTitles(axisStyle, chart, minY, maxY),
+            : _leftTitles(axisStyle, chart, minY, maxY, 0),
       ),
       extraLinesData: ExtraLinesData(
         horizontalLines: <HorizontalLine>[
@@ -565,7 +636,6 @@ class _AppBarChartState extends State<AppBarChart> {
     final items = <BarChartRodStackItem>[];
     var positive = 0.0;
     var negative = 0.0;
-    var anyHovered = false;
     for (
       var seriesIndex = 0;
       seriesIndex < group.values.length;
@@ -586,7 +656,6 @@ class _AppBarChartState extends State<AppBarChart> {
       final selection = AppChartSelection(groupIndex, seriesIndex);
       final isHovered = selection == _hovered;
       final isSelected = _selected.contains(selection);
-      anyHovered = anyHovered || isHovered;
       final baseColor =
           value.color ??
           (seriesIndex < widget.series.length
@@ -626,7 +695,9 @@ class _AppBarChartState extends State<AppBarChart> {
       fromY: negative,
       toY: positive,
       color: Colors.transparent,
-      width: chart.barWidth * (anyHovered ? chart.hoverScale : 1),
+      // Hover is conveyed by segment color/opacity. A stable width prevents
+      // category and value-axis labels from shifting during pointer movement.
+      width: chart.barWidth,
       borderRadius: BorderRadius.circular(chart.radius),
       rodStackItems: items,
       label: BarChartRodLabel(
@@ -637,8 +708,52 @@ class _AppBarChartState extends State<AppBarChart> {
     );
   }
 
-  AxisTitles _bottomTitles(TextStyle style, AppChartTheme chart) => AxisTitles(
-    axisNameWidget: _categoryAxis.title == null
+  double _valueLabelExtent(TextStyle style) {
+    final labels = <String>[];
+    for (final group in widget.groups) {
+      if (_stacked) {
+        final total = group.values.fold<double>(
+          0,
+          (sum, value) => sum + (value.value ?? 0),
+        );
+        labels.add(_valueAxis.formatter?.call(total) ?? appChartNumber(total));
+      } else {
+        for (final value in group.values) {
+          if (value.value == null) continue;
+          labels.add(
+            _valueAxis.formatter?.call(value.value!) ??
+                appChartNumber(value.value!),
+          );
+        }
+      }
+    }
+    if (labels.isEmpty) return 0;
+    final painter = TextPainter(maxLines: 1, textDirection: TextDirection.ltr);
+    var extent = 0.0;
+    for (final label in labels) {
+      painter.text = TextSpan(text: label, style: style);
+      painter.layout();
+      extent = math.max(extent, _horizontal ? painter.width : painter.height);
+    }
+    painter.dispose();
+    return extent;
+  }
+
+  AxisTitles _reservedTitles(double size) => AxisTitles(
+    sideTitles: SideTitles(
+      showTitles: size > 0,
+      reservedSize: size,
+      getTitlesWidget: (_, _) => const SizedBox.shrink(),
+    ),
+  );
+
+  AxisTitles _bottomTitles(
+    TextStyle style,
+    AppChartTheme chart,
+    int labelStride,
+    double boundaryLabelSpace,
+  ) => AxisTitles(
+    axisNameWidget: !_categoryAxis.show || _categoryAxis.title == null
         ? null
         : Text(
             _categoryAxis.title!,
@@ -647,28 +762,38 @@ class _AppBarChartState extends State<AppBarChart> {
             softWrap: false,
             overflow: TextOverflow.ellipsis,
           ),
-    axisNameSize: _categoryAxis.title == null ? 0 : 22,
+    axisNameSize: !_categoryAxis.show || _categoryAxis.title == null ? 0 : 20,
     sideTitles: SideTitles(
       showTitles: _categoryAxis.show,
-      reservedSize:
-          _categoryAxis.reservedSize ??
-          (_horizontal
-              ? appChartAxisReservedWidth(
-                  widget.groups.map((group) => group.label),
-                  style,
-                  chart,
-                )
-              : 30),
+      reservedSize: math.max(
+        _categoryAxis.reservedSize ??
+            (_horizontal
+                ? appChartAxisReservedWidth(
+                    widget.groups.map((group) => group.label),
+                    style,
+                    chart,
+                  )
+                : 26),
+        boundaryLabelSpace,
+      ),
       interval: _categoryAxis.interval,
       getTitlesWidget: (value, meta) {
         final index = value.round();
         if (index < 0 || index >= widget.groups.length || value != index) {
           return const SizedBox.shrink();
         }
+        if (_categoryAxis.interval == null &&
+            labelStride > 1 &&
+            !appChartShowSampledLabel(
+              index,
+              widget.groups.length,
+              labelStride,
+            )) {
+          return const SizedBox.shrink();
+        }
         return SideTitleWidget(
           meta: meta,
-          space: 8,
-          fitInside: SideTitleFitInsideData.fromTitleMeta(meta),
+          space: 6,
           child: Text(
             widget.groups[index].label,
             style: style,
@@ -686,8 +811,9 @@ class _AppBarChartState extends State<AppBarChart> {
     AppChartTheme chart,
     double min,
     double max,
+    double boundaryLabelSpace,
   ) => AxisTitles(
-    axisNameWidget: _valueAxis.title == null
+    axisNameWidget: !_valueAxis.show || _valueAxis.title == null
         ? null
         : Text(
             _valueAxis.title!,
@@ -696,23 +822,25 @@ class _AppBarChartState extends State<AppBarChart> {
             softWrap: false,
             overflow: TextOverflow.ellipsis,
           ),
-    axisNameSize: _valueAxis.title == null ? 0 : 22,
+    axisNameSize: !_valueAxis.show || _valueAxis.title == null ? 0 : 20,
     sideTitles: SideTitles(
       showTitles: _valueAxis.show,
-      reservedSize:
-          _valueAxis.reservedSize ??
-          (_horizontal
-              ? 30
-              : appChartAxisReservedWidth(
-                  appChartValueAxisLabels(min, max, _valueAxis.formatter),
-                  style,
-                  chart,
-                )),
+      maxIncluded: true,
+      reservedSize: math.max(
+        _valueAxis.reservedSize ??
+            (_horizontal
+                ? 26
+                : appChartAxisReservedWidth(
+                    appChartValueAxisLabels(min, max, _valueAxis.formatter),
+                    style,
+                    chart,
+                  )),
+        boundaryLabelSpace,
+      ),
       interval: _valueAxis.interval,
       getTitlesWidget: (value, meta) => SideTitleWidget(
         meta: meta,
-        space: 8,
-        fitInside: SideTitleFitInsideData.fromTitleMeta(meta),
+        space: 6,
         child: Text(
           _valueAxis.formatter?.call(value) ?? appChartNumber(value),
           style: style,
@@ -728,7 +856,7 @@ class _AppBarChartState extends State<AppBarChart> {
     final spot = response?.spot;
     final seriesIndex = spot == null
         ? -1
-        : widget._variant == _AppBarChartVariant.stacked
+        : _stacked
         ? spot.touchedStackItemIndex
         : spot.touchedRodDataIndex;
     final next = spot == null || seriesIndex < 0
@@ -848,7 +976,7 @@ class _AppBarChartState extends State<AppBarChart> {
 
   String _tooltipFor(AppChartSelection selection) {
     final hit = _hit(selection);
-    if (widget._variant == _AppBarChartVariant.stacked) {
+    if (_stacked) {
       final lines = <String>[hit.group.label];
       for (var index = 0; index < hit.group.values.length; index++) {
         if (_hiddenSeries.contains(index)) continue;

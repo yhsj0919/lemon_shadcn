@@ -8,6 +8,12 @@ import 'package:lemon_shadcn/lemon_shadcn.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
 void main() {
+  test('chart axes use compact default reservations', () {
+    const chart = AppChartTheme();
+    expect(chart.axisMinReservedSize, 32);
+    expect(chart.axisMaxReservedSize, 80);
+  });
+
   test('axis width is measured and bounded by chart theme tokens', () {
     const chart = AppChartTheme(
       axisMinReservedSize: 40,
@@ -24,6 +30,65 @@ void main() {
       ),
       80,
     );
+  });
+
+  test('dense axis labels calculate a width-aware stride', () {
+    const labels = <String>['一月', '二月', '三月', '四月', '五月', '六月'];
+    const style = TextStyle(fontSize: 12);
+
+    expect(appChartLabelStride(labels, 600, style), 1);
+    expect(appChartLabelStride(labels, 90, style), greaterThan(1));
+    expect(appChartShowSampledLabel(22, 24, 3), isFalse);
+    expect(appChartShowSampledLabel(23, 24, 3), isFalse);
+    expect(appChartShowSampledLabel(21, 24, 3), isTrue);
+  });
+
+  testWidgets('dense category axis keeps labels at a uniform stride', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(
+            width: 180,
+            child: AppBarChart.simple(
+              labels: List<String>.generate(12, (index) => '第${index + 1}个月'),
+              values: List<AppBarValue>.generate(
+                12,
+                (index) => AppBarValue(value: index.toDouble()),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('第1个月'), findsOneWidget);
+    expect(find.text('第12个月'), findsNothing);
+    expect(find.text('第2个月'), findsNothing);
+  });
+
+  testWidgets('automatic value boundary rounds to a readable tick', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: AppBarChart.simple(
+          labels: const <String>['最高值'],
+          values: const <AppBarValue>[AppBarValue(value: 60)],
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final data = tester.widget<BarChart>(find.byType(BarChart)).data;
+    expect(data.maxY, 60);
+    expect(data.titlesData.leftTitles.sideTitles.maxIncluded, isTrue);
+    expect(find.text('67.2'), findsNothing);
   });
 
   testWidgets('bar chart derives geometry and colors from App chart theme', (
@@ -61,7 +126,11 @@ void main() {
     expect(data.barGroups.first.barRods.first.width, 21);
     expect(data.barGroups.first.barRods.first.color, primary);
     expect(data.barGroups[1].barRods.first.color, const Color(0xff10b981));
-    expect(data.barGroups.first.barRods.first.borderRadius?.topLeft.x, 7);
+    final radius = data.barGroups.first.barRods.first.borderRadius!;
+    expect(radius.topLeft.x, 7);
+    expect(radius.topRight.x, 7);
+    expect(radius.bottomLeft.x, 7);
+    expect(radius.bottomRight.x, 7);
     expect(tester.takeException(), isNull);
   });
 
@@ -244,6 +313,62 @@ void main() {
     expect(data.barTouchData.handleBuiltInTouches, isFalse);
   });
 
+  testWidgets('bar width stays stable when a bar is hovered', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(
+          config: AppThemeConfig.standard(
+            chart: const AppChartTheme(barWidth: 18, hoverScale: 1.5),
+          ),
+        ),
+        home: const Align(
+          alignment: Alignment.topLeft,
+          child: AppBarChart(
+            groups: <AppBarGroup>[
+              AppBarGroup(
+                label: '一月',
+                values: <AppBarValue>[AppBarValue(value: 28)],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    var data = tester.widget<BarChart>(find.byType(BarChart)).data;
+    final group = data.barGroups.single;
+    final rod = group.barRods.single;
+    expect(rod.width, 18);
+
+    data.barTouchData.touchCallback!(
+      FlTapUpEvent(
+        TapUpDetails(
+          localPosition: const Offset(10, 10),
+          kind: PointerDeviceKind.mouse,
+        ),
+      ),
+      BarTouchResponse(
+        touchLocation: const Offset(10, 10),
+        touchChartCoordinate: const Offset(10, 10),
+        spot: BarTouchedSpot(
+          group,
+          0,
+          rod,
+          0,
+          null,
+          -1,
+          const FlSpot(0, 28),
+          const Offset(10, 10),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    data = tester.widget<BarChart>(find.byType(BarChart)).data;
+    expect(data.barGroups.single.barRods.single.width, 18);
+  });
+
   testWidgets('horizontal bars use numeric x axis and upright labels', (
     tester,
   ) async {
@@ -278,6 +403,11 @@ void main() {
     expect(data.titlesData.leftTitles.sideTitles.showTitles, isFalse);
     expect(data.titlesData.rightTitles.sideTitles.showTitles, isTrue);
     expect(data.barGroups.first.barRods.first.label.angle, 0);
+    final radius = data.barGroups.first.barRods.first.borderRadius!;
+    expect(radius.topLeft.x, greaterThan(0));
+    expect(radius.topRight.x, greaterThan(0));
+    expect(radius.bottomLeft.x, greaterThan(0));
+    expect(radius.bottomRight.x, greaterThan(0));
     expect(
       find.ancestor(
         of: find.text('华东'),
@@ -287,6 +417,112 @@ void main() {
       ),
       findsNothing,
     );
+  });
+
+  testWidgets('horizontal label supports a value near the axis maximum', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(
+            width: 320,
+            child: AppBarChart.horizontal(
+              groups: const <AppBarGroup>[
+                AppBarGroup(
+                  label: '华东',
+                  values: <AppBarValue>[AppBarValue(value: 99)],
+                ),
+              ],
+              xAxis: AppChartAxis(
+                min: 0,
+                max: 100,
+                interval: 20,
+                formatter: (value) => '${value.toInt()}%',
+              ),
+              showValues: true,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final data = tester.widget<BarChart>(find.byType(BarChart)).data;
+    expect(data.barGroups.single.barRods.single.toY, 99);
+    expect(data.barGroups.single.barRods.single.label.text, '99%');
+    expect(
+      data.barGroups.single.barRods.single.label.offset.dy,
+      greaterThan(0),
+    );
+    expect(data.titlesData.topTitles.sideTitles.showTitles, isTrue);
+    expect(data.titlesData.topTitles.sideTitles.reservedSize, greaterThan(26));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('vertical value label reserves space outside the plot', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: AppBarChart.simple(
+          labels: const <String>['极限值'],
+          values: const <AppBarValue>[AppBarValue(value: 99)],
+          yAxis: const AppChartAxis(min: 0, max: 100),
+          showValues: true,
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final data = tester.widget<BarChart>(find.byType(BarChart)).data;
+    final label = data.barGroups.single.barRods.single.label;
+    expect(label.text, '99');
+    expect(label.offset.dy, greaterThan(0));
+    expect(data.titlesData.topTitles.sideTitles.showTitles, isTrue);
+    expect(data.titlesData.topTitles.sideTitles.reservedSize, greaterThan(0));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('horizontal stacked bars can hide the x axis', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: const Align(
+          alignment: Alignment.topLeft,
+          child: AppBarChart.horizontalStacked(
+            xAxis: AppChartAxis(show: false, title: '数量'),
+            yAxis: AppChartAxis(title: '团队'),
+            series: <AppBarSeries>[
+              AppBarSeries(name: '已完成'),
+              AppBarSeries(name: '进行中'),
+            ],
+            groups: <AppBarGroup>[
+              AppBarGroup(
+                label: '研发部',
+                values: <AppBarValue>[
+                  AppBarValue(value: 30),
+                  AppBarValue(value: 20),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final data = tester.widget<BarChart>(find.byType(BarChart)).data;
+    final rod = data.barGroups.single.barRods.single;
+    expect(data.rotationQuarterTurns, 1);
+    expect(rod.toY, 50);
+    expect(rod.rodStackItems, hasLength(2));
+    expect(data.titlesData.rightTitles.sideTitles.showTitles, isFalse);
+    expect(data.titlesData.rightTitles.axisNameSize, 0);
+    expect(data.titlesData.bottomTitles.sideTitles.showTitles, isTrue);
   });
 
   testWidgets('dense bar labels are sampled instead of overlapping', (

@@ -51,6 +51,28 @@ void main() {
     expect(data.lineBarsData.single.isStepLineChart, isTrue);
   });
 
+  testWidgets('line chart can hide both axes including their titles', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: const AppLineChart(
+          series: series,
+          xAxis: AppChartAxis(show: false, title: '日期'),
+          yAxis: AppChartAxis(show: false, title: '访问量'),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final data = tester.widget<LineChart>(find.byType(LineChart)).data;
+    expect(data.titlesData.bottomTitles.sideTitles.showTitles, isFalse);
+    expect(data.titlesData.bottomTitles.axisNameSize, 0);
+    expect(data.titlesData.leftTitles.sideTitles.showTitles, isFalse);
+    expect(data.titlesData.leftTitles.axisNameSize, 0);
+  });
+
   testWidgets('line touch maps to point and series callback', (tester) async {
     AppLineChartHit? tapped;
     await tester.pumpWidget(

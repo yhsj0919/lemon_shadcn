@@ -4,6 +4,29 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:lemon_shadcn/lemon_shadcn.dart';
 
 void main() {
+  testWidgets('candlestick chart accepts hidden x and y axes', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: const AppCandlestickChart(
+          xAxis: AppChartAxis(show: false),
+          yAxis: AppChartAxis(show: false),
+          data: <AppCandlestickData>[
+            AppCandlestickData(open: 10, high: 16, low: 8, close: 14),
+          ],
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final chart = tester.widget<AppCandlestickChart>(
+      find.byType(AppCandlestickChart),
+    );
+    expect(chart.xAxis.show, isFalse);
+    expect(chart.yAxis.show, isFalse);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('candlestick chart paints business data', (tester) async {
     await tester.pumpWidget(
       MaterialApp(

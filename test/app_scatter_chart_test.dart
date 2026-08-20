@@ -7,6 +7,33 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:lemon_shadcn/lemon_shadcn.dart';
 
 void main() {
+  testWidgets('scatter chart can hide both axes including their titles', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: const AppScatterChart(
+          xAxis: AppChartAxis(show: false, title: 'X'),
+          yAxis: AppChartAxis(show: false, title: 'Y'),
+          series: <AppScatterSeries>[
+            AppScatterSeries(
+              name: '数据',
+              points: <AppScatterPoint>[AppScatterPoint(x: 1, y: 2)],
+            ),
+          ],
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final data = tester.widget<ScatterChart>(find.byType(ScatterChart)).data;
+    expect(data.titlesData.bottomTitles.sideTitles.showTitles, isFalse);
+    expect(data.titlesData.bottomTitles.axisNameSize, 0);
+    expect(data.titlesData.leftTitles.sideTitles.showTitles, isFalse);
+    expect(data.titlesData.leftTitles.axisNameSize, 0);
+  });
+
   testWidgets('scatter chart maps business points, colors and touch callback', (
     tester,
   ) async {

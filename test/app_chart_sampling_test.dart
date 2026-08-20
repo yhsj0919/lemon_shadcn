@@ -38,6 +38,12 @@ void main() {
     expect(appChartLoopIndex(4, 1, 5), 0);
   });
 
+  test('automatic value-axis maximum uses readable ticks', () {
+    expect(appChartNiceMaximum(0, 46), 50);
+    expect(appChartNiceMaximum(0, 58), 60);
+    expect(appChartNiceMaximum(0, 46, interval: 20), 60);
+  });
+
   testWidgets('line chart shows an empty state when every value is null', (
     tester,
   ) async {
@@ -95,6 +101,49 @@ void main() {
     expect(spots, hasLength(100));
     expect(spots.first.x, 0);
     expect(spots.last.x, 1199);
+  });
+
+  testWidgets('dense line x-axis labels are sampled by available width', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(
+            width: 180,
+            child: AppLineChart(
+              showLegend: false,
+              series: [
+                AppLineSeries(
+                  name: 'Dense',
+                  points: [
+                    for (var index = 0; index < 12; index++)
+                      AppLinePoint(
+                        x: index.toDouble(),
+                        y: index.toDouble(),
+                        label: '第${index + 1}个月',
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('第1个月'), findsOneWidget);
+    expect(find.text('第12个月'), findsNothing);
+    expect(find.text('第2个月'), findsNothing);
+    expect(
+      tester
+          .widgetList<SideTitleWidget>(find.byType(SideTitleWidget))
+          .every((widget) => !widget.fitInside.enabled),
+      isTrue,
+    );
   });
 
   testWidgets('scatter chart limits rendered points per series', (
