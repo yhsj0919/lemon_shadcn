@@ -706,6 +706,10 @@ class _AppInlineEditState<T> extends State<AppInlineEdit<T>> {
   @override
   Widget build(BuildContext context) {
     if (!_editing) {
+      final displayArea = _fixedArea(
+        widget.displayBuilder(context, _displayValue),
+        stretchChild: false,
+      );
       final display = Semantics(
         button: widget.enabled,
         enabled: widget.enabled,
@@ -720,14 +724,11 @@ class _AppInlineEditState<T> extends State<AppInlineEdit<T>> {
             onLongPress: widget.enabled && widget.activateOnLongPress
                 ? _beginEditing
                 : null,
-            child: widget.displayBuilder(context, _displayValue),
+            child: displayArea,
           ),
         ),
       );
-      return _transition(
-        editing: false,
-        child: _fixedArea(display, stretchChild: false),
-      );
+      return _transition(editing: false, child: display);
     }
 
     final details = AppInlineEditDetails<T>(
@@ -861,9 +862,9 @@ class _InlineTextEditorState extends State<_InlineTextEditor> {
       autofocus: true,
       hintText: widget.hintText,
       obscureText: widget.obscureText,
-        maxLength: widget.maxLength,
-        density: AppDensity.compact,
-        chrome: AppFieldChrome.bare,
+      maxLength: widget.maxLength,
+      density: AppDensity.compact,
+      chrome: AppFieldChrome.bare,
       enabled: !widget.details.saving,
       onChanged: widget.details.onChanged,
       onSubmitted: (_) => widget.details.submit(),

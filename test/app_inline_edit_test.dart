@@ -29,6 +29,25 @@ void main() {
     expect(find.text('新名称'), findsOneWidget);
   });
 
+  testWidgets('empty text still has a tappable display area', (tester) async {
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: Align(
+          alignment: Alignment.topLeft,
+          child: AppInlineEdit.text(value: '', onSaved: (_) {}),
+        ),
+      ),
+    );
+
+    final inlineEdit = find.byType(AppInlineEdit<String>);
+    expect(tester.getSize(inlineEdit).height, 32);
+
+    await _doubleTap(tester, inlineEdit);
+
+    expect(find.byType(AppTextFormField), findsOneWidget);
+  });
+
   testWidgets('display and edit states share the form control height', (
     tester,
   ) async {
