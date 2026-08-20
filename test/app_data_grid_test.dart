@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart' as material;
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lemon_shadcn/lemon_shadcn.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
@@ -445,6 +444,12 @@ void main() {
     await tester.pump();
 
     var grid = tester.widget<TrinaGrid>(find.byType(TrinaGrid));
+    expect(grid.columns.map((column) => column.field), <String>[
+      '__app_selection__',
+      '__app_tree__',
+      'name',
+    ]);
+    expect(grid.columns[1].width, 40);
     expect(find.text('Child'), findsNothing);
     expect(find.byIcon(AppLucideIcons.chevronRight), findsOneWidget);
     expect(find.byIcon(material.Icons.keyboard_arrow_right), findsNothing);

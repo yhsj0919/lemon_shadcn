@@ -186,6 +186,7 @@ enum _AppDataGridMode { local, paginated, infinite }
 
 const _appDataGridSelectionField = '__app_selection__';
 const _appDataGridDragField = '__app_drag__';
+const _appDataGridTreeField = '__app_tree__';
 
 class AppDataGrid<T> extends StatefulWidget {
   const AppDataGrid.local({
@@ -480,8 +481,6 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
   bool get _treeEnabled =>
       widget.buildChildren != null || widget.hasChildren != null;
 
-  String get _treeColumnId => widget.treeColumnId ?? widget.columns.first.id;
-
   Set<Object> get _effectiveExpandedKeys =>
       widget.expandedKeys ?? _expandedKeys;
 
@@ -727,6 +726,7 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
       if (widget.reorderableRows) _toDragColumn(),
       if (widget.selectionMode == AppDataGridSelectionMode.multiple)
         _toSelectionColumn(),
+      if (_treeEnabled) _toTreeColumn(),
       for (var index = 0; index < widget.columns.length; index++)
         _toTrinaColumn(widget.columns[index], index),
     ];
@@ -799,6 +799,49 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
     );
   }
 
+  TrinaColumn _toTreeColumn() {
+    return TrinaColumn(
+      title: '',
+      field: _appDataGridTreeField,
+      type: TrinaColumnType.text(),
+      width: 40,
+      minWidth: 40,
+      readOnly: true,
+      frozen: TrinaColumnFrozen.start,
+      enableSorting: false,
+      enableFilterMenuItem: false,
+      enableContextMenu: false,
+      enableDropToResize: false,
+      enableColumnDrag: false,
+      enableRowDrag: false,
+      enableRowChecked: false,
+      suppressedAutoSize: true,
+      titlePadding: EdgeInsets.zero,
+      cellPadding: EdgeInsets.zero,
+      textAlign: TrinaColumnTextAlign.center,
+      titleTextAlign: TrinaColumnTextAlign.center,
+      titleRenderer: (context) => _AppDataGridControlTitle(
+        manager: context.stateManager,
+        height: context.height,
+        backgroundColor: widget.headerBackgroundColor,
+        showDivider: widget.showInternalDividers,
+      ),
+      renderer: (rendererContext) {
+        final data = rendererContext.row.data as T;
+        return _AppDataGridTreeControl(
+          depth: rendererContext.row.depth,
+          indent: widget.treeIndent,
+          expandable: rendererContext.row.type.isGroup,
+          expanded:
+              rendererContext.row.type.isGroup &&
+              rendererContext.row.type.group.expanded,
+          loading: _loadingChildren.contains(widget.rowKey(data)),
+          onToggle: () => _toggleTreeRow(rendererContext.row),
+        );
+      },
+    );
+  }
+
   TrinaColumn _toTrinaColumn(AppDataGridColumn<T> column, int index) {
     final widthMode = _resolvedWidthMode(column);
     return TrinaColumn(
@@ -847,30 +890,7 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
           rendererContext.column,
         ),
       ),
-      renderer: _treeEnabled && column.id == _treeColumnId
-          ? (rendererContext) {
-              final data = rendererContext.row.data as T;
-              return _AppDataGridTreeCell(
-                depth: rendererContext.row.depth,
-                indent: widget.treeIndent,
-                expandable: rendererContext.row.type.isGroup,
-                expanded:
-                    rendererContext.row.type.isGroup &&
-                    rendererContext.row.type.group.expanded,
-                loading: _loadingChildren.contains(widget.rowKey(data)),
-                onToggle: () => _toggleTreeRow(rendererContext.row),
-                child: Builder(
-                  builder: (context) =>
-                      column.cellBuilder?.call(
-                        context,
-                        data,
-                        rendererContext.cell.value,
-                      ) ??
-                      Text('${rendererContext.cell.value ?? ''}'),
-                ),
-              );
-            }
-          : column.cellBuilder == null
+      renderer: column.cellBuilder == null
           ? null
           : (rendererContext) {
               final row = rendererContext.row.data as T;
@@ -997,6 +1017,7 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
         if (widget.reorderableRows) _appDataGridDragField: TrinaCell(value: ''),
         if (widget.selectionMode == AppDataGridSelectionMode.multiple)
           _appDataGridSelectionField: TrinaCell(value: ''),
+        if (_treeEnabled) _appDataGridTreeField: TrinaCell(value: ''),
         for (final column in widget.columns)
           column.id: TrinaCell(value: column.value(row)),
       },
@@ -1300,7 +1321,9 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
   }
 
   bool _isControlField(String field) =>
-      field == _appDataGridSelectionField || field == _appDataGridDragField;
+      field == _appDataGridSelectionField ||
+      field == _appDataGridDragField ||
+      field == _appDataGridTreeField;
 
   bool _areAllDataColumnsHidden() {
     final manager = _stateManager;
@@ -1716,15 +1739,14 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
   }
 }
 
-class _AppDataGridTreeCell extends StatelessWidget {
-  const _AppDataGridTreeCell({
+class _AppDataGridTreeControl extends StatelessWidget {
+  const _AppDataGridTreeControl({
     required this.depth,
     required this.indent,
     required this.expandable,
     required this.expanded,
     required this.loading,
     required this.onToggle,
-    required this.child,
   });
 
   final int depth;
@@ -1733,15 +1755,14 @@ class _AppDataGridTreeCell extends StatelessWidget {
   final bool expanded;
   final bool loading;
   final VoidCallback onToggle;
-  final Widget child;
 
   @override
   Widget build(BuildContext context) {
     final theme = shad.Theme.of(context);
-    return Row(
-      children: [
-        SizedBox(width: depth * indent),
-        SizedBox(
+    return Padding(
+      padding: EdgeInsetsDirectional.only(start: depth * indent),
+      child: Center(
+        child: SizedBox(
           width: 24,
           height: 24,
           child: loading
@@ -1772,9 +1793,7 @@ class _AppDataGridTreeCell extends StatelessWidget {
                 )
               : null,
         ),
-        const SizedBox(width: 4),
-        Expanded(child: child),
-      ],
+      ),
     );
   }
 }
