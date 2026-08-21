@@ -302,7 +302,8 @@ class _AppBarChartState extends State<AppBarChart> {
                 builder: (context, constraints) {
                   final labelLayout = _labelLayout(constraints, chartTheme);
                   final categoryLabelStride =
-                      _categoryAxis.interval == null &&
+                      !_horizontal &&
+                          _categoryAxis.interval == null &&
                           _categoryAxis.autoLabelInterval
                       ? appChartLabelStride(
                           widget.groups.map((group) => group.label),
@@ -778,7 +779,10 @@ class _AppBarChartState extends State<AppBarChart> {
                 : 26),
         boundaryLabelSpace,
       ),
-      interval: _categoryAxis.interval,
+      // Horizontal bars map categories to the physical Y axis. Keep one
+      // title per bar; fl_chart otherwise derives an interval and silently
+      // drops alternating category labels.
+      interval: _categoryAxis.interval ?? (_horizontal ? 1 : null),
       getTitlesWidget: (value, meta) {
         final index = value.round();
         if (index < 0 || index >= widget.groups.length || value != index) {

@@ -419,7 +419,7 @@ void main() {
     );
   });
 
-  testWidgets('horizontal chart thins categories but keeps even x ticks', (
+  testWidgets('horizontal chart keeps every category and even x ticks', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -458,7 +458,10 @@ void main() {
     final data = tester.widget<BarChart>(find.byType(BarChart)).data;
     expect(data.titlesData.rightTitles.sideTitles.interval, 20);
     expect(data.gridData.horizontalInterval, 20);
-    expect(data.titlesData.bottomTitles.sideTitles.interval, isNull);
+    expect(data.titlesData.bottomTitles.sideTitles.interval, 1);
+    for (final label in <String>['区域一', '区域二', '区域三', '区域四', '区域五']) {
+      expect(find.text(label), findsOneWidget);
+    }
   });
 
   testWidgets('horizontal label supports a value near the axis maximum', (
