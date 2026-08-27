@@ -175,5 +175,12 @@ void main() {
       DefaultTextStyle.of(tester.element(find.text('Muted tab'))).style.color,
       unselected,
     );
+    expect(
+      find.descendant(
+        of: find.byType(AppTabs),
+        matching: find.byType(ColorFiltered),
+      ),
+      findsNothing,
+    );
   });
 }

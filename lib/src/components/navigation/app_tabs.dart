@@ -161,10 +161,7 @@ class _AppTabsState extends State<AppTabs> {
         data: IconThemeData(color: color),
         child: DefaultTextStyle.merge(
           style: TextStyle(color: color),
-          child: ColorFiltered(
-            colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
-            child: content,
-          ),
+          child: content,
         ),
       );
     }
