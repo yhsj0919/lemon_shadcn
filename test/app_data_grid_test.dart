@@ -470,6 +470,71 @@ void main() {
     expect(selected.map(_treeId), containsAll([1, 2]));
   });
 
+  testWidgets('tree rows stay expanded after controlled selection rebuild', (
+    tester,
+  ) async {
+    const child = _TreeRow(2, 'Child');
+    const parent = _TreeRow(1, 'Parent', children: [child]);
+    var selectedKeys = <Object>{};
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: StatefulBuilder(
+          builder: (context, setState) => Align(
+            alignment: Alignment.topLeft,
+            child: SizedBox(
+              width: 420,
+              child: AppDataGrid<_TreeRow>.local(
+                height: 180,
+                selectionMode: AppDataGridSelectionMode.multiple,
+                selectedKeys: selectedKeys,
+                treeColumnId: 'name',
+                buildChildren: _treeChildren,
+                hasChildren: _treeHasChildren,
+                onSelectionChanged: (rows) {
+                  setState(() {
+                    selectedKeys = rows.map<Object>(_treeId).toSet();
+                  });
+                },
+                columns: const [
+                  AppDataGridColumn(
+                    id: 'name',
+                    title: 'Name',
+                    value: _treeName,
+                  ),
+                ],
+                rows: <_TreeRow>[parent],
+                rowKey: _treeId,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    var grid = tester.widget<TrinaGrid>(find.byType(TrinaGrid));
+    grid.onRowDoubleTap!(
+      TrinaGridOnRowDoubleTapEvent(
+        row: grid.rows.first,
+        rowIdx: 0,
+        cell: grid.rows.first.cells['name']!,
+      ),
+    );
+    await tester.pump();
+    expect(find.text('Child'), findsOneWidget);
+
+    tester
+        .widget<AppCheckboxIndicator>(find.byType(AppCheckboxIndicator).at(1))
+        .onChanged!(shad.CheckboxState.checked);
+    await tester.pump();
+
+    grid = tester.widget<TrinaGrid>(find.byType(TrinaGrid));
+    expect(selectedKeys, <Object>{1, 2});
+    expect(grid.rows.first.type.group.expanded, isTrue);
+    expect(find.text('Child'), findsOneWidget);
+  });
+
   testWidgets('tree rows load children once when a parent is double tapped', (
     tester,
   ) async {

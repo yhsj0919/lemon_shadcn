@@ -583,6 +583,10 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
     if (manager == null) return;
     manager.removeAllRows(notify: false);
     manager.appendRows(_toTrinaRows(rows));
+    if (_treeEnabled) {
+      _configureTree(manager);
+      _applyTreeExpansion(manager);
+    }
     _scheduleColumnWidths();
   }
 
