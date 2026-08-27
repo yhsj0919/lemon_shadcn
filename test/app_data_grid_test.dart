@@ -531,7 +531,9 @@ void main() {
 
     grid = tester.widget<TrinaGrid>(find.byType(TrinaGrid));
     expect(selectedKeys, <Object>{1, 2});
+    expect(grid.rows.first.data, parent);
     expect(grid.rows.first.type.group.expanded, isTrue);
+    expect(find.text('Parent'), findsOneWidget);
     expect(find.text('Child'), findsOneWidget);
   });
 

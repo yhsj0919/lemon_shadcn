@@ -583,10 +583,7 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
     if (manager == null) return;
     manager.removeAllRows(notify: false);
     manager.appendRows(_toTrinaRows(rows));
-    if (_treeEnabled) {
-      _configureTree(manager);
-      _applyTreeExpansion(manager);
-    }
+    if (_treeEnabled) _restoreTreeRows(manager);
     _scheduleColumnWidths();
   }
 
@@ -598,9 +595,21 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
         : _currentRootRows;
     manager.removeAllRows(notify: false);
     manager.appendRows(_toTrinaRows(source));
-    _configureTree(manager);
-    _applyTreeExpansion(manager);
+    _restoreTreeRows(manager);
     manager.notifyListeners();
+  }
+
+  void _restoreTreeRows(TrinaGridStateManager manager) {
+    if (manager.enabledRowGroups) {
+      TrinaGridStateManager.initializeRows(
+        manager.refColumns.originalList,
+        _allTreeRows(manager.refRows.originalList).toList(),
+        forceApplySortIdx: false,
+      );
+    } else {
+      _configureTree(manager);
+    }
+    _applyTreeExpansion(manager);
   }
 
   AppDataGridColumnWidthMode _resolvedWidthMode(AppDataGridColumn<T> column) =>
@@ -1007,7 +1016,7 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
       for (final child in children)
         _toTrinaRow(child, depth: depth + 1, ancestorSelected: checked),
     ];
-    return TrinaRow(
+    final trinaRow = TrinaRow(
       key: ValueKey(key),
       data: row,
       checked: checked,
@@ -1026,6 +1035,10 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
           column.id: TrinaCell(value: column.value(row)),
       },
     );
+    for (final child in childRows) {
+      child.setParent(trinaRow);
+    }
+    return trinaRow;
   }
 
   void _configureTree(TrinaGridStateManager manager) {
