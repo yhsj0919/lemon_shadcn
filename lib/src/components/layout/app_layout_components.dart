@@ -14,7 +14,21 @@ typedef AppAccordion = shad.Accordion;
 typedef AppAccordionItem = shad.AccordionItem;
 typedef AppAccordionTrigger = shad.AccordionTrigger;
 typedef AppOutlinedContainer = shad.OutlinedContainer;
-typedef AppTimelineData = shad.TimelineData;
+class AppTimelineData extends shad.TimelineData {
+  AppTimelineData({
+    required super.time,
+    required super.title,
+    super.content,
+    super.color,
+    this.trailing,
+  });
+
+  /// Optional action or metadata displayed at the end of the title row.
+  final Widget? trailing;
+}
+
+enum AppTimelineTimePosition { leading, inline }
+
 typedef AppCarouselController = shad.CarouselController;
 typedef AppCarouselTransition = shad.CarouselTransition;
 typedef AppCarouselAlignment = shad.CarouselAlignment;
@@ -1573,6 +1587,7 @@ class AppTimeline extends StatelessWidget {
     super.key,
     required this.data,
     this.timeConstraints,
+    this.timePosition = AppTimelineTimePosition.leading,
     this.axis = Axis.vertical,
   });
 
@@ -1580,16 +1595,19 @@ class AppTimeline extends StatelessWidget {
     super.key,
     required this.data,
     this.timeConstraints,
+    this.timePosition = AppTimelineTimePosition.leading,
   }) : axis = Axis.vertical;
 
   const AppTimeline.horizontal({
     super.key,
     required this.data,
     this.timeConstraints,
+    this.timePosition = AppTimelineTimePosition.leading,
   }) : axis = Axis.horizontal;
 
   final List<shad.TimelineData> data;
   final BoxConstraints? timeConstraints;
+  final AppTimelineTimePosition timePosition;
   final Axis axis;
 
   @override
@@ -1607,6 +1625,7 @@ class AppTimeline extends StatelessWidget {
     final defaultColor = timelineTheme?.color ?? theme.colorScheme.primary;
     final rowGap = timelineTheme?.rowGap ?? 16 * scaling;
     final headerHeight = dotSize > 28 * scaling ? dotSize : 28 * scaling;
+    final inlineTime = timePosition == AppTimelineTimePosition.inline;
 
     if (axis == Axis.horizontal) {
       return LayoutBuilder(
@@ -1620,7 +1639,9 @@ class AppTimeline extends StatelessWidget {
                 Positioned(
                   left: endInset,
                   right: endInset,
-                  top: headerHeight + (dotSize - connectorThickness) / 2,
+                  top:
+                      (inlineTime ? 0 : headerHeight) +
+                      (dotSize - connectorThickness) / 2,
                   child: Container(
                     height: connectorThickness,
                     color: defaultColor,
@@ -1633,10 +1654,11 @@ class AppTimeline extends StatelessWidget {
                     Expanded(
                       child: Column(
                         children: [
-                          SizedBox(
-                            height: headerHeight,
-                            child: Center(child: data[index].time),
-                          ),
+                          if (!inlineTime)
+                            SizedBox(
+                              height: headerHeight,
+                              child: Center(child: data[index].time),
+                            ),
                           Container(
                             width: dotSize,
                             height: dotSize,
@@ -1652,7 +1674,13 @@ class AppTimeline extends StatelessWidget {
                               color: theme.colorScheme.secondaryForeground,
                               fontWeight: FontWeight.w600,
                             ),
-                            child: data[index].title,
+                            child: _entryHeader(
+                              context,
+                              data[index],
+                              inlineTime: inlineTime,
+                              centered: true,
+                              gap: 8 * scaling,
+                            ),
                           ),
                           if (data[index].content != null) ...[
                             SizedBox(height: 4 * scaling),
@@ -1678,8 +1706,10 @@ class AppTimeline extends StatelessWidget {
     return Table(
       defaultVerticalAlignment: TableCellVerticalAlignment.top,
       columnWidths: {
-        0: const IntrinsicColumnWidth(),
-        1: FixedColumnWidth(spacing),
+        0: inlineTime
+            ? const FixedColumnWidth(0)
+            : const IntrinsicColumnWidth(),
+        1: FixedColumnWidth(inlineTime ? 0 : spacing),
         2: FixedColumnWidth(dotSize),
         3: FixedColumnWidth(spacing),
         4: const FlexColumnWidth(),
@@ -1691,12 +1721,15 @@ class AppTimeline extends StatelessWidget {
               ConstrainedBox(
                 constraints: resolvedTimeConstraints ?? const BoxConstraints(),
                 child: SizedBox(
+                  width: inlineTime ? 0 : null,
                   height: headerHeight,
                   child: Align(
                     alignment: Alignment.centerRight,
                     child: DefaultTextStyle.merge(
                       style: const TextStyle(fontWeight: FontWeight.w500),
-                      child: data[index].time,
+                      child: inlineTime
+                          ? const SizedBox.shrink()
+                          : data[index].time,
                     ),
                   ),
                 ),
@@ -1738,8 +1771,8 @@ class AppTimeline extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  SizedBox(
-                    height: headerHeight,
+                  ConstrainedBox(
+                    constraints: BoxConstraints(minHeight: headerHeight),
                     child: Align(
                       alignment: Alignment.centerLeft,
                       child: DefaultTextStyle.merge(
@@ -1747,7 +1780,12 @@ class AppTimeline extends StatelessWidget {
                           color: theme.colorScheme.secondaryForeground,
                           fontWeight: FontWeight.w600,
                         ),
-                        child: data[index].title,
+                        child: _entryHeader(
+                          context,
+                          data[index],
+                          inlineTime: inlineTime,
+                          gap: 8 * scaling,
+                        ),
                       ),
                     ),
                   ),
@@ -1765,6 +1803,37 @@ class AppTimeline extends StatelessWidget {
               ),
             ],
           ),
+      ],
+    );
+  }
+
+  Widget _entryHeader(
+    BuildContext context,
+    shad.TimelineData entry, {
+    required bool inlineTime,
+    required double gap,
+    bool centered = false,
+  }) {
+    final trailing = entry is AppTimelineData ? entry.trailing : null;
+    if (!inlineTime && trailing == null) return entry.title;
+    final time = DefaultTextStyle.merge(
+      style: TextStyle(
+        color: shad.Theme.of(context).colorScheme.mutedForeground,
+        fontWeight: FontWeight.w500,
+      ),
+      child: entry.time,
+    );
+    return Row(
+      mainAxisAlignment: centered
+          ? MainAxisAlignment.center
+          : MainAxisAlignment.start,
+      children: [
+        if (centered)
+          Flexible(child: entry.title)
+        else
+          Expanded(child: entry.title),
+        if (inlineTime) ...[SizedBox(width: gap), time],
+        if (trailing != null) ...[SizedBox(width: gap), trailing],
       ],
     );
   }

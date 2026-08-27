@@ -8,7 +8,7 @@ import 'app_semantic_style.dart';
 /// Visual treatment for semantic [AppBadge] variants.
 enum AppBadgeStyle { solid, soft, plain, outline }
 
-/// Badge outline shape. [pill] remains the default for compatibility.
+/// Badge outline shape. [square] is a rounded rectangle and is the default.
 enum AppBadgeShape { pill, square }
 
 /// Preset badge sizes, similar to [AppButtonSize].
@@ -256,7 +256,7 @@ abstract final class AppBadge {
     double? trailingGap,
     AppBadgeStyle appearance = AppBadgeStyle.soft,
     AppBadgeSize size = AppBadgeSize.normal,
-    AppBadgeShape shape = AppBadgeShape.pill,
+    AppBadgeShape shape = AppBadgeShape.square,
     BorderRadiusGeometry? borderRadius,
     EdgeInsetsGeometry? padding,
     FontWeight? fontWeight,
@@ -296,7 +296,7 @@ abstract final class AppBadge {
     double? trailingGap,
     shad.AbstractButtonStyle? style,
     AppBadgeSize size = AppBadgeSize.normal,
-    AppBadgeShape shape = AppBadgeShape.pill,
+    AppBadgeShape shape = AppBadgeShape.square,
     BorderRadiusGeometry? borderRadius,
     EdgeInsetsGeometry? padding,
     FontWeight? fontWeight,
@@ -336,7 +336,7 @@ abstract final class AppBadge {
     shad.AbstractButtonStyle? style,
     AppBadgeStyle appearance = AppBadgeStyle.solid,
     AppBadgeSize size = AppBadgeSize.normal,
-    AppBadgeShape shape = AppBadgeShape.pill,
+    AppBadgeShape shape = AppBadgeShape.square,
     BorderRadiusGeometry? borderRadius,
     EdgeInsetsGeometry? padding,
     FontWeight? fontWeight,
@@ -404,7 +404,7 @@ abstract final class AppBadge {
     double? trailingGap,
     shad.AbstractButtonStyle? style,
     AppBadgeSize size = AppBadgeSize.normal,
-    AppBadgeShape shape = AppBadgeShape.pill,
+    AppBadgeShape shape = AppBadgeShape.square,
     BorderRadiusGeometry? borderRadius,
     EdgeInsetsGeometry? padding,
     FontWeight? fontWeight,
@@ -444,7 +444,7 @@ abstract final class AppBadge {
     shad.AbstractButtonStyle? style,
     AppBadgeStyle appearance = AppBadgeStyle.solid,
     AppBadgeSize size = AppBadgeSize.normal,
-    AppBadgeShape shape = AppBadgeShape.pill,
+    AppBadgeShape shape = AppBadgeShape.square,
     BorderRadiusGeometry? borderRadius,
     EdgeInsetsGeometry? padding,
     FontWeight? fontWeight,
@@ -513,7 +513,7 @@ abstract final class AppBadge {
     double? trailingGap,
     AppBadgeStyle appearance = AppBadgeStyle.soft,
     AppBadgeSize size = AppBadgeSize.normal,
-    AppBadgeShape shape = AppBadgeShape.pill,
+    AppBadgeShape shape = AppBadgeShape.square,
     BorderRadiusGeometry? borderRadius,
     EdgeInsetsGeometry? padding,
     FontWeight? fontWeight,
@@ -554,7 +554,7 @@ abstract final class AppBadge {
     double? trailingGap,
     AppBadgeStyle appearance = AppBadgeStyle.soft,
     AppBadgeSize size = AppBadgeSize.normal,
-    AppBadgeShape shape = AppBadgeShape.pill,
+    AppBadgeShape shape = AppBadgeShape.square,
     BorderRadiusGeometry? borderRadius,
     EdgeInsetsGeometry? padding,
     FontWeight? fontWeight,
@@ -595,7 +595,7 @@ abstract final class AppBadge {
     double? trailingGap,
     AppBadgeStyle appearance = AppBadgeStyle.soft,
     AppBadgeSize size = AppBadgeSize.normal,
-    AppBadgeShape shape = AppBadgeShape.pill,
+    AppBadgeShape shape = AppBadgeShape.square,
     BorderRadiusGeometry? borderRadius,
     EdgeInsetsGeometry? padding,
     FontWeight? fontWeight,

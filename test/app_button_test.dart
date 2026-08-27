@@ -433,6 +433,72 @@ void main() {
       expect(transform.transform.getTranslation().y, 0);
     }
   });
+
+  testWidgets('AppIconButton supports custom color and icon size', (
+    tester,
+  ) async {
+    const customColor = Color(0xff7c3aed);
+    const customBackground = Color(0xffede9fe);
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: const Center(
+          child: AppIconButton(
+            tooltip: 'Custom',
+            onPressed: _noop,
+            foregroundColor: customColor,
+            backgroundColor: customBackground,
+            iconSize: 28,
+            icon: Icon(Icons.palette),
+          ),
+        ),
+      ),
+    );
+
+    final iconContext = tester.element(find.byIcon(Icons.palette));
+    expect(IconTheme.of(iconContext).color, customColor);
+    expect(IconTheme.of(iconContext).size, 28);
+    final button = tester.widget<shad.Button>(find.byType(shad.Button));
+    final decoration = button.style.decoration(
+      tester.element(find.byType(shad.Button)),
+      const {},
+    );
+    expect((decoration as BoxDecoration).color, customBackground);
+  });
+
+  testWidgets('AppIconButton uses component theme defaults', (tester) async {
+    const themeColor = Color(0xff0f766e);
+    const themeBackground = Color(0xffccfbf1);
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: const ComponentTheme<AppIconButtonTheme>(
+          data: AppIconButtonTheme(
+            foregroundColor: themeColor,
+            backgroundColor: themeBackground,
+            iconSize: 24,
+          ),
+          child: Center(
+            child: AppIconButton(
+              tooltip: 'Themed',
+              onPressed: _noop,
+              icon: Icon(Icons.search),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final iconContext = tester.element(find.byIcon(Icons.search));
+    expect(IconTheme.of(iconContext).color, themeColor);
+    expect(IconTheme.of(iconContext).size, 24);
+    final button = tester.widget<shad.Button>(find.byType(shad.Button));
+    final decoration = button.style.decoration(
+      tester.element(find.byType(shad.Button)),
+      const {},
+    );
+    expect((decoration as BoxDecoration).color, themeBackground);
+  });
 }
 
 void _noop() {}

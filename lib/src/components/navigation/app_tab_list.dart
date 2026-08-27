@@ -1,6 +1,8 @@
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
+import 'app_tabs.dart';
+
 /// Horizontal tab list with a sliding underline indicator.
 class AppTabList extends StatefulWidget {
   const AppTabList({
@@ -8,6 +10,8 @@ class AppTabList extends StatefulWidget {
     required this.children,
     required this.index,
     required this.onChanged,
+    this.selectedForegroundColor,
+    this.unselectedForegroundColor,
     this.duration = const Duration(milliseconds: 220),
     this.curve = Curves.easeOutCubic,
   });
@@ -15,6 +19,8 @@ class AppTabList extends StatefulWidget {
   final List<shad.TabChild> children;
   final int index;
   final ValueChanged<int>? onChanged;
+  final Color? selectedForegroundColor;
+  final Color? unselectedForegroundColor;
   final Duration duration;
   final Curve curve;
 
@@ -89,10 +95,29 @@ class _AppTabListState extends State<AppTabList> {
     Widget child,
   ) {
     final selected = data.index == widget.index;
+    final appTabsTheme =
+        shad.ComponentTheme.maybeOf<AppTabsTheme>(context);
+    final color = selected
+        ? widget.selectedForegroundColor ??
+              appTabsTheme?.selectedForegroundColor
+        : widget.unselectedForegroundColor ??
+              appTabsTheme?.unselectedForegroundColor;
+    final content = color == null
+        ? (selected ? child.foreground() : child.muted())
+        : IconTheme.merge(
+            data: IconThemeData(color: color),
+            child: DefaultTextStyle.merge(
+              style: TextStyle(color: color),
+              child: ColorFiltered(
+                colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+                child: child,
+              ),
+            ),
+          );
     final button = shad.TabButton(
       enabled: data.onSelect != null,
       onPressed: () => data.onSelect?.call(data.index),
-      child: selected ? child.foreground() : child.muted(),
+      child: content,
     );
     return KeyedSubtree(key: _tabKeys[data.index], child: button);
   }

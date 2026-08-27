@@ -79,7 +79,6 @@ class _GalleryShellState extends State<GalleryShell> {
       onSidebarModeChanged: (mode) => setState(() => _sidebarMode = mode),
       contentTransitionDuration: const Duration(milliseconds: 180),
       sidebarFrame: (sidebar) => AppCard(
-        padding: EdgeInsets.zero,
         clipBehavior: Clip.antiAlias,
         child: sidebar,
       ),

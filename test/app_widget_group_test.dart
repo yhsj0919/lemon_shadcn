@@ -55,4 +55,31 @@ void main() {
     expect(tester.getSize(find.byKey(const Key('first'))).height, 40);
     expect(tester.getSize(find.byKey(const Key('second'))).height, 80);
   });
+
+  testWidgets('horizontal group supports a fixed trailing control width', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: const Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(
+            width: 320,
+            child: AppWidgetGroup.horizontal(
+              expands: true,
+              widths: [null, 112],
+              children: [
+                ColoredBox(key: Key('field'), color: Colors.white),
+                ColoredBox(key: Key('captcha'), color: Colors.blue),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(tester.getSize(find.byKey(const Key('captcha'))).width, 112);
+    expect(tester.getSize(find.byKey(const Key('field'))).width, 208);
+  });
 }

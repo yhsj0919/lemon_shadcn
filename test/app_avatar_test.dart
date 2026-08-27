@@ -61,6 +61,13 @@ void main() {
     expect(avatar.borderRadius, 4);
   });
 
+  test('square avatar rejects a negative corner radius', () {
+    expect(
+      () => AppAvatar.square(initials: 'A', borderRadius: -1),
+      throwsAssertionError,
+    );
+  });
+
   testWidgets('square avatar defaults to a 12 pixel corner radius', (
     tester,
   ) async {
@@ -169,6 +176,68 @@ void main() {
     );
   });
 
+  testWidgets('subtle avatar provides a lighter title-icon background', (
+    tester,
+  ) async {
+    const accent = Color(0xff2563eb);
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: const Row(
+          children: [
+            AppAvatar.square(
+              icon: Icon(Icons.settings),
+              color: accent,
+              appearance: AppAvatarAppearance.soft,
+            ),
+            AppAvatar.square(
+              icon: Icon(Icons.info),
+              color: accent,
+              appearance: AppAvatarAppearance.subtle,
+            ),
+          ],
+        ),
+      ),
+    );
+
+    Color backgroundFor(IconData icon) => tester
+        .widget<ColoredBox>(
+          find.ancestor(
+            of: find.byIcon(icon),
+            matching: find.byType(ColoredBox),
+          ),
+        )
+        .color;
+    expect(
+      backgroundFor(Icons.info).computeLuminance(),
+      greaterThan(backgroundFor(Icons.settings).computeLuminance()),
+    );
+  });
+
+  testWidgets('soft avatar tint opacity is configurable', (tester) async {
+    final config = AppThemeConfig.standard();
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(config: config),
+        home: const Center(
+          child: AppAvatar.square(
+            icon: Icon(Icons.title),
+            color: Color(0xff2563eb),
+            softOpacity: 0,
+          ),
+        ),
+      ),
+    );
+
+    final background = tester.widget<ColoredBox>(
+      find.descendant(
+        of: find.byType(AppAvatar),
+        matching: find.byType(ColoredBox),
+      ),
+    );
+    expect(background.color, config.lightTheme.colorScheme.background);
+  });
+
   testWidgets('icon avatar uses the shared soft color treatment', (
     tester,
   ) async {
@@ -218,6 +287,55 @@ void main() {
           .toColor(),
     );
   });
+
+  testWidgets('icon avatar supports a custom icon size', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: const Center(
+          child: AppAvatar.circle(
+            icon: Icon(Icons.person),
+            size: 48,
+            iconSize: 30,
+          ),
+        ),
+      ),
+    );
+
+    final iconFinder = find.byIcon(Icons.person);
+    expect(IconTheme.of(tester.element(iconFinder)).size, 30);
+    expect(tester.getSize(find.byType(AppAvatar)), const Size.square(48));
+  });
+
+  testWidgets(
+    'icon avatar supports explicit background and foreground colors',
+    (tester) async {
+      const background = Color(0xfffef3c7);
+      const foreground = Color(0xff92400e);
+      await tester.pumpWidget(
+        MaterialApp(
+          builder: AppShadcnScope.builder(),
+          home: const Center(
+            child: AppAvatar.square(
+              icon: Icon(Icons.person),
+              backgroundColor: background,
+              foregroundColor: foreground,
+            ),
+          ),
+        ),
+      );
+
+      final iconFinder = find.byIcon(Icons.person);
+      final backgroundBox = tester.widget<ColoredBox>(
+        find.descendant(
+          of: find.byType(AppAvatar),
+          matching: find.byType(ColoredBox),
+        ),
+      );
+      expect(backgroundBox.color, background);
+      expect(IconTheme.of(tester.element(iconFinder)).color, foreground);
+    },
+  );
 
   testWidgets('avatar initials follow AppText typography and system scaling', (
     tester,

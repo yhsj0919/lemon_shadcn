@@ -1000,7 +1000,6 @@ class _ResultStatusShowcase extends StatelessWidget {
               SizedBox(
                 width: itemWidth,
                 child: AppCard(
-                  padding: EdgeInsets.zero,
                   child: AppResult(
                     status: item.status,
                     title: Text(item.title),

@@ -66,10 +66,17 @@ AppButton.primary(
   onPressed: () {},
   child: const Text('关闭动效'),
 );''',
-    '组件组': '''AppWidgetGroup.horizontal(children: [
-  AppButton.outline(onPressed: () {}, child: const Text('上一页')),
-  AppButton.outline(onPressed: () {}, child: const Text('下一页')),
-]);''',
+    '组件组': '''SizedBox(
+  width: 360,
+  child: AppWidgetGroup.horizontal(
+    expands: true,
+    widths: const [null, 112],
+    children: [
+      const AppTextFormField(placeholder: Text('验证码')),
+      Image.network(captchaUrl, fit: BoxFit.cover),
+    ],
+  ),
+);''',
     '带图标按钮': '''AppButton.primary(
   leading: const Icon(AppLucideIcons.plus),
   onPressed: () {},
@@ -421,9 +428,20 @@ AppDivider.vertical(width: 32);''',
     '步骤': '''const AppSteps.horizontal(children: [
   Text('配置主题'), Text('添加组件'), Text('检查示例'),
 ]);''',
-    '时间线': '''const AppTimeline.horizontal(data: [
-  AppTimelineData(time: Text('09:00'), title: Text('配置主题')),
-]);''',
+    '时间线': '''AppTimeline.vertical(
+  timePosition: AppTimelineTimePosition.inline,
+  data: [
+    AppTimelineData(
+      time: const Text('09:00'),
+      title: const Text('配置主题'),
+      trailing: AppIconButton(
+        tooltip: '更多',
+        icon: const Icon(Icons.more_horiz),
+        onPressed: onMore,
+      ),
+    ),
+  ],
+);''',
     '菜单栏': '''AppMenubar(children: [
   AppMenuButton(subMenu: items, child: const Text('文件')),
 ]);''',

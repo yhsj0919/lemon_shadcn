@@ -23,10 +23,11 @@ class AppCornerBadge extends StatelessWidget {
     required int count,
     int maxCount = 99,
     Color? color,
+    /// Overrides the automatically selected high-contrast text color.
     Color? foregroundColor,
     double size = 20,
     EdgeInsetsGeometry padding = const EdgeInsets.symmetric(horizontal: 5),
-    AppBadgeShape shape = AppBadgeShape.pill,
+    AppBadgeShape shape = AppBadgeShape.square,
     BorderRadiusGeometry? borderRadius,
     AppCornerBadgePosition position = AppCornerBadgePosition.topRight,
     Offset offset = Offset.zero,

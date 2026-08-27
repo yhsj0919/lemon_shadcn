@@ -44,8 +44,8 @@ void main() {
             ),
             AppBadge.warning(child: const Text('Warning')),
             AppBadge.warning(
-              shape: AppBadgeShape.square,
-              child: const Text('Square'),
+              shape: AppBadgeShape.pill,
+              child: const Text('Pill'),
             ),
             AppBadge.info(
               borderRadius: BorderRadius.circular(2),
@@ -83,7 +83,7 @@ void main() {
       'SuccessSolid',
       'SuccessBold',
       'Warning',
-      'Square',
+      'Pill',
       'CustomRadius',
       'CustomColor',
       'SoftDestructive',
@@ -126,7 +126,8 @@ void main() {
           as BoxDecoration;
     }
 
-    expect(decorationOf('Square').borderRadius, BorderRadius.circular(6));
+    expect(decorationOf('Warning').borderRadius, BorderRadius.circular(6));
+    expect(decorationOf('Pill').borderRadius, BorderRadius.circular(999));
     expect(decorationOf('CustomRadius').borderRadius, BorderRadius.circular(2));
     expect(
       DefaultTextStyle.of(tester.element(find.text('CustomColor'))).style.color,

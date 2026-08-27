@@ -6,12 +6,14 @@ import 'app_text.dart';
 
 enum AppAvatarShape { circle, square }
 
-enum AppAvatarAppearance { solid, soft }
+enum AppAvatarAppearance { solid, soft, subtle }
 
 /// An avatar with explicit circular and square shape variants.
 class AppAvatar extends StatelessWidget implements shad.AvatarWidget {
   static const double _softLightOpacity = 0.24;
   static const double _softDarkOpacity = 0.20;
+  static const double _subtleLightOpacity = 0.12;
+  static const double _subtleDarkOpacity = 0.12;
 
   const AppAvatar.circle({
     super.key,
@@ -21,6 +23,7 @@ class AppAvatar extends StatelessWidget implements shad.AvatarWidget {
     this.iconSize,
     this.initialsCount = 1,
     this.appearance = AppAvatarAppearance.solid,
+    this.softOpacity,
     this.color,
     this.backgroundColor,
     this.foregroundColor,
@@ -32,6 +35,8 @@ class AppAvatar extends StatelessWidget implements shad.AvatarWidget {
     this.provider,
   }) : assert(initials != null || name != null || icon != null),
        assert(initialsCount > 0),
+       assert(iconSize == null || iconSize > 0),
+       assert(softOpacity == null || (softOpacity >= 0 && softOpacity <= 1)),
        shape = AppAvatarShape.circle,
        borderRadius = 999;
 
@@ -43,6 +48,7 @@ class AppAvatar extends StatelessWidget implements shad.AvatarWidget {
     this.iconSize,
     this.initialsCount = 1,
     this.appearance = AppAvatarAppearance.solid,
+    this.softOpacity,
     this.color,
     this.backgroundColor,
     this.foregroundColor,
@@ -55,6 +61,9 @@ class AppAvatar extends StatelessWidget implements shad.AvatarWidget {
     this.provider,
   }) : assert(initials != null || name != null || icon != null),
        assert(initialsCount > 0),
+       assert(iconSize == null || iconSize > 0),
+       assert(softOpacity == null || (softOpacity >= 0 && softOpacity <= 1)),
+       assert(borderRadius == null || borderRadius >= 0),
        shape = AppAvatarShape.square;
 
   /// Extracts up to [count] grapheme-safe initials from a name.
@@ -76,19 +85,36 @@ class AppAvatar extends StatelessWidget implements shad.AvatarWidget {
 
   final AppAvatarShape shape;
   final AppAvatarAppearance appearance;
+
+  /// Overrides the tint opacity used by [AppAvatarAppearance.soft] and
+  /// [AppAvatarAppearance.subtle].
+  final double? softOpacity;
   final String? initials;
   final String? name;
   final int initialsCount;
   final Widget? icon;
+
+  /// Overrides the icon size without changing the avatar's outer [size].
   final double? iconSize;
+
+  /// Accent used to derive the default foreground and soft background colors.
   final Color? color;
+
+  /// Overrides the avatar surface color.
   final Color? backgroundColor;
+
+  /// Overrides the initials or icon color.
   final Color? foregroundColor;
+
+  /// Customizes the initials typography. Its color is used when
+  /// [foregroundColor] is null.
   final TextStyle? textStyle;
 
   @override
   final double? size;
 
+  /// Corner radius for [AppAvatar.square]. Circular avatars always use a
+  /// fully rounded radius.
   @override
   final double? borderRadius;
 
@@ -107,11 +133,22 @@ class AppAvatar extends StatelessWidget implements shad.AvatarWidget {
         avatarTheme?.borderRadius ??
         theme.radius * resolvedSize;
     final accent = color ?? theme.colorScheme.primary;
-    final soft = appearance == AppAvatarAppearance.soft || icon != null;
+    final soft = appearance != AppAvatarAppearance.solid || icon != null;
+    final resolvedSoftOpacity =
+        softOpacity ??
+        switch (appearance) {
+          AppAvatarAppearance.subtle => theme.brightness == Brightness.dark
+              ? _subtleDarkOpacity
+              : _subtleLightOpacity,
+          AppAvatarAppearance.solid || AppAvatarAppearance.soft =>
+            theme.brightness == Brightness.dark
+                ? _softDarkOpacity
+                : _softLightOpacity,
+        };
     final resolvedBackground =
         backgroundColor ??
         (soft
-            ? _softBackground(theme, accent)
+            ? _softBackground(theme, accent, opacity: resolvedSoftOpacity)
             : avatarTheme?.backgroundColor ?? theme.colorScheme.muted);
     final resolvedForeground =
         foregroundColor ??
@@ -225,12 +262,16 @@ class AppAvatar extends StatelessWidget implements shad.AvatarWidget {
     return hsl.withLightness((hsl.lightness * 0.82).clamp(0.0, 1.0)).toColor();
   }
 
-  static Color _softBackground(shad.ThemeData theme, Color accent) {
+  static Color _softBackground(
+    shad.ThemeData theme,
+    Color accent, {
+    required double opacity,
+  }) {
     final background = AppSoftColor.background(
       theme,
       accent,
-      lightOpacity: _softLightOpacity,
-      darkOpacity: _softDarkOpacity,
+      lightOpacity: opacity,
+      darkOpacity: opacity,
     );
     if (theme.brightness == Brightness.dark) return background;
     final hsl = HSLColor.fromColor(background);

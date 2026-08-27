@@ -77,11 +77,11 @@ void main() {
     expect(await translationFor(1), Offset.zero);
   });
 
-  testWidgets('count badge supports square and custom corner radii', (
+  testWidgets('count badge defaults to rounded rectangle and supports custom radii', (
     tester,
   ) async {
     Future<BoxDecoration> decorationFor({
-      AppBadgeShape shape = AppBadgeShape.pill,
+      AppBadgeShape shape = AppBadgeShape.square,
       BorderRadiusGeometry? borderRadius,
     }) async {
       await tester.pumpWidget(
@@ -109,7 +109,7 @@ void main() {
     }
 
     expect(
-      (await decorationFor(shape: AppBadgeShape.square)).borderRadius,
+      (await decorationFor()).borderRadius,
       BorderRadius.circular(6),
     );
     expect(
@@ -118,6 +118,46 @@ void main() {
         borderRadius: BorderRadius.circular(2),
       )).borderRadius,
       BorderRadius.circular(2),
+    );
+  });
+
+  testWidgets('count badge text adapts to its background and can be overridden', (
+    tester,
+  ) async {
+    Future<Color?> textColor({
+      required Color background,
+      Color? foregroundColor,
+    }) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          builder: AppShadcnScope.builder(),
+          home: Center(
+            child: AppCornerBadge.count(
+              count: 7,
+              color: background,
+              foregroundColor: foregroundColor,
+              child: const SizedBox.square(dimension: 48),
+            ),
+          ),
+        ),
+      );
+      return tester.widget<Text>(find.text('7')).style?.color;
+    }
+
+    expect(
+      await textColor(background: const Color(0xffffffff)),
+      const Color(0xff000000),
+    );
+    expect(
+      await textColor(background: const Color(0xff000000)),
+      const Color(0xffffffff),
+    );
+    expect(
+      await textColor(
+        background: const Color(0xff000000),
+        foregroundColor: const Color(0xff00ff00),
+      ),
+      const Color(0xff00ff00),
     );
   });
 }

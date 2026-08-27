@@ -26,11 +26,17 @@ class AppWidgetGroup extends StatelessWidget {
     this.spacing = 8,
     this.expands = false,
     this.flexes,
+    this.widths,
     required this.children,
   }) : assert(spacing >= 0),
        assert(
          flexes == null || flexes.length == children.length,
          'flexes length must match children length',
+       ),
+       assert(
+         widths == null ||
+             (direction == Axis.horizontal && widths.length == children.length),
+         'widths must match children length and is only valid horizontally',
        );
 
   const AppWidgetGroup.horizontal({
@@ -39,12 +45,17 @@ class AppWidgetGroup extends StatelessWidget {
     this.spacing = 8,
     this.expands = false,
     this.flexes,
+    this.widths,
     required this.children,
   }) : direction = Axis.horizontal,
        assert(spacing >= 0),
        assert(
          flexes == null || flexes.length == children.length,
          'flexes length must match children length',
+       ),
+       assert(
+         widths == null || widths.length == children.length,
+         'widths length must match children length',
        );
 
   const AppWidgetGroup.vertical({
@@ -55,6 +66,7 @@ class AppWidgetGroup extends StatelessWidget {
     this.flexes,
     required this.children,
   }) : direction = Axis.vertical,
+       widths = null,
        assert(spacing >= 0),
        assert(
          flexes == null || flexes.length == children.length,
@@ -70,6 +82,10 @@ class AppWidgetGroup extends StatelessWidget {
 
   /// Per-child flex factors used when [expands] is true. Defaults to `1`.
   final List<int>? flexes;
+
+  /// Fixed widths for horizontal children. A null entry uses its intrinsic
+  /// width, or fills remaining space when [expands] is true.
+  final List<double?>? widths;
   final List<Widget> children;
 
   /// Whether [context] belongs to a child currently managed by a widget group.
@@ -85,12 +101,20 @@ class AppWidgetGroup extends StatelessWidget {
     final theme = shad.Theme.of(context);
     final side = BorderSide(color: theme.colorScheme.border, width: 1);
     final lastIndex = children.length - 1;
+    Widget sizeItem(int index, Widget item) {
+      final width = widths?[index];
+      if (width != null) {
+        assert(width > 0, 'group child widths must be greater than zero');
+        return SizedBox(width: width, child: item);
+      }
+      return expands
+          ? Expanded(flex: flexes?[index] ?? 1, child: item)
+          : item;
+    }
+
     Widget buildItem(int index) {
       if (mode == AppWidgetGroupMode.plain) {
-        final item = children[index];
-        return expands
-            ? Expanded(flex: flexes?[index] ?? 1, child: item)
-            : item;
+        return sizeItem(index, children[index]);
       }
       final item = Builder(
         builder: (context) {
@@ -134,7 +158,7 @@ class AppWidgetGroup extends StatelessWidget {
           );
         },
       );
-      return expands ? Expanded(flex: flexes?[index] ?? 1, child: item) : item;
+      return sizeItem(index, item);
     }
 
     final items = <Widget>[];
@@ -574,6 +598,28 @@ abstract final class AppButton {
   );
 }
 
+class AppIconButtonTheme extends shad.ComponentThemeData {
+  const AppIconButtonTheme({
+    this.color,
+    this.foregroundColor,
+    this.backgroundColor,
+    this.iconSize,
+  })
+    : assert(iconSize == null || iconSize > 0);
+
+  /// Shorthand default for [foregroundColor].
+  final Color? color;
+
+  /// Default icon foreground color.
+  final Color? foregroundColor;
+
+  /// Default button background color.
+  final Color? backgroundColor;
+
+  /// Default icon size. The button hit target is unaffected.
+  final double? iconSize;
+}
+
 /// A low-template icon-only button with a guaranteed square hit target.
 ///
 /// The default constructor uses the rectangular shape. Use [AppIconButton.circle]
@@ -591,11 +637,16 @@ class AppIconButton extends StatelessWidget {
     this.loading,
     this.variant = AppButtonVariant.outline,
     this.size,
+    this.color,
+    this.foregroundColor,
+    this.backgroundColor,
+    this.iconSize,
     this.config,
     this.interactive = false,
     this.shadow = false,
   }) : _circle = false,
-       assert(action == null || onPressed == null);
+       assert(action == null || onPressed == null),
+       assert(iconSize == null || iconSize > 0);
 
   const AppIconButton.circle({
     super.key,
@@ -606,11 +657,16 @@ class AppIconButton extends StatelessWidget {
     this.loading,
     this.variant = AppButtonVariant.outline,
     this.size,
+    this.color,
+    this.foregroundColor,
+    this.backgroundColor,
+    this.iconSize,
     this.config,
     this.interactive = false,
     this.shadow = false,
   }) : _circle = true,
-       assert(action == null || onPressed == null);
+       assert(action == null || onPressed == null),
+       assert(iconSize == null || iconSize > 0);
 
   final Widget icon;
   final String tooltip;
@@ -619,6 +675,19 @@ class AppIconButton extends StatelessWidget {
   final bool? loading;
   final AppButtonVariant variant;
   final AppButtonSize? size;
+
+  /// Shorthand for [foregroundColor].
+  final Color? color;
+
+  /// Icon foreground color. Falls back to [AppIconButtonTheme], then to the
+  /// selected [variant]'s theme-aware default.
+  final Color? foregroundColor;
+
+  /// Button background color. Falls back to [AppIconButtonTheme.backgroundColor].
+  final Color? backgroundColor;
+
+  /// Overrides [AppIconButtonTheme.iconSize] without changing the hit target.
+  final double? iconSize;
   final AppButtonConfig? config;
   final bool interactive;
   final bool shadow;
@@ -626,6 +695,25 @@ class AppIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final iconButtonTheme =
+        shad.ComponentTheme.maybeOf<AppIconButtonTheme>(context);
+    final resolvedColor =
+        foregroundColor ??
+        color ??
+        iconButtonTheme?.foregroundColor ??
+        iconButtonTheme?.color;
+    final resolvedBackground =
+        backgroundColor ?? iconButtonTheme?.backgroundColor;
+    final resolvedIconSize = iconSize ?? iconButtonTheme?.iconSize;
+    final resolvedIcon = resolvedColor == null && resolvedIconSize == null
+        ? icon
+        : IconTheme.merge(
+            data: IconThemeData(
+              color: resolvedColor,
+              size: resolvedIconSize,
+            ),
+            child: icon,
+          );
     return AppTooltip(
       tooltip: (context) => Text(tooltip),
       child: Semantics(
@@ -637,6 +725,7 @@ class AppIconButton extends StatelessWidget {
           action: action,
           loading: loading,
           size: size,
+          backgroundColor: resolvedBackground,
           config: config,
           interactive: interactive,
           shadow: shadow,
@@ -644,7 +733,7 @@ class AppIconButton extends StatelessWidget {
           shapeOverride: _circle
               ? shad.ButtonShape.circle
               : shad.ButtonShape.rectangle,
-          child: icon,
+          child: resolvedIcon,
         ),
       ),
     );
@@ -669,6 +758,7 @@ class _AppAsyncButton extends StatefulWidget {
     this.shapeOverride,
     this.selectedColor,
     this.color,
+    this.backgroundColor,
     this.shadow = false,
   }) : assert(action == null || onPressed == null);
 
@@ -687,6 +777,7 @@ class _AppAsyncButton extends StatefulWidget {
   final shad.ButtonShape? shapeOverride;
   final Color? selectedColor;
   final Color? color;
+  final Color? backgroundColor;
   final bool shadow;
 
   @override
@@ -839,13 +930,18 @@ class _AppAsyncButtonState extends State<_AppAsyncButton>
     final groupItem = _AppWidgetGroupItemScope.maybeOf(context);
 
     shad.AbstractButtonStyle sized(shad.ButtonStyle style) => style.copyWith(
-      decoration: groupItem == null
+      decoration: groupItem == null && widget.backgroundColor == null
           ? null
           : (context, states, value) {
               if (value is! BoxDecoration) return value;
               return value.copyWith(
-                border: AppWidgetGroup.clearItemBorder,
-                borderRadius: BorderRadius.zero,
+                color: widget.backgroundColor ?? value.color,
+                border: groupItem == null
+                    ? value.border
+                    : AppWidgetGroup.clearItemBorder,
+                borderRadius: groupItem == null
+                    ? value.borderRadius
+                    : BorderRadius.zero,
               );
             },
       padding: (context, states, value) => widget.iconOnly

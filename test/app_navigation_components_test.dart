@@ -71,4 +71,109 @@ void main() {
     expect(find.byType(AppSteps), findsOneWidget);
     expect(find.byType(AppTimeline), findsOneWidget);
   });
+
+  testWidgets('timeline can place time and actions in the title row', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: AppTimeline.vertical(
+          timePosition: AppTimelineTimePosition.inline,
+          data: [
+            AppTimelineData(
+              time: const Text('2026-08-27'),
+              title: const Text('更换滤芯'),
+              trailing: const Icon(Icons.more_horiz),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    final headerRow = find.ancestor(
+      of: find.text('更换滤芯'),
+      matching: find.byType(Row),
+    );
+    expect(headerRow, findsOneWidget);
+    expect(
+      find.descendant(of: headerRow, matching: find.text('2026-08-27')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: headerRow, matching: find.byIcon(Icons.more_horiz)),
+      findsOneWidget,
+    );
+
+    final table = tester.widget<Table>(find.byType(Table));
+    expect((table.columnWidths![0]! as FixedColumnWidth).value, 0);
+    expect((table.columnWidths![1]! as FixedColumnWidth).value, 0);
+  });
+
+  testWidgets('tabs use component foreground defaults without mutating scheme', (
+    tester,
+  ) async {
+    const selected = Color(0xff2563eb);
+    const unselected = Color(0xff64748b);
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: ComponentTheme<AppTabsTheme>(
+          data: const AppTabsTheme(
+            selectedForegroundColor: selected,
+            unselectedForegroundColor: unselected,
+          ),
+          child: Column(
+            children: [
+              AppTabs(
+                index: 0,
+                onChanged: (_) {},
+                children: const [
+                  AppTabItem(
+                    child: Row(
+                      children: [Icon(Icons.home), Text('Selected tab')],
+                    ),
+                  ),
+                  AppTabItem(
+                    child: Row(
+                      children: [Icon(Icons.settings), Text('Muted tab')],
+                    ),
+                  ),
+                ],
+              ),
+              AppTabList(
+                index: 0,
+                onChanged: (_) {},
+                children: const [
+                  AppTabItem(child: Text('Selected list tab')),
+                  AppTabItem(
+                    child: Row(
+                      children: [Icon(Icons.info), Text('Muted list tab')],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    expect(
+      IconTheme.of(tester.element(find.byIcon(Icons.home))).color,
+      selected,
+    );
+    expect(
+      IconTheme.of(tester.element(find.byIcon(Icons.settings))).color,
+      unselected,
+    );
+    expect(
+      IconTheme.of(tester.element(find.byIcon(Icons.info))).color,
+      unselected,
+    );
+    expect(
+      DefaultTextStyle.of(tester.element(find.text('Muted tab'))).style.color,
+      unselected,
+    );
+  });
 }
