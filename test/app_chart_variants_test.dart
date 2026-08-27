@@ -281,6 +281,54 @@ void main() {
     expect(tooltipRect.bottom, lessThan(114));
   });
 
+  testWidgets('pointer tooltip builder replaces content inside the surface', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(
+            width: 200,
+            height: 120,
+            child: Stack(
+              children: <Widget>[
+                AppPointerTooltip(
+                  position: const Offset(40, 40),
+                  message: '自定义内容',
+                  builder: (context, message) => Container(
+                    key: const ValueKey<String>('custom-chart-tooltip'),
+                    color: Colors.red,
+                    child: Text(message),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(
+      find.byKey(const ValueKey<String>('custom-chart-tooltip')),
+      findsOneWidget,
+    );
+    expect(find.text('自定义内容'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey<String>('app-pointer-tooltip-surface')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey<String>('app-pointer-tooltip-surface')),
+        matching: find.byKey(const ValueKey<String>('custom-chart-tooltip')),
+      ),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('pointer tooltip fades out when the mouse leaves the chart', (
     tester,
   ) async {

@@ -34,6 +34,8 @@ class AppRadarChartHit {
 }
 
 typedef AppRadarChartDataBuilder = RadarChartData Function(RadarChartData data);
+typedef AppRadarChartTooltipBuilder =
+    Widget Function(BuildContext context, AppRadarChartHit hit);
 
 class AppRadarChart extends StatefulWidget {
   const AppRadarChart({
@@ -48,6 +50,8 @@ class AppRadarChart extends StatefulWidget {
     this.shape = RadarShape.polygon,
     this.showLegend = true,
     this.showTooltip = true,
+    this.tooltipStyle,
+    this.tooltipWidgetBuilder,
     this.interactive = true,
     this.keyboardNavigation = true,
     this.autofocus = false,
@@ -66,6 +70,8 @@ class AppRadarChart extends StatefulWidget {
   final RadarShape shape;
   final bool showLegend;
   final bool showTooltip;
+  final AppPointerTooltipStyle? tooltipStyle;
+  final AppRadarChartTooltipBuilder? tooltipWidgetBuilder;
   final bool interactive;
   final bool keyboardNavigation;
   final bool autofocus;
@@ -139,6 +145,13 @@ class _AppRadarChartState extends State<AppRadarChart> {
                     child: AppPointerTooltipArea(
                       position: _tooltipPosition,
                       message: _tooltipMessage,
+                      style: widget.tooltipStyle,
+                      builder: widget.tooltipWidgetBuilder == null
+                          ? null
+                          : (context, _) => widget.tooltipWidgetBuilder!(
+                              context,
+                              _hit(_hovered!),
+                            ),
                       onExit: _clear,
                       child: RadarChart(
                         widget.dataBuilder?.call(
@@ -257,6 +270,17 @@ class _AppRadarChartState extends State<AppRadarChart> {
         )
           AppChartSelection(indicatorIndex, seriesIndex),
   ];
+
+  AppRadarChartHit _hit(AppChartSelection selection) {
+    final series = widget.series[selection.seriesIndex];
+    return AppRadarChartHit(
+      seriesIndex: selection.seriesIndex,
+      indicatorIndex: selection.groupIndex,
+      series: series,
+      indicator: widget.indicators[selection.groupIndex],
+      value: series.values[selection.groupIndex],
+    );
+  }
 
   void _moveKeyboard(int delta) {
     final items = _keyboardItems;

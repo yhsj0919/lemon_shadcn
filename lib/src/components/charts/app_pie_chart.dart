@@ -8,6 +8,8 @@ import '../overlay/app_pointer_tooltip.dart';
 import 'app_chart_common.dart';
 
 typedef AppPieChartTapCallback = void Function(AppPieChartHit hit);
+typedef AppPieChartTooltipBuilder =
+    Widget Function(BuildContext context, AppPieChartHit hit);
 typedef AppPieChartDataBuilder = PieChartData Function(PieChartData data);
 
 @immutable
@@ -37,6 +39,8 @@ class AppPieChart extends StatefulWidget {
     this.showLegend = true,
     this.showValues = true,
     this.showTooltip = true,
+    this.tooltipStyle,
+    this.tooltipWidgetBuilder,
     this.interactive = true,
     this.selectionEnabled = false,
     this.keyboardNavigation = true,
@@ -57,6 +61,8 @@ class AppPieChart extends StatefulWidget {
     this.showLegend = true,
     this.showValues = true,
     this.showTooltip = true,
+    this.tooltipStyle,
+    this.tooltipWidgetBuilder,
     this.interactive = true,
     this.selectionEnabled = false,
     this.keyboardNavigation = true,
@@ -75,6 +81,8 @@ class AppPieChart extends StatefulWidget {
   final bool showLegend;
   final bool showValues;
   final bool showTooltip;
+  final AppPointerTooltipStyle? tooltipStyle;
+  final AppPieChartTooltipBuilder? tooltipWidgetBuilder;
   final bool interactive;
   final bool selectionEnabled;
   final bool keyboardNavigation;
@@ -174,6 +182,16 @@ class _AppPieChartState extends State<AppPieChart> {
                     child: AppPointerTooltipArea(
                       position: _tooltipPosition,
                       message: _tooltipMessage,
+                      style: widget.tooltipStyle,
+                      builder: widget.tooltipWidgetBuilder == null
+                          ? null
+                          : (context, _) => widget.tooltipWidgetBuilder!(
+                              context,
+                              AppPieChartHit(
+                                index: _hovered!,
+                                section: widget.sections[_hovered!],
+                              ),
+                            ),
                       onExit: _clearPointerHover,
                       child: Stack(
                         alignment: Alignment.center,

@@ -10,6 +10,8 @@ import '../overlay/app_pointer_tooltip.dart';
 import 'app_chart_common.dart';
 
 typedef AppBarChartTapCallback = void Function(AppBarChartHit hit);
+typedef AppBarChartTooltipBuilder =
+    Widget Function(BuildContext context, AppBarChartHit hit);
 typedef AppBarChartColorResolver = Color Function(AppBarChartStyleContext data);
 typedef AppBarChartDataBuilder = BarChartData Function(BarChartData data);
 
@@ -86,6 +88,8 @@ class AppBarChart extends StatefulWidget {
     this.palette,
     this.showGrid = true,
     this.showTooltip = true,
+    this.tooltipStyle,
+    this.tooltipWidgetBuilder,
     this.showLegend = true,
     this.showValues = false,
     this.interactive = true,
@@ -112,6 +116,8 @@ class AppBarChart extends StatefulWidget {
     this.palette,
     this.showGrid = true,
     this.showTooltip = true,
+    this.tooltipStyle,
+    this.tooltipWidgetBuilder,
     this.showLegend = true,
     this.showValues = false,
     this.interactive = true,
@@ -140,6 +146,8 @@ class AppBarChart extends StatefulWidget {
     this.palette,
     this.showGrid = true,
     this.showTooltip = true,
+    this.tooltipStyle,
+    this.tooltipWidgetBuilder,
     this.showLegend = true,
     this.showValues = false,
     this.interactive = true,
@@ -168,6 +176,8 @@ class AppBarChart extends StatefulWidget {
     this.palette,
     this.showGrid = true,
     this.showTooltip = true,
+    this.tooltipStyle,
+    this.tooltipWidgetBuilder,
     this.showLegend = true,
     this.showValues = false,
     this.interactive = true,
@@ -189,6 +199,8 @@ class AppBarChart extends StatefulWidget {
     AppChartAxis xAxis = const AppChartAxis(),
     AppChartAxis yAxis = const AppChartAxis(),
     bool showValues = false,
+    AppPointerTooltipStyle? tooltipStyle,
+    AppBarChartTooltipBuilder? tooltipWidgetBuilder,
     AppBarChartTapCallback? onBarTap,
     double? height,
   }) {
@@ -202,6 +214,8 @@ class AppBarChart extends StatefulWidget {
       xAxis: xAxis,
       yAxis: yAxis,
       showValues: showValues,
+      tooltipStyle: tooltipStyle,
+      tooltipWidgetBuilder: tooltipWidgetBuilder,
       onBarTap: onBarTap,
       height: height,
     );
@@ -217,6 +231,8 @@ class AppBarChart extends StatefulWidget {
   final List<Color>? palette;
   final bool showGrid;
   final bool showTooltip;
+  final AppPointerTooltipStyle? tooltipStyle;
+  final AppBarChartTooltipBuilder? tooltipWidgetBuilder;
   final bool showLegend;
   final bool showValues;
   final bool interactive;
@@ -351,6 +367,13 @@ class _AppBarChartState extends State<AppBarChart> {
                           key: _chartAreaKey,
                           position: _tooltipPosition,
                           message: _tooltipMessage,
+                          style: widget.tooltipStyle,
+                          builder: widget.tooltipWidgetBuilder == null
+                              ? null
+                              : (context, _) => widget.tooltipWidgetBuilder!(
+                                  context,
+                                  _hit(_hovered!),
+                                ),
                           onExit: _clearPointerHover,
                           child: chart,
                         ),

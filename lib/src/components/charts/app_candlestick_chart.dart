@@ -38,6 +38,9 @@ class AppCandlestickChartHit {
   final AppCandlestickData data;
 }
 
+typedef AppCandlestickChartTooltipBuilder =
+    Widget Function(BuildContext context, AppCandlestickChartHit hit);
+
 class AppCandlestickChart extends StatefulWidget {
   const AppCandlestickChart({
     super.key,
@@ -49,6 +52,8 @@ class AppCandlestickChart extends StatefulWidget {
     this.fallingColor,
     this.showGrid = true,
     this.showTooltip = true,
+    this.tooltipStyle,
+    this.tooltipWidgetBuilder,
     this.showValues = false,
     this.interactive = true,
     this.keyboardNavigation = true,
@@ -68,6 +73,8 @@ class AppCandlestickChart extends StatefulWidget {
   final Color? fallingColor;
   final bool showGrid;
   final bool showTooltip;
+  final AppPointerTooltipStyle? tooltipStyle;
+  final AppCandlestickChartTooltipBuilder? tooltipWidgetBuilder;
   final bool showValues;
   final bool interactive;
   final bool keyboardNavigation;
@@ -121,6 +128,16 @@ class _AppCandlestickChartState extends State<AppCandlestickChart> {
                   return AppPointerTooltipArea(
                     position: _tooltipPosition,
                     message: _tooltipMessage,
+                    style: widget.tooltipStyle,
+                    builder: widget.tooltipWidgetBuilder == null
+                        ? null
+                        : (context, _) => widget.tooltipWidgetBuilder!(
+                            context,
+                            AppCandlestickChartHit(
+                              index: _hoveredIndex!,
+                              data: widget.data[_hoveredIndex!],
+                            ),
+                          ),
                     onExit: _clear,
                     child: MouseRegion(
                       cursor: widget.interactive

@@ -10,6 +10,8 @@ import '../overlay/app_pointer_tooltip.dart';
 import 'app_chart_common.dart';
 
 typedef AppScatterChartTapCallback = void Function(AppScatterChartHit hit);
+typedef AppScatterChartTooltipBuilder =
+    Widget Function(BuildContext context, AppScatterChartHit hit);
 typedef AppScatterChartDataBuilder =
     ScatterChartData Function(ScatterChartData data);
 
@@ -66,6 +68,8 @@ class AppScatterChart extends StatefulWidget {
     this.palette,
     this.showGrid = true,
     this.showTooltip = true,
+    this.tooltipStyle,
+    this.tooltipWidgetBuilder,
     this.showLegend = true,
     this.interactive = true,
     this.keyboardNavigation = true,
@@ -87,6 +91,8 @@ class AppScatterChart extends StatefulWidget {
   final List<Color>? palette;
   final bool showGrid;
   final bool showTooltip;
+  final AppPointerTooltipStyle? tooltipStyle;
+  final AppScatterChartTooltipBuilder? tooltipWidgetBuilder;
   final bool showLegend;
   final bool interactive;
   final bool keyboardNavigation;
@@ -191,6 +197,13 @@ class _AppScatterChartState extends State<AppScatterChart> {
                     child: AppPointerTooltipArea(
                       position: _tooltipPosition,
                       message: _tooltipMessage,
+                      style: widget.tooltipStyle,
+                      builder: widget.tooltipWidgetBuilder == null
+                          ? null
+                          : (context, _) => widget.tooltipWidgetBuilder!(
+                              context,
+                              _hit(_hovered!),
+                            ),
                       onExit: _clearHover,
                       child: Builder(
                         builder: (context) {

@@ -6,6 +6,24 @@ import '../../foundation/app_shadcn_scope.dart';
 import '../../foundation/app_theme_aliases.dart';
 import '../../foundation/app_theme_config.dart';
 
+typedef AppPointerTooltipBuilder =
+    Widget Function(BuildContext context, String message);
+
+@immutable
+class AppPointerTooltipStyle {
+  const AppPointerTooltipStyle({
+    this.decoration,
+    this.padding,
+    this.textStyle,
+    this.margin,
+  });
+
+  final Decoration? decoration;
+  final EdgeInsetsGeometry? padding;
+  final TextStyle? textStyle;
+  final double? margin;
+}
+
 class AppPointerTooltipArea extends StatelessWidget {
   const AppPointerTooltipArea({
     super.key,
@@ -13,12 +31,16 @@ class AppPointerTooltipArea extends StatelessWidget {
     required this.position,
     required this.message,
     required this.onExit,
+    this.style,
+    this.builder,
   });
 
   final Widget child;
   final Offset? position;
   final String? message;
   final VoidCallback onExit;
+  final AppPointerTooltipStyle? style;
+  final AppPointerTooltipBuilder? builder;
 
   @override
   Widget build(BuildContext context) => MouseRegion(
@@ -26,7 +48,12 @@ class AppPointerTooltipArea extends StatelessWidget {
     child: Stack(
       children: <Widget>[
         Positioned.fill(child: child),
-        AppPointerTooltip(position: position, message: message),
+        AppPointerTooltip(
+          position: position,
+          message: message,
+          style: style,
+          builder: builder,
+        ),
       ],
     ),
   );
@@ -37,10 +64,14 @@ class AppPointerTooltip extends StatefulWidget {
     super.key,
     required this.position,
     required this.message,
+    this.style,
+    this.builder,
   });
 
   final Offset? position;
   final String? message;
+  final AppPointerTooltipStyle? style;
+  final AppPointerTooltipBuilder? builder;
 
   @override
   State<AppPointerTooltip> createState() => _AppPointerTooltipState();
@@ -134,6 +165,7 @@ class _AppPointerTooltipState extends State<AppPointerTooltip>
     final theme = ShadcnTheme.of(context);
     final config = AppTheme.maybeOf(context);
     final tooltip = config?.tooltip ?? const AppTooltipTheme();
+    final style = widget.style;
     final duration =
         config?.motion.enabled == false ||
             MediaQuery.maybeOf(context)?.disableAnimations == true
@@ -150,33 +182,39 @@ class _AppPointerTooltipState extends State<AppPointerTooltip>
               _position!,
               previousPointer: _previousPosition ?? _position!,
               movement: _moveAnimation,
-              gap: tooltip.margin,
+              gap: style?.margin ?? tooltip.margin,
             ),
             child: DecoratedBox(
               key: const ValueKey<String>('app-pointer-tooltip-surface'),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.popover,
-                border: Border.all(color: theme.colorScheme.border),
-                borderRadius: BorderRadius.circular(tooltip.radius),
-                boxShadow: AppTheme.of(context).shadows.resolve(
-                  context,
-                  level: AppShadowLevel.floating,
-                  colorMode: AppShadowColorMode.custom,
-                  color: theme.colorScheme.foreground,
-                  blurRadius: 8,
-                  spreadRadius: 0,
-                  offset: const Offset(0, 2),
-                ),
-              ),
-              child: Padding(
-                padding: tooltip.padding,
-                child: Text(
-                  _message!,
-                  style: theme.typography.xSmall.copyWith(
-                    color: theme.colorScheme.popoverForeground,
-                    fontWeight: FontWeight.w600,
+              decoration:
+                  style?.decoration ??
+                  BoxDecoration(
+                    color: theme.colorScheme.popover,
+                    border: Border.all(color: theme.colorScheme.border),
+                    borderRadius: BorderRadius.circular(tooltip.radius),
+                    boxShadow: AppTheme.of(context).shadows.resolve(
+                      context,
+                      level: AppShadowLevel.floating,
+                      colorMode: AppShadowColorMode.custom,
+                      color: theme.colorScheme.foreground,
+                      blurRadius: 8,
+                      spreadRadius: 0,
+                      offset: const Offset(0, 2),
+                    ),
                   ),
-                ),
+              child: Padding(
+                padding: style?.padding ?? tooltip.padding,
+                child:
+                    widget.builder?.call(context, _message!) ??
+                    Text(
+                      _message!,
+                      style: theme.typography.xSmall
+                          .copyWith(
+                            color: theme.colorScheme.popoverForeground,
+                            fontWeight: FontWeight.w600,
+                          )
+                          .merge(style?.textStyle),
+                    ),
               ),
             ),
           ),

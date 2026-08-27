@@ -12,6 +12,8 @@ import 'app_chart_common.dart';
 enum _AppLineChartVariant { line, area, step }
 
 typedef AppLineChartTapCallback = void Function(AppLineChartHit hit);
+typedef AppLineChartTooltipBuilder =
+    Widget Function(BuildContext context, AppLineChartTooltipData data);
 typedef AppLineChartDataBuilder = LineChartData Function(LineChartData data);
 
 @immutable
@@ -53,6 +55,32 @@ class AppLineChartHit {
   final AppLinePoint point;
 }
 
+@immutable
+class AppLineChartTooltipItem {
+  const AppLineChartTooltipItem({
+    required this.hit,
+    required this.color,
+    required this.formattedValue,
+  });
+
+  final AppLineChartHit hit;
+  final Color color;
+  final String formattedValue;
+}
+
+@immutable
+class AppLineChartTooltipData {
+  const AppLineChartTooltipData({
+    required this.x,
+    required this.xLabel,
+    required this.items,
+  });
+
+  final double x;
+  final String xLabel;
+  final List<AppLineChartTooltipItem> items;
+}
+
 class AppLineChart extends StatefulWidget {
   const AppLineChart({
     super.key,
@@ -65,6 +93,8 @@ class AppLineChart extends StatefulWidget {
     this.palette,
     this.showGrid = true,
     this.showTooltip = true,
+    this.tooltipStyle,
+    this.tooltipWidgetBuilder,
     this.showLegend = true,
     this.interactive = true,
     this.selectionEnabled = false,
@@ -91,6 +121,8 @@ class AppLineChart extends StatefulWidget {
     this.palette,
     this.showGrid = true,
     this.showTooltip = true,
+    this.tooltipStyle,
+    this.tooltipWidgetBuilder,
     this.showLegend = true,
     this.interactive = true,
     this.selectionEnabled = false,
@@ -117,6 +149,8 @@ class AppLineChart extends StatefulWidget {
     this.palette,
     this.showGrid = true,
     this.showTooltip = true,
+    this.tooltipStyle,
+    this.tooltipWidgetBuilder,
     this.showLegend = true,
     this.interactive = true,
     this.selectionEnabled = false,
@@ -141,6 +175,8 @@ class AppLineChart extends StatefulWidget {
   final List<Color>? palette;
   final bool showGrid;
   final bool showTooltip;
+  final AppPointerTooltipStyle? tooltipStyle;
+  final AppLineChartTooltipBuilder? tooltipWidgetBuilder;
   final bool showLegend;
   final bool interactive;
   final bool selectionEnabled;
@@ -165,6 +201,7 @@ class _AppLineChartState extends State<AppLineChart> {
   AppChartSelection? _hovered;
   Offset? _tooltipPosition;
   String? _tooltipMessage;
+  AppLineChartTooltipData? _tooltipData;
 
   bool get _controlled => widget.onSelectionChanged != null;
   Set<AppChartSelection> get _selected => widget.selectionEnabled
@@ -249,6 +286,15 @@ class _AppLineChartState extends State<AppLineChart> {
                         return AppPointerTooltipArea(
                           position: _tooltipPosition,
                           message: _tooltipMessage,
+                          style: widget.tooltipStyle,
+                          builder:
+                              widget.tooltipWidgetBuilder == null ||
+                                  _tooltipData == null
+                              ? null
+                              : (context, _) => widget.tooltipWidgetBuilder!(
+                                  context,
+                                  _tooltipData!,
+                                ),
                           onExit: _clearPointerHover,
                           child: LineChart(
                             widget.dataBuilder?.call(data) ?? data,
@@ -595,6 +641,9 @@ class _AppLineChartState extends State<AppLineChart> {
     final tooltipMessage = spot == null || !widget.showTooltip || spots == null
         ? null
         : _tooltipFor(spots);
+    final tooltipData = tooltipMessage == null || spots == null
+        ? null
+        : _tooltipDataFor(spots);
     final tooltipPosition = tooltipMessage == null
         ? null
         : response?.touchLocation;
@@ -605,6 +654,7 @@ class _AppLineChartState extends State<AppLineChart> {
         _hovered = next;
         _tooltipPosition = tooltipPosition;
         _tooltipMessage = tooltipMessage;
+        _tooltipData = tooltipData;
       });
     }
     if (event is! FlTapUpEvent || next == null) return;
@@ -621,6 +671,7 @@ class _AppLineChartState extends State<AppLineChart> {
       _hovered = null;
       _tooltipPosition = null;
       _tooltipMessage = null;
+      _tooltipData = null;
     });
   }
 
@@ -658,6 +709,7 @@ class _AppLineChartState extends State<AppLineChart> {
       _hovered = items[next];
       _tooltipPosition = null;
       _tooltipMessage = null;
+      _tooltipData = null;
     });
   }
 
@@ -675,6 +727,7 @@ class _AppLineChartState extends State<AppLineChart> {
         _hovered = null;
         _tooltipPosition = null;
         _tooltipMessage = null;
+        _tooltipData = null;
       });
       return;
     }
@@ -683,6 +736,7 @@ class _AppLineChartState extends State<AppLineChart> {
         _hovered = null;
         _tooltipPosition = null;
         _tooltipMessage = null;
+        _tooltipData = null;
         _internalSelected = <AppChartSelection>{};
       });
     } else {
@@ -690,6 +744,7 @@ class _AppLineChartState extends State<AppLineChart> {
         _hovered = null;
         _tooltipPosition = null;
         _tooltipMessage = null;
+        _tooltipData = null;
       });
     }
     widget.onSelectionChanged?.call(const <AppChartSelection>{});
@@ -714,6 +769,38 @@ class _AppLineChartState extends State<AppLineChart> {
       );
     }
     return lines.join('\n');
+  }
+
+  AppLineChartTooltipData _tooltipDataFor(List<TouchLineBarSpot> spots) {
+    final first = spots.first;
+    final config = AppTheme.maybeOf(context);
+    final chart = config?.chart ?? const AppChartTheme();
+    final theme = ShadcnTheme.of(context);
+    final palette = appChartPalette(chart, theme.colorScheme, widget.palette);
+    final xLabel =
+        _pointLabel(first.x) ??
+        widget.xAxis.formatter?.call(first.x) ??
+        appChartNumber(first.x);
+    return AppLineChartTooltipData(
+      x: first.x,
+      xLabel: xLabel,
+      items: <AppLineChartTooltipItem>[
+        for (final spot in spots)
+          AppLineChartTooltipItem(
+            hit: _hit(
+              AppChartSelection(
+                _pointIndexForX(spot.barIndex, spot.x),
+                spot.barIndex,
+              ),
+            ),
+            color:
+                widget.series[spot.barIndex].color ??
+                palette[spot.barIndex % palette.length],
+            formattedValue:
+                widget.yAxis.formatter?.call(spot.y) ?? appChartNumber(spot.y),
+          ),
+      ],
+    );
   }
 
   int _pointIndexForX(int seriesIndex, double x) =>
