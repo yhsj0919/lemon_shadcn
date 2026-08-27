@@ -499,6 +499,55 @@ void main() {
     );
     expect((decoration as BoxDecoration).color, themeBackground);
   });
+
+  testWidgets('AppIconButton theme colors default to quiet variants', (
+    tester,
+  ) async {
+    const themeColor = Color(0xff0f766e);
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: const ComponentTheme<AppIconButtonTheme>(
+          data: AppIconButtonTheme(foregroundColor: themeColor),
+          child: Row(
+            children: [
+              AppIconButton(
+                tooltip: 'Outline',
+                onPressed: _noop,
+                icon: Icon(Icons.search),
+              ),
+              AppIconButton(
+                tooltip: 'Primary',
+                variant: AppButtonVariant.primary,
+                onPressed: _noop,
+                icon: Icon(Icons.add),
+              ),
+              AppIconButton(
+                tooltip: 'Primary override',
+                variant: AppButtonVariant.primary,
+                foregroundColor: themeColor,
+                onPressed: _noop,
+                icon: Icon(Icons.edit),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    expect(
+      IconTheme.of(tester.element(find.byIcon(Icons.search))).color,
+      themeColor,
+    );
+    expect(
+      IconTheme.of(tester.element(find.byIcon(Icons.add))).color,
+      isNot(themeColor),
+    );
+    expect(
+      IconTheme.of(tester.element(find.byIcon(Icons.edit))).color,
+      themeColor,
+    );
+  });
 }
 
 void _noop() {}

@@ -599,11 +599,18 @@ abstract final class AppButton {
 }
 
 class AppIconButtonTheme extends shad.ComponentThemeData {
+  static const quietVariants = <AppButtonVariant>{
+    AppButtonVariant.outline,
+    AppButtonVariant.ghost,
+    AppButtonVariant.text,
+  };
+
   const AppIconButtonTheme({
     this.color,
     this.foregroundColor,
     this.backgroundColor,
     this.iconSize,
+    this.variants = quietVariants,
   })
     : assert(iconSize == null || iconSize > 0);
 
@@ -618,6 +625,11 @@ class AppIconButtonTheme extends shad.ComponentThemeData {
 
   /// Default icon size. The button hit target is unaffected.
   final double? iconSize;
+
+  /// Variants that receive this theme's foreground and background colors.
+  /// Defaults to the quiet outline, ghost, and text variants so solid buttons
+  /// retain their own automatic contrast colors.
+  final Set<AppButtonVariant> variants;
 }
 
 /// A low-template icon-only button with a guaranteed square hit target.
@@ -697,13 +709,18 @@ class AppIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final iconButtonTheme =
         shad.ComponentTheme.maybeOf<AppIconButtonTheme>(context);
+    final appliesThemeColor =
+        iconButtonTheme?.variants.contains(variant) ?? false;
+    final themedForeground = appliesThemeColor
+        ? iconButtonTheme?.foregroundColor ?? iconButtonTheme?.color
+        : null;
     final resolvedColor =
         foregroundColor ??
         color ??
-        iconButtonTheme?.foregroundColor ??
-        iconButtonTheme?.color;
+        themedForeground;
     final resolvedBackground =
-        backgroundColor ?? iconButtonTheme?.backgroundColor;
+        backgroundColor ??
+        (appliesThemeColor ? iconButtonTheme?.backgroundColor : null);
     final resolvedIconSize = iconSize ?? iconButtonTheme?.iconSize;
     final resolvedIcon = resolvedColor == null && resolvedIconSize == null
         ? icon
