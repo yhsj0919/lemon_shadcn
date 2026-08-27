@@ -301,6 +301,38 @@ void main() {
     expect(style.activatedColor, isNot(style.evenRowColor));
   });
 
+  testWidgets('row hover highlighting can be disabled without changing rows', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: const Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(
+            width: 420,
+            child: AppDataGrid<_Row>.local(
+              height: 180,
+              highlightHoveredRow: false,
+              columns: [
+                AppDataGridColumn(id: 'name', title: 'Name', value: _name),
+              ],
+              rows: [_Row(1, 'Ada')],
+              rowKey: _rowId,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final style = tester
+        .widget<TrinaGrid>(find.byType(TrinaGrid))
+        .configuration
+        .style;
+    expect(style.enableRowHoverColor, isFalse);
+  });
+
   testWidgets('neutral themes still get a distinct default selection color', (
     tester,
   ) async {

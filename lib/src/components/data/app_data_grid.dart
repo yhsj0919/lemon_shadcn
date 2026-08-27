@@ -221,6 +221,7 @@ class AppDataGrid<T> extends StatefulWidget {
     this.cellForegroundColor,
     this.striped = true,
     this.stripeColor,
+    this.highlightHoveredRow = true,
     this.selectedRowColor,
     this.rowContextMenuBuilder,
     this.rowBackgroundColor,
@@ -274,6 +275,7 @@ class AppDataGrid<T> extends StatefulWidget {
     this.cellForegroundColor,
     this.striped = true,
     this.stripeColor,
+    this.highlightHoveredRow = true,
     this.selectedRowColor,
     this.rowContextMenuBuilder,
     this.rowBackgroundColor,
@@ -324,6 +326,7 @@ class AppDataGrid<T> extends StatefulWidget {
     this.cellForegroundColor,
     this.striped = true,
     this.stripeColor,
+    this.highlightHoveredRow = true,
     this.selectedRowColor,
     this.rowContextMenuBuilder,
     this.rowBackgroundColor,
@@ -410,6 +413,10 @@ class AppDataGrid<T> extends StatefulWidget {
   /// Background used by every second business row when [striped] is true.
   /// Defaults to the current theme's muted color.
   final Color? stripeColor;
+
+  /// Whether hovering a row changes its background color. Disable this to
+  /// preserve the base, striped, or custom row background under the pointer.
+  final bool highlightHoveredRow;
 
   /// Background for the active single-selection row and checked
   /// multiple-selection rows. Defaults to a semantic blue surface so it
@@ -1514,7 +1521,7 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
       enableColumnBorderHorizontal: widget.showInternalDividers,
       enableCellBorderVertical: widget.showInternalDividers,
       enableCellBorderHorizontal: widget.showInternalDividers,
-      enableRowHoverColor: true,
+      enableRowHoverColor: widget.highlightHoveredRow,
       gridBackgroundColor: rowBackground,
       rowColor: rowBackground,
       oddRowColor: widget.striped ? rowBackground : null,
