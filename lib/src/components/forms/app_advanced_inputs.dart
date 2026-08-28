@@ -454,9 +454,10 @@ class AppMultiSelect<V> extends StatefulWidget {
     this.optionConfig = const AppOptionConfig(),
     this.allowUnselect = true,
     this.maxVisibleOptions,
+    this.maxPopupHeight = 320,
     this.enabled = true,
     this.spacing = 8,
-  });
+  }) : assert(maxPopupHeight > 0);
 
   final List<AppOption<V>> options;
   final Iterable<V>? value;
@@ -466,6 +467,7 @@ class AppMultiSelect<V> extends StatefulWidget {
   final bool enabled;
   final double spacing;
   final int? maxVisibleOptions;
+  final double maxPopupHeight;
 
   @override
   State<AppMultiSelect<V>> createState() => _AppMultiSelectState<V>();
@@ -509,21 +511,26 @@ class _AppMultiSelectState<V> extends State<AppMultiSelect<V>> {
       alignment: Alignment.topLeft,
       widthConstraint: shad.PopoverConstraint.anchorFixedSize,
       builder: (context) => popup(
-        StatefulBuilder(
-          builder: (context, setOverlayState) => shad.DropdownMenu(
-            children: [
-              for (final option in widget.options)
-                shad.MenuCheckbox(
-                  value: _selected.contains(option.value),
-                  enabled: !option.disabled,
-                  autoClose: false,
-                  onChanged: (_, _) {
-                    _toggle(option.value);
-                    setOverlayState(() {});
-                  },
-                  child: option.child ?? Text(option.label),
-                ),
-            ],
+        ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: widget.maxPopupHeight),
+          child: SingleChildScrollView(
+            child: StatefulBuilder(
+              builder: (context, setOverlayState) => shad.DropdownMenu(
+                children: [
+                  for (final option in widget.options)
+                    shad.MenuCheckbox(
+                      value: _selected.contains(option.value),
+                      enabled: !option.disabled,
+                      autoClose: false,
+                      onChanged: (_, _) {
+                        _toggle(option.value);
+                        setOverlayState(() {});
+                      },
+                      child: option.child ?? Text(option.label),
+                    ),
+                ],
+              ),
+            ),
           ),
         ),
       ),
@@ -696,6 +703,7 @@ class AppMultiSelectFormField<V> extends FormField<List<V>> {
     this.allowUnselect = true,
     this.optionConfig = const AppOptionConfig(),
     this.maxVisibleOptions,
+    this.maxPopupHeight = 320,
     this.onChanged,
     super.initialValue,
     super.onSaved,
@@ -704,7 +712,8 @@ class AppMultiSelectFormField<V> extends FormField<List<V>> {
     super.enabled = true,
     super.autovalidateMode = AutovalidateMode.onUserInteraction,
     super.restorationId,
-  }) : super(
+  }) : assert(maxPopupHeight > 0),
+       super(
          builder: (state) {
            final field = state.widget as AppMultiSelectFormField<V>;
            return AppFormFieldBinding<List<V>>(
@@ -725,6 +734,7 @@ class AppMultiSelectFormField<V> extends FormField<List<V>> {
                        allowUnselect: field.allowUnselect,
                        optionConfig: field.optionConfig,
                        maxVisibleOptions: field.maxVisibleOptions,
+                       maxPopupHeight: field.maxPopupHeight,
                        onChanged: (value) {
                          state.didChange(value?.toList());
                          field.onChanged?.call(value?.toList());
@@ -737,6 +747,7 @@ class AppMultiSelectFormField<V> extends FormField<List<V>> {
                        allowUnselect: field.allowUnselect,
                        optionConfig: field.optionConfig,
                        maxVisibleOptions: field.maxVisibleOptions,
+                       maxPopupHeight: field.maxPopupHeight,
                        onChanged: (value) {
                          state.didChange(value?.toList());
                          field.onChanged?.call(value?.toList());
@@ -757,6 +768,7 @@ class AppMultiSelectFormField<V> extends FormField<List<V>> {
   final bool allowUnselect;
   final AppOptionConfig<V> optionConfig;
   final int? maxVisibleOptions;
+  final double maxPopupHeight;
   final ValueChanged<List<V>?>? onChanged;
   final AppAsyncFieldValidator<List<V>>? asyncValidator;
 }
@@ -770,6 +782,7 @@ class _AppAsyncMultiSelect<V> extends StatefulWidget {
     required this.enabled,
     required this.allowUnselect,
     required this.maxVisibleOptions,
+    required this.maxPopupHeight,
   });
 
   final AppAsyncOptionSource<V> optionSource;
@@ -779,6 +792,7 @@ class _AppAsyncMultiSelect<V> extends StatefulWidget {
   final bool enabled;
   final bool allowUnselect;
   final int? maxVisibleOptions;
+  final double maxPopupHeight;
 
   @override
   State<_AppAsyncMultiSelect<V>> createState() =>
@@ -831,6 +845,7 @@ class _AppAsyncMultiSelectState<V> extends State<_AppAsyncMultiSelect<V>> {
           enabled: widget.enabled,
           allowUnselect: widget.allowUnselect,
           maxVisibleOptions: widget.maxVisibleOptions,
+          maxPopupHeight: widget.maxPopupHeight,
         );
       },
     );
