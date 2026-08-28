@@ -2193,6 +2193,8 @@ class _AppDataGridHoverRow extends StatefulWidget {
 class _AppDataGridHoverRowState extends State<_AppDataGridHoverRow> {
   bool _hovered = false;
   OverlayEntry? _overlayEntry;
+  bool _overlayInserted = false;
+  bool _overlayUpdateScheduled = false;
   Rect? _overlayRect;
 
   @override
@@ -2231,14 +2233,22 @@ class _AppDataGridHoverRowState extends State<_AppDataGridHoverRow> {
     if (_hovered != hovered) setState(() => _hovered = hovered);
     if (widget.segment != _AppDataGridRowSegment.body) return;
     if (hovered) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _updateOverlay());
+      if (_overlayUpdateScheduled) return;
+      _overlayUpdateScheduled = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _overlayUpdateScheduled = false;
+        _updateOverlay();
+      });
     } else {
       _removeOverlay();
     }
   }
 
   void _removeOverlay() {
-    _overlayEntry?.remove();
+    if (_overlayInserted) {
+      _overlayEntry?.remove();
+      _overlayInserted = false;
+    }
     _overlayEntry = null;
     _overlayRect = null;
   }
@@ -2267,7 +2277,14 @@ class _AppDataGridHoverRowState extends State<_AppDataGridHoverRow> {
       rowBox.size.height,
     );
     _overlayEntry ??= OverlayEntry(builder: _buildOverlay);
-    if (!_overlayEntry!.mounted) overlay.insert(_overlayEntry!);
+    // OverlayEntry.mounted remains false until its first build. Multiple
+    // manager notifications can therefore schedule updates that all attempt
+    // to insert the same entry in one frame. Track insertion separately so
+    // the entry is added exactly once.
+    if (!_overlayInserted) {
+      overlay.insert(_overlayEntry!);
+      _overlayInserted = true;
+    }
     _overlayEntry!.markNeedsBuild();
   }
 
