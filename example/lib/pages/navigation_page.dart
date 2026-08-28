@@ -44,10 +44,24 @@ class _NavigationPageState extends State<NavigationPage> {
             ),
             ComponentSection(
               title: '分页',
-              child: AppPagination(
-                page: _page,
-                totalPages: 8,
-                onPageChanged: (value) => setState(() => _page = value),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  AppPagination(
+                    page: _page,
+                    totalPages: 8,
+                    onPageChanged: (value) => setState(() => _page = value),
+                  ),
+                  const SizedBox(height: 16),
+                  AppPagination(
+                    page: _page,
+                    totalPages: 8,
+                    variant: AppPaginationVariant.iconOnly,
+                    showSkipToFirstPage: false,
+                    showSkipToLastPage: false,
+                    onPageChanged: (value) => setState(() => _page = value),
+                  ),
+                ],
               ),
             ),
             ComponentSection(

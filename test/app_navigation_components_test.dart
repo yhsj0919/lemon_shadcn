@@ -47,6 +47,36 @@ void main() {
     expect(find.byType(AppTabList), findsOneWidget);
   });
 
+  testWidgets('pagination supports icon-only navigation and custom items', (
+    tester,
+  ) async {
+    var builtItems = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: AppPagination(
+          page: 2,
+          totalPages: 3,
+          variant: AppPaginationVariant.iconOnly,
+          itemBuilder: (context, page, selected, onPressed) {
+            builtItems++;
+            return GestureDetector(
+              key: ValueKey('custom-page-$page'),
+              onTap: onPressed,
+              child: Text(selected ? '[$page]' : '$page'),
+            );
+          },
+          onPageChanged: (_) {},
+        ),
+      ),
+    );
+
+    expect(builtItems, 3);
+    expect(find.byKey(const ValueKey('custom-page-2')), findsOneWidget);
+    expect(find.text('Previous'), findsNothing);
+    expect(find.text('Next'), findsNothing);
+  });
+
   testWidgets('steps and timeline aliases render categorized layout data', (
     tester,
   ) async {

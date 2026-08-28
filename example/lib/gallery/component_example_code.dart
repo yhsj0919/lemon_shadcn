@@ -475,7 +475,17 @@ AppDivider.vertical(width: 32);''',
   Text('首页'), Text('组件'), Text('导航'),
 ]);''',
     '分页':
-        '''AppPagination(page: page, totalPages: 10, onPageChanged: onPageChanged);''',
+        '''AppPagination(
+  page: page,
+  totalPages: 10,
+  variant: AppPaginationVariant.iconOnly,
+  itemBuilder: (context, page, selected, onPressed) {
+    return selected
+        ? AppButton.primary(onPressed: onPressed, child: Text('\$page'))
+        : AppButton.ghost(onPressed: onPressed, child: Text('\$page'));
+  },
+  onPageChanged: onPageChanged,
+);''',
     '标签页': '''AppTabs(
   index: tab,
   onChanged: onTabChanged,
