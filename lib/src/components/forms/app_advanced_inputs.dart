@@ -513,23 +513,21 @@ class _AppMultiSelectState<V> extends State<AppMultiSelect<V>> {
       builder: (context) => popup(
         ConstrainedBox(
           constraints: BoxConstraints(maxHeight: widget.maxPopupHeight),
-          child: SingleChildScrollView(
-            child: StatefulBuilder(
-              builder: (context, setOverlayState) => shad.DropdownMenu(
-                children: [
-                  for (final option in widget.options)
-                    shad.MenuCheckbox(
-                      value: _selected.contains(option.value),
-                      enabled: !option.disabled,
-                      autoClose: false,
-                      onChanged: (_, _) {
-                        _toggle(option.value);
-                        setOverlayState(() {});
-                      },
-                      child: option.child ?? Text(option.label),
-                    ),
-                ],
-              ),
+          child: StatefulBuilder(
+            builder: (context, setOverlayState) => shad.DropdownMenu(
+              children: [
+                for (final option in widget.options)
+                  shad.MenuCheckbox(
+                    value: _selected.contains(option.value),
+                    enabled: !option.disabled,
+                    autoClose: false,
+                    onChanged: (_, _) {
+                      _toggle(option.value);
+                      setOverlayState(() {});
+                    },
+                    child: option.child ?? Text(option.label),
+                  ),
+              ],
             ),
           ),
         ),
