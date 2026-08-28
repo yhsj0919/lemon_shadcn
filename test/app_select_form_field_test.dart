@@ -201,6 +201,26 @@ void main() {
     expect(tester.takeException(), isA<FlutterError>());
   });
 
+  testWidgets('select popup height is bounded by default and configurable', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: const AppSelect<String>(
+          options: options,
+          maxPopupHeight: 240,
+          onChanged: _ignoreSelection,
+        ),
+      ),
+    );
+
+    final select = tester.widget<shad.Select<String>>(
+      find.byType(shad.Select<String>),
+    );
+    expect(select.popupConstraints?.maxHeight, 240);
+  });
+
   testWidgets('select releases focus when its popup is dismissed outside', (
     tester,
   ) async {
