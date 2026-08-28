@@ -9,6 +9,7 @@ import 'package:trina_grid/trina_grid.dart';
 import '../../foundation/app_shadcn_scope.dart';
 import '../../foundation/app_theme_config.dart';
 import '../../foundation/app_control_box.dart';
+import '../../motion/app_page_transition.dart';
 import '../actions/app_button.dart';
 import '../display/app_empty.dart';
 import '../forms/app_checkbox.dart';
@@ -414,8 +415,10 @@ class AppDataGrid<T> extends StatefulWidget {
   /// Defaults to the current theme's muted color.
   final Color? stripeColor;
 
-  /// Whether hovering a row changes its background color. Disable this to
-  /// preserve the base, striped, or custom row background under the pointer.
+  /// Whether a row scales slightly in place with a rounded surface and shadow
+  /// while hovered.
+  ///
+  /// Disable this to keep rows visually stationary under the pointer.
   final bool highlightHoveredRow;
 
   /// Background for the active single-selection row and checked
@@ -487,6 +490,8 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
 
   bool get _treeEnabled =>
       widget.buildChildren != null || widget.hasChildren != null;
+
+  bool get _useHoverScale => widget.highlightHoveredRow;
 
   Set<Object> get _effectiveExpandedKeys =>
       widget.expandedKeys ?? _expandedKeys;
@@ -781,6 +786,7 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
       renderer: (context) => _AppDataGridRowDragHandle(
         manager: context.stateManager,
         row: context.row,
+        columns: widget.columns,
       ),
     );
   }
@@ -1526,7 +1532,10 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
       rowColor: rowBackground,
       oddRowColor: widget.striped ? rowBackground : null,
       evenRowColor: widget.striped ? stripeBackground : null,
-      rowHoveredColor: colors.accent,
+      // The hover wrapper supplies elevation and shadow. Keep the row surface
+      // neutral, matching the raised white surface in light themes instead of
+      // combining the lift with the old accent-color highlight.
+      rowHoveredColor: _useHoverScale ? Colors.white : colors.accent,
       activatedColor: selectionBackground,
       rowCheckedColor: selectionBackground,
       columnUnselectedColor: colors.mutedForeground,
@@ -1673,6 +1682,25 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
         key: ValueKey(_generation),
         columns: columns,
         rows: rows,
+        rowWrapper: _useHoverScale
+            ? (_, rowWidget, row, manager) {
+                final key = rowWidget.key.toString();
+                final segment = key.contains('left_frozen_row_')
+                    ? _AppDataGridRowSegment.left
+                    : key.contains('right_frozen_row_')
+                    ? _AppDataGridRowSegment.right
+                    : _AppDataGridRowSegment.body;
+                return _AppDataGridHoverRow(
+                  key: rowWidget.key,
+                  row: row,
+                  manager: manager,
+                  segment: segment,
+                  borderColor: appTheme.colorScheme.border,
+                  shadowColor: appTheme.colorScheme.foreground,
+                  child: rowWidget,
+                );
+              }
+            : null,
         configuration: _configuration(context),
         noRowsWidget: empty,
         mode: widget.selectionMode == AppDataGridSelectionMode.single
@@ -2138,6 +2166,223 @@ class _AppDataGridControlTitle extends StatelessWidget {
   }
 }
 
+enum _AppDataGridRowSegment { left, body, right }
+
+class _AppDataGridHoverRow extends StatefulWidget {
+  const _AppDataGridHoverRow({
+    super.key,
+    required this.row,
+    required this.manager,
+    required this.segment,
+    required this.borderColor,
+    required this.shadowColor,
+    required this.child,
+  });
+
+  final TrinaRow row;
+  final TrinaGridStateManager manager;
+  final _AppDataGridRowSegment segment;
+  final Color borderColor;
+  final Color shadowColor;
+  final Widget child;
+
+  @override
+  State<_AppDataGridHoverRow> createState() => _AppDataGridHoverRowState();
+}
+
+class _AppDataGridHoverRowState extends State<_AppDataGridHoverRow> {
+  bool _hovered = false;
+  OverlayEntry? _overlayEntry;
+  Rect? _overlayRect;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.manager.addListener(_syncHover);
+    _hovered = _resolveHovered();
+  }
+
+  @override
+  void didUpdateWidget(_AppDataGridHoverRow oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.manager != widget.manager) {
+      oldWidget.manager.removeListener(_syncHover);
+      widget.manager.addListener(_syncHover);
+    }
+    _hovered = _resolveHovered();
+  }
+
+  @override
+  void dispose() {
+    _removeOverlay();
+    widget.manager.removeListener(_syncHover);
+    super.dispose();
+  }
+
+  bool _resolveHovered() {
+    if (widget.manager.isDraggingRow) return false;
+    final rowIndex = widget.manager.refRows.indexOf(widget.row);
+    return rowIndex >= 0 && widget.manager.isRowIdxHovered(rowIndex);
+  }
+
+  void _syncHover() {
+    final hovered = _resolveHovered();
+    if (!mounted) return;
+    if (_hovered != hovered) setState(() => _hovered = hovered);
+    if (widget.segment != _AppDataGridRowSegment.body) return;
+    if (hovered) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _updateOverlay());
+    } else {
+      _removeOverlay();
+    }
+  }
+
+  void _removeOverlay() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
+    _overlayRect = null;
+  }
+
+  void _updateOverlay() {
+    if (!mounted || !_hovered) return;
+    final rowBox = context.findRenderObject() as RenderBox?;
+    final gridBox = widget.manager.gridKey.currentContext?.findRenderObject()
+        as RenderBox?;
+    final overlay = Overlay.maybeOf(context);
+    final overlayBox = overlay?.context.findRenderObject() as RenderBox?;
+    if (rowBox == null ||
+        gridBox == null ||
+        overlay == null ||
+        overlayBox == null) {
+      return;
+    }
+    final rowOrigin = rowBox.localToGlobal(Offset.zero);
+    final gridOrigin = gridBox.localToGlobal(Offset.zero);
+    final globalOrigin = Offset(gridOrigin.dx, rowOrigin.dy);
+    final origin = overlayBox.globalToLocal(globalOrigin);
+    _overlayRect = Rect.fromLTWH(
+      origin.dx + 1,
+      origin.dy,
+      math.max(0, gridBox.size.width - 2),
+      rowBox.size.height,
+    );
+    _overlayEntry ??= OverlayEntry(builder: _buildOverlay);
+    if (!_overlayEntry!.mounted) overlay.insert(_overlayEntry!);
+    _overlayEntry!.markNeedsBuild();
+  }
+
+  Widget _buildOverlay(BuildContext context) {
+    final rect = _overlayRect;
+    if (rect == null) return const SizedBox.shrink();
+    final theme = shad.Theme.of(context);
+    final appTheme = AppTheme.maybeOf(context) ?? AppThemeConfig.standard();
+    final radius = BorderRadius.circular(theme.radiusMd);
+    final shadows = appTheme.shadows.resolve(
+      context,
+      level: AppShadowLevel.floating,
+      quality: AppPageTransitionScope.shadowQualityOf(context),
+      colorMode: AppShadowColorMode.custom,
+      color: widget.shadowColor,
+    );
+    return Positioned.fromRect(
+      rect: rect,
+      child: IgnorePointer(
+        child: CustomPaint(
+          key: const ValueKey('app-data-grid-hover-overlay'),
+          foregroundPainter: _AppDataGridHoverOverlayPainter(
+            radius: radius,
+            borderColor: widget.borderColor,
+            shadows: shadows,
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final appTheme = AppTheme.maybeOf(context) ?? AppThemeConfig.standard();
+    final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    final animate = appTheme.motion.enabled && !reduceMotion;
+    final tokens = appTheme.motion.tokens;
+
+    return TweenAnimationBuilder<double>(
+      tween: Tween(end: _hovered ? 1 : 0),
+      duration: animate ? tokens.hoverDuration : Duration.zero,
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) {
+        final scale = 1 + (tokens.hoverScale - 1) * value;
+        return Transform(
+          alignment: Alignment.center,
+          transform: Matrix4.identity()
+            // Frozen and scrollable columns live in separately clipped
+            // viewports. Horizontal scaling would cross those boundaries and
+            // be cut off at the pinned-column divider.
+            ..setEntry(0, 0, 1)
+            ..setEntry(1, 1, scale),
+          child: child,
+        );
+      },
+      child: widget.child,
+    );
+  }
+}
+
+class _AppDataGridHoverOverlayPainter extends CustomPainter {
+  const _AppDataGridHoverOverlayPainter({
+    required this.radius,
+    required this.borderColor,
+    required this.shadows,
+  });
+
+  final BorderRadius radius;
+  final Color borderColor;
+  final List<BoxShadow> shadows;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+    final outer = radius.toRRect(rect);
+
+    // A transparent BoxDecoration leaves the blurred portion of its shadow
+    // visible inside the row, which dims all cell content. Paint the shadow on
+    // an isolated layer and punch the card interior back out so only the
+    // outside elevation remains visible over the grid.
+    final layerBounds = rect.inflate(
+      shadows.fold<double>(0, (extent, shadow) {
+        return math.max(
+          extent,
+          shadow.blurRadius + shadow.spreadRadius + shadow.offset.distance,
+        );
+      }),
+    );
+    canvas.saveLayer(layerBounds, Paint());
+    for (final shadow in shadows) {
+      final shadowRect = rect
+          .shift(shadow.offset)
+          .inflate(shadow.spreadRadius);
+      canvas.drawRRect(radius.toRRect(shadowRect), shadow.toPaint());
+    }
+    canvas.drawRRect(outer, Paint()..blendMode = BlendMode.clear);
+    canvas.restore();
+
+    canvas.drawRRect(
+      outer.deflate(.5),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1
+        ..color = borderColor,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _AppDataGridHoverOverlayPainter oldDelegate) {
+    return oldDelegate.radius != radius ||
+        oldDelegate.borderColor != borderColor ||
+        !listEquals(oldDelegate.shadows, shadows);
+  }
+}
+
 class _AppDataGridRowCheckbox extends StatelessWidget {
   const _AppDataGridRowCheckbox({
     required this.manager,
@@ -2259,11 +2504,47 @@ class _AppDataGridColumnDrag extends StatelessWidget {
   }
 }
 
-class _AppDataGridRowDragHandle extends StatelessWidget {
-  const _AppDataGridRowDragHandle({required this.manager, required this.row});
+class _AppDataGridRowDragHandle<T> extends StatelessWidget {
+  const _AppDataGridRowDragHandle({
+    required this.manager,
+    required this.row,
+    required this.columns,
+  });
 
   final TrinaGridStateManager manager;
   final TrinaRow row;
+  final List<AppDataGridColumn<T>> columns;
+
+  AppDataGridColumn<T>? _definition(String field) {
+    for (final column in columns) {
+      if (column.id == field) return column;
+    }
+    return null;
+  }
+
+  Widget _buildDataCell(
+    BuildContext context,
+    TrinaColumn column,
+    TrinaGridStyleConfig style,
+  ) {
+    final definition = _definition(column.field);
+    final value = row.cells[column.field]?.value;
+    final child = definition?.cellBuilder == null
+        ? Text(
+            value?.toString() ?? '',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: style.cellTextStyle,
+          )
+        : definition!.cellBuilder!(context, row.data as T, value);
+    return Padding(
+      padding: column.cellPadding ?? style.defaultCellPadding,
+      child: Align(
+        alignment: definition?.alignment ?? column.textAlign.alignmentValue,
+        child: child,
+      ),
+    );
+  }
 
   List<TrinaRow> get _draggingRows {
     if (manager.currentSelectingRows.isEmpty) return [row];
@@ -2273,7 +2554,9 @@ class _AppDataGridRowDragHandle extends StatelessWidget {
   }
 
   void _start(PointerDownEvent event) {
-    manager.setIsDraggingRow(true, notify: false);
+    // Notify row wrappers immediately so the hover card is removed before the
+    // drag feedback is painted. Otherwise both floating surfaces overlap.
+    manager.setIsDraggingRow(true);
     manager.setDragRows(_draggingRows);
   }
 
@@ -2304,6 +2587,7 @@ class _AppDataGridRowDragHandle extends StatelessWidget {
       manager.maxWidth ?? manager.columnsWidth,
     );
     final feedback = AppSortableDragFeedback(
+      backgroundColor: Colors.white,
       child: SizedBox(
         width: feedbackWidth,
         height: manager.rowHeight,
@@ -2333,18 +2617,7 @@ class _AppDataGridRowDragHandle extends StatelessWidget {
                           ),
                         ),
                       ),
-                      _ => Padding(
-                        padding: column.cellPadding ?? style.defaultCellPadding,
-                        child: Align(
-                          alignment: column.textAlign.alignmentValue,
-                          child: Text(
-                            row.cells[column.field]?.value?.toString() ?? '',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: style.cellTextStyle,
-                          ),
-                        ),
-                      ),
+                      _ => _buildDataCell(context, column, style),
                     },
                   ),
               ],

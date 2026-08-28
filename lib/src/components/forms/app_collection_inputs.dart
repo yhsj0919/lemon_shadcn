@@ -18,9 +18,14 @@ typedef AppObjectConverter<A, B> = shad.BiDirectionalConvert<A, B>;
 
 /// Floating chrome shared by sortable drag previews.
 class AppSortableDragFeedback extends StatelessWidget {
-  const AppSortableDragFeedback({super.key, required this.child});
+  const AppSortableDragFeedback({
+    super.key,
+    required this.child,
+    this.backgroundColor,
+  });
 
   final Widget child;
+  final Color? backgroundColor;
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +42,7 @@ class AppSortableDragFeedback extends StatelessWidget {
         ),
       ),
       child: Material(
-        color: theme.colorScheme.popover,
+        color: backgroundColor ?? theme.colorScheme.popover,
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: radius,

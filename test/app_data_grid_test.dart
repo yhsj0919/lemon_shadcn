@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart' as material;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -331,6 +332,149 @@ void main() {
         .configuration
         .style;
     expect(style.enableRowHoverColor, isFalse);
+  });
+
+  testWidgets('hovered row scales in place with a rounded floating shadow', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(
+            width: 420,
+            child: AppDataGrid<_Row>.local(
+              height: 180,
+              columns: [
+                AppDataGridColumn(id: 'name', title: 'Name', value: _name),
+              ],
+              rows: [_Row(1, 'Ada')],
+              rowKey: _rowId,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final hoverRow = find.ancestor(
+      of: find.text('Ada'),
+      matching: find.byType(TweenAnimationBuilder<double>),
+    );
+    expect(hoverRow, findsOneWidget);
+
+    final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    addTearDown(mouse.removePointer);
+    await mouse.addPointer();
+    await mouse.moveTo(tester.getCenter(find.text('Ada')));
+    await tester.pumpAndSettle();
+
+    final transform = tester.widget<Transform>(
+      find.descendant(of: hoverRow, matching: find.byType(Transform)).first,
+    );
+    expect(transform.transform.storage[0], 1);
+    expect(transform.transform.storage[5], greaterThan(1));
+    expect(transform.transform.storage[12], 0);
+    expect(transform.transform.storage[13], 0);
+
+    expect(
+      find.byKey(const ValueKey('app-data-grid-hover-overlay')),
+      findsOneWidget,
+    );
+
+    final gridStyle = tester
+        .widget<TrinaGrid>(find.byType(TrinaGrid))
+        .configuration
+        .style;
+    expect(gridStyle.rowHoveredColor, Colors.white);
+  });
+
+  testWidgets('tree rows use the same in-place hover scale', (tester) async {
+    const parent = _TreeRow(1, 'Parent', children: [_TreeRow(2, 'Child')]);
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(
+            width: 420,
+            child: AppDataGrid<_TreeRow>.local(
+              height: 180,
+              treeColumnId: 'name',
+              buildChildren: _treeChildren,
+              hasChildren: _treeHasChildren,
+              columns: const [
+                AppDataGridColumn(id: 'name', title: 'Name', value: _treeName),
+              ],
+              rows: const [parent],
+              rowKey: _treeId,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    addTearDown(mouse.removePointer);
+    await mouse.addPointer();
+    await mouse.moveTo(tester.getCenter(find.text('Parent')));
+    await tester.pumpAndSettle();
+
+    final hoverRow = find.ancestor(
+      of: find.text('Parent'),
+      matching: find.byType(TweenAnimationBuilder<double>),
+    );
+    expect(hoverRow, findsOneWidget);
+    final transform = tester.widget<Transform>(
+      find.descendant(of: hoverRow, matching: find.byType(Transform)).first,
+    );
+    expect(transform.transform.storage[0], 1);
+    expect(transform.transform.storage[5], greaterThan(1));
+    expect(transform.transform.storage[13], 0);
+  });
+
+  testWidgets('pinned hover uses one unified row overlay', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: const Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(
+            width: 420,
+            child: AppDataGrid<_Row>.local(
+              height: 180,
+              columns: [
+                AppDataGridColumn(
+                  id: 'id',
+                  title: 'ID',
+                  value: _rowId,
+                  width: 90,
+                  pin: AppDataGridColumnPin.start,
+                ),
+                AppDataGridColumn(id: 'name', title: 'Name', value: _name),
+              ],
+              rows: [_Row(1, 'Ada')],
+              rowKey: _rowId,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    addTearDown(mouse.removePointer);
+    await mouse.addPointer();
+    await mouse.moveTo(tester.getCenter(find.text('Ada')));
+    await tester.pumpAndSettle();
+
+    final overlay = find.byKey(
+      const ValueKey('app-data-grid-hover-overlay'),
+    );
+    expect(overlay, findsOneWidget);
+    final overlaySize = tester.getSize(overlay);
+    expect(overlaySize.width, greaterThan(400));
   });
 
   testWidgets('neutral themes still get a distinct default selection color', (
@@ -701,6 +845,50 @@ void main() {
     final rows = tester.widget<TrinaGrid>(find.byType(TrinaGrid)).rows;
     expect(rows, isA<List<TrinaRow<dynamic>>>());
     expect(rows, everyElement(isA<TrinaRow<dynamic>>()));
+  });
+
+  testWidgets('row drag feedback preserves custom cell builders', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(
+            width: 420,
+            child: AppDataGrid<_Row>.local(
+              height: 180,
+              reorderableRows: true,
+              onRowsReordered: (_, _) {},
+              columns: [
+                AppDataGridColumn(
+                  id: 'name',
+                  title: 'Name',
+                  value: _name,
+                  cellBuilder: (_, row, _) =>
+                      AppBadge.secondary(child: Text('VIP ${row.id}')),
+                ),
+              ],
+              rows: const [_Row(1, 'Ada')],
+              rowKey: _rowId,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final draggable = tester.widget<Draggable<TrinaRow>>(
+      find.byType(Draggable<TrinaRow>),
+    );
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: draggable.feedback,
+      ),
+    );
+    expect(find.text('VIP 1'), findsOneWidget);
+    expect(find.text('Ada'), findsNothing);
   });
 
   testWidgets('grid-wide fill mode applies to every default column', (

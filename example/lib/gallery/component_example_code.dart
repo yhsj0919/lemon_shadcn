@@ -275,6 +275,16 @@ AppDescriptions(
   reorderableColumns: true,
   onRowsReordered: (orderedKeys, orderedRows) {},
 );''',
+    '树形行与异步子级': '''AppDataGrid<TreeRow>.local(
+  rows: treeRows,
+  rowKey: (row) => row.id,
+  treeColumnId: 'name',
+  buildChildren: (row) => row.children,
+  hasChildren: (row) => row.children.isNotEmpty || row.canLoadChildren,
+  childrenLoader: loadChildren,
+  highlightHoveredRow: true,
+  columns: columns,
+);''',
     '完全无边框与统一字体': '''AppDataGrid<User>.local(
   columns: columns,
   rows: users,

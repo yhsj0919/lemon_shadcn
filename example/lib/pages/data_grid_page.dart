@@ -175,7 +175,7 @@ class _DataGridPageState extends State<DataGridPage> {
     final colors = ShadcnTheme.of(context).colorScheme;
     return ComponentPage(
       title: '高级表格',
-      description: '排序、行/列拖动、多选均可按需开启。可编辑列双击进入编辑。',
+      description: '鼠标划入时行会原位轻微放大并增强阴影；排序、行/列拖动、多选均可按需开启。可编辑列双击进入编辑。',
       sections: [
         ComponentSection(
           title: '本地数据与拖动排序',
@@ -230,7 +230,7 @@ class _DataGridPageState extends State<DataGridPage> {
             children: [
               Text(
                 '父子行使用相同列且不缩进；灰色行为父级。点击小三角展开，双击“研发中心”异步加载。'
-                ' 已选 ${_selectedTreeRows.length} 行。',
+                '父行和子行均支持悬停放大与增强阴影。已选 ${_selectedTreeRows.length} 行。',
               ),
               const Gap(8),
               AppDataGrid<_TreeGridRow>.local(

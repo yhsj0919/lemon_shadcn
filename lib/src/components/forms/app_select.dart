@@ -31,8 +31,9 @@ class AppSelect<V> extends StatefulWidget {
     this.optionConfig = const AppOptionConfig(),
     this.initialOption,
     this.popupMinWidth,
+    this.maxPopupHeight = 320,
     this.minWidth = 160,
-  });
+  }) : assert(maxPopupHeight > 0);
 
   factory AppSelect.async({
     Key? key,
@@ -49,6 +50,7 @@ class AppSelect<V> extends StatefulWidget {
     AppOptionConfig<V> optionConfig = const AppOptionConfig(),
     AppOption<V>? initialOption,
     double? popupMinWidth,
+    double maxPopupHeight = 320,
     double minWidth = 160,
     WidgetBuilder? loadingBuilder,
     AppSelectErrorBuilder? errorBuilder,
@@ -68,6 +70,7 @@ class AppSelect<V> extends StatefulWidget {
     optionConfig: optionConfig,
     initialOption: initialOption,
     popupMinWidth: popupMinWidth,
+    maxPopupHeight: maxPopupHeight,
     minWidth: minWidth,
     loadingBuilder: loadingBuilder,
     errorBuilder: errorBuilder,
@@ -88,6 +91,7 @@ class AppSelect<V> extends StatefulWidget {
     AppOptionConfig<V> optionConfig = const AppOptionConfig(),
     AppOption<V>? initialOption,
     double? popupMinWidth,
+    double maxPopupHeight = 320,
     double minWidth = 160,
     WidgetBuilder? loadingBuilder,
     AppSelectErrorBuilder? errorBuilder,
@@ -107,6 +111,7 @@ class AppSelect<V> extends StatefulWidget {
     optionConfig: optionConfig,
     initialOption: initialOption,
     popupMinWidth: popupMinWidth,
+    maxPopupHeight: maxPopupHeight,
     minWidth: minWidth,
     loadingBuilder: loadingBuilder,
     errorBuilder: errorBuilder,
@@ -124,6 +129,7 @@ class AppSelect<V> extends StatefulWidget {
   final AppOptionConfig<V> optionConfig;
   final AppOption<V>? initialOption;
   final double? popupMinWidth;
+  final double maxPopupHeight;
   final double minWidth;
 
   @override
@@ -210,10 +216,10 @@ class _AppSelectState<V> extends State<AppSelect<V>> {
                   ? shad.PopoverConstraint.anchorFixedSize
                   : shad.PopoverConstraint.flexible,
               popupConstraints: popupWidth == null
-                  ? null
+                  ? BoxConstraints(maxHeight: widget.maxPopupHeight)
                   : BoxConstraints.tightFor(
                       width: popupWidth,
-                    ).copyWith(maxHeight: 320),
+                    ).copyWith(maxHeight: widget.maxPopupHeight),
               onChanged: widget.enabled ? widget.onChanged : null,
               placeholder: Text(
                 widget.hintText,
@@ -283,6 +289,7 @@ class AppSelectFormField<V> extends FormField<V> {
     this.optionConfig = const AppOptionConfig(),
     this.initialOption,
     this.popupMinWidth,
+    this.maxPopupHeight = 320,
     this.minWidth = 160,
     this.onChanged,
     super.initialValue,
@@ -316,6 +323,7 @@ class AppSelectFormField<V> extends FormField<V> {
     this.optionConfig = const AppOptionConfig(),
     this.initialOption,
     this.popupMinWidth,
+    this.maxPopupHeight = 320,
     this.minWidth = 160,
     this.onChanged,
     this.loadingStateBuilder,
@@ -347,6 +355,7 @@ class AppSelectFormField<V> extends FormField<V> {
     this.optionConfig = const AppOptionConfig(),
     this.initialOption,
     this.popupMinWidth,
+    this.maxPopupHeight = 320,
     this.minWidth = 160,
     this.onChanged,
     this.loadingStateBuilder,
@@ -380,6 +389,7 @@ class AppSelectFormField<V> extends FormField<V> {
   final AppOptionConfig<V> optionConfig;
   final AppOption<V>? initialOption;
   final double? popupMinWidth;
+  final double maxPopupHeight;
   final double minWidth;
   final ValueChanged<V?>? onChanged;
   final WidgetBuilder? loadingStateBuilder;
@@ -401,6 +411,7 @@ class AppSelectFormField<V> extends FormField<V> {
             optionConfig: field.optionConfig,
             initialOption: field.initialOption,
             popupMinWidth: field.popupMinWidth,
+            maxPopupHeight: field.maxPopupHeight,
             minWidth: field.minWidth,
             onChanged: (value) {
               state.didChange(value);
@@ -420,6 +431,7 @@ class AppSelectFormField<V> extends FormField<V> {
             optionConfig: field.optionConfig,
             initialOption: field.initialOption,
             popupMinWidth: field.popupMinWidth,
+            maxPopupHeight: field.maxPopupHeight,
             minWidth: field.minWidth,
             loadingBuilder: field.loadingStateBuilder,
             errorBuilder: field.loadErrorBuilder,
@@ -462,6 +474,7 @@ class _AppAsyncSelect<V> extends AppSelect<V> {
     super.optionConfig = const AppOptionConfig(),
     super.initialOption,
     super.popupMinWidth,
+    super.maxPopupHeight,
     super.minWidth,
     this.loadingBuilder,
     this.errorBuilder,
@@ -603,6 +616,9 @@ class _AppAsyncSelectState<V> extends State<_AppAsyncSelect<V>> {
           clearable: widget.clearable,
           optionConfig: widget.optionConfig,
           initialOption: widget.initialOption,
+          popupMinWidth: widget.popupMinWidth,
+          maxPopupHeight: widget.maxPopupHeight,
+          minWidth: widget.minWidth,
         );
       },
     );
