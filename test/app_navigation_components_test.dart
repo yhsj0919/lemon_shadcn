@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lemon_shadcn/lemon_shadcn.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
 void main() {
   testWidgets('navigation aliases render and retain upstream callbacks', (
@@ -75,6 +76,35 @@ void main() {
     expect(find.byKey(const ValueKey('custom-page-2')), findsOneWidget);
     expect(find.text('Previous'), findsNothing);
     expect(find.text('Next'), findsNothing);
+  });
+
+  testWidgets('unselected pagination items keep a transparent background', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: AppPagination(
+          page: 2,
+          totalPages: 2,
+          variant: AppPaginationVariant.iconOnly,
+          onPageChanged: (_) {},
+        ),
+      ),
+    );
+
+    final override = tester.widget<shad.ButtonStyleOverride>(
+      find.ancestor(
+        of: find.text('1'),
+        matching: find.byType(shad.ButtonStyleOverride),
+      ),
+    );
+    final decoration = override.decoration!(
+      tester.element(find.text('1')),
+      {WidgetState.hovered},
+      const BoxDecoration(color: Colors.grey),
+    );
+    expect((decoration as BoxDecoration).color, Colors.transparent);
   });
 
   testWidgets('steps and timeline aliases render categorized layout data', (

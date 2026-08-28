@@ -86,9 +86,14 @@ class AppPagination extends StatelessWidget {
                 onPressed: onPressed,
                 child: Text('$value'),
               )
-            : shad.GhostButton(
-                onPressed: onPressed,
-                child: Text('$value'),
+            : shad.ButtonStyleOverride(
+                decoration: (context, states, value) => value is BoxDecoration
+                    ? value.copyWith(color: const Color(0x00000000))
+                    : value,
+                child: shad.GhostButton(
+                  onPressed: onPressed,
+                  child: Text('$value'),
+                ),
               ));
   }
 
