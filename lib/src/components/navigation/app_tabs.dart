@@ -1,6 +1,8 @@
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
+import '../../foundation/app_control_box.dart';
+
 /// Foreground and padding defaults shared by [AppTabs] and [AppTabList].
 class AppTabsTheme extends shad.ComponentThemeData {
   const AppTabsTheme({
@@ -46,7 +48,8 @@ class AppTabs extends StatefulWidget {
   final bool expand;
 
   /// When true, tabs size to a square around their content instead of stretching
-  /// horizontally. Use with icon-only [children] and equal [padding].
+  /// horizontally. Defaults size so the full track matches
+  /// [AppControlMetrics.height] (icon + equal padding + container inset).
   final bool iconOnly;
 
   /// Background color of the selected tab. Defaults to the theme primary.
@@ -170,8 +173,10 @@ class _AppTabsState extends State<AppTabs> {
     final compTheme = shad.ComponentTheme.maybeOf<shad.TabsTheme>(context);
     final appTabsTheme = shad.ComponentTheme.maybeOf<AppTabsTheme>(context);
     return shad.styleValue(
+      // With container inset gap×0.5 and iconSize 16, all(gap×0.5) yields a
+      // square tab whose outer track matches [AppControlMetrics.height] (~32).
       defaultValue: widget.iconOnly
-          ? EdgeInsets.all(densityGap)
+          ? EdgeInsets.all(densityGap * 0.5)
           : EdgeInsets.symmetric(
               horizontal: densityContentPadding,
               vertical: densityGap * 0.5,
@@ -228,6 +233,13 @@ class _AppTabsState extends State<AppTabs> {
         : unselectedForeground == null
         ? textScaled.muted()
         : applyForeground(textScaled, unselectedForeground);
+    final metrics = AppControlMetricsScope.resolve(context);
+    final iconChild = widget.iconOnly
+        ? IconTheme.merge(
+            data: IconThemeData(size: metrics.iconSize),
+            child: colored,
+          )
+        : colored;
 
     // Keep tabs intrinsic-width. Plain [Align] expands to the Row's max width
     // and stretches icon-only tabs into wide rectangles. Equal [padding] with
@@ -248,7 +260,7 @@ class _AppTabsState extends State<AppTabs> {
           alignment: Alignment.center,
           widthFactor: 1,
           heightFactor: 1,
-          child: colored,
+          child: iconChild,
         ),
       ),
     );

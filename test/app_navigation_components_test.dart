@@ -294,6 +294,63 @@ void main() {
     expect(second.left, greaterThan(first.right - 0.5));
   });
 
+  testWidgets('icon-only AppTabs default height matches control metrics', (
+    tester,
+  ) async {
+    late double controlHeight;
+    late double iconSize;
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: Builder(
+          builder: (context) {
+            final metrics = AppControlMetricsScope.resolve(context);
+            controlHeight = metrics.height;
+            iconSize = metrics.iconSize;
+            return Align(
+              alignment: Alignment.topLeft,
+              child: AppTabs(
+                index: 0,
+                iconOnly: true,
+                onChanged: (_) {},
+                children: const [
+                  AppTabItem(child: Icon(Icons.grid_view)),
+                  AppTabItem(child: Icon(Icons.list)),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+
+    final track = tester.getRect(
+      find
+          .descendant(
+            of: find.byType(AppTabs),
+            matching: find.byWidgetPredicate(
+              (widget) =>
+                  widget is Container && widget.decoration is BoxDecoration,
+            ),
+          )
+          .first,
+    );
+    expect(track.height, closeTo(controlHeight, 1));
+
+    final tab = tester.getRect(
+      find
+          .ancestor(
+            of: find.byIcon(Icons.grid_view),
+            matching: find.byType(GestureDetector),
+          )
+          .first,
+    );
+    expect(tab.width, closeTo(tab.height, 0.5));
+    expect(tab.height, closeTo(iconSize + (controlHeight - iconSize) / 2, 1));
+  });
+
   testWidgets('AppTabsTheme.tabPadding applies when padding is omitted', (
     tester,
   ) async {
