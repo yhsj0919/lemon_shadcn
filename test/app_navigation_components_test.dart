@@ -243,4 +243,130 @@ void main() {
       findsNothing,
     );
   });
+
+  testWidgets('icon-only AppTabs stay square and honor padding', (tester) async {
+    const padding = EdgeInsets.all(12);
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: Align(
+          alignment: Alignment.topLeft,
+          child: AppTabs(
+            index: 0,
+            iconOnly: true,
+            padding: padding,
+            onChanged: (_) {},
+            children: const [
+              AppTabItem(child: Icon(Icons.grid_view, size: 16)),
+              AppTabItem(child: Icon(Icons.list, size: 16)),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+
+    Rect tabRectFor(IconData icon) {
+      return tester.getRect(
+        find
+            .ancestor(
+              of: find.byIcon(icon),
+              matching: find.byType(GestureDetector),
+            )
+            .first,
+      );
+    }
+
+    final first = tabRectFor(Icons.grid_view);
+    final second = tabRectFor(Icons.list);
+    expect(first.width, closeTo(first.height, 0.5));
+    expect(second.width, closeTo(second.height, 0.5));
+    expect(first.width, closeTo(16 + padding.horizontal, 0.5));
+    expect(second.left, greaterThan(first.right - 0.5));
+  });
+
+  testWidgets('AppTabsTheme.tabPadding applies when padding is omitted', (
+    tester,
+  ) async {
+    const themePadding = EdgeInsets.all(10);
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: AppComponentTheme<AppTabsTheme>(
+          data: const AppTabsTheme(tabPadding: themePadding),
+          child: Align(
+            alignment: Alignment.topLeft,
+            child: AppTabs(
+              index: 0,
+              iconOnly: true,
+              onChanged: (_) {},
+              children: const [
+                AppTabItem(child: Icon(Icons.star, size: 16)),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final tab = tester.getRect(
+      find
+          .ancestor(
+            of: find.byIcon(Icons.star),
+            matching: find.byType(GestureDetector),
+          )
+          .first,
+    );
+    expect(tab.width, closeTo(16 + themePadding.horizontal, 0.5));
+    expect(tab.height, closeTo(16 + themePadding.vertical, 0.5));
+  });
+
+  testWidgets('first selected tab indicator covers the full first tab', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: Align(
+          alignment: Alignment.topLeft,
+          child: AppTabs(
+            index: 0,
+            selectedColor: const Color(0xffffffff),
+            unselectedColor: const Color(0xffe2e8f0),
+            onChanged: (_) {},
+            children: const [
+              AppTabItem(child: Text('全部 172')),
+              AppTabItem(child: Text('在线 1')),
+              AppTabItem(child: Text('离线 171')),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+
+    final firstTab = tester.getRect(
+      find
+          .ancestor(
+            of: find.text('全部 172'),
+            matching: find.byType(GestureDetector),
+          )
+          .first,
+    );
+    final indicator = tester.getRect(
+      find.descendant(
+        of: find.byType(AppTabs),
+        matching: find.byType(AnimatedPositioned),
+      ),
+    );
+
+    expect(indicator.left, closeTo(firstTab.left, 1));
+    expect(indicator.top, closeTo(firstTab.top, 1));
+    expect(indicator.width, closeTo(firstTab.width, 1));
+    expect(indicator.height, closeTo(firstTab.height, 1));
+  });
 }
