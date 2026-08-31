@@ -59,6 +59,10 @@ class AppShadcnScope extends StatelessWidget {
           theme: resolved.lightTheme,
           darkTheme: resolved.darkTheme,
           themeMode: resolved.themeMode,
+          // Keep layouts at 1.0 regardless of the test/host TargetPlatform.
+          // Upstream defaults to AdaptiveScaling.mobile (1.25) on Android,
+          // which would inflate every carefully-tuned control metric.
+          scaling: shad.AdaptiveScaling.desktop,
           enableScrollInterception: resolved.enableScrollInterception,
           child: _AppControlComponentThemes(
             metrics: resolved.controls,

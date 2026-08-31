@@ -179,13 +179,13 @@ class _AppTabsState extends State<AppTabs> {
             child: Align(
               alignment: Alignment.center,
               child: selected
-                  ? applyForeground(
-                      child.foreground().small().medium(),
-                      selectedForeground,
-                    )
+                  ? applyForeground(child.small().medium(), selectedForeground)
                   : unselectedForeground == null
-                      ? unselectedChild
-                      : applyForeground(unselectedChild, unselectedForeground),
+                  ? unselectedChild
+                  : applyForeground(
+                      child.small().medium(),
+                      unselectedForeground,
+                    ),
             ),
           ),
         ),

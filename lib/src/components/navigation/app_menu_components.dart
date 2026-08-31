@@ -105,14 +105,14 @@ class _AppNavigationMenuState extends State<AppNavigationMenu> {
     );
     _overlayController.show(
       item.context,
-      shad.PopoverConfiguration<void>(
+      shad.PopoverConfiguration(
         alignment: Alignment.topCenter,
         offset: compTheme?.offset ?? Offset(0, gap * 0.5),
         modal: false,
         allowInvertHorizontal: false,
         allowInvertVertical: false,
-        builder: _buildPopover,
       ),
+      builder: _buildPopover,
     );
     setState(() {});
   }
@@ -337,66 +337,65 @@ class _AppMenuButtonState extends State<AppMenuButton> {
     final theme = shad.Theme.of(context);
     final scaling = theme.scaling;
     final compTheme = shad.ComponentTheme.maybeOf<shad.MenuTheme>(context);
-    final isSheetOverlay = shad.SheetOverlayHandler.isSheetOverlay(context);
-    final isDialogOverlay = shad.DialogOverlayHandler.isDialogOverlay(context);
+    final isSheetOverlay =
+        shad.OverlayConfiguration.maybeOf(context) is shad.SheetConfiguration;
+    final isDialogOverlay =
+        shad.OverlayConfiguration.maybeOf(context) is shad.DialogConfiguration;
     final isIndependentOverlay = isSheetOverlay || isDialogOverlay;
 
     void openSubMenu(BuildContext context, bool autofocus) {
       menuGroupData!.closeOthers();
-      final overlayManager = shad.OverlayManager.of(context);
       menuData!.overlayController.show(
         context,
-        shad.PopoverConfiguration(
+        shad.MenuConfiguration(
           regionGroupId: menuGroupData.regionGroupId,
           consumeOutsideTaps: false,
           dismissBackdropFocus: false,
           modal: true,
-          handler: shad.MenuOverlayHandler(overlayManager),
           overlayBarrier: shad.OverlayBarrier(
             borderRadius: BorderRadius.circular(theme.radiusMd),
           ),
-          builder: (context) {
-            final theme = shad.Theme.of(context);
-            final scaling = theme.scaling;
-            final densityGap = theme.density.baseGap * scaling;
-            var itemPadding = menuGroupData.itemPadding;
-            final isSheetOverlay = shad.SheetOverlayHandler.isSheetOverlay(
-              context,
-            );
-            if (isSheetOverlay) {
-              itemPadding = EdgeInsets.symmetric(horizontal: densityGap * 0.5);
-            }
-            return ConstrainedBox(
-              constraints: const BoxConstraints(minWidth: 192) * scaling,
-              child: AnimatedBuilder(
-                animation: _children,
-                builder: (context, child) {
-                  return shad.MenuGroup(
-                    direction: menuGroupData.direction,
-                    parent: menuGroupData,
-                    onDismissed: menuGroupData.onDismissed,
-                    regionGroupId: menuGroupData.regionGroupId,
-                    subMenuOffset:
-                        compTheme?.subMenuOffset ??
-                        Offset(densityGap, -densityGap * 0.625),
-                    itemPadding: itemPadding,
-                    autofocus: autofocus,
-                    builder: (context, children) {
-                      return AppMenuPopup(children: children);
-                    },
-                    children: _children.value,
-                  );
-                },
-              ),
-            );
-          },
           alignment: Alignment.topLeft,
           anchorAlignment: menuBarData != null
               ? Alignment.bottomLeft
               : Alignment.topRight,
           offset: menuGroupData.subMenuOffset ?? compTheme?.subMenuOffset,
         ),
-        adaptive: false,
+        builder: (context) {
+          final theme = shad.Theme.of(context);
+          final scaling = theme.scaling;
+          final densityGap = theme.density.baseGap * scaling;
+          var itemPadding = menuGroupData.itemPadding;
+          final isSheetOverlay =
+              shad.OverlayConfiguration.maybeOf(context)
+                  is shad.SheetConfiguration;
+          if (isSheetOverlay) {
+            itemPadding = EdgeInsets.symmetric(horizontal: densityGap * 0.5);
+          }
+          return ConstrainedBox(
+            constraints: const BoxConstraints(minWidth: 192) * scaling,
+            child: AnimatedBuilder(
+              animation: _children,
+              builder: (context, child) {
+                return shad.MenuGroup(
+                  direction: menuGroupData.direction,
+                  parent: menuGroupData,
+                  onDismissed: menuGroupData.onDismissed,
+                  regionGroupId: menuGroupData.regionGroupId,
+                  subMenuOffset:
+                      compTheme?.subMenuOffset ??
+                      Offset(densityGap, -densityGap * 0.625),
+                  itemPadding: itemPadding,
+                  autofocus: autofocus,
+                  builder: (context, children) {
+                    return AppMenuPopup(children: children);
+                  },
+                  children: _children.value,
+                );
+              },
+            ),
+          );
+        },
       );
     }
 
@@ -565,7 +564,8 @@ class AppDropdownMenu extends StatelessWidget {
     final densityGap = theme.density.baseGap * theme.scaling;
     final densityContentPadding =
         theme.density.baseContentPadding * theme.scaling;
-    final isSheetOverlay = shad.SheetOverlayHandler.isSheetOverlay(context);
+    final isSheetOverlay =
+        shad.OverlayConfiguration.maybeOf(context) is shad.SheetConfiguration;
     final compTheme = shad.ComponentTheme.maybeOf<shad.DropdownMenuTheme>(
       context,
     );
@@ -623,13 +623,14 @@ class AppMenuAnchor extends StatelessWidget {
   Widget build(BuildContext context) {
     void open() {
       if (!enabled || items.isEmpty) return;
-      shad.PopoverConfiguration<void>(
+      shad.showDropdown(
+        context: context,
         alignment: alignment,
         anchorAlignment: anchorAlignment,
         offset: offset,
         allowInvertVertical: allowInvertVertical,
         builder: (context) => AppDropdownMenu(children: items),
-      ).show(context);
+      );
     }
 
     return GestureDetector(
@@ -677,7 +678,7 @@ class _AppContextMenuState extends State<AppContextMenu> {
     final theme = shad.Theme.of(context);
     _overlayController.show(
       context,
-      shad.PopoverConfiguration<void>(
+      shad.MenuConfiguration(
         position: position + const Offset(8, 0),
         alignment: Alignment.topLeft,
         anchorAlignment: Alignment.topRight,
@@ -689,10 +690,10 @@ class _AppContextMenuState extends State<AppContextMenu> {
           borderRadius: BorderRadius.circular(theme.radiusMd),
           barrierColor: const Color(0xB2000000),
         ),
-        builder: (context) => AppDropdownMenu(
-          direction: widget.direction,
-          children: widget.items,
-        ),
+      ),
+      builder: (context) => AppDropdownMenu(
+        direction: widget.direction,
+        children: widget.items,
       ),
     );
   }

@@ -179,9 +179,11 @@ class _AppPhoneInputState extends State<AppPhoneInput> {
                       topLeft: theme.radiusMdRadius,
                       bottomLeft: theme.radiusMdRadius,
                     ),
-                    popoverAlignment: Alignment.topLeft,
-                    popoverAnchorAlignment: Alignment.bottomLeft,
-                    popupWidthConstraint: shad.PopoverConstraint.flexible,
+                    overlayConfiguration: const shad.PopoverConfiguration(
+                      alignment: Alignment.topLeft,
+                      anchorAlignment: Alignment.bottomLeft,
+                      widthConstraint: shad.PopoverConstraint.flexible,
+                    ),
                     popupConstraints: const BoxConstraints(
                       maxWidth: 250,
                       maxHeight: 300,

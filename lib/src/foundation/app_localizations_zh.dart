@@ -227,6 +227,9 @@ class AppLocalizationsZh extends ShadcnLocalizations {
   String get menuSelectAll => '全选';
 
   @override
+  String get noSpellCheckReplacements => '未找到替换建议';
+
+  @override
   String get menuUndo => '撤销';
 
   @override

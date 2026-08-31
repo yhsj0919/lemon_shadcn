@@ -31,7 +31,8 @@ typedef AppColorSchemes = shad.ColorSchemes;
 typedef AppThemeMode = shad.ThemeMode;
 
 /// Scoped override for a single component theme.
-typedef AppComponentTheme = shad.ComponentTheme;
+typedef AppComponentTheme<T extends shad.ComponentThemeData> =
+    shad.ComponentTheme<T>;
 
 /// Base type for component theme payloads.
 typedef AppComponentThemeData = shad.ComponentThemeData;

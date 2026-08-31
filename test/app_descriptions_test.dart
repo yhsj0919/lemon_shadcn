@@ -45,7 +45,7 @@ void main() {
         builder: AppShadcnScope.builder(),
         home: const material.Align(
           alignment: material.Alignment.topLeft,
-          child: ComponentTheme<AppDescriptionsTheme>(
+          child: AppComponentTheme<AppDescriptionsTheme>(
             data: AppDescriptionsTheme.compact(
               labelStyle: material.TextStyle(color: material.Colors.purple),
             ),
@@ -744,30 +744,33 @@ void main() {
     await tester.pumpWidget(
       material.MaterialApp(
         builder: AppShadcnScope.builder(),
-        home: const material.SizedBox(
-          width: 600,
-          child: AppDescriptions(
-            columns: 3,
-            minColumnWidth: 150,
-            padding: material.EdgeInsets.zero,
-            items: [
-              AppDescriptionItem(
-                label: material.Text('Left label'),
-                value: material.Text('Left value'),
-              ),
-              AppDescriptionItem(
-                label: material.Text('Center label'),
-                value: material.Text('Center value'),
-                labelAlignment: material.Alignment.center,
-                valueAlignment: material.Alignment.center,
-              ),
-              AppDescriptionItem(
-                label: material.Text('Right label'),
-                value: material.Text('Right value'),
-                labelAlignment: material.Alignment.centerRight,
-                valueAlignment: material.Alignment.centerRight,
-              ),
-            ],
+        home: const material.Align(
+          alignment: material.Alignment.topLeft,
+          child: material.SizedBox(
+            width: 600,
+            child: AppDescriptions(
+              columns: 3,
+              minColumnWidth: 150,
+              padding: material.EdgeInsets.zero,
+              items: [
+                AppDescriptionItem(
+                  label: material.Text('Left label'),
+                  value: material.Text('Left value'),
+                ),
+                AppDescriptionItem(
+                  label: material.Text('Center label'),
+                  value: material.Text('Center value'),
+                  labelAlignment: material.Alignment.center,
+                  valueAlignment: material.Alignment.center,
+                ),
+                AppDescriptionItem(
+                  label: material.Text('Right label'),
+                  value: material.Text('Right value'),
+                  labelAlignment: material.Alignment.centerRight,
+                  valueAlignment: material.Alignment.centerRight,
+                ),
+              ],
+            ),
           ),
         ),
       ),

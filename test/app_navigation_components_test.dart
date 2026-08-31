@@ -178,7 +178,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         builder: AppShadcnScope.builder(),
-        home: ComponentTheme<AppTabsTheme>(
+        home: AppComponentTheme<AppTabsTheme>(
           data: const AppTabsTheme(
             selectedForegroundColor: selected,
             unselectedForegroundColor: unselected,

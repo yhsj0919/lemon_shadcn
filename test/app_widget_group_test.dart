@@ -62,14 +62,14 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         builder: AppShadcnScope.builder(),
-        home: const Align(
+        home: Align(
           alignment: Alignment.topLeft,
           child: SizedBox(
             width: 320,
             child: AppWidgetGroup.horizontal(
               expands: true,
-              widths: [null, 112],
-              children: [
+              widths: const [null, 112],
+              children: const [
                 ColoredBox(key: Key('field'), color: Colors.white),
                 ColoredBox(key: Key('captcha'), color: Colors.blue),
               ],

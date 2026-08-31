@@ -1485,7 +1485,7 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
     final theme = shad.Theme.of(context);
     _rowMenuController.show(
       context,
-      shad.PopoverConfiguration<void>(
+      shad.MenuConfiguration(
         position: event.offset + const Offset(8, 0),
         alignment: Alignment.topLeft,
         anchorAlignment: Alignment.topRight,
@@ -1497,8 +1497,8 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
           borderRadius: BorderRadius.circular(theme.radiusMd),
           barrierColor: const Color(0xB2000000),
         ),
-        builder: (context) => AppDropdownMenu(children: items),
       ),
+      builder: (context) => AppDropdownMenu(children: items),
     );
   }
 

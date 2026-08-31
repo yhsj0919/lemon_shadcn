@@ -58,7 +58,8 @@ class _AppDropdownButtonState extends State<AppDropdownButton> {
     if (!mounted || !widget.enabled || _open) return;
     final buttonContext = _buttonKey.currentContext;
     if (buttonContext == null) return;
-    shad.PopoverConfiguration<void>(
+    shad.showDropdown(
+      context: buttonContext,
       alignment: widget.alignment ?? Alignment.bottomLeft,
       anchorAlignment: widget.anchorAlignment,
       offset: widget.offset,
@@ -68,7 +69,7 @@ class _AppDropdownButtonState extends State<AppDropdownButton> {
         onDisposed: () => _open = false,
         child: AppDropdownMenu(children: widget.items),
       ),
-    ).show(buttonContext);
+    );
   }
 
   @override

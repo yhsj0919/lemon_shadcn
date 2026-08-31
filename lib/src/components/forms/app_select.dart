@@ -212,9 +212,12 @@ class _AppSelectState<V> extends State<AppSelect<V>> {
               enabled: widget.enabled,
               canUnselect: widget.clearable,
               expandIcon: showExpandIcon ? const shad.SelectExpandIcon() : null,
-              popupWidthConstraint: popupWidth == null
-                  ? shad.PopoverConstraint.anchorFixedSize
-                  : shad.PopoverConstraint.flexible,
+              overlayConfiguration: shad.PopoverConfiguration(
+                alignment: Alignment.topCenter,
+                widthConstraint: popupWidth == null
+                    ? shad.PopoverConstraint.anchorFixedSize
+                    : shad.PopoverConstraint.flexible,
+              ),
               popupConstraints: popupWidth == null
                   ? BoxConstraints(maxHeight: widget.maxPopupHeight)
                   : BoxConstraints.tightFor(

@@ -4,13 +4,15 @@ import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 import '../../foundation/app_overlay_style.dart';
 import '../../foundation/app_shadcn_scope.dart';
 import '../../foundation/app_theme_config.dart';
+import '../actions/app_button.dart';
 
 typedef AppOverlayController = shad.OverlayController;
 typedef AppOverlayCompleter<T> = shad.OverlayCompleter<T>;
-typedef AppDialogConfiguration<T> = shad.DialogConfiguration<T>;
-typedef AppDrawerConfiguration<T> = shad.DrawerConfiguration<T>;
-typedef AppSheetConfiguration<T> = shad.SheetConfiguration<T>;
-typedef AppPopoverConfiguration<T> = shad.PopoverConfiguration<T>;
+typedef AppDialogConfiguration = shad.DialogConfiguration;
+typedef AppDrawerConfiguration = shad.DrawerConfiguration;
+typedef AppSheetConfiguration = shad.SheetConfiguration;
+typedef AppPopoverConfiguration = shad.PopoverConfiguration;
+typedef AppMenuConfiguration = shad.MenuConfiguration;
 typedef AppToastOverlay = shad.ToastOverlay;
 typedef AppToastLocation = shad.ToastLocation;
 
@@ -141,7 +143,7 @@ class AppHoverCard extends StatelessWidget {
     this.popoverOffset,
     this.behavior,
     this.controller,
-    this.handler,
+    this.adaptiveOverlay = false,
   });
 
   final Widget child;
@@ -153,7 +155,7 @@ class AppHoverCard extends StatelessWidget {
   final Offset? popoverOffset;
   final HitTestBehavior? behavior;
   final shad.OverlayController? controller;
-  final shad.OverlayHandler? handler;
+  final bool adaptiveOverlay;
 
   @override
   Widget build(BuildContext context) {
@@ -165,7 +167,7 @@ class AppHoverCard extends StatelessWidget {
       popoverOffset: popoverOffset,
       behavior: behavior,
       controller: controller,
-      handler: handler,
+      adaptiveOverlay: adaptiveOverlay,
       hoverBuilder: (context) =>
           AppOverlaySurfaceTheme(child: hoverBuilder(context)),
       child: child,
@@ -188,21 +190,25 @@ abstract final class AppDialog {
     bool fullScreen = false,
     AlignmentGeometry? alignment,
   }) {
-    return shad.DialogConfiguration<T>(
-      builder: builder,
+    return shad.DialogConfiguration(
       barrierDismissible: barrierDismissible,
       barrierColor: barrierColor,
       useRootNavigator: useRootNavigator,
       fullScreen: fullScreen,
       alignment: alignment,
-    ).show(context);
+    ).show<T>(
+      context,
+      (dialogContext) => AppButtonMotionScope.disable(
+        child: builder(dialogContext),
+      ),
+    );
   }
 }
 
 /// A shadcn alert dialog with a softer application-level modal backdrop.
 ///
-/// shadcn_flutter 0.0.53 hardcodes an 80% black barrier in [shad.AlertDialog]
-/// when no color is supplied, so the ambient backdrop theme cannot override it.
+/// Upstream [shad.AlertDialog] may hardcode a heavy barrier when no color is
+/// supplied, so the ambient backdrop theme cannot override it.
 class AppAlertDialog extends StatelessWidget {
   const AppAlertDialog({
     super.key,
@@ -371,15 +377,14 @@ abstract final class AppDrawer {
     Color? barrierColor,
     BoxConstraints? constraints,
   }) {
-    return shad.DrawerConfiguration<T>(
-      builder: builder,
+    return shad.DrawerConfiguration(
       position: position,
       draggable: draggable,
       expands: expands,
       barrierDismissible: barrierDismissible,
       barrierColor: barrierColor ?? AppOverlayStyle.modalBarrier(context),
       constraints: constraints,
-    ).show(context);
+    ).show<T>(context, builder);
   }
 }
 
@@ -393,14 +398,13 @@ abstract final class AppSheet {
     Color? barrierColor,
     BoxConstraints? constraints,
   }) {
-    return shad.SheetConfiguration<T>(
-      builder: builder,
+    return shad.SheetConfiguration(
       position: position,
       draggable: draggable,
       barrierDismissible: barrierDismissible,
       barrierColor: barrierColor ?? AppOverlayStyle.modalBarrier(context),
       constraints: constraints,
-    ).show(context);
+    ).show<T>(context, builder);
   }
 }
 
@@ -413,15 +417,19 @@ abstract final class AppPopover {
     Offset offset = AppOverlayStyle.popoverOffset,
     bool modal = true,
     bool barrierDismissible = true,
+    bool follow = false,
   }) {
-    return shad.PopoverConfiguration<T>(
-      builder: (context) => AppOverlaySurfaceTheme(child: builder(context)),
+    return shad.PopoverConfiguration(
       alignment: alignment,
       anchorAlignment: anchorAlignment,
       offset: offset,
       modal: modal,
       barrierDismissable: barrierDismissible,
-    ).show(context);
+      follow: follow,
+    ).show<T>(
+      context,
+      (context) => AppOverlaySurfaceTheme(child: builder(context)),
+    );
   }
 }
 

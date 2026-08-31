@@ -150,11 +150,11 @@ void main() {
 
     await tester.tap(find.text('Save'));
     await tester.pump(const Duration(milliseconds: 1));
-    await tester.tap(find.byType(CircularProgressIndicator));
+    await tester.tap(find.byType(shad.CircularProgressIndicator));
     await tester.pump();
 
     expect(presses, 1);
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.byType(shad.CircularProgressIndicator), findsOneWidget);
 
     completer.complete();
     await tester.pump();
@@ -472,7 +472,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         builder: AppShadcnScope.builder(),
-        home: const ComponentTheme<AppIconButtonTheme>(
+        home: const AppComponentTheme<AppIconButtonTheme>(
           data: AppIconButtonTheme(
             foregroundColor: themeColor,
             backgroundColor: themeBackground,
@@ -507,7 +507,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         builder: AppShadcnScope.builder(),
-        home: const ComponentTheme<AppIconButtonTheme>(
+        home: const AppComponentTheme<AppIconButtonTheme>(
           data: AppIconButtonTheme(foregroundColor: themeColor),
           child: Row(
             children: [
