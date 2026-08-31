@@ -467,32 +467,32 @@ class _AppComboboxState<V> extends State<AppCombobox<V>> {
             ).horizontalPadding,
           ),
           features: [
-            shad.InputFeature.leading(
-              AppInputGroupAddon(child: token ?? const SizedBox.shrink()),
-            ),
-            shad.InputFeature.trailing(
-              AppInputGroupAddon(
-                child: SizedBox.square(
-                  dimension: 28,
-                  child: Center(
-                    child: _loading
-                        ? const SizedBox.square(
-                            dimension: 16,
-                            child: shad.CircularProgressIndicator(
-                              strokeWidth: 1.5,
+            if (token != null)
+              shad.InputFeature.leading(
+                AppInputGroupAddon(child: token),
+              ),
+            if (_loading || (widget.clearable && widget.value != null))
+              shad.InputFeature.trailing(
+                AppInputGroupAddon(
+                  child: SizedBox.square(
+                    dimension: 28,
+                    child: Center(
+                      child: _loading
+                          ? const SizedBox.square(
+                              dimension: 16,
+                              child: shad.CircularProgressIndicator(
+                                strokeWidth: 1.5,
+                              ),
+                            )
+                          : shad.IconButton.text(
+                              density: shad.ButtonDensity.compact,
+                              onPressed: _clear,
+                              icon: const Icon(shad.LucideIcons.x, size: 16),
                             ),
-                          )
-                        : widget.clearable && widget.value != null
-                        ? shad.IconButton.text(
-                            density: shad.ButtonDensity.compact,
-                            onPressed: _clear,
-                            icon: const Icon(shad.LucideIcons.x, size: 16),
-                          )
-                        : const SizedBox.shrink(),
+                    ),
                   ),
                 ),
               ),
-            ),
           ],
           onChanged: _handleTextChanged,
           onTap: _open,
