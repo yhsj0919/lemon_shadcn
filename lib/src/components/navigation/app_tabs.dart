@@ -235,6 +235,24 @@ class _AppTabsState extends State<AppTabs> {
     //
     // Until the overlay indicator has been measured, paint the selection on the
     // tab itself so the first frame is never a clipped/missing pill.
+    final tab = DecoratedBox(
+      decoration: BoxDecoration(
+        color: selected && !_indicatorReady
+            ? (widget.selectedColor ?? theme.colorScheme.primary)
+            : const Color(0x00000000),
+        borderRadius: BorderRadius.circular(theme.radiusMd),
+      ),
+      child: Padding(
+        padding: tabPadding,
+        child: Align(
+          alignment: Alignment.center,
+          widthFactor: 1,
+          heightFactor: 1,
+          child: colored,
+        ),
+      ),
+    );
+
     return KeyedSubtree(
       key: _tabKeys[data.index],
       child: GestureDetector(
@@ -243,23 +261,7 @@ class _AppTabsState extends State<AppTabs> {
         child: MouseRegion(
           hitTestBehavior: HitTestBehavior.translucent,
           cursor: SystemMouseCursors.click,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: selected && !_indicatorReady
-                  ? (widget.selectedColor ?? theme.colorScheme.primary)
-                  : const Color(0x00000000),
-              borderRadius: BorderRadius.circular(theme.radiusMd),
-            ),
-            child: Padding(
-              padding: tabPadding,
-              child: Align(
-                alignment: Alignment.center,
-                widthFactor: 1,
-                heightFactor: widget.iconOnly ? 1 : null,
-                child: colored,
-              ),
-            ),
-          ),
+          child: tab,
         ),
       ),
     );
@@ -300,7 +302,7 @@ class _AppTabsState extends State<AppTabs> {
       selected: widget.index,
       onSelect: widget.onChanged,
       builder: (context, children) {
-        return Container(
+        final track = Container(
           decoration: BoxDecoration(
             color: backgroundColor,
             borderRadius: resolvedRadius,
@@ -340,7 +342,11 @@ class _AppTabsState extends State<AppTabs> {
                       mainAxisSize: expand
                           ? MainAxisSize.max
                           : MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      // Stretch fills parent height and defeats square icon-only
+                      // tabs; center keeps each tab at its intrinsic size.
+                      crossAxisAlignment: widget.iconOnly
+                          ? CrossAxisAlignment.center
+                          : CrossAxisAlignment.stretch,
                       children: expand
                           ? [
                               for (final child in children)
@@ -353,6 +359,15 @@ class _AppTabsState extends State<AppTabs> {
               ),
             ),
           ),
+        );
+        // Shrink-wrap when icon-only so a stretched parent Row cannot inflate
+        // the track into a tall capsule around square tabs.
+        if (!widget.iconOnly) return track;
+        return Align(
+          alignment: Alignment.center,
+          widthFactor: 1,
+          heightFactor: 1,
+          child: track,
         );
       },
       childBuilder: _childBuilder,

@@ -251,15 +251,23 @@ void main() {
         builder: AppShadcnScope.builder(),
         home: Align(
           alignment: Alignment.topLeft,
-          child: AppTabs(
-            index: 0,
-            iconOnly: true,
-            padding: padding,
-            onChanged: (_) {},
-            children: const [
-              AppTabItem(child: Icon(Icons.grid_view, size: 16)),
-              AppTabItem(child: Icon(Icons.list, size: 16)),
-            ],
+          child: SizedBox(
+            height: 64,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                AppTabs(
+                  index: 0,
+                  iconOnly: true,
+                  padding: padding,
+                  onChanged: (_) {},
+                  children: const [
+                    AppTabItem(child: Icon(Icons.grid_view, size: 16)),
+                    AppTabItem(child: Icon(Icons.list, size: 16)),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
