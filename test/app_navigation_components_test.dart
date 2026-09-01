@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lemon_shadcn/lemon_shadcn.dart';
+import 'package:lemon_shadcn/src/components/display/app_semantic_style.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
 void main() {
@@ -43,12 +44,14 @@ void main() {
     tester.widget<AppTabs>(find.byType(AppTabs)).onChanged(1);
     expect(page, 2);
     expect(tab, 1);
+    expect(find.text('Previous'), findsNothing);
+    expect(find.text('Next'), findsNothing);
     expect(find.byType(AppBreadcrumb), findsOneWidget);
     expect(find.byType(AppTabs), findsOneWidget);
     expect(find.byType(AppTabList), findsOneWidget);
   });
 
-  testWidgets('pagination supports icon-only navigation and custom items', (
+  testWidgets('pagination supports labeled navigation and custom items', (
     tester,
   ) async {
     var builtItems = 0;
@@ -58,7 +61,7 @@ void main() {
         home: AppPagination(
           page: 2,
           totalPages: 3,
-          variant: AppPaginationVariant.iconOnly,
+          variant: AppPaginationVariant.labeled,
           itemBuilder: (context, page, selected, onPressed) {
             builtItems++;
             return GestureDetector(
@@ -74,8 +77,45 @@ void main() {
 
     expect(builtItems, 3);
     expect(find.byKey(const ValueKey('custom-page-2')), findsOneWidget);
-    expect(find.text('Previous'), findsNothing);
-    expect(find.text('Next'), findsNothing);
+    expect(find.text('Previous'), findsOneWidget);
+    expect(find.text('Next'), findsOneWidget);
+  });
+
+  testWidgets('selected pagination item uses soft primary style', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: AppPagination(
+          page: 1,
+          totalPages: 2,
+          onPageChanged: (_) {},
+        ),
+      ),
+    );
+
+    final selectedButton = tester.widget<shad.Button>(
+      find.ancestor(of: find.text('1'), matching: find.byType(shad.Button)),
+    );
+    final selectedContext = tester.element(
+      find.ancestor(of: find.text('1'), matching: find.byType(shad.Button)),
+    );
+    final theme = shad.Theme.of(selectedContext);
+    final decoration = selectedButton.style.decoration(
+      selectedContext,
+      const {},
+    );
+    final textStyle = selectedButton.style.textStyle(
+      selectedContext,
+      const {},
+    );
+
+    expect(
+      (decoration as BoxDecoration).color,
+      AppSoftColor.selectionBackground(theme, theme.colorScheme.primary),
+    );
+    expect(textStyle.color, theme.colorScheme.primary);
   });
 
   testWidgets('unselected pagination items keep a transparent background', (
@@ -87,7 +127,6 @@ void main() {
         home: AppPagination(
           page: 2,
           totalPages: 2,
-          variant: AppPaginationVariant.iconOnly,
           onPageChanged: (_) {},
         ),
       ),

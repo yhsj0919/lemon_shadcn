@@ -1,6 +1,8 @@
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
+import '../display/app_semantic_style.dart';
+
 enum AppPaginationVariant { labeled, iconOnly }
 
 typedef AppPaginationItemBuilder =
@@ -32,7 +34,7 @@ class AppPagination extends StatelessWidget {
     this.showSkipToLastPage = true,
     this.hidePreviousOnFirstPage = false,
     this.hideNextOnLastPage = false,
-    this.variant = AppPaginationVariant.labeled,
+    this.variant = AppPaginationVariant.iconOnly,
     this.showLabel,
     this.gap,
     this.itemBuilder,
@@ -80,21 +82,67 @@ class AppPagination extends StatelessWidget {
   Widget _pageButton(BuildContext context, int value) {
     final selected = value == page;
     final onPressed = () => onPageChanged(value);
-    return itemBuilder?.call(context, value, selected, onPressed) ??
-        (selected
-            ? shad.OutlineButton(
-                onPressed: onPressed,
-                child: Text('$value'),
-              )
-            : shad.ButtonStyleOverride(
-                decoration: (context, states, value) => value is BoxDecoration
-                    ? value.copyWith(color: const Color(0x00000000))
-                    : value,
-                child: shad.GhostButton(
-                  onPressed: onPressed,
-                  child: Text('$value'),
-                ),
-              ));
+    if (itemBuilder != null) {
+      return itemBuilder!(context, value, selected, onPressed);
+    }
+    if (!selected) {
+      return shad.ButtonStyleOverride(
+        decoration: (context, states, value) => value is BoxDecoration
+            ? value.copyWith(color: const Color(0x00000000))
+            : value,
+        child: shad.GhostButton(
+          onPressed: onPressed,
+          child: Text('$value'),
+        ),
+      );
+    }
+
+    final theme = shad.Theme.of(context);
+    final selectedColor = theme.colorScheme.primary;
+    return shad.Button(
+      onPressed: onPressed,
+      style: const shad.ButtonStyle.ghost().copyWith(
+        decoration: (context, states, decoration) {
+          if (decoration is! BoxDecoration) return decoration;
+          final disabled = states.contains(WidgetState.disabled);
+          final pressed = states.contains(WidgetState.pressed);
+          final hovered = states.contains(WidgetState.hovered);
+          final lightOpacity = disabled
+              ? 0.04
+              : pressed
+              ? 0.14
+              : hovered
+              ? 0.11
+              : AppSoftColor.selectionLightOpacity;
+          final darkOpacity = disabled
+              ? 0.06
+              : pressed
+              ? 0.18
+              : hovered
+              ? 0.15
+              : AppSoftColor.selectionDarkOpacity;
+          return decoration.copyWith(
+            color: AppSoftColor.background(
+              theme,
+              selectedColor,
+              lightOpacity: lightOpacity,
+              darkOpacity: darkOpacity,
+            ),
+          );
+        },
+        textStyle: (context, states, style) => style.copyWith(
+          color: selectedColor.withValues(
+            alpha: states.contains(WidgetState.disabled) ? 0.45 : 1,
+          ),
+        ),
+        iconTheme: (context, states, style) => style.copyWith(
+          color: selectedColor.withValues(
+            alpha: states.contains(WidgetState.disabled) ? 0.45 : 1,
+          ),
+        ),
+      ),
+      child: Text('$value'),
+    );
   }
 
   Widget _ellipsis(BuildContext context, int target) {

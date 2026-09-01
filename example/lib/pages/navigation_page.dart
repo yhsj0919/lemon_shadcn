@@ -56,7 +56,7 @@ class _NavigationPageState extends State<NavigationPage> {
                   AppPagination(
                     page: _page,
                     totalPages: 8,
-                    variant: AppPaginationVariant.iconOnly,
+                    variant: AppPaginationVariant.labeled,
                     showSkipToFirstPage: false,
                     showSkipToLastPage: false,
                     onPageChanged: (value) => setState(() => _page = value),

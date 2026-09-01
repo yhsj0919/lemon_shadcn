@@ -478,12 +478,6 @@ AppDivider.vertical(width: 32);''',
         '''AppPagination(
   page: page,
   totalPages: 10,
-  variant: AppPaginationVariant.iconOnly,
-  itemBuilder: (context, page, selected, onPressed) {
-    return selected
-        ? AppButton.primary(onPressed: onPressed, child: Text('\$page'))
-        : AppButton.ghost(onPressed: onPressed, child: Text('\$page'));
-  },
   onPageChanged: onPageChanged,
 );''',
     '标签页': '''AppTabs(
