@@ -190,6 +190,11 @@ abstract final class AppDialog {
   /// Shows a dialog. Pass [movable] / [resizable] to opt into drag and resize;
   /// [builder] stays the same as a normal dialog (e.g. [AppAlertDialog]).
   ///
+  /// For form / add dialogs that should only drag: `movable: true`,
+  /// `resizable: false`, `maximizable: false`. Do not use [showMovable]
+  /// (it enables resize). Content keeps its intrinsic size;
+  /// [AppFormDialog] defaults to `maxWidth: 480`.
+  ///
   /// Window chrome buttons (maximize / close) can be replaced via [controls]
   /// or [controlsBuilder]. Maximize is button-driven (no top-edge snap).
   static shad.OverlayCompleter<T?> show<T>({
@@ -430,8 +435,13 @@ class _AppMovableDialogState extends State<AppMovableDialog> {
   bool _maximized = false;
   bool _measureScheduled = false;
 
+  /// Fixed bounds only when the window must fill a box (maximize / resize /
+  /// explicit [initialSize]). Movable-only keeps intrinsic content size —
+  /// measured [_size] is for positioning, not a forced layout size.
   bool get _forcesSize =>
-      _maximized || widget.initialSize != null || _size != null;
+      _maximized ||
+      widget.initialSize != null ||
+      (widget.resizable && _size != null);
 
   Size get _effectiveSize {
     if (_maximized && _viewport != null) return _maximizedRect(_viewport!).size;
@@ -440,6 +450,16 @@ class _AppMovableDialogState extends State<AppMovableDialog> {
     final box = _dialogKey.currentContext?.findRenderObject() as RenderBox?;
     if (box != null && box.hasSize) return box.size;
     return const Size(480, 360);
+  }
+
+  Size _resolvedViewport(BoxConstraints constraints) {
+    final biggest = constraints.biggest;
+    if (biggest.width.isFinite && biggest.height.isFinite) return biggest;
+    final mq = MediaQuery.sizeOf(context);
+    return Size(
+      biggest.width.isFinite ? biggest.width : mq.width,
+      biggest.height.isFinite ? biggest.height : mq.height,
+    );
   }
 
   Rect _maximizedRect(Size viewport) {
@@ -492,7 +512,12 @@ class _AppMovableDialogState extends State<AppMovableDialog> {
       final box = _dialogKey.currentContext?.findRenderObject() as RenderBox?;
       if (box == null || !box.hasSize) return;
       setState(() {
-        _size = _clampSize(box.size, _viewport!);
+        // Content-sized (non-resizable) dialogs: clamp to viewport max only —
+        // resize minWidth/minHeight must not inflate the measured size used
+        // for centering / drag bounds.
+        _size = widget.resizable
+            ? _clampSize(box.size, _viewport!)
+            : _clampMeasuredSize(box.size, _viewport!);
         _offset = widget.initialOffset == null
             ? _centeredOffset(_size!, _viewport!)
             : _clampOffset(widget.initialOffset!, _size!, _viewport!);
@@ -511,6 +536,19 @@ class _AppMovableDialogState extends State<AppMovableDialog> {
         limits.minHeight,
         limits.maxHeight.isFinite ? limits.maxHeight : viewport.height,
       ),
+    );
+  }
+
+  Size _clampMeasuredSize(Size size, Size viewport) {
+    final maxW = widget.constraints.maxWidth.isFinite
+        ? widget.constraints.maxWidth.clamp(0.0, viewport.width)
+        : viewport.width;
+    final maxH = widget.constraints.maxHeight.isFinite
+        ? widget.constraints.maxHeight.clamp(0.0, viewport.height)
+        : viewport.height;
+    return Size(
+      size.width.clamp(0.0, maxW),
+      size.height.clamp(0.0, maxH),
     );
   }
 
@@ -638,11 +676,15 @@ class _AppMovableDialogState extends State<AppMovableDialog> {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final viewport = constraints.biggest;
+        final viewport = _resolvedViewport(constraints);
         _ensureGeometry(viewport);
         final offset = _offset;
         final size = _effectiveSize;
         final canResize = widget.resizable && !_maximized;
+        final measureConstraints = BoxConstraints(
+          maxWidth: viewport.width,
+          maxHeight: viewport.height,
+        );
 
         Widget dialog = KeyedSubtree(
           key: _dialogKey,
@@ -652,6 +694,14 @@ class _AppMovableDialogState extends State<AppMovableDialog> {
           dialog = SizedBox(
             width: size.width,
             height: size.height,
+            child: dialog,
+          );
+        } else {
+          // Intrinsic / first-measure path: keep cross-axis finite so forms,
+          // fields, and scrollables can lay out (Center alone can pass
+          // 0..Infinity when the overlay reports unbounded constraints).
+          dialog = ConstrainedBox(
+            constraints: measureConstraints,
             child: dialog,
           );
         }
@@ -891,7 +941,7 @@ class AppFormDialog extends StatelessWidget {
     this.barrierColor,
     this.backgroundColor,
     this.padding,
-    this.constraints,
+    this.constraints = const BoxConstraints(maxWidth: 480),
   });
 
   final Widget? leading;
@@ -904,6 +954,9 @@ class AppFormDialog extends StatelessWidget {
   final Color? barrierColor;
   final Color? backgroundColor;
   final EdgeInsetsGeometry? padding;
+
+  /// Width / height caps for the form shell. Defaults to `maxWidth: 480` so
+  /// stretch content (fields, columns) can lay out under movable dialogs.
   final BoxConstraints? constraints;
 
   @override
@@ -960,6 +1013,11 @@ class _AppDialogChrome extends StatelessWidget {
         theme.density.baseContainerPadding * scaling;
     final interaction = AppDialogInteraction.maybeOf(context);
     final fillsBounds = interaction?.fillsBounds ?? false;
+    // Form shells pass maxWidth; under that, header must use Flexible —
+    // Row(mainAxisSize: min) lays out non-flex children with infinite
+    // max width, which breaks CrossAxisAlignment.stretch form content.
+    final boundedHeader =
+        fillsBounds || (constraints?.maxWidth.isFinite ?? false);
     // Keep rounded corners always — maximize only insets, it does not go
     // edge-to-edge over the page.
     final borderRadius = theme.borderRadiusXxl;
@@ -969,32 +1027,20 @@ class _AppDialogChrome extends StatelessWidget {
     final resolvedTrailing =
         interaction?.mergeTrailing(context, styledTrailing) ?? styledTrailing;
 
+    final titleColumn = Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ?title?.large().semiBold(),
+        if (title != null && content != null) SizedBox(height: densityGap),
+        ?content,
+      ],
+    );
+
     final headerChildren = <Widget>[
       ?leading?.iconXLarge().iconMutedForeground(),
       if (title != null || content != null)
-        fillsBounds
-            ? Flexible(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ?title?.large().semiBold(),
-                    if (title != null && content != null)
-                      SizedBox(height: densityGap),
-                    ?content,
-                  ],
-                ),
-              )
-            : Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ?title?.large().semiBold(),
-                  if (title != null && content != null)
-                    SizedBox(height: densityGap),
-                  ?content,
-                ],
-              ),
+        boundedHeader ? Flexible(child: titleColumn) : titleColumn,
       ?resolvedTrailing,
     ];
 
@@ -1013,7 +1059,7 @@ class _AppDialogChrome extends StatelessWidget {
             )
           : Row(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
+              mainAxisSize: boundedHeader ? MainAxisSize.max : MainAxisSize.min,
               children: [
                 for (var i = 0; i < headerChildren.length; i++) ...[
                   if (i > 0) SizedBox(width: densityGap * 2),
@@ -1025,7 +1071,9 @@ class _AppDialogChrome extends StatelessWidget {
         SizedBox(height: densityGap * 2),
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
-          mainAxisSize: fillsBounds ? MainAxisSize.max : MainAxisSize.min,
+          mainAxisSize: fillsBounds || boundedHeader
+              ? MainAxisSize.max
+              : MainAxisSize.min,
           children: shad.join(actions!, SizedBox(width: densityGap)).toList(),
         ),
       ],

@@ -263,6 +263,64 @@ void main() {
     expect(find.text('Movable title'), findsNothing);
   });
 
+  testWidgets('movable-only form dialog keeps intrinsic size', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () {
+              AppDialog.show<void>(
+                context: context,
+                movable: true,
+                resizable: false,
+                maximizable: false,
+                builder: (dialogContext) => AppFormDialog(
+                  title: const Text('Add form'),
+                  content: const Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text('Form body'),
+                      SizedBox(height: 12),
+                      TextField(decoration: InputDecoration(hintText: 'Name')),
+                    ],
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => AppOverlay.close(dialogContext),
+                      child: const Text('Close form movable'),
+                    ),
+                  ],
+                ),
+              );
+            },
+            child: const Text('Open form movable'),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Open form movable'));
+    await tester.pumpAndSettle();
+    expect(find.text('Add form'), findsOneWidget);
+    expect(find.text('Form body'), findsOneWidget);
+    expect(find.byType(AppMovableDialog), findsOneWidget);
+    // closable defaults true — close chrome stays; maximize is off.
+    expect(find.byIcon(shad.LucideIcons.x), findsOneWidget);
+    expect(find.byIcon(shad.LucideIcons.maximize2), findsNothing);
+
+    final interaction = tester.widget<AppDialogInteraction>(
+      find.byType(AppDialogInteraction),
+    );
+    expect(interaction.fillsBounds, isFalse);
+    expect(interaction.resizable, isFalse);
+
+    await tester.tap(find.text('Close form movable'));
+    await tester.pumpAndSettle();
+    expect(find.text('Add form'), findsNothing);
+  });
+
   testWidgets('scope supplies toast and hover surface infrastructure', (
     tester,
   ) async {
