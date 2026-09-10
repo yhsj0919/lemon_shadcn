@@ -519,6 +519,16 @@ AppDivider.vertical(width: 32);''',
     content: const AppTextFormField(label: '名称'),
   ),
 );''',
+    '可拖动对话框': '''AppDialog.show(
+  context: context,
+  movable: true,
+  resizable: true,
+  // controls / controlsBuilder 可替换默认窗口按钮
+  builder: (context) => AppAlertDialog(
+    title: const Text('可拖动窗口'),
+    content: const Text('与普通弹窗同一套 API。'),
+  ),
+);''',
     '抽屉': '''AppDrawer.show(
   context: context,
   builder: (context) => content,

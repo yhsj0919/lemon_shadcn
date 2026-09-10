@@ -627,6 +627,13 @@ abstract final class AppComponentRegistry {
       status: AppComponentStatus.implemented,
     ),
     AppComponentRegistration(
+      appName: 'AppMovableDialog',
+      upstreamName: 'DialogConfiguration',
+      category: AppComponentCategory.overlay,
+      adapter: AppComponentAdapter.independent,
+      status: AppComponentStatus.implemented,
+    ),
+    AppComponentRegistration(
       appName: 'AppDrawer',
       upstreamName: 'DrawerConfiguration',
       category: AppComponentCategory.overlay,

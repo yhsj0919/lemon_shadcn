@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
@@ -181,6 +182,16 @@ abstract final class AppOverlay {
 }
 
 abstract final class AppDialog {
+  static const BoxConstraints defaultResizeConstraints = BoxConstraints(
+    minWidth: 280,
+    minHeight: 200,
+  );
+
+  /// Shows a dialog. Pass [movable] / [resizable] to opt into drag and resize;
+  /// [builder] stays the same as a normal dialog (e.g. [AppAlertDialog]).
+  ///
+  /// Window chrome buttons (maximize / close) can be replaced via [controls]
+  /// or [controlsBuilder]. Maximize is button-driven (no top-edge snap).
   static shad.OverlayCompleter<T?> show<T>({
     required BuildContext context,
     required WidgetBuilder builder,
@@ -189,26 +200,636 @@ abstract final class AppDialog {
     bool useRootNavigator = true,
     bool fullScreen = false,
     AlignmentGeometry? alignment,
+    bool movable = false,
+    bool resizable = false,
+    bool maximizable = true,
+    bool closable = true,
+    Size? initialSize,
+    Offset? initialOffset,
+    BoxConstraints resizeConstraints = defaultResizeConstraints,
+    Widget? controls,
+    AppDialogControlsBuilder? controlsBuilder,
   }) {
+    final interactive = movable || resizable;
     return shad.DialogConfiguration(
       barrierDismissible: barrierDismissible,
-      barrierColor: barrierColor,
+      barrierColor: interactive
+          ? (barrierColor ?? AppOverlayStyle.modalBarrier(context))
+          : barrierColor,
       useRootNavigator: useRootNavigator,
-      fullScreen: fullScreen,
+      fullScreen: interactive ? true : fullScreen,
       alignment: alignment,
     ).show<T>(
       context,
       (dialogContext) => AppButtonMotionScope.disable(
-        child: builder(dialogContext),
+        child: interactive
+            ? AppMovableDialog(
+                movable: movable,
+                resizable: resizable,
+                maximizable: maximizable,
+                closable: closable,
+                initialSize: initialSize,
+                initialOffset: initialOffset,
+                constraints: resizeConstraints,
+                controls: controls,
+                controlsBuilder: controlsBuilder,
+                builder: builder,
+              )
+            : builder(dialogContext),
       ),
     );
   }
+
+  /// Alias for [show] with [movable] and [resizable] enabled.
+  static shad.OverlayCompleter<T?> showMovable<T>({
+    required BuildContext context,
+    required WidgetBuilder builder,
+    bool barrierDismissible = true,
+    Color? barrierColor,
+    bool useRootNavigator = true,
+    bool movable = true,
+    bool resizable = true,
+    bool maximizable = true,
+    bool closable = true,
+    Size? initialSize,
+    Offset? initialOffset,
+    BoxConstraints resizeConstraints = defaultResizeConstraints,
+    Widget? controls,
+    AppDialogControlsBuilder? controlsBuilder,
+  }) {
+    return show<T>(
+      context: context,
+      builder: builder,
+      barrierDismissible: barrierDismissible,
+      barrierColor: barrierColor,
+      useRootNavigator: useRootNavigator,
+      movable: movable,
+      resizable: resizable,
+      maximizable: maximizable,
+      closable: closable,
+      initialSize: initialSize,
+      initialOffset: initialOffset,
+      resizeConstraints: resizeConstraints,
+      controls: controls,
+      controlsBuilder: controlsBuilder,
+    );
+  }
+}
+
+/// Builds replacement window controls for a movable / resizable dialog.
+typedef AppDialogControlsBuilder =
+    Widget Function(BuildContext context, AppDialogInteraction interaction);
+
+/// Host state for dialogs shown with [AppDialog.show] movable / resizable.
+class AppDialogInteraction extends InheritedWidget {
+  const AppDialogInteraction({
+    super.key,
+    required this.movable,
+    required this.resizable,
+    required this.maximizable,
+    required this.closable,
+    required this.maximized,
+    required this.fillsBounds,
+    required this.toggleMaximize,
+    required this.close,
+    required this.controls,
+    required this.controlsBuilder,
+    required super.child,
+  });
+
+  final bool movable;
+  final bool resizable;
+  final bool maximizable;
+  final bool closable;
+  final bool maximized;
+  final bool fillsBounds;
+  final VoidCallback toggleMaximize;
+  final VoidCallback close;
+  final Widget? controls;
+  final AppDialogControlsBuilder? controlsBuilder;
+
+  static AppDialogInteraction? maybeOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<AppDialogInteraction>();
+
+  bool get showsWindowActions =>
+      controls != null ||
+      controlsBuilder != null ||
+      maximizable ||
+      closable;
+
+  Widget buildWindowActions(BuildContext context) {
+    if (controls != null) return controls!;
+    if (controlsBuilder != null) return controlsBuilder!(context, this);
+    return AppDialogWindowActions(interaction: this);
+  }
+
+  Widget? mergeTrailing(BuildContext context, Widget? trailing) {
+    if (!showsWindowActions) return trailing;
+    final actions = buildWindowActions(context);
+    if (trailing == null) return actions;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        trailing,
+        const SizedBox(width: 8),
+        actions,
+      ],
+    );
+  }
+
+  @override
+  bool updateShouldNotify(AppDialogInteraction oldWidget) =>
+      movable != oldWidget.movable ||
+      resizable != oldWidget.resizable ||
+      maximizable != oldWidget.maximizable ||
+      closable != oldWidget.closable ||
+      maximized != oldWidget.maximized ||
+      fillsBounds != oldWidget.fillsBounds ||
+      controls != oldWidget.controls ||
+      controlsBuilder != oldWidget.controlsBuilder;
+}
+
+/// Default maximize / close controls for movable dialogs. Replace via
+/// [AppDialog.show] `controls` / `controlsBuilder`.
+class AppDialogWindowActions extends StatelessWidget {
+  const AppDialogWindowActions({super.key, required this.interaction});
+
+  final AppDialogInteraction interaction;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (interaction.maximizable)
+          AppIconButton(
+            icon: Icon(
+              interaction.maximized
+                  ? shad.LucideIcons.minimize2
+                  : shad.LucideIcons.maximize2,
+            ),
+            tooltip: interaction.maximized ? '还原' : '最大化',
+            variant: AppButtonVariant.ghost,
+            onPressed: interaction.toggleMaximize,
+          ),
+        if (interaction.closable)
+          AppIconButton(
+            icon: const Icon(shad.LucideIcons.x),
+            tooltip: '关闭',
+            variant: AppButtonVariant.ghost,
+            onPressed: interaction.close,
+          ),
+      ],
+    );
+  }
+}
+
+/// Lightweight drag / resize shell that hosts the same dialog builder used by
+/// a normal [AppDialog.show]. Maximize is available via window actions (no
+/// top-edge snap).
+class AppMovableDialog extends StatefulWidget {
+  const AppMovableDialog({
+    super.key,
+    required this.builder,
+    this.movable = true,
+    this.resizable = true,
+    this.maximizable = true,
+    this.closable = true,
+    this.initialSize,
+    this.initialOffset,
+    this.constraints = AppDialog.defaultResizeConstraints,
+    this.controls,
+    this.controlsBuilder,
+  });
+
+  final WidgetBuilder builder;
+  final bool movable;
+  final bool resizable;
+  final bool maximizable;
+  final bool closable;
+  final Size? initialSize;
+  final Offset? initialOffset;
+  final BoxConstraints constraints;
+  final Widget? controls;
+  final AppDialogControlsBuilder? controlsBuilder;
+
+  @override
+  State<AppMovableDialog> createState() => _AppMovableDialogState();
+}
+
+class _AppMovableDialogState extends State<AppMovableDialog> {
+  static const double _handleExtent = 8;
+  static const double _maximizeInset = 24;
+
+  final GlobalKey _dialogKey = GlobalKey();
+  Offset? _offset;
+  Size? _size;
+  Size? _viewport;
+  Offset? _restoreOffset;
+  Size? _restoreSize;
+  bool _maximized = false;
+  bool _measureScheduled = false;
+
+  bool get _forcesSize =>
+      _maximized || widget.initialSize != null || _size != null;
+
+  Size get _effectiveSize {
+    if (_maximized && _viewport != null) return _maximizedRect(_viewport!).size;
+    if (_size != null) return _size!;
+    if (widget.initialSize != null) return widget.initialSize!;
+    final box = _dialogKey.currentContext?.findRenderObject() as RenderBox?;
+    if (box != null && box.hasSize) return box.size;
+    return const Size(480, 360);
+  }
+
+  Rect _maximizedRect(Size viewport) {
+    final width = (viewport.width - _maximizeInset * 2).clamp(
+      widget.constraints.minWidth,
+      double.infinity,
+    );
+    final height = (viewport.height - _maximizeInset * 2).clamp(
+      widget.constraints.minHeight,
+      double.infinity,
+    );
+    return Rect.fromCenter(
+      center: Offset(viewport.width / 2, viewport.height / 2),
+      width: width,
+      height: height,
+    );
+  }
+
+  Offset _centeredOffset(Size size, Size viewport) => Offset(
+    ((viewport.width - size.width) / 2).clamp(0.0, double.infinity),
+    ((viewport.height - size.height) / 2).clamp(0.0, double.infinity),
+  );
+
+  void _ensureGeometry(Size viewport) {
+    _viewport = viewport;
+    if (_maximized) {
+      final rect = _maximizedRect(viewport);
+      _offset = rect.topLeft;
+      _size = rect.size;
+      return;
+    }
+    if (_size == null && widget.initialSize != null) {
+      _size = _clampSize(widget.initialSize!, viewport);
+    }
+    if (_size != null && _offset == null) {
+      _offset = widget.initialOffset ?? _centeredOffset(_size!, viewport);
+      _offset = _clampOffset(_offset!, _size!, viewport);
+    }
+    if (_size == null && (widget.resizable || widget.movable)) {
+      _scheduleMeasure();
+    }
+  }
+
+  void _scheduleMeasure() {
+    if (_measureScheduled || _size != null) return;
+    _measureScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _measureScheduled = false;
+      if (!mounted || _size != null || _viewport == null || _maximized) return;
+      final box = _dialogKey.currentContext?.findRenderObject() as RenderBox?;
+      if (box == null || !box.hasSize) return;
+      setState(() {
+        _size = _clampSize(box.size, _viewport!);
+        _offset = widget.initialOffset == null
+            ? _centeredOffset(_size!, _viewport!)
+            : _clampOffset(widget.initialOffset!, _size!, _viewport!);
+      });
+    });
+  }
+
+  Size _clampSize(Size size, Size viewport) {
+    final limits = widget.constraints.enforce(BoxConstraints.loose(viewport));
+    return Size(
+      size.width.clamp(
+        limits.minWidth,
+        limits.maxWidth.isFinite ? limits.maxWidth : viewport.width,
+      ),
+      size.height.clamp(
+        limits.minHeight,
+        limits.maxHeight.isFinite ? limits.maxHeight : viewport.height,
+      ),
+    );
+  }
+
+  Offset _clampOffset(Offset offset, Size size, Size viewport) {
+    final maxDx = (viewport.width - size.width).clamp(0.0, double.infinity);
+    final maxDy = (viewport.height - size.height).clamp(0.0, double.infinity);
+    return Offset(offset.dx.clamp(0.0, maxDx), offset.dy.clamp(0.0, maxDy));
+  }
+
+  void _toggleMaximize() {
+    if (!widget.maximizable || _viewport == null) return;
+    setState(() {
+      if (_maximized) {
+        _maximized = false;
+        _size = _restoreSize ?? _size ?? const Size(480, 360);
+        _offset =
+            _restoreOffset ?? _centeredOffset(_size!, _viewport!);
+        _restoreSize = null;
+        _restoreOffset = null;
+      } else {
+        _restoreSize = _effectiveSize;
+        _restoreOffset = _offset ?? _centeredOffset(_effectiveSize, _viewport!);
+        _maximized = true;
+        final rect = _maximizedRect(_viewport!);
+        _size = rect.size;
+        _offset = rect.topLeft;
+      }
+    });
+  }
+
+  void _close() => AppOverlay.close(context);
+
+  void _onDrag(DragUpdateDetails details) {
+    if (!widget.movable || _viewport == null) return;
+    if (_maximized) {
+      // Dragging a maximized dialog restores it first (no top-edge snap).
+      final restored = _restoreSize ?? const Size(480, 360);
+      final local = details.globalPosition;
+      setState(() {
+        _maximized = false;
+        _size = restored;
+        _offset = _clampOffset(
+          Offset(local.dx - restored.width / 2, local.dy - 16),
+          restored,
+          _viewport!,
+        );
+        _restoreSize = null;
+        _restoreOffset = null;
+      });
+      return;
+    }
+    if (_offset == null) return;
+    setState(() {
+      _offset = _clampOffset(
+        _offset! + details.delta,
+        _effectiveSize,
+        _viewport!,
+      );
+    });
+  }
+
+  void _onResize(Offset delta, {_ResizeEdge edge = _ResizeEdge.bottomRight}) {
+    if (!widget.resizable || _maximized || _offset == null || _viewport == null) {
+      return;
+    }
+    final current = _effectiveSize;
+    var left = _offset!.dx;
+    var top = _offset!.dy;
+    var right = left + current.width;
+    var bottom = top + current.height;
+
+    if (edge.adjustsLeft) left += delta.dx;
+    if (edge.adjustsTop) top += delta.dy;
+    if (edge.adjustsRight) right += delta.dx;
+    if (edge.adjustsBottom) bottom += delta.dy;
+
+    var next = _clampSize(Size(right - left, bottom - top), _viewport!);
+    if (edge.adjustsLeft && !edge.adjustsRight) {
+      left = right - next.width;
+    } else {
+      right = left + next.width;
+    }
+    if (edge.adjustsTop && !edge.adjustsBottom) {
+      top = bottom - next.height;
+    } else {
+      bottom = top + next.height;
+    }
+    next = Size(right - left, bottom - top);
+    final nextOffset = _clampOffset(Offset(left, top), next, _viewport!);
+
+    setState(() {
+      _size = next;
+      _offset = nextOffset;
+    });
+  }
+
+  Widget _resizeHandle({
+    required _ResizeEdge edge,
+    required double? left,
+    required double? top,
+    required double? right,
+    required double? bottom,
+    required double? width,
+    required double? height,
+    required SystemMouseCursor cursor,
+  }) {
+    return Positioned(
+      left: left,
+      top: top,
+      right: right,
+      bottom: bottom,
+      width: width,
+      height: height,
+      child: MouseRegion(
+        cursor: cursor,
+        child: GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onPanUpdate: (details) => _onResize(details.delta, edge: edge),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final viewport = constraints.biggest;
+        _ensureGeometry(viewport);
+        final offset = _offset;
+        final size = _effectiveSize;
+        final canResize = widget.resizable && !_maximized;
+
+        Widget dialog = KeyedSubtree(
+          key: _dialogKey,
+          child: Builder(builder: widget.builder),
+        );
+        if (_forcesSize) {
+          dialog = SizedBox(
+            width: size.width,
+            height: size.height,
+            child: dialog,
+          );
+        }
+        if (widget.movable) {
+          dialog = MouseRegion(
+            cursor: SystemMouseCursors.move,
+            child: GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onPanUpdate: _onDrag,
+              child: dialog,
+            ),
+          );
+        }
+
+        // DialogConfiguration(fullScreen: true) sets ModalContainer fullscreen
+        // mode which zeroes corner radius — clear it so dialog chrome keeps
+        // rounded corners like a normal AppAlertDialog.
+        dialog = shad.MultiModel(
+          data: const [
+            shad.Model(shad.ModalContainer.kFullScreenMode, false),
+          ],
+          child: shad.ComponentTheme<shad.ModalBackdropTheme>(
+            data: const shad.ModalBackdropTheme(modal: false),
+            child: AppDialogInteraction(
+              movable: widget.movable,
+              resizable: widget.resizable,
+              maximizable: widget.maximizable,
+              closable: widget.closable,
+              maximized: _maximized,
+              fillsBounds: _forcesSize,
+              toggleMaximize: _toggleMaximize,
+              close: _close,
+              controls: widget.controls,
+              controlsBuilder: widget.controlsBuilder,
+              child: dialog,
+            ),
+          ),
+        );
+
+        // Before the first measure, center intrinsically so the panel does not
+        // jump from a guessed size origin.
+        if (offset == null) {
+          return Stack(
+            clipBehavior: Clip.none,
+            children: [Center(child: dialog)],
+          );
+        }
+
+        return Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Positioned(
+              left: offset.dx,
+              top: offset.dy,
+              width: _forcesSize ? size.width : null,
+              height: _forcesSize ? size.height : null,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  dialog,
+                  if (canResize) ...[
+                    _resizeHandle(
+                      edge: _ResizeEdge.topLeft,
+                      left: -_handleExtent / 2,
+                      top: -_handleExtent / 2,
+                      right: null,
+                      bottom: null,
+                      width: _handleExtent,
+                      height: _handleExtent,
+                      cursor: SystemMouseCursors.resizeUpLeft,
+                    ),
+                    _resizeHandle(
+                      edge: _ResizeEdge.topRight,
+                      left: null,
+                      top: -_handleExtent / 2,
+                      right: -_handleExtent / 2,
+                      bottom: null,
+                      width: _handleExtent,
+                      height: _handleExtent,
+                      cursor: SystemMouseCursors.resizeUpRight,
+                    ),
+                    _resizeHandle(
+                      edge: _ResizeEdge.bottomLeft,
+                      left: -_handleExtent / 2,
+                      top: null,
+                      right: null,
+                      bottom: -_handleExtent / 2,
+                      width: _handleExtent,
+                      height: _handleExtent,
+                      cursor: SystemMouseCursors.resizeDownLeft,
+                    ),
+                    _resizeHandle(
+                      edge: _ResizeEdge.bottomRight,
+                      left: null,
+                      top: null,
+                      right: -_handleExtent / 2,
+                      bottom: -_handleExtent / 2,
+                      width: _handleExtent,
+                      height: _handleExtent,
+                      cursor: SystemMouseCursors.resizeDownRight,
+                    ),
+                    _resizeHandle(
+                      edge: _ResizeEdge.top,
+                      left: _handleExtent,
+                      top: -_handleExtent / 2,
+                      right: _handleExtent,
+                      bottom: null,
+                      width: null,
+                      height: _handleExtent,
+                      cursor: SystemMouseCursors.resizeUpDown,
+                    ),
+                    _resizeHandle(
+                      edge: _ResizeEdge.bottom,
+                      left: _handleExtent,
+                      top: null,
+                      right: _handleExtent,
+                      bottom: -_handleExtent / 2,
+                      width: null,
+                      height: _handleExtent,
+                      cursor: SystemMouseCursors.resizeUpDown,
+                    ),
+                    _resizeHandle(
+                      edge: _ResizeEdge.left,
+                      left: -_handleExtent / 2,
+                      top: _handleExtent,
+                      right: null,
+                      bottom: _handleExtent,
+                      width: _handleExtent,
+                      height: null,
+                      cursor: SystemMouseCursors.resizeLeftRight,
+                    ),
+                    _resizeHandle(
+                      edge: _ResizeEdge.right,
+                      left: null,
+                      top: _handleExtent,
+                      right: -_handleExtent / 2,
+                      bottom: _handleExtent,
+                      width: _handleExtent,
+                      height: null,
+                      cursor: SystemMouseCursors.resizeLeftRight,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+enum _ResizeEdge {
+  topLeft,
+  topRight,
+  bottomLeft,
+  bottomRight,
+  top,
+  bottom,
+  left,
+  right;
+
+  bool get adjustsLeft =>
+      this == topLeft || this == bottomLeft || this == left;
+  bool get adjustsTop => this == topLeft || this == topRight || this == top;
+  bool get adjustsRight =>
+      this == topRight || this == bottomRight || this == right;
+  bool get adjustsBottom =>
+      this == bottomLeft || this == bottomRight || this == bottom;
 }
 
 /// A shadcn alert dialog with a softer application-level modal backdrop.
 ///
 /// Upstream [shad.AlertDialog] may hardcode a heavy barrier when no color is
 /// supplied, so the ambient backdrop theme cannot override it.
+///
+/// When hosted by a movable / resizable [AppDialog.show], window actions are
+/// merged into [trailing] and the surface fills the dialog bounds.
 class AppAlertDialog extends StatelessWidget {
   const AppAlertDialog({
     super.key,
@@ -235,15 +856,15 @@ class AppAlertDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return shad.AlertDialog(
+    return _AppDialogChrome(
       leading: leading,
       title: title,
-      content: content,
+      content: content == null ? null : content!.small().muted(),
       actions: actions,
       trailing: trailing,
       surfaceBlur: surfaceBlur,
       surfaceOpacity: surfaceOpacity,
-      barrierColor: barrierColor ?? AppOverlayStyle.modalBarrier(context),
+      barrierColor: barrierColor,
       padding: padding,
     );
   }
@@ -287,49 +908,124 @@ class AppFormDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return _AppDialogChrome(
+      leading: leading,
+      title: title,
+      content: content,
+      actions: actions,
+      trailing: trailing,
+      surfaceBlur: surfaceBlur,
+      surfaceOpacity: surfaceOpacity,
+      barrierColor: barrierColor,
+      backgroundColor: backgroundColor,
+      padding: padding,
+      constraints: constraints,
+    );
+  }
+}
+
+class _AppDialogChrome extends StatelessWidget {
+  const _AppDialogChrome({
+    this.leading,
+    this.title,
+    this.content,
+    this.actions,
+    this.trailing,
+    this.surfaceBlur,
+    this.surfaceOpacity,
+    this.barrierColor,
+    this.backgroundColor,
+    this.padding,
+    this.constraints,
+  });
+
+  final Widget? leading;
+  final Widget? title;
+  final Widget? content;
+  final List<Widget>? actions;
+  final Widget? trailing;
+  final double? surfaceBlur;
+  final double? surfaceOpacity;
+  final Color? barrierColor;
+  final Color? backgroundColor;
+  final EdgeInsetsGeometry? padding;
+  final BoxConstraints? constraints;
+
+  @override
+  Widget build(BuildContext context) {
     final theme = shad.Theme.of(context);
     final scaling = theme.scaling;
     final densityGap = theme.density.baseGap * scaling;
     final densityContainerPadding =
         theme.density.baseContainerPadding * scaling;
+    final interaction = AppDialogInteraction.maybeOf(context);
+    final fillsBounds = interaction?.fillsBounds ?? false;
+    // Keep rounded corners always — maximize only insets, it does not go
+    // edge-to-edge over the page.
+    final borderRadius = theme.borderRadiusXxl;
+    final styledTrailing = trailing == null
+        ? null
+        : trailing!.iconXLarge().iconMutedForeground();
+    final resolvedTrailing =
+        interaction?.mergeTrailing(context, styledTrailing) ?? styledTrailing;
 
     final headerChildren = <Widget>[
       ?leading?.iconXLarge().iconMutedForeground(),
       if (title != null || content != null)
-        Flexible(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ?title?.large().semiBold(),
-              if (title != null && content != null)
-                SizedBox(height: densityGap),
-              // Intentionally no .small().muted() — form body copy.
-              ?content,
-            ],
-          ),
-        ),
-      ?trailing?.iconXLarge().iconMutedForeground(),
+        fillsBounds
+            ? Flexible(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ?title?.large().semiBold(),
+                    if (title != null && content != null)
+                      SizedBox(height: densityGap),
+                    ?content,
+                  ],
+                ),
+              )
+            : Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ?title?.large().semiBold(),
+                  if (title != null && content != null)
+                    SizedBox(height: densityGap),
+                  ?content,
+                ],
+              ),
+      ?resolvedTrailing,
     ];
 
     final bodyChildren = <Widget>[
-      Flexible(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (var i = 0; i < headerChildren.length; i++) ...[
-              if (i > 0) SizedBox(width: densityGap * 2),
-              headerChildren[i],
-            ],
-          ],
-        ),
-      ),
+      fillsBounds
+          ? Expanded(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (var i = 0; i < headerChildren.length; i++) ...[
+                    if (i > 0) SizedBox(width: densityGap * 2),
+                    headerChildren[i],
+                  ],
+                ],
+              ),
+            )
+          : Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (var i = 0; i < headerChildren.length; i++) ...[
+                  if (i > 0) SizedBox(width: densityGap * 2),
+                  headerChildren[i],
+                ],
+              ],
+            ),
       if (actions != null && actions!.isNotEmpty) ...[
         SizedBox(height: densityGap * 2),
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
-          mainAxisSize: MainAxisSize.min,
+          mainAxisSize: fillsBounds ? MainAxisSize.max : MainAxisSize.min,
           children: shad.join(actions!, SizedBox(width: densityGap)).toList(),
         ),
       ],
@@ -338,25 +1034,29 @@ class AppFormDialog extends StatelessWidget {
     Widget surface = shad.ModalContainer(
       fillColor: backgroundColor ?? theme.colorScheme.popover,
       filled: true,
-      borderRadius: theme.borderRadiusXxl,
+      borderRadius: borderRadius,
       borderWidth: 1 * scaling,
       borderColor: theme.colorScheme.muted,
       padding: padding ?? EdgeInsets.all(densityContainerPadding * 1.5),
       surfaceBlur: surfaceBlur ?? theme.surfaceBlur,
       surfaceOpacity: surfaceOpacity ?? theme.surfaceOpacity,
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: fillsBounds ? MainAxisSize.max : MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: bodyChildren,
       ),
     );
+
+    if (fillsBounds) {
+      surface = SizedBox.expand(child: surface);
+    }
 
     if (constraints != null) {
       surface = ConstrainedBox(constraints: constraints!, child: surface);
     }
 
     return shad.ModalBackdrop(
-      borderRadius: theme.borderRadiusXxl,
+      borderRadius: borderRadius,
       barrierColor: barrierColor ?? AppOverlayStyle.modalBarrier(context),
       surfaceClip: shad.ModalBackdrop.shouldClipSurface(
         surfaceOpacity ?? theme.surfaceOpacity,

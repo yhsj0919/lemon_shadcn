@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lemon_shadcn/lemon_shadcn.dart';
+import 'package:lemon_shadcn/shadcn.dart' as shad;
 
 void main() {
   testWidgets('dialog, drawer, sheet and popover work in a Material host', (
@@ -214,6 +215,52 @@ void main() {
     expect(alertContentColor, equals(mutedForeground));
     await tester.tap(find.text('Close alert'));
     await tester.pumpAndSettle();
+  });
+
+  testWidgets('movable dialog can open and close', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: Builder(
+          builder: (context) => AppButton.outline(
+            onPressed: () {
+              AppDialog.show<void>(
+                context: context,
+                movable: true,
+                resizable: true,
+                builder: (dialogContext) => AppAlertDialog(
+                  title: const Text('Movable title'),
+                  content: const Text('Movable body'),
+                  actions: [
+                    AppButton.outline(
+                      onPressed: () {
+                        AppOverlay.close(dialogContext);
+                      },
+                      child: const Text('Close movable'),
+                    ),
+                  ],
+                ),
+              );
+            },
+            child: const Text('Open movable'),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Open movable'));
+    await tester.pumpAndSettle();
+    expect(find.text('Movable title'), findsOneWidget);
+    expect(find.byType(AppMovableDialog), findsOneWidget);
+    expect(find.byType(AppDialogWindowActions), findsOneWidget);
+
+    await tester.tap(find.byIcon(shad.LucideIcons.maximize2));
+    await tester.pumpAndSettle();
+    expect(find.byIcon(shad.LucideIcons.minimize2), findsOneWidget);
+
+    await tester.tap(find.text('Close movable'));
+    await tester.pumpAndSettle();
+    expect(find.text('Movable title'), findsNothing);
   });
 
   testWidgets('scope supplies toast and hover surface infrastructure', (

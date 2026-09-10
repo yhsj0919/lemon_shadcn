@@ -604,6 +604,17 @@ abstract final class GalleryRegistry {
       ),
     ),
     GalleryEntry(
+      id: 'app-movable-dialog',
+      label: 'AppMovableDialog',
+      subtitle: '可拖动/缩放对话框',
+      group: '反馈',
+      builder: (_) => const OverlayPage(
+        title: 'AppMovableDialog',
+        description: '与 AppDialog.show 同一套 API，增加 movable / resizable 与尺寸参数。',
+        visibleSections: {'可拖动对话框'},
+      ),
+    ),
+    GalleryEntry(
       id: 'app-drawer',
       label: 'AppDrawer',
       subtitle: '侧边抽屉',

@@ -116,6 +116,78 @@ class OverlayPage extends StatelessWidget {
               ),
             ),
             ComponentSection(
+              title: '可拖动对话框',
+              code: '''AppDialog.show(
+  context: context,
+  movable: true,
+  resizable: true,
+  builder: (dialogContext) => AppAlertDialog(
+    title: const Text('可拖动窗口'),
+    content: const Text('与普通弹窗同一套 API；标题栏含最大化/关闭。'),
+    actions: [
+      AppButton.outline(
+        onPressed: () => AppOverlay.close(dialogContext),
+        child: const Text('关闭'),
+      ),
+    ],
+  ),
+)''',
+              child: Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  AppButton.outline(
+                    onPressed: () => AppDialog.show<void>(
+                      context: context,
+                      movable: true,
+                      resizable: true,
+                      builder: (dialogContext) => AppAlertDialog(
+                        title: const Text('可拖动窗口'),
+                        content: const Text(
+                          '拖动面板移动，拖边缘缩放，右上角可最大化。',
+                        ),
+                        actions: [
+                          AppButton.outline(
+                            onPressed: () {
+                              AppOverlay.close(dialogContext);
+                            },
+                            child: const Text('关闭'),
+                          ),
+                        ],
+                      ),
+                    ),
+                    child: const Text('打开可拖动对话框'),
+                  ),
+                  AppButton.outline(
+                    onPressed: () => AppDialog.show<void>(
+                      context: context,
+                      movable: true,
+                      resizable: true,
+                      maximizable: true,
+                      controlsBuilder: (context, interaction) => Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          AppButton.ghost(
+                            onPressed: interaction.toggleMaximize,
+                            child: Text(interaction.maximized ? '还原' : '最大化'),
+                          ),
+                          AppButton.ghost(
+                            onPressed: interaction.close,
+                            child: const Text('关闭'),
+                          ),
+                        ],
+                      ),
+                      builder: (dialogContext) => AppAlertDialog(
+                        title: const Text('自定义窗口按钮'),
+                        content: const Text('通过 controlsBuilder 替换默认最大化/关闭按钮。'),
+                      ),
+                    ),
+                    child: const Text('自定义窗口按钮'),
+                  ),
+                ],
+              ),
+            ),
+            ComponentSection(
               title: '表单对话框',
               child: AppButton.outline(
                 onPressed: () => AppDialog.show<void>(
