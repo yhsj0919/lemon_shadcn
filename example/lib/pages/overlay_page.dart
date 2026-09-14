@@ -123,7 +123,7 @@ class OverlayPage extends StatelessWidget {
   resizable: true,
   builder: (dialogContext) => AppAlertDialog(
     title: const Text('可拖动窗口'),
-    content: const Text('与普通弹窗同一套 API；标题栏含最大化/关闭。'),
+    content: const Text('与普通弹窗同一套 API；最大化/关闭只挂在标题行。'),
     actions: [
       AppButton.outline(
         onPressed: () => AppOverlay.close(dialogContext),

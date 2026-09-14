@@ -879,7 +879,8 @@ enum _ResizeEdge {
 /// supplied, so the ambient backdrop theme cannot override it.
 ///
 /// When hosted by a movable / resizable [AppDialog.show], window actions are
-/// merged into [trailing] and the surface fills the dialog bounds.
+/// merged into the title-row trailing slot (not beside [content]) and the
+/// surface fills the dialog bounds when resized / maximized.
 class AppAlertDialog extends StatelessWidget {
   const AppAlertDialog({
     super.key,
@@ -1026,22 +1027,42 @@ class _AppDialogChrome extends StatelessWidget {
         : trailing!.iconXLarge().iconMutedForeground();
     final resolvedTrailing =
         interaction?.mergeTrailing(context, styledTrailing) ?? styledTrailing;
+    final styledTitle = title?.large().semiBold();
+    final hasTitleRow = styledTitle != null || resolvedTrailing != null;
 
-    final titleColumn = Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        ?title?.large().semiBold(),
-        if (title != null && content != null) SizedBox(height: densityGap),
-        ?content,
-      ],
-    );
+    // Window controls / trailing stay on the title row only — never beside
+    // [content]. Leading remains next to the title+content column so alert
+    // icon alignment matches upstream AlertDialog.
+    Widget? mainColumn;
+    if (hasTitleRow || content != null) {
+      mainColumn = Column(
+        mainAxisSize: fillsBounds ? MainAxisSize.max : MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (hasTitleRow)
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize:
+                  boundedHeader ? MainAxisSize.max : MainAxisSize.min,
+              children: [
+                if (styledTitle != null)
+                  boundedHeader ? Flexible(child: styledTitle) : styledTitle,
+                if (styledTitle != null && resolvedTrailing != null)
+                  SizedBox(width: densityGap * 2),
+                ?resolvedTrailing,
+              ],
+            ),
+          if (hasTitleRow && content != null) SizedBox(height: densityGap),
+          if (content != null)
+            fillsBounds ? Expanded(child: content!) : content!,
+        ],
+      );
+    }
 
     final headerChildren = <Widget>[
       ?leading?.iconXLarge().iconMutedForeground(),
-      if (title != null || content != null)
-        boundedHeader ? Flexible(child: titleColumn) : titleColumn,
-      ?resolvedTrailing,
+      if (mainColumn != null)
+        boundedHeader ? Flexible(child: mainColumn) : mainColumn,
     ];
 
     final bodyChildren = <Widget>[
