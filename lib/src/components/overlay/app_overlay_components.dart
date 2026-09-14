@@ -1029,6 +1029,12 @@ class _AppDialogChrome extends StatelessWidget {
         interaction?.mergeTrailing(context, styledTrailing) ?? styledTrailing;
     final styledTitle = title?.large().semiBold();
     final hasTitleRow = styledTitle != null || resolvedTrailing != null;
+    // Pin trailing to the title-row end without expanding the dialog to the
+    // parent max width (surface Column must stay end/intrinsic).
+    final pinTrailing = resolvedTrailing != null;
+    // Form maxWidth / filled bounds: Flexible so stretch fields get a finite
+    // max width. Do not use this alone to right-align window actions.
+    final expandOuter = fillsBounds || boundedHeader;
 
     // Window controls / trailing stay on the title row only — never beside
     // [content]. Leading remains next to the title+content column so alert
@@ -1037,16 +1043,19 @@ class _AppDialogChrome extends StatelessWidget {
     if (hasTitleRow || content != null) {
       mainColumn = Column(
         mainAxisSize: fillsBounds ? MainAxisSize.max : MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: pinTrailing || expandOuter
+            ? CrossAxisAlignment.stretch
+            : CrossAxisAlignment.start,
         children: [
           if (hasTitleRow)
             Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize:
-                  boundedHeader ? MainAxisSize.max : MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 if (styledTitle != null)
-                  boundedHeader ? Flexible(child: styledTitle) : styledTitle,
+                  pinTrailing || expandOuter
+                      ? Expanded(child: styledTitle)
+                      : styledTitle,
+                if (styledTitle == null && pinTrailing) const Spacer(),
                 if (styledTitle != null && resolvedTrailing != null)
                   SizedBox(width: densityGap * 2),
                 ?resolvedTrailing,
@@ -1057,12 +1066,17 @@ class _AppDialogChrome extends StatelessWidget {
             fillsBounds ? Expanded(child: content!) : content!,
         ],
       );
+      // Content-sized + window actions: size to content, then stretch the
+      // title row so actions sit on the right without filling the viewport.
+      if (pinTrailing && !expandOuter) {
+        mainColumn = IntrinsicWidth(child: mainColumn);
+      }
     }
 
     final headerChildren = <Widget>[
       ?leading?.iconXLarge().iconMutedForeground(),
       if (mainColumn != null)
-        boundedHeader ? Flexible(child: mainColumn) : mainColumn,
+        expandOuter ? Flexible(child: mainColumn) : mainColumn,
     ];
 
     final bodyChildren = <Widget>[
@@ -1080,7 +1094,7 @@ class _AppDialogChrome extends StatelessWidget {
             )
           : Row(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: boundedHeader ? MainAxisSize.max : MainAxisSize.min,
+              mainAxisSize: expandOuter ? MainAxisSize.max : MainAxisSize.min,
               children: [
                 for (var i = 0; i < headerChildren.length; i++) ...[
                   if (i > 0) SizedBox(width: densityGap * 2),
@@ -1092,9 +1106,7 @@ class _AppDialogChrome extends StatelessWidget {
         SizedBox(height: densityGap * 2),
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
-          mainAxisSize: fillsBounds || boundedHeader
-              ? MainAxisSize.max
-              : MainAxisSize.min,
+          mainAxisSize: expandOuter ? MainAxisSize.max : MainAxisSize.min,
           children: shad.join(actions!, SizedBox(width: densityGap)).toList(),
         ),
       ],
@@ -1109,9 +1121,13 @@ class _AppDialogChrome extends StatelessWidget {
       padding: padding ?? EdgeInsets.all(densityContainerPadding * 1.5),
       surfaceBlur: surfaceBlur ?? theme.surfaceBlur,
       surfaceOpacity: surfaceOpacity ?? theme.surfaceOpacity,
+      // Keep end (not stretch) so the shell stays content-sized under a
+      // viewport max constraint; stretch would fill the parent width.
       child: Column(
         mainAxisSize: fillsBounds ? MainAxisSize.max : MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.end,
+        crossAxisAlignment: fillsBounds
+            ? CrossAxisAlignment.stretch
+            : CrossAxisAlignment.end,
         children: bodyChildren,
       ),
     );
