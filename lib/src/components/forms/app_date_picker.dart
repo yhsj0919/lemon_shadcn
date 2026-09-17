@@ -82,15 +82,16 @@ class AppDatePicker extends StatelessWidget {
               enabled: enabled,
               mode: resolvedMode,
               immediateValueChange: false,
-              placeholder: Text(
-                hintText ?? localizations.placeholderDatePicker,
+              placeholder: appObjectFormFieldLabel(
+                Text(hintText ?? localizations.placeholderDatePicker),
               ),
               trailing: const Icon(shad.LucideIcons.calendarDays),
               popoverAlignment: popoverAlignment,
               popoverAnchorAlignment: popoverAnchorAlignment,
               popoverPadding: popoverPadding,
               dialogTitle: dialogTitle,
-              builder: (context, value) => Text(_formatAppDate(value)),
+              builder: (context, value) =>
+                  appObjectFormFieldLabel(Text(_formatAppDate(value))),
               editorBuilder: (overlayContext, handler) => popup(
                 _AppSingleDateEditor(
                   handler: handler,
@@ -107,16 +108,18 @@ class AppDatePicker extends StatelessWidget {
               enabled: enabled,
               mode: resolvedMode,
               immediateValueChange: false,
-              placeholder: Text(
-                hintText ?? localizations.placeholderDatePicker,
+              placeholder: appObjectFormFieldLabel(
+                Text(hintText ?? localizations.placeholderDatePicker),
               ),
               trailing: const Icon(shad.LucideIcons.calendarRange),
               popoverAlignment: popoverAlignment,
               popoverAnchorAlignment: popoverAnchorAlignment,
               popoverPadding: popoverPadding,
               dialogTitle: dialogTitle,
-              builder: (context, value) => Text(
-                '${_formatAppDate(value.start)} - ${_formatAppDate(value.end)}',
+              builder: (context, value) => appObjectFormFieldLabel(
+                Text(
+                  '${_formatAppDate(value.start)} - ${_formatAppDate(value.end)}',
+                ),
               ),
               editorBuilder: (overlayContext, handler) => popup(
                 _AppRangeDateEditor(

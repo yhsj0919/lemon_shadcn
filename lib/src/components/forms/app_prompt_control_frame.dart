@@ -5,6 +5,15 @@ import '../../foundation/app_overlay_style.dart';
 import '../overlay/app_popup_switch_coordinator.dart';
 import 'app_inline_edit_overlay_scope.dart';
 
+/// Centers [shad.ObjectFormField] label/value vertically in the control box.
+///
+/// With a trailing icon, [shad.OutlineButton] leaves the child top-start aligned.
+/// Once [AppControlMetrics.height] is taller than the intrinsic content, the
+/// placeholder/value looks top-heavy unless wrapped with this helper.
+Widget appObjectFormFieldLabel(Widget child) {
+  return Align(alignment: Alignment.centerLeft, child: child);
+}
+
 /// Shared frame for prompt controls backed by a popover or dialog.
 class AppPromptControlFrame extends StatefulWidget {
   const AppPromptControlFrame({

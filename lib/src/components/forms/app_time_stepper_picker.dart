@@ -41,12 +41,16 @@ class AppTimeStepperPicker extends StatelessWidget {
             enabled: enabled,
             mode: mode,
             popoverPadding: EdgeInsets.zero,
-            placeholder: Text(hintText ?? localizations.placeholderTimePicker),
+            placeholder: appObjectFormFieldLabel(
+              Text(hintText ?? localizations.placeholderTimePicker),
+            ),
             trailing: const Icon(shad.LucideIcons.clock),
             onChanged: onChanged,
             immediateValueChange: false,
-            builder: (context, value) => Text(
-              localizations.formatTimeOfDay(value, use24HourFormat: true),
+            builder: (context, value) => appObjectFormFieldLabel(
+              Text(
+                localizations.formatTimeOfDay(value, use24HourFormat: true),
+              ),
             ),
             editorBuilder: (overlayContext, handler) => popup(
               _AppTimeStepperEditor(
@@ -93,9 +97,12 @@ class AppDateTimePicker extends StatelessWidget {
           mode: mode,
           immediateValueChange: false,
           popoverPadding: EdgeInsets.zero,
-          placeholder: Text(hintText ?? '选择日期和时间'),
+          placeholder: appObjectFormFieldLabel(
+            Text(hintText ?? '选择日期和时间'),
+          ),
           trailing: const Icon(shad.LucideIcons.calendarClock),
-          builder: (context, value) => Text(_formatDateTime(value)),
+          builder: (context, value) =>
+              appObjectFormFieldLabel(Text(_formatDateTime(value))),
           editorBuilder: (overlayContext, handler) => popup(
             _AppDateTimeEditor(handler: handler, minuteStep: minuteStep),
           ),

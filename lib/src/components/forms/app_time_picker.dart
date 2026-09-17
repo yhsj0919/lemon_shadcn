@@ -32,17 +32,21 @@ Widget _buildTimePickerField(
     onChanged: onChanged,
     enabled: enabled,
     mode: mode,
-    placeholder: _hint(hintText) ?? Text(localizations.placeholderTimePicker),
+    placeholder: appObjectFormFieldLabel(
+      _hint(hintText) ?? Text(localizations.placeholderTimePicker),
+    ),
     trailing: const Icon(shad.LucideIcons.clock),
     popoverAlignment: popoverAlignment,
     popoverAnchorAlignment: popoverAnchorAlignment,
     popoverPadding: popoverPadding,
     dialogTitle: dialogTitle,
-    builder: (context, value) => Text(
-      localizations.formatTimeOfDay(
-        value,
-        use24HourFormat: resolved24HourFormat,
-        showSeconds: showSeconds,
+    builder: (context, value) => appObjectFormFieldLabel(
+      Text(
+        localizations.formatTimeOfDay(
+          value,
+          use24HourFormat: resolved24HourFormat,
+          showSeconds: showSeconds,
+        ),
       ),
     ),
     editorBuilder: (context, handler) => popup(
