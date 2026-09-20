@@ -127,7 +127,6 @@ class _StructuredLayoutPageState extends State<StructuredLayoutPage> {
             child: AppTree<String>(
               nodes: _treeNodes,
               shrinkWrap: true,
-              branchLine: BranchLine.line,
               allowMultiSelect: false,
               recursiveSelection: false,
               onSelectionChanged: Tree.defaultSelectionHandler<String>(
