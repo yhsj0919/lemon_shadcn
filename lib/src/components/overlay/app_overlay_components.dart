@@ -304,6 +304,7 @@ class AppDialogInteraction extends InheritedWidget {
     required this.controls,
     required this.controlsBuilder,
     this.onDrag,
+    this.onDragStart,
     required super.child,
   });
 
@@ -323,6 +324,9 @@ class AppDialogInteraction extends InheritedWidget {
   /// Null when the dialog is not movable. Content must not call this; only
   /// title / explicit drag handles should.
   final GestureDragUpdateCallback? onDrag;
+
+  /// Clears per-gesture drag bookkeeping (e.g. unmaximize threshold).
+  final GestureDragStartCallback? onDragStart;
 
   static AppDialogInteraction? maybeOf(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<AppDialogInteraction>();
@@ -365,14 +369,20 @@ class AppDialogInteraction extends InheritedWidget {
       fillsBounds != oldWidget.fillsBounds ||
       controls != oldWidget.controls ||
       controlsBuilder != oldWidget.controlsBuilder ||
-      onDrag != oldWidget.onDrag;
+      onDrag != oldWidget.onDrag ||
+      onDragStart != oldWidget.onDragStart;
 }
 
 /// Marks a region as the movable dialog drag handle (title bar / grab strip).
 ///
 /// Content should not wrap with this — only chrome. When [AppDialog.show] is
-/// movable, [AppFormDialog] / [AppAlertDialog] apply it to the title row
-/// automatically; if there is no title row they insert a top grab strip.
+/// movable, [AppFormDialog] / [AppAlertDialog] apply it to the title label
+/// area automatically (not the window buttons); if there is no title row they
+/// insert a top grab strip.
+///
+/// Double-tap toggles maximize when the host is maximizable. A plain click
+/// does not restore a maximized dialog — only drag past a small threshold or
+/// double-tap / the maximize control does.
 class AppDialogDragHandle extends StatelessWidget {
   const AppDialogDragHandle({super.key, required this.child});
 
@@ -389,7 +399,10 @@ class AppDialogDragHandle extends StatelessWidget {
       cursor: SystemMouseCursors.move,
       child: GestureDetector(
         behavior: HitTestBehavior.translucent,
+        onPanStart: interaction.onDragStart,
         onPanUpdate: onDrag,
+        onDoubleTap:
+            interaction.maximizable ? interaction.toggleMaximize : null,
         child: child,
       ),
     );
@@ -468,6 +481,9 @@ class _AppMovableDialogState extends State<AppMovableDialog> {
   static const double _handleExtent = 8;
   static const double _maximizeInset = 24;
 
+  /// Ignore click jitter; only unmaximize after a real drag.
+  static const double _unmaximizeDragThreshold = 8;
+
   final GlobalKey _dialogKey = GlobalKey();
   Offset? _offset;
   Size? _size;
@@ -476,6 +492,8 @@ class _AppMovableDialogState extends State<AppMovableDialog> {
   Size? _restoreSize;
   bool _maximized = false;
   bool _measureScheduled = false;
+  Offset _dragAccumulated = Offset.zero;
+  bool _unmaximizeGestureActive = false;
 
   /// Fixed bounds only when the window must fill a box (maximize / resize /
   /// explicit [initialSize]). Movable-only keeps intrinsic content size —
@@ -623,24 +641,35 @@ class _AppMovableDialogState extends State<AppMovableDialog> {
 
   void _close() => AppOverlay.close(context);
 
+  void _onDragStart(DragStartDetails details) {
+    _dragAccumulated = Offset.zero;
+    _unmaximizeGestureActive = false;
+  }
+
   void _onDrag(DragUpdateDetails details) {
     if (!widget.movable || _viewport == null) return;
     if (_maximized) {
-      // Dragging a maximized dialog restores it first (no top-edge snap).
-      final restored = _restoreSize ?? const Size(480, 360);
-      final local = details.globalPosition;
-      setState(() {
-        _maximized = false;
-        _size = restored;
-        _offset = _clampOffset(
-          Offset(local.dx - restored.width / 2, local.dy - 16),
-          restored,
-          _viewport!,
-        );
-        _restoreSize = null;
-        _restoreOffset = null;
-      });
-      return;
+      // Click jitter must not restore; wait for a deliberate drag, then
+      // unmaximize once and keep dragging (no top-edge snap).
+      _dragAccumulated += details.delta;
+      if (!_unmaximizeGestureActive) {
+        if (_dragAccumulated.distance < _unmaximizeDragThreshold) return;
+        _unmaximizeGestureActive = true;
+        final restored = _restoreSize ?? const Size(480, 360);
+        final local = details.globalPosition;
+        setState(() {
+          _maximized = false;
+          _size = restored;
+          _offset = _clampOffset(
+            Offset(local.dx - restored.width / 2, local.dy - 16),
+            restored,
+            _viewport!,
+          );
+          _restoreSize = null;
+          _restoreOffset = null;
+        });
+        return;
+      }
     }
     if (_offset == null) return;
     setState(() {
@@ -767,6 +796,7 @@ class _AppMovableDialogState extends State<AppMovableDialog> {
               controls: widget.controls,
               controlsBuilder: widget.controlsBuilder,
               onDrag: widget.movable ? _onDrag : null,
+              onDragStart: widget.movable ? _onDragStart : null,
               child: dialog,
             ),
           ),
@@ -1075,22 +1105,34 @@ class _AppDialogChrome extends StatelessWidget {
     if (hasTitleRow || content != null || canDrag) {
       Widget? titleRow;
       if (hasTitleRow) {
+        // Drag only the title / empty area — never wrap window buttons, or a
+        // click on maximize/close can be mistaken for a pan and unmaximize.
+        final stretchTitle = pinTrailing || expandOuter;
         titleRow = Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            if (styledTitle != null)
-              pinTrailing || expandOuter
-                  ? Expanded(child: styledTitle)
-                  : styledTitle,
-            if (styledTitle == null && pinTrailing) const Spacer(),
+            if (canDrag && (stretchTitle || styledTitle == null))
+              Expanded(
+                child: AppDialogDragHandle(
+                  child: styledTitle != null
+                      ? Align(
+                          alignment: Alignment.centerLeft,
+                          child: styledTitle,
+                        )
+                      : const SizedBox.expand(),
+                ),
+              )
+            else if (canDrag && styledTitle != null)
+              AppDialogDragHandle(child: styledTitle)
+            else if (styledTitle != null)
+              stretchTitle ? Expanded(child: styledTitle) : styledTitle
+            else if (pinTrailing)
+              const Spacer(),
             if (styledTitle != null && resolvedTrailing != null)
               SizedBox(width: densityGap * 2),
             ?resolvedTrailing,
           ],
         );
-        if (canDrag) {
-          titleRow = AppDialogDragHandle(child: titleRow);
-        }
       } else if (canDrag) {
         // No title / trailing: still need a drag region at the top.
         titleRow = AppDialogDragHandle(
