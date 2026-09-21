@@ -553,10 +553,18 @@ class AppDescriptions extends StatelessWidget {
     } else {
       valueHeight = null;
     }
-    // Align supplies loose constraints to intrinsic controls (notably buttons),
-    // while the outer item can still occupy its responsive grid cell.
+    // Top-aligned labels should pin values to the top as well; otherwise a
+    // vertically expanding Align centers multi-line content and makes the
+    // labelAlignment look ignored. heightFactor keeps the slot content-sized
+    // so table/flex parents cannot stretch and re-center the value.
+    final valueAlignment =
+        item._valueAlignment ??
+        (resolvedLabelAlignment.y <= -0.5
+            ? AlignmentDirectional.topStart
+            : style.valueAlignment!);
     final aligned = Align(
-      alignment: item._valueAlignment ?? style.valueAlignment!,
+      alignment: valueAlignment,
+      heightFactor: 1,
       child: value,
     );
     value = valueHeight == null
@@ -703,7 +711,7 @@ class AppDescriptions extends StatelessWidget {
       }
       sections.add(
         Table(
-          defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+          defaultVerticalAlignment: TableCellVerticalAlignment.top,
           border: TableBorder(
             horizontalInside: BorderSide(color: theme.colorScheme.border),
             verticalInside: BorderSide(color: theme.colorScheme.border),

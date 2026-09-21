@@ -459,6 +459,45 @@ void main() {
     );
   });
 
+  testWidgets('topStart keeps multiline AppInlineEdit flush with the label', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: material.SizedBox(
+          width: 360,
+          child: AppDescriptions(
+            type: AppDescriptionsType.table,
+            columns: 1,
+            layout: AppDescriptionLayout.horizontal,
+            items: [
+              AppDescriptionItem(
+                label: const material.Text('开关机时间'),
+                labelAlignment: material.AlignmentDirectional.topStart,
+                value: AppInlineEdit.multiline(
+                  value: '09:00:00–12:00:00\n13:00:00–19:45:00',
+                  minHeight: 56,
+                  onSaved: (_) async {},
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    final labelTop = tester.getTopLeft(find.text('开关机时间')).dy;
+    final valueTop = tester
+        .getTopLeft(find.text('09:00:00–12:00:00\n13:00:00–19:45:00'))
+        .dy;
+    expect(valueTop, closeTo(labelTop, 0.01));
+    expect(
+      tester.getSize(find.byType(AppInlineEdit<String>)).height,
+      greaterThanOrEqualTo(56),
+    );
+  });
+
   testWidgets('compact embedded controls and inline edit use local height', (
     tester,
   ) async {
