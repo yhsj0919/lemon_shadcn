@@ -492,9 +492,18 @@ void main() {
         .getTopLeft(find.text('09:00:00–12:00:00\n13:00:00–19:45:00'))
         .dy;
     expect(valueTop, closeTo(labelTop, 0.01));
+
+    final valueBottom = tester
+        .getBottomLeft(find.text('09:00:00–12:00:00\n13:00:00–19:45:00'))
+        .dy;
+    final inlineBottom = tester
+        .getBottomLeft(find.byType(AppInlineEdit<String>))
+        .dy;
+    // Display must shrink-wrap; minHeight belongs to the editor only.
+    expect(inlineBottom, closeTo(valueBottom, 0.01));
     expect(
       tester.getSize(find.byType(AppInlineEdit<String>)).height,
-      greaterThanOrEqualTo(56),
+      lessThan(56),
     );
   });
 

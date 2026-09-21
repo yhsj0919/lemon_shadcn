@@ -182,8 +182,8 @@ class AppInlineEdit<T> extends StatefulWidget {
       displayBuilder: displayBuilder ?? (_, value) => Text(value),
       validator: validator,
       enabled: enabled,
+      // Display stays content-sized; minHeight/maxHeight only size the editor.
       intrinsicHeight: true,
-      height: minHeight,
       alignment: AlignmentDirectional.topStart,
       onSaved: onSaved,
       editorBuilder: (context, details) => _InlineTextAreaEditor(
@@ -556,12 +556,12 @@ class AppInlineEdit<T> extends StatefulWidget {
   /// taller than the minimum (e.g. multi-line text) expands instead of
   /// compressing vertical padding.
   ///
-  /// With [intrinsicHeight], this is still honored as a minimum when set
-  /// (e.g. [AppInlineEdit.multiline]'s `minHeight`).
+  /// Ignored while [intrinsicHeight] is true so display text can shrink-wrap;
+  /// multiline editors pass their own min height to the text area instead.
   final double? height;
 
-  /// Lets multiline and other large controls skip the default control-height
-  /// floor. Explicit [height] is still applied as a minimum.
+  /// Lets multiline and other large controls skip the control-height floor and
+  /// size purely to their content while idle.
   final bool intrinsicHeight;
   final AlignmentGeometry alignment;
   final Duration transitionDuration;
@@ -823,15 +823,6 @@ class _AppInlineEditState<T> extends State<AppInlineEdit<T>> {
           : child,
     );
     if (widget.intrinsicHeight) {
-      if (widget.height case final minHeight?) {
-        return SizedBox(
-          width: resolvedWidth,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minHeight: minHeight),
-            child: content,
-          ),
-        );
-      }
       return SizedBox(width: resolvedWidth, child: content);
     }
     final height =
