@@ -20,8 +20,13 @@ class AppTimelineData extends shad.TimelineData {
     required super.title,
     super.content,
     super.color,
+    this.connectorColor,
     this.trailing,
   });
+
+  /// Color of the connector line below this entry. Falls back to
+  /// [AppTimeline.connectorColor] when null.
+  final Color? connectorColor;
 
   /// Optional action or metadata displayed at the end of the title row.
   final Widget? trailing;
@@ -1589,6 +1594,8 @@ class AppTimeline extends StatelessWidget {
     this.timeConstraints,
     this.timePosition = AppTimelineTimePosition.leading,
     this.axis = Axis.vertical,
+    this.color,
+    this.connectorColor,
   });
 
   const AppTimeline.vertical({
@@ -1596,6 +1603,8 @@ class AppTimeline extends StatelessWidget {
     required this.data,
     this.timeConstraints,
     this.timePosition = AppTimelineTimePosition.leading,
+    this.color,
+    this.connectorColor,
   }) : axis = Axis.vertical;
 
   const AppTimeline.horizontal({
@@ -1603,12 +1612,21 @@ class AppTimeline extends StatelessWidget {
     required this.data,
     this.timeConstraints,
     this.timePosition = AppTimelineTimePosition.leading,
+    this.color,
+    this.connectorColor,
   }) : axis = Axis.horizontal;
 
   final List<shad.TimelineData> data;
   final BoxConstraints? timeConstraints;
   final AppTimelineTimePosition timePosition;
   final Axis axis;
+
+  /// Default indicator (dot) color. Per-entry [TimelineData.color] wins.
+  final Color? color;
+
+  /// Default connector line color. Per-entry [AppTimelineData.connectorColor]
+  /// wins when provided.
+  final Color? connectorColor;
 
   @override
   Widget build(BuildContext context) {
@@ -1622,10 +1640,15 @@ class AppTimeline extends StatelessWidget {
     final spacing = timelineTheme?.spacing ?? 16 * scaling;
     final dotSize = timelineTheme?.dotSize ?? 12 * scaling;
     final connectorThickness = timelineTheme?.connectorThickness ?? 2 * scaling;
-    final defaultColor = timelineTheme?.color ?? theme.colorScheme.primary;
+    final defaultColor =
+        color ?? timelineTheme?.color ?? theme.colorScheme.primary;
+    final defaultConnectorColor = connectorColor ?? theme.colorScheme.border;
+    final connectorGap = 6 * scaling;
+    final dotBorderWidth = 3 * scaling;
     final rowGap = timelineTheme?.rowGap ?? 16 * scaling;
     final headerHeight = dotSize > 28 * scaling ? dotSize : 28 * scaling;
     final inlineTime = timePosition == AppTimelineTimePosition.inline;
+    final squareDot = theme.radius == 0;
 
     if (axis == Axis.horizontal) {
       return LayoutBuilder(
@@ -1642,9 +1665,24 @@ class AppTimeline extends StatelessWidget {
                   top:
                       (inlineTime ? 0 : headerHeight) +
                       (dotSize - connectorThickness) / 2,
-                  child: Container(
-                    height: connectorThickness,
-                    color: defaultColor,
+                  child: Row(
+                    children: [
+                      for (var index = 0; index < data.length - 1; index++)
+                        Expanded(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: dotSize / 2 + connectorGap,
+                            ),
+                            child: Container(
+                              height: connectorThickness,
+                              color: _connectorColorFor(
+                                data[index],
+                                defaultConnectorColor,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
               Row(
@@ -1659,13 +1697,11 @@ class AppTimeline extends StatelessWidget {
                               height: headerHeight,
                               child: Center(child: data[index].time),
                             ),
-                          Container(
-                            width: dotSize,
-                            height: dotSize,
-                            decoration: BoxDecoration(
-                              color: data[index].color ?? defaultColor,
-                              shape: BoxShape.circle,
-                            ),
+                          _timelineDot(
+                            size: dotSize,
+                            color: data[index].color ?? defaultColor,
+                            borderWidth: dotBorderWidth,
+                            square: squareDot,
                           ),
                           SizedBox(height: 8 * scaling),
                           DefaultTextStyle.merge(
@@ -1742,26 +1778,25 @@ class AppTimeline extends StatelessWidget {
                   children: [
                     if (index != data.length - 1)
                       Positioned(
-                        top: headerHeight / 2,
-                        bottom: -headerHeight / 2,
+                        top: (headerHeight + dotSize) / 2 + connectorGap,
+                        bottom: connectorGap - (headerHeight - dotSize) / 2,
                         left: (dotSize - connectorThickness) / 2,
                         child: Container(
                           width: connectorThickness,
-                          color: data[index].color ?? defaultColor,
+                          color: _connectorColorFor(
+                            data[index],
+                            defaultConnectorColor,
+                          ),
                         ),
                       ),
                     Positioned(
                       top: (headerHeight - dotSize) / 2,
                       left: 0,
-                      child: Container(
-                        width: dotSize,
-                        height: dotSize,
-                        decoration: BoxDecoration(
-                          shape: theme.radius == 0
-                              ? BoxShape.rectangle
-                              : BoxShape.circle,
-                          color: data[index].color ?? defaultColor,
-                        ),
+                      child: _timelineDot(
+                        size: dotSize,
+                        color: data[index].color ?? defaultColor,
+                        borderWidth: dotBorderWidth,
+                        square: squareDot,
                       ),
                     ),
                   ],
@@ -1804,6 +1839,29 @@ class AppTimeline extends StatelessWidget {
             ],
           ),
       ],
+    );
+  }
+
+  Color _connectorColorFor(shad.TimelineData entry, Color fallback) {
+    if (entry is AppTimelineData && entry.connectorColor != null) {
+      return entry.connectorColor!;
+    }
+    return fallback;
+  }
+
+  Widget _timelineDot({
+    required double size,
+    required Color color,
+    required double borderWidth,
+    required bool square,
+  }) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: square ? BoxShape.rectangle : BoxShape.circle,
+        border: Border.all(color: color, width: borderWidth),
+      ),
     );
   }
 
