@@ -1644,6 +1644,7 @@ class AppTimeline extends StatelessWidget {
         color ?? timelineTheme?.color ?? theme.colorScheme.primary;
     final defaultConnectorColor = connectorColor ?? theme.colorScheme.border;
     final connectorGap = 6 * scaling;
+    final connectorEndGap = 12 * scaling;
     final dotBorderWidth = 3 * scaling;
     final rowGap = timelineTheme?.rowGap ?? 16 * scaling;
     final headerHeight = dotSize > 28 * scaling ? dotSize : 28 * scaling;
@@ -1670,8 +1671,9 @@ class AppTimeline extends StatelessWidget {
                       for (var index = 0; index < data.length - 1; index++)
                         Expanded(
                           child: Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: dotSize / 2 + connectorGap,
+                            padding: EdgeInsets.only(
+                              left: dotSize / 2 + connectorGap,
+                              right: dotSize / 2 + connectorEndGap,
                             ),
                             child: Container(
                               height: connectorThickness,
@@ -1779,7 +1781,8 @@ class AppTimeline extends StatelessWidget {
                     if (index != data.length - 1)
                       Positioned(
                         top: (headerHeight + dotSize) / 2 + connectorGap,
-                        bottom: connectorGap - (headerHeight - dotSize) / 2,
+                        bottom:
+                            connectorEndGap - (headerHeight - dotSize) / 2,
                         left: (dotSize - connectorThickness) / 2,
                         child: Container(
                           width: connectorThickness,
