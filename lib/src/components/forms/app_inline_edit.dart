@@ -549,11 +549,14 @@ class AppInlineEdit<T> extends StatefulWidget {
   final Widget Function(BuildContext context, String message)? errorBuilder;
   final AppInlineEditEquality<T>? valuesEqual;
 
-  /// Stable height shared by display and edit states. When omitted, this uses
-  /// the same control-height token as the rest of the form components.
+  /// Minimum height shared by display and edit states. When omitted, this uses
+  /// the same control-height token as the rest of the form components. Content
+  /// taller than the minimum (e.g. multi-line text) expands instead of
+  /// compressing vertical padding.
   final double? height;
 
-  /// Lets multiline and other large controls determine their own height.
+  /// Lets multiline and other large controls determine their own height
+  /// without enforcing the control-height minimum.
   final bool intrinsicHeight;
   final AlignmentGeometry alignment;
   final Duration transitionDuration;
@@ -804,15 +807,28 @@ class _AppInlineEditState<T> extends State<AppInlineEdit<T>> {
   Widget _fixedArea(Widget child, {required bool stretchChild}) {
     final resolvedWidth =
         widget.width ?? (widget.expand ? double.infinity : null);
-    final content = stretchChild && resolvedWidth != null
-        ? child
-        : Align(alignment: widget.alignment, child: child);
+    // heightFactor keeps the slot content-sized vertically so multi-line
+    // display text can grow past the control-height floor without being
+    // compressed inside a tight SizedBox.
+    final content = Align(
+      alignment: widget.alignment,
+      heightFactor: 1,
+      child: stretchChild && resolvedWidth != null
+          ? SizedBox(width: double.infinity, child: child)
+          : child,
+    );
     if (widget.intrinsicHeight) {
       return SizedBox(width: resolvedWidth, child: content);
     }
     final height =
         widget.height ?? AppControlMetricsScope.resolve(context).height;
-    return SizedBox(width: resolvedWidth, height: height, child: content);
+    return SizedBox(
+      width: resolvedWidth,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(minHeight: height),
+        child: content,
+      ),
+    );
   }
 }
 

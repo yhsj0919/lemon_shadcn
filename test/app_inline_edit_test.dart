@@ -64,13 +64,36 @@ void main() {
     Finder fixedArea() => find.descendant(
       of: find.byType(AppInlineEdit<String>),
       matching: find.byWidgetPredicate(
-        (widget) => widget is SizedBox && widget.height == 32,
+        (widget) =>
+            widget is ConstrainedBox && widget.constraints.minHeight == 32,
       ),
     );
 
     expect(tester.getSize(fixedArea().first).height, 32);
     await _doubleTap(tester, find.text('名称'));
     expect(tester.getSize(fixedArea().first).height, 32);
+  });
+
+  testWidgets('multi-line display grows past the control-height floor', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: Align(
+          alignment: Alignment.topLeft,
+          child: AppInlineEdit.text(
+            value: '09:00:00–12:00:00\n13:00:00–19:45:00',
+            onSaved: (_) {},
+          ),
+        ),
+      ),
+    );
+
+    expect(
+      tester.getSize(find.byType(AppInlineEdit<String>)).height,
+      greaterThan(32),
+    );
   });
 
   testWidgets('clicking non-focusable blank space exits edit mode', (
