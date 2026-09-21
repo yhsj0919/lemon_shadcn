@@ -195,6 +195,10 @@ abstract final class AppDialog {
   /// (it enables resize). Content keeps its intrinsic size;
   /// [AppFormDialog] defaults to `maxWidth: 480`.
   ///
+  /// When [movable] is true, drag is limited to the title row (or a top grab
+  /// strip when there is no title). Content does not move the dialog.
+  /// Custom shells can wrap chrome with [AppDialogDragHandle].
+  ///
   /// Window chrome buttons (maximize / close) can be replaced via [controls]
   /// or [controlsBuilder]. Maximize is button-driven (no top-edge snap).
   static shad.OverlayCompleter<T?> show<T>({
@@ -299,6 +303,7 @@ class AppDialogInteraction extends InheritedWidget {
     required this.close,
     required this.controls,
     required this.controlsBuilder,
+    this.onDrag,
     required super.child,
   });
 
@@ -313,8 +318,16 @@ class AppDialogInteraction extends InheritedWidget {
   final Widget? controls;
   final AppDialogControlsBuilder? controlsBuilder;
 
+  /// Host drag callback for [AppDialogDragHandle] / title chrome.
+  ///
+  /// Null when the dialog is not movable. Content must not call this; only
+  /// title / explicit drag handles should.
+  final GestureDragUpdateCallback? onDrag;
+
   static AppDialogInteraction? maybeOf(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<AppDialogInteraction>();
+
+  bool get canDrag => movable && onDrag != null;
 
   bool get showsWindowActions =>
       controls != null ||
@@ -351,7 +364,36 @@ class AppDialogInteraction extends InheritedWidget {
       maximized != oldWidget.maximized ||
       fillsBounds != oldWidget.fillsBounds ||
       controls != oldWidget.controls ||
-      controlsBuilder != oldWidget.controlsBuilder;
+      controlsBuilder != oldWidget.controlsBuilder ||
+      onDrag != oldWidget.onDrag;
+}
+
+/// Marks a region as the movable dialog drag handle (title bar / grab strip).
+///
+/// Content should not wrap with this — only chrome. When [AppDialog.show] is
+/// movable, [AppFormDialog] / [AppAlertDialog] apply it to the title row
+/// automatically; if there is no title row they insert a top grab strip.
+class AppDialogDragHandle extends StatelessWidget {
+  const AppDialogDragHandle({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final interaction = AppDialogInteraction.maybeOf(context);
+    final onDrag = interaction?.onDrag;
+    if (interaction == null || !interaction.canDrag || onDrag == null) {
+      return child;
+    }
+    return MouseRegion(
+      cursor: SystemMouseCursors.move,
+      child: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onPanUpdate: onDrag,
+        child: child,
+      ),
+    );
+  }
 }
 
 /// Default maximize / close controls for movable dialogs. Replace via
@@ -705,20 +747,8 @@ class _AppMovableDialogState extends State<AppMovableDialog> {
             child: dialog,
           );
         }
-        if (widget.movable) {
-          dialog = MouseRegion(
-            cursor: SystemMouseCursors.move,
-            child: GestureDetector(
-              behavior: HitTestBehavior.translucent,
-              onPanUpdate: _onDrag,
-              child: dialog,
-            ),
-          );
-        }
-
-        // DialogConfiguration(fullScreen: true) sets ModalContainer fullscreen
-        // mode which zeroes corner radius — clear it so dialog chrome keeps
-        // rounded corners like a normal AppAlertDialog.
+        // Drag is title-bar only ([AppDialogDragHandle] in chrome). Do not wrap
+        // the whole surface — content pan/scroll must not move the dialog.
         dialog = shad.MultiModel(
           data: const [
             shad.Model(shad.ModalContainer.kFullScreenMode, false),
@@ -736,6 +766,7 @@ class _AppMovableDialogState extends State<AppMovableDialog> {
               close: _close,
               controls: widget.controls,
               controlsBuilder: widget.controlsBuilder,
+              onDrag: widget.movable ? _onDrag : null,
               child: dialog,
             ),
           ),
@@ -1029,6 +1060,7 @@ class _AppDialogChrome extends StatelessWidget {
         interaction?.mergeTrailing(context, styledTrailing) ?? styledTrailing;
     final styledTitle = title?.large().semiBold();
     final hasTitleRow = styledTitle != null || resolvedTrailing != null;
+    final canDrag = interaction?.canDrag ?? false;
     // Pin trailing to the title-row end without expanding the dialog to the
     // parent max width (surface Column must stay end/intrinsic).
     final pinTrailing = resolvedTrailing != null;
@@ -1040,28 +1072,54 @@ class _AppDialogChrome extends StatelessWidget {
     // [content]. Leading remains next to the title+content column so alert
     // icon alignment matches upstream AlertDialog.
     Widget? mainColumn;
-    if (hasTitleRow || content != null) {
+    if (hasTitleRow || content != null || canDrag) {
+      Widget? titleRow;
+      if (hasTitleRow) {
+        titleRow = Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            if (styledTitle != null)
+              pinTrailing || expandOuter
+                  ? Expanded(child: styledTitle)
+                  : styledTitle,
+            if (styledTitle == null && pinTrailing) const Spacer(),
+            if (styledTitle != null && resolvedTrailing != null)
+              SizedBox(width: densityGap * 2),
+            ?resolvedTrailing,
+          ],
+        );
+        if (canDrag) {
+          titleRow = AppDialogDragHandle(child: titleRow);
+        }
+      } else if (canDrag) {
+        // No title / trailing: still need a drag region at the top.
+        titleRow = AppDialogDragHandle(
+          child: SizedBox(
+            height: 28 * scaling,
+            width: double.infinity,
+            child: Center(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.mutedForeground.withValues(
+                    alpha: 0.35,
+                  ),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: const SizedBox(width: 36, height: 4),
+              ),
+            ),
+          ),
+        );
+      }
+
       mainColumn = Column(
         mainAxisSize: fillsBounds ? MainAxisSize.max : MainAxisSize.min,
         crossAxisAlignment: pinTrailing || expandOuter
             ? CrossAxisAlignment.stretch
             : CrossAxisAlignment.start,
         children: [
-          if (hasTitleRow)
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                if (styledTitle != null)
-                  pinTrailing || expandOuter
-                      ? Expanded(child: styledTitle)
-                      : styledTitle,
-                if (styledTitle == null && pinTrailing) const Spacer(),
-                if (styledTitle != null && resolvedTrailing != null)
-                  SizedBox(width: densityGap * 2),
-                ?resolvedTrailing,
-              ],
-            ),
-          if (hasTitleRow && content != null) SizedBox(height: densityGap),
+          if (titleRow != null) titleRow,
+          if (titleRow != null && content != null) SizedBox(height: densityGap),
           if (content != null)
             fillsBounds ? Expanded(child: content!) : content!,
         ],
