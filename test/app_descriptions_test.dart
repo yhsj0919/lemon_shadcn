@@ -499,13 +499,65 @@ void main() {
     final inlineBottom = tester
         .getBottomLeft(find.byType(AppInlineEdit<String>))
         .dy;
-    // Display must shrink-wrap; minHeight belongs to the editor only.
-    expect(inlineBottom, closeTo(valueBottom, 0.01));
+    // Multiline display keeps the same optical air as single-line slots.
+    expect(inlineBottom, greaterThan(valueBottom + 4));
     expect(
       tester.getSize(find.byType(AppInlineEdit<String>)).height,
-      lessThan(56),
+      lessThan(72),
     );
   });
+
+  testWidgets(
+    'multiline and single-line inline edit share the same optical inset',
+    (tester) async {
+      await tester.pumpWidget(
+        material.MaterialApp(
+          builder: AppShadcnScope.builder(),
+          home: material.Align(
+            alignment: material.Alignment.topLeft,
+            child: material.SizedBox(
+              width: 360,
+              child: AppDescriptions(
+                type: AppDescriptionsType.table,
+                columns: 1,
+                layout: AppDescriptionLayout.horizontal,
+                items: [
+                  AppDescriptionItem(
+                    label: const material.Text('分辨率'),
+                    value: AppInlineEdit.text(
+                      value: '2160x3840',
+                      onSaved: (_) async {},
+                    ),
+                  ),
+                  AppDescriptionItem(
+                    label: const material.Text('开关机时间'),
+                    labelAlignment: material.AlignmentDirectional.topStart,
+                    value: AppInlineEdit.multiline(
+                      value: '09:00:00-12:00:00\n13:00:00-19:45:00',
+                      minHeight: 56,
+                      onSaved: (_) async {},
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+
+      final singleText = tester.getRect(find.text('2160x3840'));
+      final singleSlot = tester.getRect(find.byType(AppInlineEdit<String>).at(0));
+      final multiText = tester.getRect(
+        find.text('09:00:00-12:00:00\n13:00:00-19:45:00'),
+      );
+      final multiSlot = tester.getRect(find.byType(AppInlineEdit<String>).at(1));
+
+      final singleInset = singleText.top - singleSlot.top;
+      final multiInset = multiText.top - multiSlot.top;
+      expect(multiInset, closeTo(singleInset, 0.5));
+      expect(multiSlot.bottom - multiText.bottom, closeTo(multiInset, 0.5));
+    },
+  );
 
   testWidgets('compact embedded controls and inline edit use local height', (
     tester,

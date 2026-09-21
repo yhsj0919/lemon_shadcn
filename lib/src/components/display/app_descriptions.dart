@@ -507,6 +507,16 @@ class AppDescriptions extends StatelessWidget {
         (item.labelAlignment ?? style.labelAlignment!).resolve(
           Directionality.of(context),
         );
+    final intrinsicValue = _containsIntrinsicInlineEdit(item.value);
+    final valueTextStyle = DefaultTextStyle.of(
+      context,
+    ).style.merge(style.valueStyle!);
+    final labelInset = intrinsicValue && resolvedLabelAlignment.y <= -0.5
+        ? AppInlineEdit.opticalVerticalInset(
+            context,
+            textStyle: valueTextStyle,
+          )
+        : 0.0;
     final labelContent = IconTheme.merge(
       data: style.labelIconTheme!,
       child: DefaultTextStyle.merge(
@@ -525,7 +535,15 @@ class AppDescriptions extends StatelessWidget {
     );
     final label = SizedBox(
       width: double.infinity,
-      child: Align(alignment: resolvedLabelAlignment, child: labelContent),
+      child: Align(
+        alignment: resolvedLabelAlignment,
+        child: labelInset > 0
+            ? Padding(
+                padding: EdgeInsets.only(top: labelInset),
+                child: labelContent,
+              )
+            : labelContent,
+      ),
     );
     Widget value = DefaultTextStyle.merge(
       style: style.valueStyle!,
@@ -614,6 +632,23 @@ class AppDescriptions extends StatelessWidget {
     if (widget is MultiChildRenderObjectWidget) {
       for (final child in widget.children) {
         if (_containsInlineEdit(child)) return true;
+      }
+    }
+    return false;
+  }
+
+  static bool _containsIntrinsicInlineEdit(Widget widget) {
+    if (widget is AppInlineEdit) return widget.intrinsicHeight;
+    if (widget is ProxyWidget) {
+      return _containsIntrinsicInlineEdit(widget.child);
+    }
+    if (widget is SingleChildRenderObjectWidget) {
+      final child = widget.child;
+      return child != null && _containsIntrinsicInlineEdit(child);
+    }
+    if (widget is MultiChildRenderObjectWidget) {
+      for (final child in widget.children) {
+        if (_containsIntrinsicInlineEdit(child)) return true;
       }
     }
     return false;

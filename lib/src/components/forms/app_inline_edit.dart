@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
@@ -569,6 +570,25 @@ class AppInlineEdit<T> extends StatefulWidget {
   final double? width;
   final bool expand;
 
+  /// Vertical inset single-line editors get from centering text inside the
+  /// control-height slot. Multiline display reuses this so rows keep the same
+  /// visual air above/below the text block.
+  static double opticalVerticalInset(
+    BuildContext context, {
+    double? controlHeight,
+    TextStyle? textStyle,
+  }) {
+    final height =
+        controlHeight ?? AppControlMetricsScope.resolve(context).height;
+    final style = textStyle ?? DefaultTextStyle.of(context).style;
+    final painter = TextPainter(
+      text: TextSpan(text: 'Ag', style: style),
+      textDirection: Directionality.of(context),
+      textScaler: MediaQuery.textScalerOf(context),
+    )..layout();
+    return math.max(0.0, (height - painter.preferredLineHeight) / 2);
+  }
+
   @override
   State<AppInlineEdit<T>> createState() => _AppInlineEditState<T>();
 }
@@ -823,7 +843,22 @@ class _AppInlineEditState<T> extends State<AppInlineEdit<T>> {
           : child,
     );
     if (widget.intrinsicHeight) {
-      return SizedBox(width: resolvedWidth, child: content);
+      // Editing uses the text-area minHeight; idle display keeps the same
+      // top/bottom air that single-line rows get from the control-height slot.
+      if (stretchChild) {
+        return SizedBox(width: resolvedWidth, child: content);
+      }
+      final inset = AppInlineEdit.opticalVerticalInset(
+        context,
+        controlHeight: widget.height,
+      );
+      return SizedBox(
+        width: resolvedWidth,
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: inset),
+          child: content,
+        ),
+      );
     }
     final height =
         widget.height ?? AppControlMetricsScope.resolve(context).height;
