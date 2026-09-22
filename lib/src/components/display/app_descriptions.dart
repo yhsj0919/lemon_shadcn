@@ -383,7 +383,7 @@ class AppDescriptions extends StatelessWidget {
   final EdgeInsetsGeometry? _tableCellPadding;
 
   /// Requested content padding, or the stable standard default.
-  EdgeInsetsGeometry get padding => _padding ?? const EdgeInsets.all(12);
+  EdgeInsetsGeometry get padding => _padding ?? const EdgeInsets.all(20);
 
   /// Requested table-cell padding, or the stable standard default.
   EdgeInsetsGeometry get tableCellPadding =>
@@ -445,10 +445,10 @@ class AppDescriptions extends StatelessWidget {
           _padding ??
           local?.padding ??
           (compact
-              ? const EdgeInsets.all(8)
+              ? const EdgeInsets.all(12)
               : inlineEdit
-              ? const EdgeInsets.symmetric(horizontal: 12, vertical: 6)
-              : const EdgeInsets.all(12)),
+              ? const EdgeInsets.symmetric(horizontal: 20, vertical: 6)
+              : const EdgeInsets.all(20)),
       tableCellPadding:
           _tableCellPadding ??
           local?.tableCellPadding ??
@@ -466,9 +466,9 @@ class AppDescriptions extends StatelessWidget {
           headerPadding ??
           local?.headerPadding ??
           EdgeInsets.fromLTRB(
-            compact ? 8 : 12,
+            compact ? 12 : 20,
             compact ? 7 : 10,
-            compact ? 8 : 12,
+            compact ? 12 : 20,
             0,
           ),
       controlMetrics:

@@ -23,6 +23,11 @@ void main() {
     expect(descriptions.margin, const material.EdgeInsets.all(20));
   });
 
+  test('AppDescriptions uses all(20) content padding by default', () {
+    const descriptions = AppDescriptions(items: []);
+    expect(descriptions.padding, const material.EdgeInsets.all(20));
+  });
+
   test('AppDescriptions uses the standard label width by default', () {
     const descriptions = AppDescriptions(items: []);
     expect(descriptions.labelWidth, 80);
