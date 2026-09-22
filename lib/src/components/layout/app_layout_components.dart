@@ -1649,6 +1649,12 @@ class AppTimeline extends StatelessWidget {
     final rowGap = timelineTheme?.rowGap ?? 16 * scaling;
     final headerHeight = dotSize > 28 * scaling ? dotSize : 28 * scaling;
     final inlineTime = timePosition == AppTimelineTimePosition.inline;
+    // 无时间列（inline，或 timeConstraints 把时间列压到 0）时，圆点贴左，
+    // 避免仍留 spacing 导致与上方筛选等左缘错位。
+    final hideTimeColumn =
+        inlineTime ||
+        (resolvedTimeConstraints != null &&
+            resolvedTimeConstraints.maxWidth <= 0);
     final squareDot = theme.radius == 0;
 
     if (axis == Axis.horizontal) {
@@ -1744,10 +1750,10 @@ class AppTimeline extends StatelessWidget {
     return Table(
       defaultVerticalAlignment: TableCellVerticalAlignment.top,
       columnWidths: {
-        0: inlineTime
+        0: hideTimeColumn
             ? const FixedColumnWidth(0)
             : const IntrinsicColumnWidth(),
-        1: FixedColumnWidth(inlineTime ? 0 : spacing),
+        1: FixedColumnWidth(hideTimeColumn ? 0 : spacing),
         2: FixedColumnWidth(dotSize),
         3: FixedColumnWidth(spacing),
         4: const FlexColumnWidth(),
@@ -1759,13 +1765,13 @@ class AppTimeline extends StatelessWidget {
               ConstrainedBox(
                 constraints: resolvedTimeConstraints ?? const BoxConstraints(),
                 child: SizedBox(
-                  width: inlineTime ? 0 : null,
+                  width: hideTimeColumn ? 0 : null,
                   height: headerHeight,
                   child: Align(
                     alignment: Alignment.centerRight,
                     child: DefaultTextStyle.merge(
                       style: const TextStyle(fontWeight: FontWeight.w500),
-                      child: inlineTime
+                      child: hideTimeColumn
                           ? const SizedBox.shrink()
                           : data[index].time,
                     ),
