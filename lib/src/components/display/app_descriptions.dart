@@ -851,23 +851,28 @@ class AppDescriptions extends StatelessWidget {
           Padding(
             padding: style.headerPadding!,
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 if (title != null)
                   Expanded(
-                    child: DefaultTextStyle.merge(
-                      style: style.titleStyle!,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (titleIcon != null) ...[
-                            IconTheme.merge(
-                              data: style.titleIconTheme!,
-                              child: titleIcon!,
-                            ),
-                            SizedBox(width: style.titleGap),
+                    child: Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: DefaultTextStyle.merge(
+                        style: style.titleStyle!,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            if (titleIcon != null) ...[
+                              IconTheme.merge(
+                                data: style.titleIconTheme!,
+                                child: titleIcon!,
+                              ),
+                              SizedBox(width: style.titleGap),
+                            ],
+                            Flexible(child: title!),
                           ],
-                          Flexible(child: title!),
-                        ],
+                        ),
                       ),
                     ),
                   )
