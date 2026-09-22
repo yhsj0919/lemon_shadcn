@@ -400,6 +400,7 @@ class AppDescriptions extends StatelessWidget {
         density ?? local?.density ?? AppDensity.standard;
     final compact = effectiveDensity == AppDensity.compact;
     final inlineEdit = _syncValueHeightWithInlineEdit;
+    final hasHeader = title != null || actions != null;
     final typography = shadTheme.typography;
     final xSmallSize = typography.xSmall.fontSize ?? 12;
     final smallSize = typography.small.fontSize ?? 14;
@@ -441,14 +442,19 @@ class AppDescriptions extends StatelessWidget {
           : local != null && local._hasValueHeight
           ? local._valueHeight
           : _valueHeightUnset,
+      // 有标题时：外边距 20，标题到内容 10；无标题时四周均为 20。
       padding:
           _padding ??
           local?.padding ??
           (compact
-              ? const EdgeInsets.all(12)
+              ? (hasHeader
+                  ? const EdgeInsets.fromLTRB(12, 10, 12, 12)
+                  : const EdgeInsets.all(12))
               : inlineEdit
               ? const EdgeInsets.symmetric(horizontal: 20, vertical: 6)
-              : const EdgeInsets.all(20)),
+              : (hasHeader
+                  ? const EdgeInsets.fromLTRB(20, 10, 20, 20)
+                  : const EdgeInsets.all(20))),
       tableCellPadding:
           _tableCellPadding ??
           local?.tableCellPadding ??
@@ -467,7 +473,7 @@ class AppDescriptions extends StatelessWidget {
           local?.headerPadding ??
           EdgeInsets.fromLTRB(
             compact ? 12 : 20,
-            compact ? 7 : 10,
+            compact ? 12 : 20,
             compact ? 12 : 20,
             0,
           ),
