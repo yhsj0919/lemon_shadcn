@@ -10,7 +10,7 @@ abstract final class AppCompactLabelStyle {
     vertical: 6,
   );
   static const double badgeFontSize = 12;
-  static const double badgeHeight = 19;
+  static const double badgeHeight = 24;
   static const EdgeInsetsGeometry badgePadding = EdgeInsets.symmetric(
     horizontal: 8,
   );

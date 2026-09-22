@@ -41,7 +41,7 @@ class AppBadgeSize {
 
   static const large = AppBadgeSize(
     fontSize: 14,
-    height: 24,
+    height: 28,
     padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
     iconSize: 14,
     contentGap: 6,
