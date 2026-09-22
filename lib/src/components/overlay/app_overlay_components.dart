@@ -1071,8 +1071,6 @@ class _AppDialogChrome extends StatelessWidget {
     final theme = shad.Theme.of(context);
     final scaling = theme.scaling;
     final densityGap = theme.density.baseGap * scaling;
-    final densityContainerPadding =
-        theme.density.baseContainerPadding * scaling;
     final interaction = AppDialogInteraction.maybeOf(context);
     final fillsBounds = interaction?.fillsBounds ?? false;
     // Form shells pass maxWidth; under that, header must use Flexible —
@@ -1218,7 +1216,7 @@ class _AppDialogChrome extends StatelessWidget {
       borderRadius: borderRadius,
       borderWidth: 1 * scaling,
       borderColor: theme.colorScheme.muted,
-      padding: padding ?? EdgeInsets.all(densityContainerPadding * 1.5),
+      padding: padding ?? const EdgeInsets.all(20),
       surfaceBlur: surfaceBlur ?? theme.surfaceBlur,
       surfaceOpacity: surfaceOpacity ?? theme.surfaceOpacity,
       // Keep end (not stretch) so the shell stays content-sized under a
