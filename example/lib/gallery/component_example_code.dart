@@ -11,6 +11,14 @@ abstract final class ComponentExampleCode {
   onSaved: (value) async => repository.updateName(value),
 );
 
+// 无法就地编辑时改为弹窗。
+AppInlineEdit.dialog(
+  value: schedule,
+  displayBuilder: (_, value) => Text(value),
+  dialogBuilder: (context, value) => showScheduleDialog(context, value),
+  onSaved: saveSchedule,
+);
+
 // 任意现有表单控件都可以通过 control 接入。
 AppInlineEdit<MyValue>.immediate(
   value: value,
@@ -269,6 +277,7 @@ AppDescriptions(
   shrinkWrap: true,
   sortable: true,
   selectionMode: AppDataGridSelectionMode.multiple,
+  showFrozenColumnDivider: false,
   selectedRowColor: const Color(0xffdbeafe),
   onCellChanged: (row, field, value, oldValue) {},
   reorderableRows: true,

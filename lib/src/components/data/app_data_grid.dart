@@ -213,6 +213,7 @@ class AppDataGrid<T> extends StatefulWidget {
     this.columnWidthMode = AppDataGridColumnWidthMode.fixed,
     this.showBorder = true,
     this.showInternalDividers = true,
+    this.showFrozenColumnDivider,
     this.textStyle,
     this.headerTextStyle,
     this.cellTextStyle,
@@ -267,6 +268,7 @@ class AppDataGrid<T> extends StatefulWidget {
     this.columnWidthMode = AppDataGridColumnWidthMode.fixed,
     this.showBorder = true,
     this.showInternalDividers = true,
+    this.showFrozenColumnDivider,
     this.textStyle,
     this.headerTextStyle,
     this.cellTextStyle,
@@ -318,6 +320,7 @@ class AppDataGrid<T> extends StatefulWidget {
     this.columnWidthMode = AppDataGridColumnWidthMode.fixed,
     this.showBorder = true,
     this.showInternalDividers = true,
+    this.showFrozenColumnDivider,
     this.textStyle,
     this.headerTextStyle,
     this.cellTextStyle,
@@ -393,6 +396,12 @@ class AppDataGrid<T> extends StatefulWidget {
   /// Whether horizontal and vertical separators are drawn inside the grid.
   /// The outer grid border is unaffected.
   final bool showInternalDividers;
+
+  /// Whether to draw the vertical divider between pinned and scrollable columns.
+  ///
+  /// Defaults to [showInternalDividers]. Set `false` to hide the frozen-column
+  /// seam while keeping the outer border and cell separators.
+  final bool? showFrozenColumnDivider;
 
   /// Shared typography applied to both the header and body cells.
   final TextStyle? textStyle;
@@ -492,6 +501,9 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
       widget.buildChildren != null || widget.hasChildren != null;
 
   bool get _useHoverScale => widget.highlightHoveredRow;
+
+  bool get _showFrozenColumnDivider =>
+      widget.showFrozenColumnDivider ?? widget.showInternalDividers;
 
   Set<Object> get _effectiveExpandedKeys =>
       widget.expandedKeys ?? _expandedKeys;
@@ -1554,7 +1566,9 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
       cellReadonlyColor: null,
       cellDefaultColor: null,
       menuBackgroundColor: colors.popover,
-      gridBorderColor: widget.showBorder ? colors.border : Colors.transparent,
+      gridBorderColor: widget.showBorder && _showFrozenColumnDivider
+          ? colors.border
+          : Colors.transparent,
       borderColor: colors.border,
       activatedBorderColor: Colors.transparent,
       inactivatedBorderColor: Colors.transparent,
@@ -1586,7 +1600,7 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
       ),
       gridBorderRadius: BorderRadius.circular(theme.radiusMd),
       gridPopupBorderRadius: BorderRadius.circular(theme.radiusMd),
-      gridBorderWidth: widget.showBorder ? 1 : 0,
+      gridBorderWidth: widget.showBorder && _showFrozenColumnDivider ? 1 : 0,
       cellVerticalBorderWidth: widget.showInternalDividers ? .5 : 0,
       cellHorizontalBorderWidth: widget.showInternalDividers ? .5 : 0,
       filterHeaderColor: widget.headerBackgroundColor,
@@ -1740,7 +1754,7 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
             : _buildFooter,
       ),
     );
-    final content = Stack(
+    Widget content = Stack(
       children: [
         Positioned.fill(child: grid),
         if (_stateManager case final manager?)
@@ -1781,6 +1795,19 @@ class _AppDataGridState<T> extends State<AppDataGrid<T>> {
           ),
       ],
     );
+    // Trina draws the frozen-column seam with the same border color/width as
+    // the outer chrome. When that seam is hidden, restore the outer border here.
+    if (widget.showBorder && !_showFrozenColumnDivider) {
+      final theme = shad.Theme.of(context);
+      final radius = BorderRadius.circular(theme.radiusMd);
+      content = DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: radius,
+          border: Border.all(color: theme.colorScheme.border),
+        ),
+        child: ClipRRect(borderRadius: radius, child: content),
+      );
+    }
     if (widget.shrinkWrap) {
       return SizedBox(height: _shrinkWrapHeight(context), child: content);
     }

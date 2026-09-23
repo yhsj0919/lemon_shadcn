@@ -114,6 +114,47 @@ void main() {
     expect(style.cellTextStyle.color, expectedForeground);
   });
 
+  testWidgets('frozen column divider can be hidden independently', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: const Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(
+            width: 420,
+            child: AppDataGrid<_Row>.local(
+              height: 180,
+              showBorder: true,
+              showInternalDividers: true,
+              showFrozenColumnDivider: false,
+              columns: [
+                AppDataGridColumn(
+                  id: 'name',
+                  title: 'Name',
+                  value: _name,
+                  pin: AppDataGridColumnPin.start,
+                ),
+              ],
+              rows: [_Row(1, 'Ada')],
+              rowKey: _rowId,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final style = tester
+        .widget<TrinaGrid>(find.byType(TrinaGrid))
+        .configuration
+        .style;
+    expect(style.gridBorderWidth, 0);
+    expect(style.gridBorderColor, material.Colors.transparent);
+    expect(style.enableCellBorderVertical, isTrue);
+  });
+
   testWidgets('data grid supports fully borderless style and typography', (
     tester,
   ) async {

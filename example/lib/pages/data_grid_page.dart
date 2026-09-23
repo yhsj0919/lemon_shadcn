@@ -191,6 +191,7 @@ class _DataGridPageState extends State<DataGridPage> {
                 shrinkWrap: true,
                 sortable: true,
                 selectionMode: AppDataGridSelectionMode.multiple,
+                showFrozenColumnDivider: false,
                 selectedRowColor: const Color(0xffdbeafe),
                 selectedKeys: {for (final row in _selectedRows) row.id},
                 onSelectionChanged: (rows) =>

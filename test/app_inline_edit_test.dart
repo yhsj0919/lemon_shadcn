@@ -233,6 +233,50 @@ void main() {
     expect(find.text('4.0 / 5.0'), findsOneWidget);
   });
 
+  testWidgets('dialog builder saves the returned value', (tester) async {
+    var value = '09:00-12:00';
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: material.StatefulBuilder(
+          builder: (context, setState) => AppInlineEdit.dialog(
+            value: value,
+            displayBuilder: (_, current) => Text(current),
+            dialogBuilder: (context, current) async => '08:00-22:00',
+            onSaved: (next) => setState(() => value = next),
+          ),
+        ),
+      ),
+    );
+
+    await _doubleTap(tester, find.text('09:00-12:00'));
+    await tester.pumpAndSettle();
+
+    expect(value, '08:00-22:00');
+    expect(find.text('08:00-22:00'), findsOneWidget);
+  });
+
+  testWidgets('dialog cancel keeps the current value', (tester) async {
+    var saves = 0;
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: AppInlineEdit.dialog(
+          value: '09:00-12:00',
+          displayBuilder: (_, current) => Text(current),
+          dialogBuilder: (context, current) async => null,
+          onSaved: (_) => saves++,
+        ),
+      ),
+    );
+
+    await _doubleTap(tester, find.text('09:00-12:00'));
+    await tester.pumpAndSettle();
+
+    expect(saves, 0);
+    expect(find.text('09:00-12:00'), findsOneWidget);
+  });
+
   testWidgets('unchanged values exit without calling onSaved', (tester) async {
     var saves = 0;
     await tester.pumpWidget(

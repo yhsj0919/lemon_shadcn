@@ -32,6 +32,8 @@ typedef AppInlineEditDisplayBuilder<T> =
     Widget Function(BuildContext context, T value);
 typedef AppInlineEditEditorBuilder<T> =
     Widget Function(BuildContext context, AppInlineEditDetails<T> details);
+typedef AppInlineEditDialogBuilder<T> =
+    Future<T?> Function(BuildContext context, T value);
 
 @immutable
 class AppInlineEditDetails<T> {
@@ -58,6 +60,7 @@ class AppInlineEditDetails<T> {
 ///
 /// Every App form control can be hosted through [AppInlineEdit.control]. Common
 /// controls also have concise factories such as [text], [select], and [date].
+/// Values that cannot be edited in place use [dialog].
 class AppInlineEdit<T> extends StatefulWidget {
   const AppInlineEdit({
     super.key,
@@ -65,6 +68,7 @@ class AppInlineEdit<T> extends StatefulWidget {
     required this.displayBuilder,
     required this.editorBuilder,
     required this.onSaved,
+    this.dialogBuilder,
     this.validator,
     this.enabled = true,
     this.saveOnBlur = true,
@@ -90,6 +94,7 @@ class AppInlineEdit<T> extends StatefulWidget {
     required this.displayBuilder,
     required this.editorBuilder,
     required this.onSaved,
+    this.dialogBuilder,
     this.validator,
     this.enabled = true,
     this.saveOnBlur = true,
@@ -117,6 +122,7 @@ class AppInlineEdit<T> extends StatefulWidget {
     required this.displayBuilder,
     required this.editorBuilder,
     required this.onSaved,
+    this.dialogBuilder,
     this.validator,
     this.enabled = true,
     this.invalidBlurBehavior = AppInlineEditInvalidBlurBehavior.cancel,
@@ -537,9 +543,63 @@ class AppInlineEdit<T> extends StatefulWidget {
     );
   }
 
+  /// Double-click / long-press opens a dialog instead of swapping in an editor.
+  ///
+  /// Use this when the value cannot be edited in place (multi-period times,
+  /// maps, uploads, etc.). [dialogBuilder] returns the next value, or `null`
+  /// if the user cancelled.
+  ///
+  /// ```dart
+  /// AppInlineEdit.dialog(
+  ///   value: schedule,
+  ///   displayBuilder: (_, value) => Text(value),
+  ///   dialogBuilder: (context, value) => showScheduleDialog(context, value),
+  ///   onSaved: saveSchedule,
+  /// )
+  /// ```
+  static AppInlineEdit<T> dialog<T>({
+    Key? key,
+    required T value,
+    required AppInlineEditSaver<T> onSaved,
+    required AppInlineEditDisplayBuilder<T> displayBuilder,
+    required AppInlineEditDialogBuilder<T> dialogBuilder,
+    AppInlineEditValidator<T>? validator,
+    AppInlineEditEquality<T>? valuesEqual,
+    bool enabled = true,
+    bool activateOnLongPress = true,
+    ValueChanged<bool>? onEditingChanged,
+    Widget Function(BuildContext context, String message)? errorBuilder,
+    bool intrinsicHeight = false,
+    AlignmentGeometry alignment = AlignmentDirectional.centerStart,
+    double? height,
+    double? width,
+    bool expand = true,
+  }) {
+    return AppInlineEdit<T>(
+      key: key,
+      value: value,
+      displayBuilder: displayBuilder,
+      editorBuilder: (_, _) => const SizedBox.shrink(),
+      onSaved: onSaved,
+      dialogBuilder: dialogBuilder,
+      validator: validator,
+      valuesEqual: valuesEqual,
+      enabled: enabled,
+      activateOnLongPress: activateOnLongPress,
+      onEditingChanged: onEditingChanged,
+      errorBuilder: errorBuilder,
+      intrinsicHeight: intrinsicHeight,
+      alignment: alignment,
+      height: height,
+      width: width,
+      expand: expand,
+    );
+  }
+
   final T value;
   final AppInlineEditDisplayBuilder<T> displayBuilder;
   final AppInlineEditEditorBuilder<T> editorBuilder;
+  final AppInlineEditDialogBuilder<T>? dialogBuilder;
   final AppInlineEditSaver<T> onSaved;
   final AppInlineEditValidator<T>? validator;
   final bool enabled;
@@ -602,6 +662,7 @@ class _AppInlineEditState<T> extends State<AppInlineEdit<T>> {
   late T _draft;
   late T _displayValue;
   String? _errorText;
+  var _dialogOpen = false;
 
   @override
   void initState() {
@@ -629,7 +690,12 @@ class _AppInlineEditState<T> extends State<AppInlineEdit<T>> {
   }
 
   void _beginEditing() {
-    if (!widget.enabled || _editing) return;
+    if (!widget.enabled || _editing || _saving) return;
+    final openDialog = widget.dialogBuilder;
+    if (openDialog != null) {
+      unawaited(_openDialog(openDialog));
+      return;
+    }
     setState(() {
       _draft = _displayValue;
       _errorText = null;
@@ -639,6 +705,46 @@ class _AppInlineEditState<T> extends State<AppInlineEdit<T>> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _editorFocusNode.requestFocus();
     });
+  }
+
+  Future<void> _openDialog(AppInlineEditDialogBuilder<T> openDialog) async {
+    if (_dialogOpen || _saving) return;
+    _dialogOpen = true;
+    widget.onEditingChanged?.call(true);
+    try {
+      final result = await openDialog(context, _displayValue);
+      if (!mounted || result == null) return;
+      if ((widget.valuesEqual ?? _defaultEquals)(result, _displayValue)) {
+        return;
+      }
+      final error = widget.validator?.call(result);
+      if (error != null) {
+        setState(() => _errorText = error);
+        return;
+      }
+      setState(() {
+        _saving = true;
+        _errorText = null;
+      });
+      try {
+        await widget.onSaved(result);
+        if (!mounted) return;
+        setState(() {
+          _saving = false;
+          _displayValue = result;
+          _draft = result;
+        });
+      } catch (error) {
+        if (!mounted) return;
+        setState(() {
+          _saving = false;
+          _errorText = error.toString();
+        });
+      }
+    } finally {
+      _dialogOpen = false;
+      if (mounted) widget.onEditingChanged?.call(false);
+    }
   }
 
   void _cancel() {
@@ -756,6 +862,24 @@ class _AppInlineEditState<T> extends State<AppInlineEdit<T>> {
           ),
         ),
       );
+      if (_errorText case final error?) {
+        final theme = shad.Theme.of(context);
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            display,
+            const SizedBox(height: 4),
+            widget.errorBuilder?.call(context, error) ??
+                Text(
+                  error,
+                  style: theme.typography.small.copyWith(
+                    color: theme.colorScheme.destructive,
+                  ),
+                ),
+          ],
+        );
+      }
       return _transition(editing: false, child: display);
     }
 
