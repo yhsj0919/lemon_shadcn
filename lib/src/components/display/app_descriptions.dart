@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
 
@@ -421,6 +423,8 @@ class AppDescriptions extends StatelessWidget {
   /// Exact height of every complete item. When omitted, items use the system
   /// control height as their minimum height.
   /// Individual [AppDescriptionItem.itemHeight] values take precedence.
+  /// Controls in the value slot, such as [AppInlineEdit] editors, are capped to
+  /// this height so they fit inside the row.
   double? get itemHeight => _readItemHeight(_itemHeight);
 
   final Object? _valueHeight;
@@ -629,7 +633,21 @@ class AppDescriptions extends StatelessWidget {
       style: style.valueStyle!,
       child: item.value,
     );
-    if (style.controlMetrics case final metrics?) {
+    final fixedItemHeight = item._hasItemHeight
+        ? item.itemHeight
+        : style._hasItemHeight
+        ? style.itemHeight
+        : null;
+    var valueMetrics = style.controlMetrics;
+    if (fixedItemHeight != null) {
+      // Inline editors and other controls must fit inside the fixed row.
+      final base = valueMetrics ?? AppControlMetricsScope.resolve(context);
+      valueMetrics = base.copyWith(
+        height: math.min(base.height, fixedItemHeight),
+        buttonHeight: math.min(base.buttonHeight, fixedItemHeight),
+      );
+    }
+    if (valueMetrics case final metrics?) {
       value = AppControlMetricsScope(metrics: metrics, child: value);
     }
     if (item.valueWidth != null) {

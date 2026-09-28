@@ -811,6 +811,59 @@ void main() {
     expect(itemSlot('自然高度', 40), findsNothing);
   });
 
+  testWidgets('fixed itemHeight caps control metrics in the value slot', (
+    tester,
+  ) async {
+    final heights = <String, double>{};
+    material.Widget probe(String key) => material.Builder(
+      builder: (context) {
+        final metrics = AppControlMetricsScope.resolve(context);
+        heights[key] = metrics.height;
+        heights['$key.button'] = metrics.buttonHeight;
+        return material.Text(key);
+      },
+    );
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(
+          config: AppThemeConfig.standard(
+            controls: const AppControlMetrics(height: 36, buttonHeight: 35),
+          ),
+        ),
+        home: material.Align(
+          alignment: material.Alignment.topLeft,
+          child: AppDescriptions(
+            columns: 1,
+            layout: AppDescriptionLayout.horizontal,
+            padding: material.EdgeInsets.zero,
+            itemHeight: 32,
+            items: [
+              AppDescriptionItem(
+                label: const material.Text('固定'),
+                value: probe('fixed'),
+              ),
+              AppDescriptionItem(
+                label: const material.Text('单项'),
+                value: probe('item'),
+                itemHeight: 28,
+              ),
+              AppDescriptionItem(
+                label: const material.Text('自然'),
+                value: probe('natural'),
+                itemHeight: null,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    expect(heights['fixed'], 32);
+    expect(heights['fixed.button'], 32);
+    expect(heights['item'], 28);
+    expect(heights['natural'], 36);
+  });
+
   testWidgets('fixed itemHeight keeps mixed horizontal rows evenly spaced', (
     tester,
   ) async {
