@@ -4,6 +4,15 @@ import 'package:lemon_shadcn/lemon_shadcn.dart';
 import 'package:lemon_shadcn/shadcn.dart' as shad;
 
 void main() {
+  test('AppThemeConfig exposes and copies dialogRadius', () {
+    final config = AppThemeConfig.standard(dialogRadius: 24);
+    expect(config.dialogRadius, 24);
+    expect(config.copyWith().dialogRadius, 24);
+    expect(config.copyWith(dialogRadius: 16).dialogRadius, 16);
+    expect(config.copyWith(clearDialogRadius: true).dialogRadius, isNull);
+    expect(AppThemeConfig.standard().dialogRadius, isNull);
+  });
+
   testWidgets('dialog, drawer, sheet and popover work in a Material host', (
     tester,
   ) async {
@@ -215,6 +224,59 @@ void main() {
     expect(alertContentColor, equals(mutedForeground));
     await tester.tap(find.text('Close alert'));
     await tester.pumpAndSettle();
+  });
+
+  testWidgets('dialog radius follows theme config and per-dialog override', (
+    tester,
+  ) async {
+    BorderRadiusGeometry? radiusOf(String title) => tester
+        .widget<shad.ModalContainer>(
+          find.ancestor(
+            of: find.text(title),
+            matching: find.byType(shad.ModalContainer),
+          ),
+        )
+        .borderRadius;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(
+          config: AppThemeConfig.standard(dialogRadius: 24),
+        ),
+        home: const Column(
+          children: [
+            AppAlertDialog(title: Text('global')),
+            AppFormDialog(
+              title: Text('override'),
+              borderRadius: BorderRadius.all(Radius.circular(8)),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    expect(radiusOf('global'), BorderRadius.circular(24));
+    expect(radiusOf('override'), const BorderRadius.all(Radius.circular(8)));
+  });
+
+  testWidgets('dialog radius defaults to the theme radiusXxl', (tester) async {
+    late BorderRadius expected;
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: Builder(
+          builder: (context) {
+            expected = shad.Theme.of(context).borderRadiusXxl;
+            return const AppAlertDialog(title: Text('default'));
+          },
+        ),
+      ),
+    );
+
+    final container = tester.widget<shad.ModalContainer>(
+      find.byType(shad.ModalContainer),
+    );
+    expect(container.borderRadius, expected);
   });
 
   testWidgets('movable dialog can open and close', (tester) async {

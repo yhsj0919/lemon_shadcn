@@ -537,12 +537,14 @@ class AppThemeConfig {
     this.dataGrid = const AppDataGridMetrics(),
     this.tooltip = const AppTooltipTheme(),
     this.chart = const AppChartTheme(),
+    this.dialogRadius,
     this.controlPalette,
     this.textTheme,
     this.errorPresenter,
     this.enableScrollInterception = false,
     this.componentThemeWrapper,
-  }) : lightTheme = lightTheme ?? LemonThemes.light,
+  }) : assert(dialogRadius == null || dialogRadius >= 0),
+       lightTheme = lightTheme ?? LemonThemes.light,
        darkTheme = darkTheme ?? LemonThemes.dark;
 
   /// Zinc baseline with optional brand [primary] (and matching ring).
@@ -568,6 +570,7 @@ class AppThemeConfig {
     AppDataGridMetrics dataGrid = const AppDataGridMetrics(),
     AppTooltipTheme tooltip = const AppTooltipTheme(),
     AppChartTheme chart = const AppChartTheme(),
+    double? dialogRadius,
     AppVisualPalette? controlPalette,
     AppTextTheme? textTheme,
     AppErrorPresenter? errorPresenter,
@@ -610,6 +613,7 @@ class AppThemeConfig {
       dataGrid: dataGrid,
       tooltip: tooltip,
       chart: chart,
+      dialogRadius: dialogRadius,
       controlPalette: controlPalette,
       textTheme: textTheme,
       errorPresenter: errorPresenter,
@@ -761,6 +765,12 @@ class AppThemeConfig {
   final AppDataGridMetrics dataGrid;
   final AppTooltipTheme tooltip;
   final AppChartTheme chart;
+
+  /// Corner radius of [AppAlertDialog] / [AppFormDialog] surfaces.
+  ///
+  /// When null, dialogs follow the theme radius scale (`radiusXxl`). A dialog's
+  /// own `borderRadius` takes precedence over this value.
+  final double? dialogRadius;
   final AppVisualPalette? controlPalette;
   final AppTextTheme? textTheme;
   final AppErrorPresenter? errorPresenter;
@@ -778,6 +788,8 @@ class AppThemeConfig {
     AppDataGridMetrics? dataGrid,
     AppTooltipTheme? tooltip,
     AppChartTheme? chart,
+    double? dialogRadius,
+    bool clearDialogRadius = false,
     AppVisualPalette? controlPalette,
     AppTextTheme? textTheme,
     bool clearTextTheme = false,
@@ -797,6 +809,9 @@ class AppThemeConfig {
       dataGrid: dataGrid ?? this.dataGrid,
       tooltip: tooltip ?? this.tooltip,
       chart: chart ?? this.chart,
+      dialogRadius: clearDialogRadius
+          ? null
+          : (dialogRadius ?? this.dialogRadius),
       controlPalette: controlPalette ?? this.controlPalette,
       textTheme: clearTextTheme ? null : (textTheme ?? this.textTheme),
       errorPresenter: errorPresenter ?? this.errorPresenter,

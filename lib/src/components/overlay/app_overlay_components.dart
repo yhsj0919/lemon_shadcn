@@ -954,6 +954,7 @@ class AppAlertDialog extends StatelessWidget {
     this.surfaceOpacity,
     this.barrierColor,
     this.padding,
+    this.borderRadius,
   });
 
   final Widget? leading;
@@ -965,6 +966,9 @@ class AppAlertDialog extends StatelessWidget {
   final double? surfaceOpacity;
   final Color? barrierColor;
   final EdgeInsetsGeometry? padding;
+
+  /// Overrides [AppThemeConfig.dialogRadius] for this dialog.
+  final BorderRadiusGeometry? borderRadius;
 
   @override
   Widget build(BuildContext context) {
@@ -978,6 +982,7 @@ class AppAlertDialog extends StatelessWidget {
       surfaceOpacity: surfaceOpacity,
       barrierColor: barrierColor,
       padding: padding,
+      borderRadius: borderRadius,
     );
   }
 }
@@ -1003,6 +1008,7 @@ class AppFormDialog extends StatelessWidget {
     this.barrierColor,
     this.backgroundColor,
     this.padding,
+    this.borderRadius,
     this.constraints = const BoxConstraints(maxWidth: 480),
   });
 
@@ -1016,6 +1022,9 @@ class AppFormDialog extends StatelessWidget {
   final Color? barrierColor;
   final Color? backgroundColor;
   final EdgeInsetsGeometry? padding;
+
+  /// Overrides [AppThemeConfig.dialogRadius] for this dialog.
+  final BorderRadiusGeometry? borderRadius;
 
   /// Width / height caps for the form shell. Defaults to `maxWidth: 480` so
   /// stretch content (fields, columns) can lay out under movable dialogs.
@@ -1034,6 +1043,7 @@ class AppFormDialog extends StatelessWidget {
       barrierColor: barrierColor,
       backgroundColor: backgroundColor,
       padding: padding,
+      borderRadius: borderRadius,
       constraints: constraints,
     );
   }
@@ -1051,6 +1061,7 @@ class _AppDialogChrome extends StatelessWidget {
     this.barrierColor,
     this.backgroundColor,
     this.padding,
+    this.borderRadius,
     this.constraints,
   });
 
@@ -1064,6 +1075,7 @@ class _AppDialogChrome extends StatelessWidget {
   final Color? barrierColor;
   final Color? backgroundColor;
   final EdgeInsetsGeometry? padding;
+  final BorderRadiusGeometry? borderRadius;
   final BoxConstraints? constraints;
 
   @override
@@ -1080,7 +1092,12 @@ class _AppDialogChrome extends StatelessWidget {
         fillsBounds || (constraints?.maxWidth.isFinite ?? false);
     // Keep rounded corners always — maximize only insets, it does not go
     // edge-to-edge over the page.
-    final borderRadius = theme.borderRadiusXxl;
+    final dialogRadius = AppTheme.maybeOf(context)?.dialogRadius;
+    final borderRadius =
+        this.borderRadius ??
+        (dialogRadius == null
+            ? theme.borderRadiusXxl
+            : BorderRadius.circular(dialogRadius));
     final styledTrailing = trailing == null
         ? null
         : trailing!.iconXLarge().iconMutedForeground();
