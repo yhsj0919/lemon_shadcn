@@ -74,6 +74,74 @@ void main() {
     expect(tester.getSize(fixedArea().first).height, 32);
   });
 
+  testWidgets('item height supports theme defaults and per-item overrides', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(
+          config: AppThemeConfig.standard(
+            inlineEdit: const AppInlineEditMetrics(itemHeight: 40),
+          ),
+        ),
+        home: Align(
+          alignment: Alignment.topLeft,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AppInlineEdit.text(
+                key: const Key('themed-inline-edit'),
+                value: '全局高度',
+                onSaved: (_) {},
+              ),
+              AppInlineEdit.text(
+                key: const Key('local-inline-edit'),
+                value: '单独高度',
+                itemHeight: 48,
+                onSaved: (_) {},
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    expect(
+      tester.getSize(find.byKey(const Key('themed-inline-edit'))).height,
+      40,
+    );
+    expect(
+      tester.getSize(find.byKey(const Key('local-inline-edit'))).height,
+      48,
+    );
+
+    await _doubleTap(tester, find.text('单独高度'));
+    expect(
+      tester.getSize(find.byKey(const Key('local-inline-edit'))).height,
+      48,
+    );
+  });
+
+  testWidgets('item height still follows control height when theme is unset', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(
+          config: AppThemeConfig.standard(
+            controls: const AppControlMetrics(height: 36),
+          ),
+        ),
+        home: Align(
+          alignment: Alignment.topLeft,
+          child: AppInlineEdit.text(value: '继承控件高度', onSaved: (_) {}),
+        ),
+      ),
+    );
+
+    expect(tester.getSize(find.byType(AppInlineEdit<String>)).height, 36);
+  });
+
   testWidgets('multi-line display grows past the control-height floor', (
     tester,
   ) async {

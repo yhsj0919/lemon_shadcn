@@ -7,9 +7,14 @@ abstract final class ComponentExampleCode {
   static const _examples = <String, String>{
     '就地编辑': '''AppInlineEdit.text(
   value: user.name,
+  itemHeight: 36, // 单个 item 覆盖
   validator: (value) => value.trim().isEmpty ? '名称不能为空' : null,
   onSaved: (value) async => repository.updateName(value),
 );
+
+// 全局配置：AppThemeConfig.standard(
+//   inlineEdit: AppInlineEditMetrics(itemHeight: 36),
+// )
 
 // 无法就地编辑时改为弹窗。
 AppInlineEdit.dialog(
@@ -483,8 +488,7 @@ AppDivider.vertical(width: 32);''',
     '面包屑': '''const AppBreadcrumb(children: [
   Text('首页'), Text('组件'), Text('导航'),
 ]);''',
-    '分页':
-        '''AppPagination(
+    '分页': '''AppPagination(
   page: page,
   totalPages: 10,
   onPageChanged: onPageChanged,

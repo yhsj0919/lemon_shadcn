@@ -31,8 +31,19 @@ class AppInputGroup extends StatelessWidget {
     final theme = shad.Theme.of(context);
     final metrics = AppControlMetricsScope.resolve(context);
     final radius = BorderRadius.circular(theme.radiusMd);
+    final scaledTextHeight =
+        MediaQuery.textScalerOf(context).scale(metrics.fontSize) * 1.2 + 12;
+    final iconHeight = metrics.iconSize + 12;
+    final safeContentHeight = scaledTextHeight > iconHeight
+        ? scaledTextHeight
+        : iconHeight;
+    final themedHeight = AppControlMetricsScope.shouldEnforceSafeHeight(context)
+        ? (metrics.height > safeContentHeight
+              ? metrics.height
+              : safeContentHeight)
+        : metrics.height;
     return SizedBox(
-      height: height ?? metrics.height,
+      height: height ?? themedHeight,
       child: DecoratedBox(
         decoration: BoxDecoration(
           color:

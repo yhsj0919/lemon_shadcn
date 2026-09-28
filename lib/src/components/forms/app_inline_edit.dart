@@ -79,6 +79,7 @@ class AppInlineEdit<T> extends StatefulWidget {
     this.onEditingChanged,
     this.errorBuilder,
     this.valuesEqual,
+    this.itemHeight,
     this.height,
     this.intrinsicHeight = false,
     this.alignment = AlignmentDirectional.centerStart,
@@ -86,7 +87,9 @@ class AppInlineEdit<T> extends StatefulWidget {
     this.transitionCurve = Curves.easeOut,
     this.width,
     this.expand = true,
-  });
+  }) : assert(itemHeight == null || itemHeight > 0),
+       assert(height == null || height > 0),
+       assert(itemHeight == null || height == null);
 
   const AppInlineEdit.control({
     super.key,
@@ -105,6 +108,7 @@ class AppInlineEdit<T> extends StatefulWidget {
     this.onEditingChanged,
     this.errorBuilder,
     this.valuesEqual,
+    this.itemHeight,
     this.height,
     this.intrinsicHeight = false,
     this.alignment = AlignmentDirectional.centerStart,
@@ -112,7 +116,9 @@ class AppInlineEdit<T> extends StatefulWidget {
     this.transitionCurve = Curves.easeOut,
     this.width,
     this.expand = true,
-  });
+  }) : assert(itemHeight == null || itemHeight > 0),
+       assert(height == null || height > 0),
+       assert(itemHeight == null || height == null);
 
   /// Convenience host for selection, picker, upload, and other controls that
   /// finish editing by emitting a value from an overlay or direct gesture.
@@ -130,6 +136,7 @@ class AppInlineEdit<T> extends StatefulWidget {
     this.onEditingChanged,
     this.errorBuilder,
     this.valuesEqual,
+    this.itemHeight,
     this.height,
     this.intrinsicHeight = false,
     this.alignment = AlignmentDirectional.centerStart,
@@ -137,7 +144,10 @@ class AppInlineEdit<T> extends StatefulWidget {
     this.transitionCurve = Curves.easeOut,
     this.width,
     this.expand = true,
-  }) : saveOnBlur = true,
+  }) : assert(itemHeight == null || itemHeight > 0),
+       assert(height == null || height > 0),
+       assert(itemHeight == null || height == null),
+       saveOnBlur = true,
        commitOnChanged = true,
        submitOnEnter = false;
 
@@ -151,6 +161,7 @@ class AppInlineEdit<T> extends StatefulWidget {
     bool enabled = true,
     bool obscureText = false,
     int? maxLength,
+    double? itemHeight,
     AppInlineEditInvalidBlurBehavior invalidBlurBehavior =
         AppInlineEditInvalidBlurBehavior.cancel,
   }) {
@@ -160,6 +171,7 @@ class AppInlineEdit<T> extends StatefulWidget {
       displayBuilder: displayBuilder ?? (_, value) => Text(value),
       validator: validator,
       enabled: enabled,
+      itemHeight: itemHeight,
       invalidBlurBehavior: invalidBlurBehavior,
       submitOnEnter: true,
       onSaved: onSaved,
@@ -181,6 +193,7 @@ class AppInlineEdit<T> extends StatefulWidget {
     String? hintText,
     double minHeight = 72,
     double maxHeight = 240,
+    double? itemHeight,
     bool enabled = true,
   }) {
     return AppInlineEdit<String>(
@@ -189,6 +202,7 @@ class AppInlineEdit<T> extends StatefulWidget {
       displayBuilder: displayBuilder ?? (_, value) => Text(value),
       validator: validator,
       enabled: enabled,
+      itemHeight: itemHeight,
       // Display stays content-sized; minHeight/maxHeight only size the editor.
       intrinsicHeight: true,
       alignment: AlignmentDirectional.topStart,
@@ -212,6 +226,7 @@ class AppInlineEdit<T> extends StatefulWidget {
     int max = 999999,
     int step = 1,
     double width = 120,
+    double? itemHeight,
     bool enabled = true,
   }) {
     return AppInlineEdit<int>(
@@ -220,6 +235,7 @@ class AppInlineEdit<T> extends StatefulWidget {
       displayBuilder: displayBuilder ?? (_, value) => Text('$value'),
       validator: validator,
       enabled: enabled,
+      itemHeight: itemHeight,
       onSaved: onSaved,
       editorBuilder: (context, details) => AppNumberInput(
         value: details.value,
@@ -244,6 +260,7 @@ class AppInlineEdit<T> extends StatefulWidget {
     AppInlineEditValidator<V?>? validator,
     String hintText = 'Select an option',
     bool clearable = false,
+    double? itemHeight,
     bool enabled = true,
   }) {
     Widget defaultDisplay(BuildContext context, V? value) {
@@ -260,6 +277,7 @@ class AppInlineEdit<T> extends StatefulWidget {
       displayBuilder: displayBuilder ?? defaultDisplay,
       validator: validator,
       enabled: enabled,
+      itemHeight: itemHeight,
       saveOnBlur: true,
       commitOnChanged: true,
       onSaved: onSaved,
@@ -281,6 +299,7 @@ class AppInlineEdit<T> extends StatefulWidget {
     AppInlineEditDisplayBuilder<DateTime?>? displayBuilder,
     AppInlineEditValidator<DateTime?>? validator,
     String? hintText,
+    double? itemHeight,
     bool enabled = true,
   }) {
     return AppInlineEdit<DateTime?>(
@@ -292,6 +311,7 @@ class AppInlineEdit<T> extends StatefulWidget {
               Text(value == null ? hintText ?? '-' : _formatDate(value)),
       validator: validator,
       enabled: enabled,
+      itemHeight: itemHeight,
       saveOnBlur: true,
       commitOnChanged: true,
       onSaved: onSaved,
@@ -311,6 +331,7 @@ class AppInlineEdit<T> extends StatefulWidget {
     AppInlineEditDisplayBuilder<shad.TimeOfDay?>? displayBuilder,
     AppInlineEditValidator<shad.TimeOfDay?>? validator,
     String? hintText,
+    double? itemHeight,
     bool enabled = true,
   }) {
     return AppInlineEdit<shad.TimeOfDay?>(
@@ -322,6 +343,7 @@ class AppInlineEdit<T> extends StatefulWidget {
               Text(value == null ? hintText ?? '-' : _formatTime(value)),
       validator: validator,
       enabled: enabled,
+      itemHeight: itemHeight,
       saveOnBlur: true,
       commitOnChanged: true,
       onSaved: onSaved,
@@ -339,6 +361,7 @@ class AppInlineEdit<T> extends StatefulWidget {
     required bool value,
     required AppInlineEditSaver<bool> onSaved,
     AppInlineEditDisplayBuilder<bool>? displayBuilder,
+    double? itemHeight,
     bool enabled = true,
   }) {
     return AppInlineEdit<bool>(
@@ -346,6 +369,7 @@ class AppInlineEdit<T> extends StatefulWidget {
       value: value,
       displayBuilder: displayBuilder ?? (_, value) => Text(value ? '是' : '否'),
       enabled: enabled,
+      itemHeight: itemHeight,
       saveOnBlur: true,
       commitOnChanged: true,
       onSaved: onSaved,
@@ -361,6 +385,7 @@ class AppInlineEdit<T> extends StatefulWidget {
     required bool value,
     required AppInlineEditSaver<bool> onSaved,
     AppInlineEditDisplayBuilder<bool>? displayBuilder,
+    double? itemHeight,
     bool enabled = true,
   }) {
     return AppInlineEdit<bool>(
@@ -368,6 +393,7 @@ class AppInlineEdit<T> extends StatefulWidget {
       value: value,
       displayBuilder: displayBuilder ?? (_, value) => Text(value ? '是' : '否'),
       enabled: enabled,
+      itemHeight: itemHeight,
       saveOnBlur: true,
       commitOnChanged: true,
       onSaved: onSaved,
@@ -392,6 +418,7 @@ class AppInlineEdit<T> extends StatefulWidget {
     Axis valueDirection = Axis.horizontal,
     double spacing = 16,
     double runSpacing = 8,
+    double? itemHeight,
   }) {
     Widget defaultDisplay(BuildContext context, List<V> value) {
       final labels = [
@@ -406,6 +433,7 @@ class AppInlineEdit<T> extends StatefulWidget {
       value: List<V>.of(value),
       displayBuilder: displayBuilder ?? defaultDisplay,
       enabled: enabled,
+      itemHeight: itemHeight,
       saveOnBlur: true,
       commitOnChanged: true,
       onSaved: onSaved,
@@ -430,6 +458,7 @@ class AppInlineEdit<T> extends StatefulWidget {
     bool enabled = true,
     bool allowUnselect = true,
     int? maxVisibleOptions,
+    double? itemHeight,
   }) {
     Widget defaultDisplay(BuildContext context, List<V> value) {
       final labels = [
@@ -444,6 +473,7 @@ class AppInlineEdit<T> extends StatefulWidget {
       value: List<V>.of(value),
       displayBuilder: displayBuilder ?? defaultDisplay,
       enabled: enabled,
+      itemHeight: itemHeight,
       saveOnBlur: true,
       commitOnChanged: true,
       onSaved: onSaved,
@@ -468,6 +498,7 @@ class AppInlineEdit<T> extends StatefulWidget {
     String hintText = 'Search and select',
     String searchHintText = 'Search',
     bool clearable = false,
+    double? itemHeight,
     bool enabled = true,
   }) {
     return AppInlineEdit<V?>(
@@ -475,6 +506,7 @@ class AppInlineEdit<T> extends StatefulWidget {
       value: value,
       displayBuilder: displayBuilder ?? (_, value) => Text('$value'),
       enabled: enabled,
+      itemHeight: itemHeight,
       saveOnBlur: true,
       commitOnChanged: true,
       onSaved: onSaved,
@@ -497,6 +529,7 @@ class AppInlineEdit<T> extends StatefulWidget {
     required List<AppOption<V>> options,
     required AppInlineEditSaver<V> onSaved,
     AppInlineEditDisplayBuilder<V>? displayBuilder,
+    double? itemHeight,
     bool enabled = true,
   }) {
     Widget defaultDisplay(BuildContext context, V value) {
@@ -511,6 +544,7 @@ class AppInlineEdit<T> extends StatefulWidget {
       value: value,
       displayBuilder: displayBuilder ?? defaultDisplay,
       enabled: enabled,
+      itemHeight: itemHeight,
       saveOnBlur: true,
       commitOnChanged: true,
       onSaved: onSaved,
@@ -529,6 +563,7 @@ class AppInlineEdit<T> extends StatefulWidget {
     AppInlineEditDisplayBuilder<double>? displayBuilder,
     double max = 5,
     double step = .5,
+    double? itemHeight,
     bool enabled = true,
   }) {
     return AppInlineEdit<double>(
@@ -536,6 +571,7 @@ class AppInlineEdit<T> extends StatefulWidget {
       value: value,
       displayBuilder: displayBuilder ?? (_, value) => Text('$value / $max'),
       enabled: enabled,
+      itemHeight: itemHeight,
       saveOnBlur: true,
       onSaved: onSaved,
       editorBuilder: (context, details) =>
@@ -571,6 +607,7 @@ class AppInlineEdit<T> extends StatefulWidget {
     Widget Function(BuildContext context, String message)? errorBuilder,
     bool intrinsicHeight = false,
     AlignmentGeometry alignment = AlignmentDirectional.centerStart,
+    double? itemHeight,
     double? height,
     double? width,
     bool expand = true,
@@ -590,6 +627,7 @@ class AppInlineEdit<T> extends StatefulWidget {
       errorBuilder: errorBuilder,
       intrinsicHeight: intrinsicHeight,
       alignment: alignment,
+      itemHeight: itemHeight,
       height: height,
       width: width,
       expand: expand,
@@ -612,6 +650,10 @@ class AppInlineEdit<T> extends StatefulWidget {
   final Widget Function(BuildContext context, String message)? errorBuilder;
   final AppInlineEditEquality<T>? valuesEqual;
 
+  /// Minimum item height for this inline editor. Overrides
+  /// [AppThemeConfig.inlineEdit].
+  final double? itemHeight;
+
   /// Minimum height shared by display and edit states. When omitted, this uses
   /// the same control-height token as the rest of the form components. Content
   /// taller than the minimum (e.g. multi-line text) expands instead of
@@ -619,6 +661,7 @@ class AppInlineEdit<T> extends StatefulWidget {
   ///
   /// Ignored while [intrinsicHeight] is true so display text can shrink-wrap;
   /// multiline editors pass their own min height to the text area instead.
+  @Deprecated('Use itemHeight instead.')
   final double? height;
 
   /// Lets multiline and other large controls skip the control-height floor and
@@ -974,7 +1017,11 @@ class _AppInlineEditState<T> extends State<AppInlineEdit<T>> {
       }
       final inset = AppInlineEdit.opticalVerticalInset(
         context,
-        controlHeight: widget.height,
+        controlHeight:
+            widget.itemHeight ??
+            widget.height ??
+            AppTheme.of(context).inlineEdit.itemHeight ??
+            AppControlMetricsScope.resolve(context).height,
       );
       return SizedBox(
         width: resolvedWidth,
@@ -985,7 +1032,10 @@ class _AppInlineEditState<T> extends State<AppInlineEdit<T>> {
       );
     }
     final height =
-        widget.height ?? AppControlMetricsScope.resolve(context).height;
+        widget.itemHeight ??
+        widget.height ??
+        AppTheme.of(context).inlineEdit.itemHeight ??
+        AppControlMetricsScope.resolve(context).height;
     return SizedBox(
       width: resolvedWidth,
       child: ConstrainedBox(

@@ -56,6 +56,24 @@ class AppControlMetrics {
   /// Content box used by bordered controls that sit inside the shared slot.
   double get borderedContentHeight => height - 1;
 
+  AppControlMetrics copyWith({
+    double? height,
+    double? buttonHeight,
+    double? horizontalPadding,
+    double? fontSize,
+    double? iconSize,
+    double? contentGap,
+    double? textAreaHeight,
+  }) => AppControlMetrics(
+    height: height ?? this.height,
+    buttonHeight: buttonHeight ?? this.buttonHeight,
+    horizontalPadding: horizontalPadding ?? this.horizontalPadding,
+    fontSize: fontSize ?? this.fontSize,
+    iconSize: iconSize ?? this.iconSize,
+    contentGap: contentGap ?? this.contentGap,
+    textAreaHeight: textAreaHeight ?? this.textAreaHeight,
+  );
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -78,6 +96,25 @@ class AppControlMetrics {
     contentGap,
     textAreaHeight,
   );
+}
+
+/// Shared dimensions for inline-edit items.
+@immutable
+class AppInlineEditMetrics {
+  const AppInlineEditMetrics({this.itemHeight})
+    : assert(itemHeight == null || itemHeight > 0);
+
+  /// Minimum height of one inline-edit item in display and edit states.
+  /// Falls back to [AppControlMetrics.height] when omitted.
+  final double? itemHeight;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is AppInlineEditMetrics && itemHeight == other.itemHeight;
+
+  @override
+  int get hashCode => itemHeight.hashCode;
 }
 
 /// Shared DataGrid dimensions. Defaults preserve the standard grid appearance
@@ -496,6 +533,7 @@ class AppThemeConfig {
     this.motion = const AppMotionTheme(),
     this.shadows = const AppShadowTheme(),
     this.controls = const AppControlMetrics(),
+    this.inlineEdit = const AppInlineEditMetrics(),
     this.dataGrid = const AppDataGridMetrics(),
     this.tooltip = const AppTooltipTheme(),
     this.chart = const AppChartTheme(),
@@ -526,6 +564,7 @@ class AppThemeConfig {
     AppMotionTheme motion = const AppMotionTheme(),
     AppShadowTheme shadows = const AppShadowTheme(),
     AppControlMetrics controls = const AppControlMetrics(),
+    AppInlineEditMetrics inlineEdit = const AppInlineEditMetrics(),
     AppDataGridMetrics dataGrid = const AppDataGridMetrics(),
     AppTooltipTheme tooltip = const AppTooltipTheme(),
     AppChartTheme chart = const AppChartTheme(),
@@ -567,6 +606,7 @@ class AppThemeConfig {
       motion: motion,
       shadows: shadows,
       controls: controls,
+      inlineEdit: inlineEdit,
       dataGrid: dataGrid,
       tooltip: tooltip,
       chart: chart,
@@ -717,6 +757,7 @@ class AppThemeConfig {
   final AppMotionTheme motion;
   final AppShadowTheme shadows;
   final AppControlMetrics controls;
+  final AppInlineEditMetrics inlineEdit;
   final AppDataGridMetrics dataGrid;
   final AppTooltipTheme tooltip;
   final AppChartTheme chart;
@@ -733,6 +774,7 @@ class AppThemeConfig {
     AppMotionTheme? motion,
     AppShadowTheme? shadows,
     AppControlMetrics? controls,
+    AppInlineEditMetrics? inlineEdit,
     AppDataGridMetrics? dataGrid,
     AppTooltipTheme? tooltip,
     AppChartTheme? chart,
@@ -751,6 +793,7 @@ class AppThemeConfig {
       motion: motion ?? this.motion,
       shadows: shadows ?? this.shadows,
       controls: controls ?? this.controls,
+      inlineEdit: inlineEdit ?? this.inlineEdit,
       dataGrid: dataGrid ?? this.dataGrid,
       tooltip: tooltip ?? this.tooltip,
       chart: chart ?? this.chart,

@@ -18,11 +18,19 @@ enum AppDescriptionsType { standard, table }
 /// Sentinel for an omitted [valueHeight] so explicit `null` can mean
 /// content-sized (no minimum height).
 const Object _valueHeightUnset = Object();
+const Object _itemHeightUnset = Object();
 
 bool _isValueHeightSet(Object? value) => !identical(value, _valueHeightUnset);
 
 double? _readValueHeight(Object? value) {
   if (!_isValueHeightSet(value) || value == null) return null;
+  return (value as num).toDouble();
+}
+
+bool _isItemHeightSet(Object? value) => !identical(value, _itemHeightUnset);
+
+double? _readItemHeight(Object? value) {
+  if (!_isItemHeightSet(value) || value == null) return null;
   return (value as num).toDouble();
 }
 
@@ -40,6 +48,7 @@ class AppDescriptionsTheme extends shad.ComponentThemeData {
     this.labelIconTheme,
     this.labelAlignment,
     this.valueAlignment,
+    Object? itemHeight = _itemHeightUnset,
     Object? valueHeight = _valueHeightUnset,
     this.padding,
     this.tableCellPadding,
@@ -47,9 +56,17 @@ class AppDescriptionsTheme extends shad.ComponentThemeData {
     this.runSpacing,
     this.labelGap,
     this.contentGap,
+    this.headerHeight,
     this.headerPadding,
     this.controlMetrics,
-  }) : _valueHeight = valueHeight,
+  }) : _itemHeight = itemHeight,
+       _valueHeight = valueHeight,
+       assert(headerHeight == null || headerHeight > 0),
+       assert(
+         identical(itemHeight, _itemHeightUnset) ||
+             itemHeight == null ||
+             (itemHeight is num && itemHeight > 0),
+       ),
        assert(
          identical(valueHeight, _valueHeightUnset) ||
              valueHeight == null ||
@@ -65,8 +82,10 @@ class AppDescriptionsTheme extends shad.ComponentThemeData {
     this.labelIconTheme,
     this.labelAlignment,
     this.valueAlignment,
+    Object? itemHeight = _itemHeightUnset,
     Object? valueHeight = _valueHeightUnset,
   }) : density = AppDensity.compact,
+       _itemHeight = itemHeight,
        _valueHeight = valueHeight,
        padding = null,
        tableCellPadding = null,
@@ -74,8 +93,14 @@ class AppDescriptionsTheme extends shad.ComponentThemeData {
        runSpacing = null,
        labelGap = null,
        contentGap = null,
+       headerHeight = null,
        headerPadding = null,
        controlMetrics = null,
+       assert(
+         identical(itemHeight, _itemHeightUnset) ||
+             itemHeight == null ||
+             (itemHeight is num && itemHeight > 0),
+       ),
        assert(
          identical(valueHeight, _valueHeightUnset) ||
              valueHeight == null ||
@@ -91,13 +116,18 @@ class AppDescriptionsTheme extends shad.ComponentThemeData {
   final IconThemeData? labelIconTheme;
   final AlignmentGeometry? labelAlignment;
   final AlignmentGeometry? valueAlignment;
+  final Object? _itemHeight;
+
+  /// Minimum height of each complete description item.
+  /// `null` keeps items content-sized.
+  double? get itemHeight => _readItemHeight(_itemHeight);
+
+  bool get _hasItemHeight => _isItemHeightSet(_itemHeight);
   final Object? _valueHeight;
 
   /// Minimum height of each item's value slot.
   ///
-  /// - Omitted: when the surface contains [AppInlineEdit], fall back to the
-  ///   active control height so plain text lines up with editors; otherwise
-  ///   keep the value content-sized.
+  /// - Omitted: inherit from the enclosing component, otherwise content-sized.
   /// - `null`: always content-sized, no minimum height.
   /// - `double`: use that minimum height.
   double? get valueHeight => _readValueHeight(_valueHeight);
@@ -109,6 +139,7 @@ class AppDescriptionsTheme extends shad.ComponentThemeData {
   final double? runSpacing;
   final double? labelGap;
   final double? contentGap;
+  final double? headerHeight;
   final EdgeInsetsGeometry? headerPadding;
   final AppControlMetrics? controlMetrics;
 }
@@ -124,12 +155,14 @@ class AppDescriptionItem {
     this.maxWidth,
     this.labelAlignment,
     this.valueWidth,
+    Object? itemHeight = _itemHeightUnset,
     Object? valueHeight = _valueHeightUnset,
     this.expandValue = false,
     AlignmentGeometry? valueAlignment,
   }) : _isDivider = false,
        _isCustom = false,
        _valueAlignment = valueAlignment,
+       _itemHeight = itemHeight,
        _valueHeight = valueHeight,
        assert(span > 0),
        assert(width == null || width > 0),
@@ -137,6 +170,11 @@ class AppDescriptionItem {
        assert(maxWidth == null || maxWidth > 0),
        assert(minWidth == null || maxWidth == null || minWidth <= maxWidth),
        assert(valueWidth == null || valueWidth > 0),
+       assert(
+         identical(itemHeight, _itemHeightUnset) ||
+             itemHeight == null ||
+             (itemHeight is num && itemHeight > 0),
+       ),
        assert(
          identical(valueHeight, _valueHeightUnset) ||
              valueHeight == null ||
@@ -157,6 +195,7 @@ class AppDescriptionItem {
        icon = null,
        labelAlignment = null,
        valueWidth = null,
+       _itemHeight = _itemHeightUnset,
        _valueHeight = _valueHeightUnset,
        expandValue = false,
        _valueAlignment = null,
@@ -179,6 +218,7 @@ class AppDescriptionItem {
       maxWidth = null,
       labelAlignment = null,
       valueWidth = null,
+      _itemHeight = _itemHeightUnset,
       _valueHeight = _valueHeightUnset,
       expandValue = false,
       _valueAlignment = null,
@@ -209,12 +249,20 @@ class AppDescriptionItem {
   /// Optional width for controls such as fields that would otherwise fill a cell.
   final double? valueWidth;
 
+  final Object? _itemHeight;
+
+  /// Minimum height for this complete item. Omitted values inherit from the
+  /// enclosing [AppDescriptions] or [AppDescriptionsTheme].
+  /// Explicit `null` keeps this item content-sized.
+  double? get itemHeight => _readItemHeight(_itemHeight);
+
+  bool get _hasItemHeight => _isItemHeightSet(_itemHeight);
+
   final Object? _valueHeight;
 
   /// Minimum height for this item's value slot.
   ///
-  /// - Omitted: inherit from [AppDescriptions.valueHeight] / theme, or sync to
-  ///   the control height only when the surface mixes in [AppInlineEdit].
+  /// - Omitted: inherit from [AppDescriptions.valueHeight] / theme.
   /// - `null`: content-sized, no minimum height.
   /// - `double`: use that minimum height.
   double? get valueHeight => _readValueHeight(_valueHeight);
@@ -233,9 +281,7 @@ class AppDescriptionItem {
 
 /// Responsive key-value details for entity and record pages.
 ///
-/// When any item embeds [AppInlineEdit], omitted [valueHeight] syncs every
-/// value slot to the control height so plain text aligns with editors without
-/// per-row wrappers. Surfaces without inline edit stay content-sized.
+/// Items stay content-sized unless [itemHeight] or [valueHeight] is set.
 class AppDescriptions extends StatelessWidget {
   const AppDescriptions({
     super.key,
@@ -258,11 +304,13 @@ class AppDescriptions extends StatelessWidget {
     this.labelIconTheme,
     this.labelAlignment,
     this.valueAlignment,
+    Object? itemHeight = _itemHeightUnset,
     Object? valueHeight = _valueHeightUnset,
     double? spacing,
     double? runSpacing,
     this.labelGap,
     this.contentGap,
+    this.headerHeight,
     this.bordered = false,
     this.type = AppDescriptionsType.standard,
     EdgeInsetsGeometry? padding,
@@ -274,12 +322,19 @@ class AppDescriptions extends StatelessWidget {
        _runSpacing = runSpacing,
        _padding = padding,
        _tableCellPadding = tableCellPadding,
+       _itemHeight = itemHeight,
        _valueHeight = valueHeight,
        customChild = null,
        assert(columns > 0),
        assert(minColumnWidth > 0),
        assert(columnWidth == null || columnWidth > 0),
        assert(maxColumnWidth == null || maxColumnWidth > 0),
+       assert(headerHeight == null || headerHeight > 0),
+       assert(
+         identical(itemHeight, _itemHeightUnset) ||
+             itemHeight == null ||
+             (itemHeight is num && itemHeight > 0),
+       ),
        assert(
          identical(valueHeight, _valueHeightUnset) ||
              valueHeight == null ||
@@ -307,6 +362,7 @@ class AppDescriptions extends StatelessWidget {
     this.titleStyle,
     this.titleIconTheme,
     this.titleGap,
+    this.headerHeight,
     EdgeInsetsGeometry? padding,
     this.headerPadding,
     this.controlMetrics,
@@ -316,6 +372,7 @@ class AppDescriptions extends StatelessWidget {
        _spacing = null,
        _runSpacing = null,
        _tableCellPadding = null,
+       _itemHeight = _itemHeightUnset,
        _valueHeight = _valueHeightUnset,
        items = const [],
        customChild = child,
@@ -329,7 +386,8 @@ class AppDescriptions extends StatelessWidget {
        valueAlignment = null,
        labelGap = null,
        contentGap = null,
-       type = AppDescriptionsType.standard;
+       type = AppDescriptionsType.standard,
+       assert(headerHeight == null || headerHeight > 0);
 
   final List<AppDescriptionItem> items;
   final Widget? customChild;
@@ -356,12 +414,17 @@ class AppDescriptions extends StatelessWidget {
   final IconThemeData? labelIconTheme;
   final AlignmentGeometry? labelAlignment;
   final AlignmentGeometry? valueAlignment;
+  final Object? _itemHeight;
+
+  /// Minimum height of every complete item. Defaults to content-sized.
+  /// Individual [AppDescriptionItem.itemHeight] values take precedence.
+  double? get itemHeight => _readItemHeight(_itemHeight);
+
   final Object? _valueHeight;
 
   /// Minimum height of each item's value slot.
   ///
-  /// - Omitted: sync to the control height only when items include
-  ///   [AppInlineEdit]; otherwise content-sized.
+  /// - Omitted: inherit from the theme, otherwise content-sized.
   /// - `null`: always content-sized, no minimum height.
   /// - `double`: use that minimum height.
   double? get valueHeight => _readValueHeight(_valueHeight);
@@ -376,6 +439,7 @@ class AppDescriptions extends StatelessWidget {
   double get runSpacing => _runSpacing ?? 8;
   final double? labelGap;
   final double? contentGap;
+  final double? headerHeight;
   final bool bordered;
   final AppDescriptionsType type;
 
@@ -396,18 +460,16 @@ class AppDescriptions extends StatelessWidget {
   AppDescriptionsTheme _resolvedTheme(BuildContext context) {
     final shadTheme = shad.Theme.of(context);
     final local = shad.ComponentTheme.maybeOf<AppDescriptionsTheme>(context);
-    final effectiveDensity =
-        density ?? local?.density ?? AppDensity.standard;
+    final effectiveDensity = density ?? local?.density ?? AppDensity.standard;
     final compact = effectiveDensity == AppDensity.compact;
     final inlineEdit = _syncValueHeightWithInlineEdit;
     final hasHeader = title != null || actions != null;
     final typography = shadTheme.typography;
     final xSmallSize = typography.xSmall.fontSize ?? 12;
     final smallSize = typography.small.fontSize ?? 14;
-    final baseSize = typography.base.fontSize ?? 16;
     final intermediateSize = (xSmallSize + smallSize) / 2;
     final resolvedTitleStyle = TextStyle(
-      fontSize: compact ? smallSize : baseSize,
+      fontSize: compact ? smallSize : 16,
       fontWeight: FontWeight.w600,
     ).merge(local?.titleStyle).merge(titleStyle);
     return AppDescriptionsTheme(
@@ -437,6 +499,11 @@ class AppDescriptions extends StatelessWidget {
           valueAlignment ??
           local?.valueAlignment ??
           AlignmentDirectional.centerStart,
+      itemHeight: _isItemHeightSet(_itemHeight)
+          ? _itemHeight
+          : local != null && local._hasItemHeight
+          ? local._itemHeight
+          : _itemHeightUnset,
       valueHeight: _isValueHeightSet(_valueHeight)
           ? _valueHeight
           : local != null && local._hasValueHeight
@@ -448,13 +515,15 @@ class AppDescriptions extends StatelessWidget {
           local?.padding ??
           (compact
               ? (hasHeader
-                  ? const EdgeInsets.fromLTRB(12, 10, 12, 12)
-                  : const EdgeInsets.all(12))
+                    ? const EdgeInsets.fromLTRB(12, 10, 12, 12)
+                    : const EdgeInsets.all(12))
               : inlineEdit
-              ? const EdgeInsets.symmetric(horizontal: 20, vertical: 6)
+              ? (hasHeader
+                    ? const EdgeInsets.fromLTRB(20, 6, 20, 12)
+                    : const EdgeInsets.symmetric(horizontal: 20, vertical: 6))
               : (hasHeader
-                  ? const EdgeInsets.fromLTRB(20, 10, 20, 20)
-                  : const EdgeInsets.all(20))),
+                    ? const EdgeInsets.fromLTRB(20, 10, 20, 20)
+                    : const EdgeInsets.all(20))),
       tableCellPadding:
           _tableCellPadding ??
           local?.tableCellPadding ??
@@ -463,17 +532,23 @@ class AppDescriptions extends StatelessWidget {
             vertical: compact ? 0 : 8,
           ),
       spacing: _spacing ?? local?.spacing ?? 12,
-      runSpacing:
-          _runSpacing ?? local?.runSpacing ?? (inlineEdit ? 0 : 8),
+      runSpacing: _runSpacing ?? local?.runSpacing ?? (inlineEdit ? 0 : 8),
       labelGap: labelGap ?? local?.labelGap ?? (compact ? 4 : 8),
       contentGap:
-          contentGap ?? local?.contentGap ?? (compact ? 2 : inlineEdit ? 0 : 4),
+          contentGap ??
+          local?.contentGap ??
+          (compact
+              ? 2
+              : inlineEdit
+              ? 0
+              : 4),
+      headerHeight: headerHeight ?? local?.headerHeight ?? (compact ? 26 : 32),
       headerPadding:
           headerPadding ??
           local?.headerPadding ??
           EdgeInsets.fromLTRB(
             compact ? 12 : 20,
-            compact ? 12 : 20,
+            compact ? 6 : 14,
             compact ? 12 : 20,
             0,
           ),
@@ -496,9 +571,8 @@ class AppDescriptions extends StatelessWidget {
   Widget _buildItem(
     BuildContext context,
     AppDescriptionItem item,
-    AppDescriptionsTheme style, {
-    required bool syncValueHeightWithInlineEdit,
-  }) {
+    AppDescriptionsTheme style,
+  ) {
     if (item._isCustom) {
       Widget custom = DefaultTextStyle.merge(
         style: style.valueStyle!,
@@ -518,10 +592,7 @@ class AppDescriptions extends StatelessWidget {
       context,
     ).style.merge(style.valueStyle!);
     final labelInset = intrinsicValue && resolvedLabelAlignment.y <= -0.5
-        ? AppInlineEdit.opticalVerticalInset(
-            context,
-            textStyle: valueTextStyle,
-          )
+        ? AppInlineEdit.opticalVerticalInset(context, textStyle: valueTextStyle)
         : 0.0;
     final labelContent = IconTheme.merge(
       data: style.labelIconTheme!,
@@ -563,17 +634,11 @@ class AppDescriptions extends StatelessWidget {
     } else if (item.expandValue) {
       value = SizedBox(width: double.infinity, child: value);
     }
-    // Sync plain text to the control slot only when this surface mixes in
-    // AppInlineEdit. Explicit valueHeight / null still win.
     final double? valueHeight;
     if (item._hasValueHeight) {
       valueHeight = item.valueHeight;
     } else if (style._hasValueHeight) {
       valueHeight = style.valueHeight;
-    } else if (syncValueHeightWithInlineEdit) {
-      valueHeight =
-          style.controlMetrics?.height ??
-          AppControlMetricsScope.resolve(context).height;
     } else {
       valueHeight = null;
     }
@@ -600,8 +665,9 @@ class AppDescriptions extends StatelessWidget {
               child: aligned,
             ),
           );
+    final Widget content;
     if (layout == AppDescriptionLayout.horizontal) {
-      return Row(
+      content = Row(
         crossAxisAlignment: resolvedLabelAlignment.y <= -0.5
             ? CrossAxisAlignment.start
             : resolvedLabelAlignment.y >= 0.5
@@ -613,16 +679,28 @@ class AppDescriptions extends StatelessWidget {
           Expanded(child: value),
         ],
       );
+    } else {
+      content = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          label,
+          SizedBox(height: style.contentGap),
+          value,
+        ],
+      );
     }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        label,
-        SizedBox(height: style.contentGap),
-        value,
-      ],
-    );
+    final itemHeight = item._hasItemHeight
+        ? item.itemHeight
+        : style._hasItemHeight
+        ? style.itemHeight
+        : null;
+    return itemHeight == null
+        ? content
+        : ConstrainedBox(
+            constraints: BoxConstraints(minHeight: itemHeight),
+            child: content,
+          );
   }
 
   bool get _syncValueHeightWithInlineEdit =>
@@ -690,7 +768,6 @@ class AppDescriptions extends StatelessWidget {
   ) {
     final gap = style.spacing!;
     final columnWidth = _resolveColumnWidth(available, gap, count);
-    final syncValueHeight = _syncValueHeightWithInlineEdit;
     return Wrap(
       spacing: gap,
       runSpacing: style.runSpacing!,
@@ -706,12 +783,7 @@ class AppDescriptions extends StatelessWidget {
                   ),
             child: item._isDivider
                 ? item.value
-                : _buildItem(
-                    context,
-                    item,
-                    style,
-                    syncValueHeightWithInlineEdit: syncValueHeight,
-                  ),
+                : _buildItem(context, item, style),
           ),
       ],
     );
@@ -725,7 +797,6 @@ class AppDescriptions extends StatelessWidget {
   ) {
     final sections = <Widget>[];
     final regularItems = <AppDescriptionItem>[];
-    final syncValueHeight = _syncValueHeightWithInlineEdit;
 
     void flushRegularItems() {
       if (regularItems.isEmpty) return;
@@ -742,7 +813,6 @@ class AppDescriptions extends StatelessWidget {
                           context,
                           regularItems[offset + column],
                           style,
-                          syncValueHeightWithInlineEdit: syncValueHeight,
                         ),
                       )
                     : const SizedBox.shrink(),
@@ -850,42 +920,50 @@ class AppDescriptions extends StatelessWidget {
         children: [
           Padding(
             padding: style.headerPadding!,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                if (title != null)
-                  Expanded(
-                    child: Align(
-                      alignment: AlignmentDirectional.centerStart,
-                      child: DefaultTextStyle.merge(
-                        style: style.titleStyle!,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            if (titleIcon != null) ...[
-                              IconTheme.merge(
-                                data: style.titleIconTheme!,
-                                child: titleIcon!,
-                              ),
-                              SizedBox(width: style.titleGap),
+            child: SizedBox(
+              height: style.headerHeight,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  if (title != null)
+                    Expanded(
+                      child: Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: DefaultTextStyle.merge(
+                          style: style.titleStyle!,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              if (titleIcon != null) ...[
+                                IconTheme.merge(
+                                  data: style.titleIconTheme!,
+                                  child: titleIcon!,
+                                ),
+                                SizedBox(width: style.titleGap),
+                              ],
+                              Flexible(child: title!),
                             ],
-                            Flexible(child: title!),
-                          ],
+                          ),
                         ),
                       ),
+                    )
+                  else
+                    const Spacer(),
+                  if (actions != null)
+                    SizedBox(
+                      height: style.headerHeight,
+                      child: Align(
+                        alignment: AlignmentDirectional.centerEnd,
+                        child: actions,
+                      ),
                     ),
-                  )
-                else
-                  const Spacer(),
-                ?actions,
-              ],
+                ],
+              ),
             ),
           ),
           if (type == AppDescriptionsType.table) ...[
-            SizedBox(
-              height: style.density == AppDensity.compact ? 8 : 14,
-            ),
+            SizedBox(height: style.density == AppDensity.compact ? 8 : 14),
             SizedBox(
               height: 1,
               child: ColoredBox(color: theme.colorScheme.border),

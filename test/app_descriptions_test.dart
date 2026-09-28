@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart' as material;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lemon_shadcn/lemon_shadcn.dart';
-import 'package:lemon_shadcn/shadcn.dart';
 
 void main() {
   test('AppDescriptions accepts independently configurable spacing', () {
@@ -187,7 +186,7 @@ void main() {
       ),
     );
 
-    expect(tester.getSize(find.byKey(dividerKey)).width, 476);
+    expect(tester.getSize(find.byKey(dividerKey)).width, 460);
     expect(
       tester.getTopLeft(find.byKey(dividerKey)).dy,
       greaterThan(tester.getBottomLeft(find.text('One')).dy),
@@ -267,7 +266,7 @@ void main() {
       ),
     );
 
-    expect(tester.getSize(find.byKey(customKey)).width, 476);
+    expect(tester.getSize(find.byKey(customKey)).width, 460);
     expect(find.text('自定义操作区'), findsOneWidget);
     expect(find.byType(material.Column), findsNothing);
   });
@@ -363,6 +362,46 @@ void main() {
           tester.getTopRight(find.byIcon(material.Icons.monitor)).dx,
       closeTo(8, 0.01),
     );
+  });
+
+  testWidgets('header actions do not expand title spacing', (tester) async {
+    const actionKey = material.ValueKey('tall-header-action');
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: const material.Align(
+          alignment: material.Alignment.topLeft,
+          child: material.SizedBox(
+            width: 320,
+            child: AppDescriptions(
+              bordered: true,
+              columns: 1,
+              titleIcon: material.Icon(material.Icons.monitor),
+              title: material.Text('设备信息'),
+              actions: material.SizedBox(
+                key: actionKey,
+                width: 40,
+                height: 80,
+                child: material.ColoredBox(color: material.Colors.transparent),
+              ),
+              items: [
+                AppDescriptionItem(
+                  label: material.Text('设备序列号'),
+                  value: material.Text('site-shimano-01'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(tester.getSize(find.byKey(actionKey)).height, 32);
+    final surface = tester.getRect(find.byType(AppDescriptions));
+    final topInset = tester.getTopLeft(find.text('设备信息')).dy - surface.top;
+    final bottomInset =
+        surface.bottom - tester.getBottomLeft(find.text('site-shimano-01')).dy;
+    expect(topInset, closeTo(bottomInset, 2));
   });
 
   testWidgets('item label alignment can be overridden directly', (
@@ -551,11 +590,15 @@ void main() {
       );
 
       final singleText = tester.getRect(find.text('2160x3840'));
-      final singleSlot = tester.getRect(find.byType(AppInlineEdit<String>).at(0));
+      final singleSlot = tester.getRect(
+        find.byType(AppInlineEdit<String>).at(0),
+      );
       final multiText = tester.getRect(
         find.text('09:00:00-12:00:00\n13:00:00-19:45:00'),
       );
-      final multiSlot = tester.getRect(find.byType(AppInlineEdit<String>).at(1));
+      final multiSlot = tester.getRect(
+        find.byType(AppInlineEdit<String>).at(1),
+      );
 
       final singleInset = singleText.top - singleSlot.top;
       final multiInset = multiText.top - multiSlot.top;
@@ -665,7 +708,7 @@ void main() {
     expect(tester.getSize(find.text('柠檬管理后台')).height, lessThan(32));
   });
 
-  testWidgets('mixed AppInlineEdit syncs plain text to control height', (
+  testWidgets('mixed AppInlineEdit leaves sibling items content-sized', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -699,8 +742,98 @@ void main() {
             widget.constraints.minHeight == 32,
       ),
     );
-    expect(tester.getSize(valueArea).height, 32);
+    expect(valueArea, findsNothing);
+    expect(tester.getSize(find.text('柠檬管理后台')).height, lessThan(32));
     expect(tester.getSize(find.byType(AppInlineEdit<String>)).height, 32);
+  });
+
+  testWidgets('itemHeight supports theme, surface, item, and null overrides', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: material.Align(
+          alignment: material.Alignment.topLeft,
+          child: AppComponentTheme<AppDescriptionsTheme>(
+            data: const AppDescriptionsTheme(itemHeight: 36),
+            child: material.Column(
+              mainAxisSize: material.MainAxisSize.min,
+              children: [
+                const AppDescriptions(
+                  columns: 1,
+                  padding: material.EdgeInsets.zero,
+                  items: [
+                    AppDescriptionItem(
+                      label: material.Text('主题项'),
+                      value: material.Text('主题高度'),
+                    ),
+                  ],
+                ),
+                const AppDescriptions(
+                  columns: 1,
+                  padding: material.EdgeInsets.zero,
+                  itemHeight: 40,
+                  items: [
+                    AppDescriptionItem(
+                      label: material.Text('表面项'),
+                      value: material.Text('表面高度'),
+                    ),
+                    AppDescriptionItem(
+                      label: material.Text('单项'),
+                      value: material.Text('单项高度'),
+                      itemHeight: 48,
+                    ),
+                    AppDescriptionItem(
+                      label: material.Text('自然项'),
+                      value: material.Text('自然高度'),
+                      itemHeight: null,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    Finder itemSlot(String text, double height) => find.ancestor(
+      of: find.text(text),
+      matching: find.byWidgetPredicate(
+        (widget) =>
+            widget is material.ConstrainedBox &&
+            widget.constraints.minHeight == height,
+      ),
+    );
+
+    expect(
+      tester.getSize(itemSlot('主题高度', 36).first).height,
+      greaterThanOrEqualTo(36),
+    );
+    expect(
+      tester.getSize(itemSlot('表面高度', 40).first).height,
+      greaterThanOrEqualTo(40),
+    );
+    expect(
+      tester.getSize(itemSlot('单项高度', 48).first).height,
+      greaterThanOrEqualTo(48),
+    );
+    expect(itemSlot('自然高度', 40), findsNothing);
+  });
+
+  testWidgets('default title font size is 16', (tester) async {
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: const AppDescriptions(title: material.Text('设备信息'), items: []),
+      ),
+    );
+
+    final style = material.DefaultTextStyle.of(
+      tester.element(find.text('设备信息')),
+    ).style;
+    expect(style.fontSize, 16);
   });
 
   testWidgets('valueHeight can be overridden on the surface and item', (
@@ -781,10 +914,7 @@ void main() {
       ),
       findsNothing,
     );
-    expect(
-      tester.getSize(find.text('内容高度')).height,
-      lessThan(32),
-    );
+    expect(tester.getSize(find.text('内容高度')).height, lessThan(32));
     expect(
       find.ancestor(
         of: find.text('单项内容'),
