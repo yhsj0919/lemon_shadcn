@@ -118,7 +118,7 @@ class AppDescriptionsTheme extends shad.ComponentThemeData {
   final AlignmentGeometry? valueAlignment;
   final Object? _itemHeight;
 
-  /// Minimum height of each complete description item.
+  /// Exact height of each complete description item.
   /// `null` keeps items content-sized.
   double? get itemHeight => _readItemHeight(_itemHeight);
 
@@ -251,8 +251,9 @@ class AppDescriptionItem {
 
   final Object? _itemHeight;
 
-  /// Minimum height for this complete item. Omitted values inherit from the
-  /// enclosing [AppDescriptions] or [AppDescriptionsTheme].
+  /// Exact height for this complete item. Omitted values inherit from the
+  /// enclosing [AppDescriptions] or [AppDescriptionsTheme], then fall back to
+  /// the system control height.
   /// Explicit `null` keeps this item content-sized.
   double? get itemHeight => _readItemHeight(_itemHeight);
 
@@ -281,7 +282,8 @@ class AppDescriptionItem {
 
 /// Responsive key-value details for entity and record pages.
 ///
-/// Items stay content-sized unless [itemHeight] or [valueHeight] is set.
+/// Items use the system control height by default. Set [itemHeight] to a
+/// number for an exact height, or explicitly to `null` for content sizing.
 class AppDescriptions extends StatelessWidget {
   const AppDescriptions({
     super.key,
@@ -416,7 +418,8 @@ class AppDescriptions extends StatelessWidget {
   final AlignmentGeometry? valueAlignment;
   final Object? _itemHeight;
 
-  /// Minimum height of every complete item. Defaults to content-sized.
+  /// Exact height of every complete item. When omitted, items use the system
+  /// control height as their minimum height.
   /// Individual [AppDescriptionItem.itemHeight] values take precedence.
   double? get itemHeight => _readItemHeight(_itemHeight);
 
@@ -690,17 +693,25 @@ class AppDescriptions extends StatelessWidget {
         ],
       );
     }
-    final itemHeight = item._hasItemHeight
-        ? item.itemHeight
-        : style._hasItemHeight
-        ? style.itemHeight
-        : null;
-    return itemHeight == null
-        ? content
-        : ConstrainedBox(
-            constraints: BoxConstraints(minHeight: itemHeight),
-            child: content,
-          );
+    if (item._hasItemHeight) {
+      final height = item.itemHeight;
+      return height == null
+          ? content
+          : SizedBox(height: height, child: content);
+    }
+    if (style._hasItemHeight) {
+      final height = style.itemHeight;
+      return height == null
+          ? content
+          : SizedBox(height: height, child: content);
+    }
+    final defaultHeight =
+        style.controlMetrics?.height ??
+        AppControlMetricsScope.resolve(context).height;
+    return ConstrainedBox(
+      constraints: BoxConstraints(minHeight: defaultHeight),
+      child: content,
+    );
   }
 
   bool get _syncValueHeightWithInlineEdit =>

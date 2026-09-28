@@ -672,7 +672,7 @@ void main() {
     expect(labelCenter, closeTo(controlCenter, 0.01));
   });
 
-  testWidgets('plain text stays content-sized without AppInlineEdit', (
+  testWidgets('plain text uses the system control height by default', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -682,6 +682,7 @@ void main() {
           alignment: material.Alignment.topLeft,
           child: AppDescriptions(
             columns: 1,
+            layout: AppDescriptionLayout.horizontal,
             padding: material.EdgeInsets.zero,
             items: [
               AppDescriptionItem(
@@ -694,21 +695,18 @@ void main() {
       ),
     );
 
-    expect(
-      find.ancestor(
-        of: find.text('柠檬管理后台'),
-        matching: find.byWidgetPredicate(
-          (widget) =>
-              widget is material.ConstrainedBox &&
-              widget.constraints.minHeight == 32,
-        ),
+    final item = find.ancestor(
+      of: find.text('柠檬管理后台'),
+      matching: find.byWidgetPredicate(
+        (widget) =>
+            widget is material.ConstrainedBox &&
+            widget.constraints.minHeight == 32,
       ),
-      findsNothing,
     );
-    expect(tester.getSize(find.text('柠檬管理后台')).height, lessThan(32));
+    expect(tester.getSize(item.first).height, 32);
   });
 
-  testWidgets('mixed AppInlineEdit leaves sibling items content-sized', (
+  testWidgets('mixed AppInlineEdit keeps sibling items at system height', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -718,6 +716,7 @@ void main() {
           alignment: material.Alignment.topLeft,
           child: AppDescriptions(
             columns: 1,
+            layout: AppDescriptionLayout.horizontal,
             padding: material.EdgeInsets.zero,
             items: [
               const AppDescriptionItem(
@@ -742,8 +741,7 @@ void main() {
             widget.constraints.minHeight == 32,
       ),
     );
-    expect(valueArea, findsNothing);
-    expect(tester.getSize(find.text('柠檬管理后台')).height, lessThan(32));
+    expect(tester.getSize(valueArea.first).height, 32);
     expect(tester.getSize(find.byType(AppInlineEdit<String>)).height, 32);
   });
 
@@ -762,6 +760,7 @@ void main() {
               children: [
                 const AppDescriptions(
                   columns: 1,
+                  layout: AppDescriptionLayout.horizontal,
                   padding: material.EdgeInsets.zero,
                   items: [
                     AppDescriptionItem(
@@ -772,6 +771,7 @@ void main() {
                 ),
                 const AppDescriptions(
                   columns: 1,
+                  layout: AppDescriptionLayout.horizontal,
                   padding: material.EdgeInsets.zero,
                   itemHeight: 40,
                   items: [
@@ -801,25 +801,64 @@ void main() {
     Finder itemSlot(String text, double height) => find.ancestor(
       of: find.text(text),
       matching: find.byWidgetPredicate(
-        (widget) =>
-            widget is material.ConstrainedBox &&
-            widget.constraints.minHeight == height,
+        (widget) => widget is material.SizedBox && widget.height == height,
       ),
     );
 
-    expect(
-      tester.getSize(itemSlot('主题高度', 36).first).height,
-      greaterThanOrEqualTo(36),
-    );
-    expect(
-      tester.getSize(itemSlot('表面高度', 40).first).height,
-      greaterThanOrEqualTo(40),
-    );
-    expect(
-      tester.getSize(itemSlot('单项高度', 48).first).height,
-      greaterThanOrEqualTo(48),
-    );
+    expect(tester.getSize(itemSlot('主题高度', 36).first).height, 36);
+    expect(tester.getSize(itemSlot('表面高度', 40).first).height, 40);
+    expect(tester.getSize(itemSlot('单项高度', 48).first).height, 48);
     expect(itemSlot('自然高度', 40), findsNothing);
+  });
+
+  testWidgets('fixed itemHeight keeps mixed horizontal rows evenly spaced', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      material.MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: const material.Align(
+          alignment: material.Alignment.topLeft,
+          child: material.SizedBox(
+            width: 360,
+            child: AppDescriptions(
+              columns: 1,
+              layout: AppDescriptionLayout.horizontal,
+              padding: material.EdgeInsets.zero,
+              runSpacing: 0,
+              itemHeight: 36,
+              items: [
+                AppDescriptionItem(
+                  label: material.Text('点位名称'),
+                  value: material.Text('国贸中心'),
+                ),
+                AppDescriptionItem(
+                  label: material.Text('媒体尺寸'),
+                  value: material.Text(
+                    '98寸',
+                    style: material.TextStyle(
+                      fontWeight: material.FontWeight.bold,
+                    ),
+                  ),
+                ),
+                AppDescriptionItem(
+                  label: material.Text('开关机时间'),
+                  value: material.Text('09:00:00–21:00:00'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final tops = [
+      tester.getTopLeft(find.text('点位名称')).dy,
+      tester.getTopLeft(find.text('媒体尺寸')).dy,
+      tester.getTopLeft(find.text('开关机时间')).dy,
+    ];
+    expect(tops[1] - tops[0], closeTo(36, 0.01));
+    expect(tops[2] - tops[1], closeTo(36, 0.01));
   });
 
   testWidgets('default title font size is 16', (tester) async {
@@ -886,6 +925,7 @@ void main() {
           child: AppDescriptions(
             columns: 1,
             padding: material.EdgeInsets.zero,
+            itemHeight: null,
             valueHeight: null,
             items: [
               AppDescriptionItem(
