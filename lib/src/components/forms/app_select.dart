@@ -211,7 +211,7 @@ class _AppSelectState<V> extends State<AppSelect<V>> {
               focusNode: focusNode,
               enabled: widget.enabled,
               canUnselect: widget.clearable,
-              expandIcon: showExpandIcon ? const shad.SelectExpandIcon() : null,
+              expandIcon: showExpandIcon ? const Icon(shad.LucideIcons.chevronDown).iconSmall() : null,
               overlayConfiguration: shad.PopoverConfiguration(
                 alignment: Alignment.topCenter,
                 widthConstraint: popupWidth == null

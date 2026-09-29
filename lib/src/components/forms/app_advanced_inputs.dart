@@ -648,8 +648,8 @@ class _AppMultiSelectState<V> extends State<AppMultiSelect<V>> {
                 },
               ),
             ),
-            const shad.InputFeature.trailing(
-              AppInputGroupAddon(child: shad.SelectExpandIcon()),
+            shad.InputFeature.trailing(
+              AppInputGroupAddon(child: const Icon(shad.LucideIcons.chevronDown).iconSmall()),
             ),
           ],
         ),
