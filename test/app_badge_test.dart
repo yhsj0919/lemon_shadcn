@@ -134,4 +134,66 @@ void main() {
       const Color(0xff7c3aed),
     );
   });
+
+  testWidgets('long badge label ellipsizes within bounded width', (
+    tester,
+  ) async {
+    const label = 'A very long badge label that cannot fit in the row';
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(
+            width: 120,
+            child: Row(
+              children: [
+                Flexible(child: AppBadge.secondary(child: const Text(label))),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(tester.takeException(), isNull);
+    expect(tester.getSize(find.byType(shad.SecondaryBadge)).width,
+        lessThanOrEqualTo(120));
+    final text = tester.widget<RichText>(
+      find.descendant(of: find.text(label), matching: find.byType(RichText)),
+    );
+    expect(text.overflow, TextOverflow.ellipsis);
+    expect(text.maxLines, 1);
+  });
+
+  testWidgets('badge hugs content in unbounded and stretched parents', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(),
+        home: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                AppBadge.success(
+                  leading: const Icon(Icons.check, size: 12),
+                  child: const Text('InRow'),
+                ),
+              ],
+            ),
+            AppBadge.secondary(child: const Text('Stretched')),
+          ],
+        ),
+      ),
+    );
+
+    expect(tester.takeException(), isNull);
+    final screenWidth = tester.getSize(find.byType(Column)).width;
+    expect(
+      tester.getSize(find.byType(shad.SecondaryBadge).last).width,
+      lessThan(screenWidth / 2),
+    );
+  });
 }

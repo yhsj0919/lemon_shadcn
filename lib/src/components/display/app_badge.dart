@@ -75,9 +75,11 @@ class AppBadgeSize {
 /// Semantic badge variants exposed through one App-prefixed facade.
 abstract final class AppBadge {
   static Widget _badge({required Widget child, VoidCallback? onPressed}) {
-    final badge = UnconstrainedBox(
-      constrainedAxis: Axis.vertical,
+    // Drop only minWidth: hug content instead of stretching, but still honor
+    // the parent's maxWidth so long labels ellipsize rather than overflow.
+    final badge = ConstraintsTransformBox(
       alignment: Alignment.centerLeft,
+      constraintsTransform: (constraints) => constraints.copyWith(minWidth: 0),
       child: child,
     );
     if (onPressed != null) return badge;
@@ -98,17 +100,25 @@ abstract final class AppBadge {
     height: size.height,
     child: Center(
       widthFactor: 1,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ?leading,
-          if (leading != null && (leadingGap ?? size.contentGap) > 0)
-            SizedBox(width: leadingGap ?? size.contentGap),
-          child,
-          if (trailing != null && (trailingGap ?? size.contentGap) > 0)
-            SizedBox(width: trailingGap ?? size.contentGap),
-          ?trailing,
-        ],
+      child: DefaultTextStyle.merge(
+        maxLines: 1,
+        softWrap: false,
+        overflow: TextOverflow.ellipsis,
+        child: leading == null && trailing == null
+            ? child
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ?leading,
+                  if (leading != null && (leadingGap ?? size.contentGap) > 0)
+                    SizedBox(width: leadingGap ?? size.contentGap),
+                  child,
+                  if (trailing != null &&
+                      (trailingGap ?? size.contentGap) > 0)
+                    SizedBox(width: trailingGap ?? size.contentGap),
+                  ?trailing,
+                ],
+              ),
       ),
     ),
   );
