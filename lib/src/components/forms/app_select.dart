@@ -212,7 +212,14 @@ class _AppSelectState<V> extends State<AppSelect<V>> {
               enabled: widget.enabled,
               canUnselect: widget.clearable,
               expandIcon: showExpandIcon ? const Icon(shad.LucideIcons.chevronDown).iconSmall() : null,
+              // Overriding overlayConfiguration drops shad.Select's default
+              // gap, so restore it to keep the popup off the trigger.
               overlayConfiguration: shad.PopoverConfiguration(
+                offset: Offset(
+                  0,
+                  shad.Theme.of(context).density.baseGap *
+                      shad.Theme.of(context).scaling,
+                ),
                 alignment: Alignment.topCenter,
                 widthConstraint: popupWidth == null
                     ? shad.PopoverConstraint.anchorFixedSize
