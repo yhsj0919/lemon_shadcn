@@ -31,6 +31,7 @@ class AppControlMetrics {
     this.fontSize = 14,
     this.iconSize = 16,
     this.contentGap = 8,
+    this.buttonContentGap,
     this.textAreaHeight = 100,
   }) : assert(height > 0),
        assert(buttonHeight > 0),
@@ -38,6 +39,7 @@ class AppControlMetrics {
        assert(fontSize > 0),
        assert(iconSize > 0),
        assert(contentGap >= 0),
+       assert(buttonContentGap == null || buttonContentGap >= 0),
        assert(textAreaHeight > 0);
 
   final double height;
@@ -51,6 +53,10 @@ class AppControlMetrics {
   final double fontSize;
   final double iconSize;
   final double contentGap;
+
+  /// Gap between an [AppButton]'s `leading` / `trailing` and its label.
+  /// Null keeps the shadcn density gap.
+  final double? buttonContentGap;
   final double textAreaHeight;
 
   /// Content box used by bordered controls that sit inside the shared slot.
@@ -63,6 +69,7 @@ class AppControlMetrics {
     double? fontSize,
     double? iconSize,
     double? contentGap,
+    double? buttonContentGap,
     double? textAreaHeight,
   }) => AppControlMetrics(
     height: height ?? this.height,
@@ -71,6 +78,7 @@ class AppControlMetrics {
     fontSize: fontSize ?? this.fontSize,
     iconSize: iconSize ?? this.iconSize,
     contentGap: contentGap ?? this.contentGap,
+    buttonContentGap: buttonContentGap ?? this.buttonContentGap,
     textAreaHeight: textAreaHeight ?? this.textAreaHeight,
   );
 
@@ -84,6 +92,7 @@ class AppControlMetrics {
           fontSize == other.fontSize &&
           iconSize == other.iconSize &&
           contentGap == other.contentGap &&
+          buttonContentGap == other.buttonContentGap &&
           textAreaHeight == other.textAreaHeight;
 
   @override
@@ -94,6 +103,7 @@ class AppControlMetrics {
     fontSize,
     iconSize,
     contentGap,
+    buttonContentGap,
     textAreaHeight,
   );
 }

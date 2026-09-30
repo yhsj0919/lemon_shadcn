@@ -278,7 +278,8 @@ class AppButtonConfig {
     this.pressDuration,
     this.hoverLift = false,
     this.hoverDuration,
-  });
+    this.contentGap,
+  }) : assert(contentGap == null || contentGap >= 0);
 
   /// Standard button feedback: hover stays in place and press sinks by 1 px.
   static const interactive = AppButtonConfig(
@@ -309,6 +310,10 @@ class AppButtonConfig {
   /// Null → [AppMotionTokens.hoverDuration] from theme.
   final Duration? hoverDuration;
 
+  /// Gap between `leading` / `trailing` and the label.
+  /// Null → [AppControlMetrics.buttonContentGap], then the shadcn density gap.
+  final double? contentGap;
+
   AppButtonConfig copyWith({
     double? height,
     bool? enabled,
@@ -325,6 +330,7 @@ class AppButtonConfig {
     Duration? pressDuration,
     bool? hoverLift,
     Duration? hoverDuration,
+    double? contentGap,
   }) {
     return AppButtonConfig(
       height: height ?? this.height,
@@ -342,6 +348,7 @@ class AppButtonConfig {
       pressDuration: pressDuration ?? this.pressDuration,
       hoverLift: hoverLift ?? this.hoverLift,
       hoverDuration: hoverDuration ?? this.hoverDuration,
+      contentGap: contentGap ?? this.contentGap,
     );
   }
 
@@ -943,6 +950,7 @@ class _AppAsyncButtonState extends State<_AppAsyncButton>
     final onPressed = !enabled || _effectiveRunning ? null : _press;
     final metrics = AppControlMetricsScope.resolve(context);
     final baseHeight = metrics.buttonHeight;
+    final contentGap = _config.contentGap ?? metrics.buttonContentGap;
     final sizeScale = _config.size.scale;
     final groupItem = _AppWidgetGroupItemScope.maybeOf(context);
 
@@ -1141,6 +1149,8 @@ class _AppAsyncButtonState extends State<_AppAsyncButton>
         enabled: _config.enabled,
         leading: widget.leading,
         trailing: widget.trailing,
+        leadingGap: contentGap,
+        trailingGap: contentGap,
         alignment: _config.alignment,
         style: primaryStyle,
         focusNode: _config.focusNode,
@@ -1154,6 +1164,8 @@ class _AppAsyncButtonState extends State<_AppAsyncButton>
         enabled: _config.enabled,
         leading: widget.leading,
         trailing: widget.trailing,
+        leadingGap: contentGap,
+        trailingGap: contentGap,
         alignment: _config.alignment,
         style: AppInteractiveStyle.hover(secondaryStyle),
         focusNode: _config.focusNode,
@@ -1167,6 +1179,8 @@ class _AppAsyncButtonState extends State<_AppAsyncButton>
         enabled: _config.enabled,
         leading: widget.leading,
         trailing: widget.trailing,
+        leadingGap: contentGap,
+        trailingGap: contentGap,
         alignment: _config.alignment,
         style: selectedStyle,
         focusNode: _config.focusNode,
@@ -1180,6 +1194,8 @@ class _AppAsyncButtonState extends State<_AppAsyncButton>
         enabled: _config.enabled,
         leading: widget.leading,
         trailing: widget.trailing,
+        leadingGap: contentGap,
+        trailingGap: contentGap,
         alignment: _config.alignment,
         style: outlineStyle,
         focusNode: _config.focusNode,
@@ -1193,6 +1209,8 @@ class _AppAsyncButtonState extends State<_AppAsyncButton>
         enabled: _config.enabled,
         leading: widget.leading,
         trailing: widget.trailing,
+        leadingGap: contentGap,
+        trailingGap: contentGap,
         alignment: _config.alignment,
         style: ghostStyle,
         focusNode: _config.focusNode,
@@ -1206,6 +1224,8 @@ class _AppAsyncButtonState extends State<_AppAsyncButton>
         enabled: _config.enabled,
         leading: widget.leading,
         trailing: widget.trailing,
+        leadingGap: contentGap,
+        trailingGap: contentGap,
         alignment: _config.alignment,
         style: softDestructiveStyle,
         focusNode: _config.focusNode,
@@ -1219,6 +1239,8 @@ class _AppAsyncButtonState extends State<_AppAsyncButton>
         enabled: _config.enabled,
         leading: widget.leading,
         trailing: widget.trailing,
+        leadingGap: contentGap,
+        trailingGap: contentGap,
         alignment: _config.alignment,
         style: AppInteractiveStyle.hover(
           linkStyle,
@@ -1235,6 +1257,8 @@ class _AppAsyncButtonState extends State<_AppAsyncButton>
         enabled: _config.enabled,
         leading: widget.leading,
         trailing: widget.trailing,
+        leadingGap: contentGap,
+        trailingGap: contentGap,
         alignment: _config.alignment,
         style: AppInteractiveStyle.hover(
           textStyle,

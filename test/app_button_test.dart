@@ -548,6 +548,42 @@ void main() {
       themeColor,
     );
   });
+
+  testWidgets('leading gap follows theme metrics and config override', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: AppShadcnScope.builder(
+          config: AppThemeConfig.standard(
+            controls: const AppControlMetrics(buttonContentGap: 4),
+          ),
+        ),
+        home: Column(
+          children: [
+            AppButton.outline(
+              onPressed: _noop,
+              leading: const Icon(Icons.add),
+              child: const Text('Themed'),
+            ),
+            AppButton.outline(
+              onPressed: _noop,
+              config: const AppButtonConfig(contentGap: 10),
+              leading: const Icon(Icons.edit),
+              child: const Text('Override'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    double gap(IconData icon, String label) =>
+        tester.getTopLeft(find.text(label)).dx -
+        tester.getTopRight(find.byIcon(icon)).dx;
+
+    expect(gap(Icons.add, 'Themed'), moreOrLessEquals(4));
+    expect(gap(Icons.edit, 'Override'), moreOrLessEquals(10));
+  });
 }
 
 void _noop() {}
