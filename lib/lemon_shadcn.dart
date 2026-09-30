@@ -42,6 +42,7 @@ export 'src/components/forms/app_inline_edit.dart';
 export 'src/components/forms/app_form.dart';
 export 'src/components/forms/app_input_otp.dart';
 export 'src/components/forms/app_auto_complete.dart';
+export 'src/components/forms/app_cascade_select.dart';
 export 'src/components/forms/app_cascader.dart';
 export 'src/components/forms/app_combobox.dart';
 export 'src/components/forms/app_async_option_source.dart';
