@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
+import 'package:shadcn_flutter_skeletonizer/shadcn_flutter_skeletonizer.dart';
 
 typedef AppAnimatedValueBuilder<T> = shad.AnimatedValueBuilder<T>;
 typedef AppRepeatedAnimationBuilder = shad.RepeatedAnimationBuilder;

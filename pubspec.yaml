@@ -12,10 +12,14 @@ dependencies:
   cross_file: ^0.3.5+5
   desktop_drop: ^0.8.4
   file_picker: ^12.3.0
-  fl_chart: ^1.2.0
+  fl_chart: ^1.3.0
   flutter:
     sdk: flutter
-  shadcn_flutter: ^0.0.54
+  shadcn_flutter: ^0.0.55
+  shadcn_flutter_skeletonizer:
+    git:
+      url: https://github.com/sunarya-thito/shadcn_flutter.git
+      path: packages/shadcn_flutter_skeletonizer
   trina_grid: ^2.3.0
 
 dev_dependencies:

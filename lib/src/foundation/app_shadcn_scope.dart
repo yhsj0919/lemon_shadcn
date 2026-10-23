@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart' show Material, MaterialType, Theme;
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
+import 'package:shadcn_flutter_skeletonizer/shadcn_flutter_skeletonizer.dart';
 
 import '../components/display/app_text.dart';
 import 'app_theme_config.dart';
@@ -64,19 +65,21 @@ class AppShadcnScope extends StatelessWidget {
           // which would inflate every carefully-tuned control metric.
           scaling: shad.AdaptiveScaling.desktop,
           enableScrollInterception: resolved.enableScrollInterception,
-          child: _AppControlComponentThemes(
-            metrics: resolved.controls,
-            child: _AppOverlayHost(
-              child: shad.ToastLayer(
-                child: shad.DrawerOverlay(
-                  child: _MaterialThemeBridge(
-                    enabled: syncMaterialTheme,
-                    child: provideMaterialHost
-                        ? Material(
-                            type: MaterialType.transparency,
-                            child: themedChild,
-                          )
-                        : themedChild,
+          child: SkeletonizerLayer(
+            child: _AppControlComponentThemes(
+              metrics: resolved.controls,
+              child: _AppOverlayHost(
+                child: shad.ToastLayer(
+                  child: shad.DrawerOverlay(
+                    child: _MaterialThemeBridge(
+                      enabled: syncMaterialTheme,
+                      child: provideMaterialHost
+                          ? Material(
+                              type: MaterialType.transparency,
+                              child: themedChild,
+                            )
+                          : themedChild,
+                    ),
                   ),
                 ),
               ),
